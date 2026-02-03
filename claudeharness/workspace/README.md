@@ -1,0 +1,1 @@
+Drop the Project folder in this folder and open Claude from the claudeharness folder to inherit skills and documents that could apply to any project and.

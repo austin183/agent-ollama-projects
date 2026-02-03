@@ -1,0 +1,9 @@
+03:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Navi 48 [Radeon RX 9070/9070 XT/9070 GRE] (rev c0)
+	Subsystem: ASUSTeK Computer Inc. Device 0633
+	Kernel driver in use: amdgpu
+	Kernel modules: amdgpu
+--
+0d:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Granite Ridge [Radeon Graphics] (rev cb)
+	Subsystem: ASUSTeK Computer Inc. Device 8877
+	Kernel driver in use: amdgpu
+	Kernel modules: amdgpu

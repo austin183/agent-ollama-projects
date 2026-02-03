@@ -1,0 +1,99 @@
+projectUser@bazzite:~/FullLogs20260101$ grep -E "dri|pipewire|sddm" full_journal_ctl_system_2026-01-31
+Jan 31 11:31:01 bazzite kernel: Performance Events: Fam17h+ 16-deep LBR, core perfctr, AMD PMU driver.
+Jan 31 11:31:01 bazzite kernel: usbcore: registered new interface driver usbfs
+Jan 31 11:31:01 bazzite kernel: usbcore: registered new interface driver hub
+Jan 31 11:31:01 bazzite kernel: usbcore: registered new device driver usb
+Jan 31 11:31:01 bazzite kernel: Block layer SCSI generic (bsg) driver version 0.4 loaded (major 244)
+Jan 31 11:31:01 bazzite kernel: Serial: 8250/16550 driver, 32 ports, IRQ sharing enabled
+Jan 31 11:31:01 bazzite kernel: Non-volatile memory driver v1.3
+Jan 31 11:31:01 bazzite kernel: usbcore: registered new interface driver usbserial_generic
+Jan 31 11:31:01 bazzite kernel: hid: raw HID events driver (C) Jiri Kosina
+Jan 31 11:31:01 bazzite kernel: usbcore: registered new interface driver usbhid
+Jan 31 11:31:01 bazzite kernel: usbhid: USB HID core driver
+Jan 31 11:31:01 bazzite dracut-cmdline[350]: Using kernel command line parameters:  rd.driver.pre=btrfs rd.driver.pre=vfio rd.driver.pre=vfio_iommu_type1 rd.driver.pre=vfio_pci   BOOT_IMAGE=(hd0,gpt3)/ostree/default-374696162330b925549cee64679444d2440b032ade6a444374bbbc9dc43853ec/vmlinuz-6.17.7-ba25.fc43.x86_64 ostree=/ostree/boot.0/default/374696162330b925549cee64679444d2440b032ade6a444374bbbc9dc43853ec/0 rhgb quiet root=UUID=23c09f1d-5446-49d1-a5cf-a50a020c9e64 vconsole.keymap=us rootflags=subvol=root rw bluetooth.disable_ertm=1
+Jan 31 11:31:01 bazzite kernel: i2c_dev: i2c /dev entries driver
+Jan 31 11:31:01 bazzite kernel: VFIO - User Level meta-driver version: 0.3
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: smu driver if version = 0x0000002e, smu fw if version = 0x00000032, smu fw program = 0, smu fw version = 0x00684b00 (104.75.0)
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: SMU driver if version not matched
+Jan 31 17:31:05 bazzite kernel: tun: Universal TUN/TAP device driver, 1.6
+Jan 31 17:31:06 bazzite udevadm[859]: systemd-udev-settle.service is deprecated. Please fix sddm.service not to pull it in.
+Jan 31 17:31:06 bazzite kernel: asus_wmi: ASUS WMI generic driver loaded
+Jan 31 17:31:06 bazzite kernel: usbcore: registered new interface driver btusb
+Jan 31 17:31:06 bazzite razer_mount[1043]: Changing group /sys/bus/hid/drivers/razermouse/0003:1532:005C.0002/
+Jan 31 17:31:06 bazzite razer_mount[1042]: Changing group /sys/bus/hid/drivers/razermouse/0003:1532:005C.0004/
+Jan 31 17:31:06 bazzite razer_mount[1047]: Changing group /sys/bus/hid/drivers/razermouse/0003:1532:005C.0003/
+Jan 31 17:31:06 bazzite systemd[1]: usr-share-sddm-themes.mount: Directory /usr/share/sddm/themes to mount over is not empty, mounting anyway.
+Jan 31 17:31:06 bazzite systemd[1]: Mounting usr-share-sddm-themes.mount - KDE writable sddm workaround...
+Jan 31 17:31:06 bazzite systemd[1]: Mounted usr-share-sddm-themes.mount - KDE writable sddm workaround.
+Jan 31 17:31:08 bazzite chronyd[1352]: Frequency 17.800 +/- 0.110 ppm read from /var/lib/chrony/drift
+Jan 31 17:31:09 bazzite NetworkManager[1545]: <info>  [1769902269.2513] rfkill1: found Wi-Fi radio killswitch (at /sys/devices/pci0000:00/0000:00:02.1/0000:05:00.0/0000:06:0b.0/0000:0a:00.0/ieee80211/phy0/rfkill1) (driver rtw89_8851be)
+Jan 31 17:31:09 bazzite kernel: Generic FE-GE Realtek PHY r8169-0-900:00: attached PHY driver (mii_bus:phy_addr=r8169-0-900:00, irq=MAC)
+Jan 31 17:31:10 bazzite systemd[1]: Started sddm.service - Simple Desktop Display Manager.
+Jan 31 17:31:10 bazzite audit[1]: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=sddm comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite sddm-helper[1792]: Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Jan 31 17:31:10 bazzite audit[1792]: AUDIT1100 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:authentication grantors=pam_permit acct="sddm" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite audit[1792]: AUDIT1101 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_permit acct="sddm" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite audit[1792]: AUDIT1103 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_permit acct="sddm" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite sddm-helper[1792]: pam_unix(sddm-greeter:session): session opened for user sddm(uid=969) by (uid=0)
+Jan 31 17:31:10 bazzite systemd-logind[1389]: New session 'c1' of user 'sddm' with class 'greeter' and type 'wayland'.
+Jan 31 17:31:10 bazzite audit[1812]: AUDIT1101 pid=1812 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:accounting grantors=pam_unix acct="sddm" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite audit[1812]: AUDIT1103 pid=1812 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:setcred grantors=? acct="sddm" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=failed'
+Jan 31 17:31:10 bazzite systemd-logind[1389]: New session '1' of user 'sddm' with class 'manager-early' and type 'unspecified'.
+Jan 31 17:31:10 bazzite (systemd)[1812]: pam_unix(systemd-user:session): session opened for user sddm(uid=969) by sddm(uid=0)
+Jan 31 17:31:10 bazzite audit[1812]: AUDIT1105 pid=1812 uid=0 auid=969 ses=1 subj=system_u:system_r:init_t:s0 msg='op=PAM:session_open grantors=pam_selinux,pam_selinux,pam_loginuid,pam_keyinit,pam_namespace,pam_systemd_home,pam_umask,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="sddm" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite systemd[1812]: Listening on pipewire-pulse.socket - PipeWire PulseAudio.
+Jan 31 17:31:10 bazzite systemd[1812]: Listening on pipewire.socket - PipeWire Multimedia System Sockets.
+Jan 31 17:31:10 bazzite systemd[1]: Started session-c1.scope - Session c1 of User sddm.
+Jan 31 17:31:10 bazzite audit[1792]: AUDIT1105 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_unix,pam_systemd acct="sddm" exe="/usr/libexec/sddm-helper" hostname=bazzite addr=? terminal=/dev/tty1 res=success'
+Jan 31 17:31:10 bazzite sddm-helper-start-wayland[1838]: "No backend specified, automatically choosing drm\n"
+Jan 31 17:31:10 bazzite sddm-helper-start-wayland[1838]: "Accepting client connections on sockets: QList(\"wayland-0\")\n"
+Jan 31 17:31:10 bazzite sddm-helper-start-wayland[1838]: "kwin_core: EDID colorimetry xy(0, 0) xy(0, 0) xy(0, 0) xy(0, 0) is invalid\n"
+Jan 31 17:31:10 bazzite systemd[1812]: Started pipewire.service - PipeWire Multimedia Service.
+Jan 31 17:31:10 bazzite rtkit-daemon[1359]: Successfully made thread 1891 of process 1891 (/usr/bin/pipewire) owned by '969' high priority at nice level -11.
+Jan 31 17:31:10 bazzite rtkit-daemon[1359]: Successfully made thread 1904 of process 1891 (/usr/bin/pipewire) owned by '969' RT at priority 20.
+Jan 31 17:31:10 bazzite systemd[1812]: Started pipewire-pulse.service - PipeWire PulseAudio.
+Jan 31 17:31:10 bazzite rtkit-daemon[1359]: Successfully made thread 1930 of process 1930 (/usr/bin/pipewire) owned by '969' high priority at nice level -11.
+Jan 31 17:31:10 bazzite sddm-greeter-qt6[1847]: Loading file:///usr/share/sddm/themes/01-breeze-fedora/Main.qml...
+Jan 31 17:31:10 bazzite rtkit-daemon[1359]: Successfully made thread 1937 of process 1930 (/usr/bin/pipewire) owned by '969' RT at priority 20.
+Jan 31 17:31:10 bazzite sddm-helper-start-wayland[1838]: "QSoundEffect(pulseaudio): Error decoding source file:///usr/share/maliit/keyboard2/sounds/key_tick2_quiet.wav\n"
+Jan 31 17:31:11 bazzite sddm-helper-start-wayland[1838]: "QSGContext::initialize: depth buffer support missing, expect rendering errors\nQSGContext::initialize: stencil buffer support missing, expect rendering errors\n"
+Jan 31 17:31:19 bazzite.something.smwhre sddm-greeter-qt6[1847]: file:///usr/share/sddm/themes/01-breeze-fedora/Main.qml:241:17 Parameter "username" is not declared. Injection of parameters into signal handlers is deprecated. Use JavaScript functions with formal parameters instead.
+Jan 31 17:31:19 bazzite.something.smwhre sddm-helper[2108]: Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[2108]: pam_kwallet5(sddm:auth): pam_kwallet5: pam_sm_authenticate
+Jan 31 17:31:20 bazzite.something.smwhre audit[2108]: AUDIT1100 pid=2108 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:authentication grantors=pam_unix acct="projectUser" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:20 bazzite.something.smwhre audit[2108]: AUDIT1101 pid=2108 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="projectUser" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:20 bazzite.something.smwhre audit[2108]: AUDIT1103 pid=2108 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_unix acct="projectUser" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[2108]: pam_kwallet5(sddm:setcred): pam_kwallet5: pam_sm_setcred
+Jan 31 17:31:20 bazzite.something.smwhre audit[2108]: AUDIT2300 pid=2108 uid=0 auid=1000 ses=2 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=pam_selinux default-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 selected-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 exe="/usr/libexec/sddm-helper" hostname=bazzite.something.smwhre addr=? terminal=/dev/tty2 res=success'
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper-start-wayland[1838]: Stopping... "kwin_wayland"
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper-start-wayland[1838]: "kwin_scene_opengl: Could not delete render time query because no context is current\nkwin_scene_opengl: Could not delete render time query because no context is current\n"
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[1792]: pam_unix(sddm-greeter:session): session closed for user sddm
+Jan 31 17:31:20 bazzite.something.smwhre audit[1792]: AUDIT1106 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_unix,pam_systemd acct="sddm" exe="/usr/libexec/sddm-helper" hostname=bazzite addr=? terminal=/dev/tty1 res=success'
+Jan 31 17:31:20 bazzite.something.smwhre audit[1792]: AUDIT1104 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_permit acct="sddm" exe="/usr/libexec/sddm-helper" hostname=bazzite addr=? terminal=/dev/tty1 res=success'
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[2108]: pam_unix(sddm:session): session opened for user projectUser(uid=1000) by projectUser(uid=0)
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[2108]: pam_kwallet5(sddm:session): pam_kwallet5: pam_sm_open_session
+Jan 31 17:31:20 bazzite.something.smwhre audit[2108]: AUDIT1105 pid=2108 uid=0 auid=1000 ses=2 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_selinux,pam_loginuid,pam_selinux,pam_keyinit,pam_namespace,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_kwallet5,pam_umask,pam_lastlog2 acct="projectUser" exe="/usr/libexec/sddm-helper" hostname=bazzite.something.smwhre addr=? terminal=/dev/tty2 res=success'
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[2108]: Starting Wayland user session: "/etc/sddm/wayland-session" "/usr/libexec/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland"
+Jan 31 17:31:20 bazzite.something.smwhre rtkit-daemon[1359]: Successfully made thread 2373 of process 2373 (/usr/bin/pipewire) owned by '1000' high priority at nice level -11.
+Jan 31 17:31:20 bazzite.something.smwhre rtkit-daemon[1359]: Successfully made thread 2378 of process 2373 (/usr/bin/pipewire) owned by '1000' RT at priority 20.
+Jan 31 17:31:20 bazzite.something.smwhre rtkit-daemon[1359]: Successfully made thread 2375 of process 2375 (/usr/bin/pipewire) owned by '1000' high priority at nice level -11.
+Jan 31 17:31:20 bazzite.something.smwhre rtkit-daemon[1359]: Successfully made thread 2387 of process 2375 (/usr/bin/pipewire) owned by '1000' RT at priority 20.
+Jan 31 17:31:30 bazzite.something.smwhre systemd[1812]: Stopping pipewire-pulse.service - PipeWire PulseAudio...
+Jan 31 17:31:30 bazzite.something.smwhre systemd[1812]: Stopped pipewire-pulse.service - PipeWire PulseAudio.
+Jan 31 17:31:30 bazzite.something.smwhre systemd[1812]: Stopping pipewire.service - PipeWire Multimedia Service...
+Jan 31 17:31:30 bazzite.something.smwhre systemd[1812]: Stopped pipewire.service - PipeWire Multimedia Service.
+Jan 31 17:31:30 bazzite.something.smwhre systemd[1812]: Closed pipewire-pulse.socket - PipeWire PulseAudio.
+Jan 31 17:31:30 bazzite.something.smwhre systemd[1812]: Closed pipewire.socket - PipeWire Multimedia System Sockets.
+Jan 31 17:33:52 bazzite.something.smwhre kernel: usbcore: registered new interface driver usb-storage
+Jan 31 17:33:52 bazzite.something.smwhre kernel: usbcore: registered new interface driver uas
+Jan 31 17:34:24 bazzite.something.smwhre sddm-helper[2108]: Signal received: SIGTERM
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Authentication error: SDDM::Auth::ERROR_INTERNAL "Process crashed"
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Auth: sddm-helper (--socket /tmp/sddm-auth-fa820e0e-dc06-430f-9256-5f742d7fd8b0 --id 1 --start /usr/libexec/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland --user projectUser) crashed (exit code 1)
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Authentication error: SDDM::Auth::ERROR_INTERNAL "Process crashed"
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Auth: sddm-helper exited with 1
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Signal received: SIGTERM
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopping sddm.service - Simple Desktop Display Manager...
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: sddm.service: Deactivated successfully.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopped sddm.service - Simple Desktop Display Manager.
+Jan 31 17:34:24 bazzite.something.smwhre audit[1]: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=sddm comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:34:25 bazzite.something.smwhre systemd[1]: Unmounting usr-share-sddm-themes.mount - KDE writable sddm workaround...

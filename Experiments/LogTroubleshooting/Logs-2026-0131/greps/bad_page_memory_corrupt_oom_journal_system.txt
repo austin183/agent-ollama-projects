@@ -1,0 +1,79 @@
+projectUser@bazzite:~/FullLogs20260101$ grep -E "bad_page|memory|corrupt|oom" full_journal_ctl_system_2026-01-31
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving FACP table memory at [mem 0x71f21000-0x71f21113]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving DSDT table memory at [mem 0x71f01000-0x71f11d51]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving FACS table memory at [mem 0x73f14000-0x73f1403f]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f23000-0x71f2b16b]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f22000-0x71f22220]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving FIDT table memory at [mem 0x71f16000-0x71f1609b]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving MCFG table memory at [mem 0x71f14000-0x71f1403b]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving HPET table memory at [mem 0x71f13000-0x71f13037]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving FPDT table memory at [mem 0x71f12000-0x71f12043]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving VFCT table memory at [mem 0x71ee7000-0x71f0049f]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving WPBT table memory at [mem 0x71f1f000-0x71f1f03f]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f1a000-0x71f1eded]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f19000-0x71f19040]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving BGRT table memory at [mem 0x71f18000-0x71f18037]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71dfe000-0x71dff69d]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71dfb000-0x71dfdaa5]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f17000-0x71f178b9]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71df0000-0x71dfa629]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving BGRT table memory at [mem 0x71def000-0x71def037]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71dec000-0x71dee9d8]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving WSMT table memory at [mem 0x71deb000-0x71deb027]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving APIC table memory at [mem 0x71dea000-0x71dea15d]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving IVRS table memory at [mem 0x71de9000-0x71de90c7]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de8000-0x71de84ff]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de7000-0x71de79e5]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de6000-0x71de647b]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de5000-0x71de553d]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de4000-0x71de444d]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving MSDM table memory at [mem 0x71f15000-0x71f15054]
+Jan 31 11:31:01 bazzite kernel: Early memory node ranges
+Jan 31 11:31:01 bazzite kernel: PM: hibernation: Registered nosave memory: [mem 0x00000000-0x00000fff]
+Jan 31 11:31:01 bazzite kernel: PM: hibernation: Registered nosave memory: [mem 0x000a0000-0x000fffff]
+Jan 31 11:31:01 bazzite kernel: PM: hibernation: Registered nosave memory: [mem 0x09aff000-0x09ffffff]
+Jan 31 11:31:01 bazzite kernel: PM: hibernation: Registered nosave memory: [mem 0x0a200000-0x0a21dfff]
+Jan 31 11:31:01 bazzite kernel: PM: hibernation: Registered nosave memory: [mem 0x0b000000-0x0b020fff]
+Jan 31 11:31:01 bazzite kernel: PM: hibernation: Registered nosave memory: [mem 0x6117d000-0x611affff]
+Jan 31 11:31:01 bazzite kernel: PM: hibernation: Registered nosave memory: [mem 0x68491000-0x68491fff]
+Jan 31 11:31:01 bazzite kernel: PM: hibernation: Registered nosave memory: [mem 0x6b5ee000-0x785fefff]
+Jan 31 11:31:01 bazzite kernel: PM: hibernation: Registered nosave memory: [mem 0x79ff7000-0x79ffbfff]
+Jan 31 11:31:01 bazzite kernel: PM: hibernation: Registered nosave memory: [mem 0x7a000000-0xffffffff]
+Jan 31 11:31:01 bazzite kernel: Freeing SMP alternatives memory: 56K
+Jan 31 11:31:01 bazzite kernel: Freeing initrd memory: 244652K
+Jan 31 11:31:01 bazzite kernel: Non-volatile memory driver v1.3
+Jan 31 11:31:01 bazzite kernel: Freeing unused decrypted memory: 2028K
+Jan 31 11:31:01 bazzite kernel: Freeing unused kernel image (initmem) memory: 5116K
+Jan 31 11:31:01 bazzite kernel: Freeing unused kernel image (text/rodata gap) memory: 500K
+Jan 31 11:31:01 bazzite kernel: Freeing unused kernel image (rodata/data gap) memory: 976K
+Jan 31 11:31:02 bazzite kernel: nvme nvme0: allocated 64 MiB host memory buffer (1 segment).
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: amdgpu: 16304M of VRAM memory ready
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: amdgpu: 15617M of GTT memory ready.
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: amdgpu: 512M of VRAM memory ready
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: amdgpu: 15617M of GTT memory ready.
+Jan 31 11:31:04 bazzite systemd[1]: systemd-udevd.service: Consumed 2.404s CPU time, 41.1M memory peak.
+Jan 31 17:31:05 bazzite systemd[1]: Listening on systemd-oomd.socket - Userspace Out-Of-Memory (OOM) Killer Socket.
+Jan 31 17:31:07 bazzite systemd[1]: Starting systemd-oomd.service - Userspace Out-Of-Memory (OOM) Killer...
+Jan 31 17:31:07 bazzite systemd[1]: Started systemd-oomd.service - Userspace Out-Of-Memory (OOM) Killer.
+Jan 31 17:31:07 bazzite audit[1]: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-oomd comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:08 bazzite dbus-broker-launch[1345]: Looking up NSS user entry for 'systemd-oom'...
+Jan 31 17:31:08 bazzite dbus-broker-launch[1345]: NSS returned NAME 'systemd-oom' and UID '967'
+Jan 31 17:31:08 bazzite systemd[1]: Starting foomaticrip-upgrade.service - Allowing already installed printers for foomatic-rip...
+Jan 31 17:31:08 bazzite systemd[1]: foomaticrip-upgrade.service: Deactivated successfully.
+Jan 31 17:31:08 bazzite systemd[1]: Finished foomaticrip-upgrade.service - Allowing already installed printers for foomatic-rip.
+Jan 31 17:31:08 bazzite audit[1]: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=foomaticrip-upgrade comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:08 bazzite audit[1]: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=foomaticrip-upgrade comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:20 bazzite.something.smwhre systemd[1]: session-c1.scope: Consumed 1.559s CPU time, 713.1M memory peak.
+Jan 31 17:31:30 bazzite.something.smwhre systemd[1]: user-969.slice: Consumed 1.819s CPU time, 753.6M memory peak.
+Jan 31 17:34:10 bazzite.something.smwhre kernel: FAT-fs (sda1): Volume was not properly unmounted. Some data may be corrupt. Please run fsck.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: greenboot-healthcheck.service: Consumed 65ms CPU time, 288M memory peak.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: udisks2.service: Consumed 3.661s CPU time, 1.1G memory peak.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: user@1000.service: Consumed 20.697s CPU time, 3.8G memory peak.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopping systemd-oomd.service - Userspace Out-Of-Memory (OOM) Killer...
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: systemd-oomd.service: Deactivated successfully.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopped systemd-oomd.service - Userspace Out-Of-Memory (OOM) Killer.
+Jan 31 17:34:24 bazzite.something.smwhre audit[1]: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-oomd comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: user-1000.slice: Consumed 20.918s CPU time, 3.9G memory peak.
+Jan 31 17:34:25 bazzite.something.smwhre systemd[1]: user.slice: Consumed 22.737s CPU time, 4.4G memory peak.
+Jan 31 17:34:25 bazzite.something.smwhre systemd[1]: systemd-oomd.socket: Deactivated successfully.
+Jan 31 17:34:25 bazzite.something.smwhre systemd[1]: Closed systemd-oomd.socket - Userspace Out-Of-Memory (OOM) Killer Socket.

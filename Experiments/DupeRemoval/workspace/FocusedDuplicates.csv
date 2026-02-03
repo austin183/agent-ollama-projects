@@ -1,0 +1,5 @@
+Group ID,Folder,Filename,Size (KB),Match %,Decision,Rationale
+2897,/Users/UserA/Pictures/Friends,anonymized_file.ai,623,100,KEEP,Main source folder
+2897,/Users/UserA/Pictures/Friends/Uncategorized,anonymized_file.ai,623,100,KEEP,Main source folder
+2898,/Users/UserA/Music/Musician,AlbumArt_{097DA2D8-8D1F-400A-8052-F85E1DA4BBBF}_Large.jpg,15,100,KEEP,Main source folder
+2898,/Users/UserA/Music/Musician,Folder.jpg,15,100,KEEP,Main source folder

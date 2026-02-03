@@ -1,0 +1,307 @@
+projectUser@bazzite:~/FullLogs20260101$ grep -iE "FAT|usb|sd|nvme" full_journal_ctl_system_2026-01-31
+Jan 31 11:31:01 bazzite kernel: ACPI: RSDP 0x0000000071F2D014 000024 (v02 ALASKA)
+Jan 31 11:31:01 bazzite kernel: ACPI: XSDT 0x0000000071F2C728 0000FC (v01 _ASUS_ Desktop  01072009 AMI  01000013)
+Jan 31 11:31:01 bazzite kernel: ACPI: DSDT 0x0000000071F01000 010D52 (v02 ALASKA A M I    01072009 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071F23000 00816C (v02 AMD    Splinter 00000002 MSFT 05000000)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071F22000 000221 (v02 ALASKA CPUSSDT  01072009 AMI  01072009)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071F1A000 004DEE (v02 AMD    AMD CPU  00000001 AMD  00000001)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071F19000 000041 (v01 AMD    AppCompD 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DFE000 00169E (v02 AMD    CPMDFIG2 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DFB000 002AA6 (v02 AMD    CDFAAIG2 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071F17000 0008BA (v02 AMD    CPMDFDG2 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DF0000 00A62A (v02 AMD    CPMCMN   00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DEC000 0029D9 (v02 AMD    AOD      00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DE8000 000500 (v02 AMD    MEMTOOL0 00000002 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DE7000 0009E6 (v02 AMD    CPMMSOSC 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DE6000 00047C (v02 AMD    AMDWOV   00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DE5000 00053E (v01 AMD    CPMAPMFD 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DE4000 00044E (v02 AMD    AmdTable 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: MSDM 0x0000000071F15000 000055 (v01 _ASUS_ Desktop  00000001 MSFT 00000000)
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving DSDT table memory at [mem 0x71f01000-0x71f11d51]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f23000-0x71f2b16b]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f22000-0x71f22220]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f1a000-0x71f1eded]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f19000-0x71f19040]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71dfe000-0x71dff69d]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71dfb000-0x71dfdaa5]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f17000-0x71f178b9]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71df0000-0x71dfa629]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71dec000-0x71dee9d8]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de8000-0x71de84ff]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de7000-0x71de79e5]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de6000-0x71de647b]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de5000-0x71de553d]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de4000-0x71de444d]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving MSDM table memory at [mem 0x71f15000-0x71f15054]
+Jan 31 11:31:01 bazzite kernel: ACPI: bus type USB registered
+Jan 31 11:31:01 bazzite kernel: usbcore: registered new interface driver usbfs
+Jan 31 11:31:01 bazzite kernel: usbcore: registered new interface driver hub
+Jan 31 11:31:01 bazzite kernel: usbcore: registered new device driver usb
+Jan 31 11:31:01 bazzite kernel: ahci 0000:0c:00.0: flags: 64bit ncq sntf stag pm led clo only pmp pio slum part sxs deso sadm sds apst
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0b:00.0: new USB bus registered, assigned bus number 1
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0b:00.0: new USB bus registered, assigned bus number 2
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0b:00.0: Host supports USB 3.1 Enhanced SuperSpeed
+Jan 31 11:31:01 bazzite kernel: usb usb1: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 6.17
+Jan 31 11:31:01 bazzite kernel: usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Jan 31 11:31:01 bazzite kernel: usb usb1: Product: xHCI Host Controller
+Jan 31 11:31:01 bazzite kernel: usb usb1: Manufacturer: Linux 6.17.7-ba25.fc43.x86_64 xhci-hcd
+Jan 31 11:31:01 bazzite kernel: usb usb1: SerialNumber: 0000:0b:00.0
+Jan 31 11:31:01 bazzite kernel: hub 1-0:1.0: USB hub found
+Jan 31 11:31:01 bazzite kernel: usb usb2: We don't know the algorithms for LPM for this host, disabling LPM.
+Jan 31 11:31:01 bazzite kernel: usb usb2: New USB device found, idVendor=1d6b, idProduct=0003, bcdDevice= 6.17
+Jan 31 11:31:01 bazzite kernel: usb usb2: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Jan 31 11:31:01 bazzite kernel: usb usb2: Product: xHCI Host Controller
+Jan 31 11:31:01 bazzite kernel: usb usb2: Manufacturer: Linux 6.17.7-ba25.fc43.x86_64 xhci-hcd
+Jan 31 11:31:01 bazzite kernel: usb usb2: SerialNumber: 0000:0b:00.0
+Jan 31 11:31:01 bazzite kernel: hub 2-0:1.0: USB hub found
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0d:00.3: new USB bus registered, assigned bus number 3
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0d:00.3: new USB bus registered, assigned bus number 4
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0d:00.3: Host supports USB 3.1 Enhanced SuperSpeed
+Jan 31 11:31:01 bazzite kernel: usb usb3: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 6.17
+Jan 31 11:31:01 bazzite kernel: usb usb3: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Jan 31 11:31:01 bazzite kernel: usb usb3: Product: xHCI Host Controller
+Jan 31 11:31:01 bazzite kernel: usb usb3: Manufacturer: Linux 6.17.7-ba25.fc43.x86_64 xhci-hcd
+Jan 31 11:31:01 bazzite kernel: usb usb3: SerialNumber: 0000:0d:00.3
+Jan 31 11:31:01 bazzite kernel: hub 3-0:1.0: USB hub found
+Jan 31 11:31:01 bazzite kernel: usb usb4: We don't know the algorithms for LPM for this host, disabling LPM.
+Jan 31 11:31:01 bazzite kernel: usb usb4: New USB device found, idVendor=1d6b, idProduct=0003, bcdDevice= 6.17
+Jan 31 11:31:01 bazzite kernel: usb usb4: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Jan 31 11:31:01 bazzite kernel: usb usb4: Product: xHCI Host Controller
+Jan 31 11:31:01 bazzite kernel: usb usb4: Manufacturer: Linux 6.17.7-ba25.fc43.x86_64 xhci-hcd
+Jan 31 11:31:01 bazzite kernel: usb usb4: SerialNumber: 0000:0d:00.3
+Jan 31 11:31:01 bazzite kernel: hub 4-0:1.0: USB hub found
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0d:00.4: new USB bus registered, assigned bus number 5
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0d:00.4: new USB bus registered, assigned bus number 6
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0d:00.4: Host supports USB 3.1 Enhanced SuperSpeed
+Jan 31 11:31:01 bazzite kernel: usb usb5: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 6.17
+Jan 31 11:31:01 bazzite kernel: usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Jan 31 11:31:01 bazzite kernel: usb usb5: Product: xHCI Host Controller
+Jan 31 11:31:01 bazzite kernel: usb usb5: Manufacturer: Linux 6.17.7-ba25.fc43.x86_64 xhci-hcd
+Jan 31 11:31:01 bazzite kernel: usb usb5: SerialNumber: 0000:0d:00.4
+Jan 31 11:31:01 bazzite kernel: hub 5-0:1.0: USB hub found
+Jan 31 11:31:01 bazzite kernel: usb usb6: We don't know the algorithms for LPM for this host, disabling LPM.
+Jan 31 11:31:01 bazzite kernel: usb usb6: New USB device found, idVendor=1d6b, idProduct=0003, bcdDevice= 6.17
+Jan 31 11:31:01 bazzite kernel: usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Jan 31 11:31:01 bazzite kernel: usb usb6: Product: xHCI Host Controller
+Jan 31 11:31:01 bazzite kernel: usb usb6: Manufacturer: Linux 6.17.7-ba25.fc43.x86_64 xhci-hcd
+Jan 31 11:31:01 bazzite kernel: usb usb6: SerialNumber: 0000:0d:00.4
+Jan 31 11:31:01 bazzite kernel: hub 6-0:1.0: USB hub found
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0e:00.0: new USB bus registered, assigned bus number 7
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0e:00.0: USB3 root hub has no ports
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0e:00.0: new USB bus registered, assigned bus number 8
+Jan 31 11:31:01 bazzite kernel: xhci_hcd 0000:0e:00.0: Host supports USB 3.0 SuperSpeed
+Jan 31 11:31:01 bazzite kernel: usb usb7: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 6.17
+Jan 31 11:31:01 bazzite kernel: usb usb7: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Jan 31 11:31:01 bazzite kernel: usb usb7: Product: xHCI Host Controller
+Jan 31 11:31:01 bazzite kernel: usb usb7: Manufacturer: Linux 6.17.7-ba25.fc43.x86_64 xhci-hcd
+Jan 31 11:31:01 bazzite kernel: usb usb7: SerialNumber: 0000:0e:00.0
+Jan 31 11:31:01 bazzite kernel: hub 7-0:1.0: USB hub found
+Jan 31 11:31:01 bazzite kernel: usb usb8: We don't know the algorithms for LPM for this host, disabling LPM.
+Jan 31 11:31:01 bazzite kernel: usb usb8: New USB device found, idVendor=1d6b, idProduct=0003, bcdDevice= 6.17
+Jan 31 11:31:01 bazzite kernel: usb usb8: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Jan 31 11:31:01 bazzite kernel: usb usb8: Product: xHCI Host Controller
+Jan 31 11:31:01 bazzite kernel: usb usb8: Manufacturer: Linux 6.17.7-ba25.fc43.x86_64 xhci-hcd
+Jan 31 11:31:01 bazzite kernel: usb usb8: SerialNumber: 0000:0e:00.0
+Jan 31 11:31:01 bazzite kernel: hub 8-0:1.0: USB hub found
+Jan 31 11:31:01 bazzite kernel: usbcore: registered new interface driver usbserial_generic
+Jan 31 11:31:01 bazzite kernel: usbserial: USB Serial support registered for generic
+Jan 31 11:31:01 bazzite kernel: usbcore: registered new interface driver usbhid
+Jan 31 11:31:01 bazzite kernel: usbhid: USB HID core driver
+Jan 31 11:31:01 bazzite kernel: usb 5-2: new high-speed USB device number 2 using xhci_hcd
+Jan 31 11:31:01 bazzite kernel: usb 3-1: new full-speed USB device number 2 using xhci_hcd
+Jan 31 11:31:01 bazzite kernel: usb 1-7: new full-speed USB device number 2 using xhci_hcd
+Jan 31 11:31:01 bazzite kernel: usb 5-2: New USB device found, idVendor=05e3, idProduct=0610, bcdDevice= 6.63
+Jan 31 11:31:01 bazzite kernel: usb 5-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Jan 31 11:31:01 bazzite kernel: usb 5-2: Product: USB2.1 Hub
+Jan 31 11:31:01 bazzite kernel: usb 5-2: Manufacturer: GenesysLogic
+Jan 31 11:31:01 bazzite kernel: usb 3-1: New USB device found, idVendor=0489, idProduct=e112, bcdDevice= 0.00
+Jan 31 11:31:01 bazzite kernel: usb 3-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Jan 31 11:31:01 bazzite kernel: usb 3-1: Product: Bluetooth Radio
+Jan 31 11:31:01 bazzite kernel: usb 3-1: Manufacturer: Realtek
+Jan 31 11:31:01 bazzite kernel: usb 3-1: SerialNumber: 00e04c000001
+Jan 31 11:31:01 bazzite kernel: hub 5-2:1.0: USB hub found
+Jan 31 11:31:01 bazzite kernel: usb 1-7: config 1 has an invalid interface number: 2 but max is 1
+Jan 31 11:31:01 bazzite kernel: usb 1-7: config 1 has no interface number 1
+Jan 31 11:31:01 bazzite kernel: usb 1-7: New USB device found, idVendor=0b05, idProduct=19af, bcdDevice= 1.00
+Jan 31 11:31:01 bazzite kernel: usb 1-7: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Jan 31 11:31:01 bazzite kernel: usb 1-7: Product: AURA LED Controller
+Jan 31 11:31:01 bazzite kernel: usb 1-7: Manufacturer: AsusTek Computer Inc.
+Jan 31 11:31:01 bazzite kernel: usb 1-7: SerialNumber: 9876543210
+Jan 31 11:31:01 bazzite kernel: hid-generic 0003:0B05:19AF.0001: hiddev96,hidraw0: USB HID v1.11 Device [AsusTek Computer Inc. AURA LED Controller] on usb-0000:0b:00.0-7/input2
+Jan 31 11:31:01 bazzite kernel: usb 5-2.2: new full-speed USB device number 3 using xhci_hcd
+Jan 31 11:31:01 bazzite kernel: usb 5-2.2: New USB device found, idVendor=1532, idProduct=005c, bcdDevice= 2.00
+Jan 31 11:31:01 bazzite kernel: usb 5-2.2: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Jan 31 11:31:01 bazzite kernel: usb 5-2.2: Product: Razer DeathAdder Elite
+Jan 31 11:31:01 bazzite kernel: usb 5-2.2: Manufacturer: Razer
+Jan 31 11:31:01 bazzite kernel: usb 1-8: new high-speed USB device number 3 using xhci_hcd
+Jan 31 11:31:01 bazzite kernel: input: Razer Razer DeathAdder Elite as /devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.2/5-2.2:1.0/0003:1532:005C.0002/input/input2
+Jan 31 11:31:01 bazzite kernel: hid-generic 0003:1532:005C.0002: input,hidraw1: USB HID v1.11 Mouse [Razer Razer DeathAdder Elite] on usb-0000:0d:00.4-2.2/input0
+Jan 31 11:31:01 bazzite kernel: input: Razer Razer DeathAdder Elite Keyboard as /devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.2/5-2.2:1.1/0003:1532:005C.0003/input/input3
+Jan 31 11:31:01 bazzite kernel: input: Razer Razer DeathAdder Elite as /devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.2/5-2.2:1.1/0003:1532:005C.0003/input/input4
+Jan 31 11:31:01 bazzite kernel: hid-generic 0003:1532:005C.0003: input,hidraw2: USB HID v1.11 Keyboard [Razer Razer DeathAdder Elite] on usb-0000:0d:00.4-2.2/input1
+Jan 31 11:31:01 bazzite kernel: input: Razer Razer DeathAdder Elite as /devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.2/5-2.2:1.2/0003:1532:005C.0004/input/input5
+Jan 31 11:31:01 bazzite kernel: usb 1-8: New USB device found, idVendor=05e3, idProduct=0608, bcdDevice=60.70
+Jan 31 11:31:01 bazzite kernel: usb 1-8: New USB device strings: Mfr=0, Product=1, SerialNumber=0
+Jan 31 11:31:01 bazzite kernel: usb 1-8: Product: USB2.0 Hub
+Jan 31 11:31:01 bazzite kernel: hub 1-8:1.0: USB hub found
+Jan 31 11:31:01 bazzite kernel: hid-generic 0003:1532:005C.0004: input,hidraw3: USB HID v1.11 Keyboard [Razer Razer DeathAdder Elite] on usb-0000:0d:00.4-2.2/input2
+Jan 31 11:31:01 bazzite kernel: usb 5-2.3: new low-speed USB device number 4 using xhci_hcd
+Jan 31 11:31:01 bazzite kernel: usb 5-2.3: New USB device found, idVendor=1a2c, idProduct=2124, bcdDevice= 1.10
+Jan 31 11:31:01 bazzite kernel: usb 5-2.3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Jan 31 11:31:01 bazzite kernel: usb 5-2.3: Product: USB Keyboard
+Jan 31 11:31:01 bazzite kernel: usb 5-2.3: Manufacturer: SEM
+Jan 31 11:31:01 bazzite kernel: input: SEM USB Keyboard as /devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.3/5-2.3:1.0/0003:1A2C:2124.0005/input/input6
+Jan 31 11:31:01 bazzite kernel: hid-generic 0003:1A2C:2124.0005: input,hidraw4: USB HID v1.10 Keyboard [SEM USB Keyboard] on usb-0000:0d:00.4-2.3/input0
+Jan 31 11:31:01 bazzite kernel: input: SEM USB Keyboard Consumer Control as /devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.3/5-2.3:1.1/0003:1A2C:2124.0006/input/input7
+Jan 31 11:31:02 bazzite kernel: input: SEM USB Keyboard System Control as /devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.3/5-2.3:1.1/0003:1A2C:2124.0006/input/input8
+Jan 31 11:31:02 bazzite kernel: hid-generic 0003:1A2C:2124.0006: input,hidraw5: USB HID v1.10 Device [SEM USB Keyboard] on usb-0000:0d:00.4-2.3/input1
+Jan 31 11:31:02 bazzite kernel: nvme nvme0: pci function 0000:04:00.0
+Jan 31 11:31:02 bazzite kernel: nvme nvme0: bad crto:14 cap:8100030f00100ff
+Jan 31 11:31:02 bazzite kernel: nvme nvme0: allocated 64 MiB host memory buffer (1 segment).
+Jan 31 11:31:02 bazzite kernel: nvme nvme0: 16/0/0 default/read/poll queues
+Jan 31 11:31:02 bazzite kernel:  nvme0n1: p1 p2 p3 p4 p5 p6
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 7 <sdma_v7_0>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: ring sdma0 uses VM inv eng 8 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: ring sdma1 uses VM inv eng 9 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: detected ip block number 7 <sdma_v5_2>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring sdma0 uses VM inv eng 13 on hub 0
+Jan 31 11:31:04 bazzite kernel: BTRFS: device label bazzite_bazzite devid 1 transid 5382 /dev/nvme0n1p6 (259:6) scanned by mount (705)
+Jan 31 11:31:04 bazzite kernel: BTRFS info (device nvme0n1p6): first mount of filesystem 23c09f1d-5446-49d1-a5cf-a50a020c9e64
+Jan 31 11:31:04 bazzite kernel: BTRFS info (device nvme0n1p6): using crc32c (crc32c-lib) checksum algorithm
+Jan 31 11:31:04 bazzite kernel: BTRFS info (device nvme0n1p6): enabling ssd optimizations
+Jan 31 11:31:04 bazzite kernel: BTRFS info (device nvme0n1p6): turning on async discard
+Jan 31 11:31:04 bazzite kernel: BTRFS info (device nvme0n1p6): enabling free space tree
+Jan 31 17:31:05 bazzite systemd[1]: Listening on systemd-mountfsd.socket - DDI File System Mounter Socket.
+Jan 31 17:31:06 bazzite udevadm[859]: systemd-udev-settle.service is deprecated. Please fix sddm.service not to pull it in.
+Jan 31 17:31:06 bazzite mtp-probe[925]: checking bus 5, device 3: "/sys/devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.2"
+Jan 31 17:31:06 bazzite mtp-probe[927]: checking bus 5, device 4: "/sys/devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.3"
+Jan 31 17:31:06 bazzite kernel: Adding 15992316k swap on /dev/zram0.  Priority:100 extents:1 across:15992316k SSDsc
+Jan 31 17:31:06 bazzite kernel: input: Razer Razer DeathAdder Elite as /devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.2/5-2.2:1.0/0003:1532:005C.0002/input/input10
+Jan 31 17:31:06 bazzite kernel: razermouse 0003:1532:005C.0002: input,hidraw1: USB HID v1.11 Mouse [Razer Razer DeathAdder Elite] on usb-0000:0d:00.4-2.2/input0
+Jan 31 17:31:06 bazzite mtp-probe[962]: checking bus 1, device 2: "/sys/devices/pci0000:00/0000:00:02.1/0000:05:00.0/0000:06:0c.0/0000:0b:00.0/usb1/1-7"
+Jan 31 17:31:06 bazzite systemd-fsck[970]: fsck.fat 4.2 (2021-01-31)
+Jan 31 17:31:06 bazzite systemd-fsck[970]: /dev/nvme0n1p1: 215 files, 19306/65536 clusters
+Jan 31 17:31:06 bazzite kernel: input: Razer Razer DeathAdder Elite as /devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.2/5-2.2:1.1/0003:1532:005C.0003/input/input13
+Jan 31 17:31:06 bazzite kernel: usbcore: registered new interface driver btusb
+Jan 31 17:31:06 bazzite kernel: razermouse 0003:1532:005C.0003: input,hidraw2: USB HID v1.11 Keyboard [Razer Razer DeathAdder Elite] on usb-0000:0d:00.4-2.2/input1
+Jan 31 17:31:06 bazzite kernel: input: Razer Razer DeathAdder Elite as /devices/pci0000:00/0000:00:08.1/0000:0d:00.4/usb5/5-2/5-2.2/5-2.2:1.2/0003:1532:005C.0004/input/input25
+Jan 31 17:31:06 bazzite kernel: razermouse 0003:1532:005C.0004: input,hidraw3: USB HID v1.11 Keyboard [Razer Razer DeathAdder Elite] on usb-0000:0d:00.4-2.2/input2
+Jan 31 17:31:06 bazzite systemd[1]: usr-share-sddm-themes.mount: Directory /usr/share/sddm/themes to mount over is not empty, mounting anyway.
+Jan 31 17:31:06 bazzite systemd[1]: Mounting usr-share-sddm-themes.mount - KDE writable sddm workaround...
+Jan 31 17:31:06 bazzite kernel: EXT4-fs (nvme0n1p3): mounted filesystem c395bbee-04a7-42fe-8a67-afbeab9ef796 r/w with ordered data mode. Quota mode: none.
+Jan 31 17:31:06 bazzite systemd[1]: Mounted usr-share-sddm-themes.mount - KDE writable sddm workaround.
+Jan 31 17:31:08 bazzite systemd[1]: Listening on avahi-daemon.socket - Avahi mDNS/DNS-SD Stack Activation Socket.
+Jan 31 17:31:08 bazzite systemd[1]: Listening on sssd-kcm.socket - SSSD Kerberos Cache Manager responder socket.
+Jan 31 17:31:08 bazzite systemd[1]: Starting avahi-daemon.service - Avahi mDNS/DNS-SD Stack...
+Jan 31 17:31:08 bazzite systemd[1]: sssd.service - System Security Services Daemon was skipped because no trigger condition checks were met.
+Jan 31 17:31:08 bazzite systemd[1]: vmtoolsd.service - Service for virtual machines hosted on VMware was skipped because of an unmet condition check (ConditionVirtualization=vmware).
+Jan 31 17:31:08 bazzite bluetoothd[1349]: Starting SDP server
+Jan 31 17:31:08 bazzite smartd[1360]: Device: /dev/nvme0, opened
+Jan 31 17:31:08 bazzite smartd[1360]: Device: /dev/nvme0, SLEG-860-1TBI-S58, S/N:2P15291HQ6KE, FW:X1105E00, 1.02 TB
+Jan 31 17:31:08 bazzite kernel: nvme nvme0: using unchecked data buffer
+Jan 31 17:31:08 bazzite smartd[1360]: Device: /dev/nvme0, is SMART capable. Adding to "monitor" list.
+Jan 31 17:31:08 bazzite smartd[1360]: Monitoring 0 ATA/SATA, 0 SCSI/SAS and 1 NVMe devices
+Jan 31 17:31:08 bazzite systemd[1]: Started avahi-daemon.service - Avahi mDNS/DNS-SD Stack.
+Jan 31 17:31:08 bazzite ublue-os-media-automount.py[1368]: Skipping /dev/nvme0n1p1: unsupported filesystem type 'vfat'
+Jan 31 17:31:08 bazzite ublue-os-media-automount.py[1368]: Skipping /dev/nvme0n1p2: unsupported filesystem type 'None'
+Jan 31 17:31:08 bazzite ublue-os-media-automount.py[1368]: Skipping /dev/nvme0n1p3: already in fstab
+Jan 31 17:31:08 bazzite ublue-os-media-automount.py[1368]: Skipping /dev/nvme0n1p4: unsupported filesystem type 'ntfs'
+Jan 31 17:31:08 bazzite ublue-os-media-automount.py[1368]: Skipping /dev/nvme0n1p5: unsupported filesystem type 'ntfs'
+Jan 31 17:31:08 bazzite ublue-os-media-automount.py[1368]: Skipping /dev/nvme0n1p6: already in fstab
+Jan 31 17:31:08 bazzite systemd-logind[1389]: Watching system buttons on /dev/input/event6 (SEM USB Keyboard)
+Jan 31 17:31:08 bazzite systemd-logind[1389]: Watching system buttons on /dev/input/event7 (SEM USB Keyboard Consumer Control)
+Jan 31 17:31:08 bazzite systemd-logind[1389]: Watching system buttons on /dev/input/event8 (SEM USB Keyboard System Control)
+Jan 31 17:31:08 bazzite kernel: block nvme0n1: No UUID available providing old NGUID
+Jan 31 17:31:09 bazzite NetworkManager[1545]: <info>  [1769902269.2485] Read config: /etc/NetworkManager/NetworkManager.conf, /usr/lib/NetworkManager/conf.d/{20-connectivity-fedora.conf,22-wifi-mac-addr.conf,50-iwd.conf,51-iwd-config.conf,99-nvme-nbft-no-ignore-carrier.conf}
+Jan 31 17:31:09 bazzite systemd[1]: rpc-gssd.service - RPC security service for NFS client and server was skipped because of an unmet condition check (ConditionPathExists=/etc/krb5.keytab).
+Jan 31 17:31:10 bazzite systemd[1]: Started sddm.service - Simple Desktop Display Manager.
+Jan 31 17:31:10 bazzite audit[1]: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=sddm comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite sddm-helper[1792]: Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Jan 31 17:31:10 bazzite audit[1792]: AUDIT1100 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:authentication grantors=pam_permit acct="sddm" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite audit[1792]: AUDIT1101 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_permit acct="sddm" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite audit[1792]: AUDIT1103 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_permit acct="sddm" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite sddm-helper[1792]: pam_unix(sddm-greeter:session): session opened for user sddm(uid=969) by (uid=0)
+Jan 31 17:31:10 bazzite systemd-logind[1389]: New session 'c1' of user 'sddm' with class 'greeter' and type 'wayland'.
+Jan 31 17:31:10 bazzite audit[1812]: AUDIT1101 pid=1812 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:accounting grantors=pam_unix acct="sddm" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite audit[1812]: AUDIT1103 pid=1812 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:setcred grantors=? acct="sddm" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=failed'
+Jan 31 17:31:10 bazzite systemd-logind[1389]: New session '1' of user 'sddm' with class 'manager-early' and type 'unspecified'.
+Jan 31 17:31:10 bazzite (systemd)[1812]: pam_unix(systemd-user:session): session opened for user sddm(uid=969) by sddm(uid=0)
+Jan 31 17:31:10 bazzite audit[1812]: AUDIT1105 pid=1812 uid=0 auid=969 ses=1 subj=system_u:system_r:init_t:s0 msg='op=PAM:session_open grantors=pam_selinux,pam_selinux,pam_loginuid,pam_keyinit,pam_namespace,pam_systemd_home,pam_umask,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="sddm" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:10 bazzite systemd[1]: Started session-c1.scope - Session c1 of User sddm.
+Jan 31 17:31:10 bazzite audit[1792]: AUDIT1105 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_unix,pam_systemd acct="sddm" exe="/usr/libexec/sddm-helper" hostname=bazzite addr=? terminal=/dev/tty1 res=success'
+Jan 31 17:31:10 bazzite dbus-broker-launch[1839]: Policy to allow eavesdropping in /usr/share/dbus-1/session.conf +31: Eavesdropping is deprecated and ignored
+Jan 31 17:31:10 bazzite dbus-broker-launch[1839]: Policy to allow eavesdropping in /usr/share/dbus-1/session.conf +33: Eavesdropping is deprecated and ignored
+Jan 31 17:31:10 bazzite sddm-helper-start-wayland[1838]: "No backend specified, automatically choosing drm\n"
+Jan 31 17:31:10 bazzite sddm-helper-start-wayland[1838]: "Accepting client connections on sockets: QList(\"wayland-0\")\n"
+Jan 31 17:31:10 bazzite sddm-helper-start-wayland[1838]: "kwin_core: EDID colorimetry xy(0, 0) xy(0, 0) xy(0, 0) xy(0, 0) is invalid\n"
+Jan 31 17:31:10 bazzite sddm-greeter-qt6[1847]: Loading file:///usr/share/sddm/themes/01-breeze-fedora/Main.qml...
+Jan 31 17:31:10 bazzite sddm-helper-start-wayland[1838]: "QSoundEffect(pulseaudio): Error decoding source file:///usr/share/maliit/keyboard2/sounds/key_tick2_quiet.wav\n"
+Jan 31 17:31:11 bazzite sddm-helper-start-wayland[1838]: "QSGContext::initialize: depth buffer support missing, expect rendering errors\nQSGContext::initialize: stencil buffer support missing, expect rendering errors\n"
+Jan 31 17:31:19 bazzite.something.smwhre sddm-greeter-qt6[1847]: file:///usr/share/sddm/themes/01-breeze-fedora/Main.qml:241:17 Parameter "username" is not declared. Injection of parameters into signal handlers is deprecated. Use JavaScript functions with formal parameters instead.
+Jan 31 17:31:19 bazzite.something.smwhre sddm-helper[2108]: Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[2108]: pam_kwallet5(sddm:auth): pam_kwallet5: pam_sm_authenticate
+Jan 31 17:31:20 bazzite.something.smwhre audit[2108]: AUDIT1100 pid=2108 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:authentication grantors=pam_unix acct="projectUser" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:20 bazzite.something.smwhre audit[2108]: AUDIT1101 pid=2108 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="projectUser" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:20 bazzite.something.smwhre audit[2108]: AUDIT1103 pid=2108 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_unix acct="projectUser" exe="/usr/libexec/sddm-helper" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[2108]: pam_kwallet5(sddm:setcred): pam_kwallet5: pam_sm_setcred
+Jan 31 17:31:20 bazzite.something.smwhre audit[2108]: AUDIT2300 pid=2108 uid=0 auid=1000 ses=2 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=pam_selinux default-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 selected-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 exe="/usr/libexec/sddm-helper" hostname=bazzite.something.smwhre addr=? terminal=/dev/tty2 res=success'
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper-start-wayland[1838]: Stopping... "kwin_wayland"
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper-start-wayland[1838]: "kwin_scene_opengl: Could not delete render time query because no context is current\nkwin_scene_opengl: Could not delete render time query because no context is current\n"
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[1792]: pam_unix(sddm-greeter:session): session closed for user sddm
+Jan 31 17:31:20 bazzite.something.smwhre audit[1792]: AUDIT1106 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_unix,pam_systemd acct="sddm" exe="/usr/libexec/sddm-helper" hostname=bazzite addr=? terminal=/dev/tty1 res=success'
+Jan 31 17:31:20 bazzite.something.smwhre audit[1792]: AUDIT1104 pid=1792 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_permit acct="sddm" exe="/usr/libexec/sddm-helper" hostname=bazzite addr=? terminal=/dev/tty1 res=success'
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[2108]: pam_unix(sddm:session): session opened for user projectUser(uid=1000) by projectUser(uid=0)
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[2108]: pam_kwallet5(sddm:session): pam_kwallet5: pam_sm_open_session
+Jan 31 17:31:20 bazzite.something.smwhre audit[2108]: AUDIT1105 pid=2108 uid=0 auid=1000 ses=2 subj=system_u:system_r:xdm_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_selinux,pam_loginuid,pam_selinux,pam_keyinit,pam_namespace,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_kwallet5,pam_umask,pam_lastlog2 acct="projectUser" exe="/usr/libexec/sddm-helper" hostname=bazzite.something.smwhre addr=? terminal=/dev/tty2 res=success'
+Jan 31 17:31:20 bazzite.something.smwhre sddm-helper[2108]: Starting Wayland user session: "/etc/sddm/wayland-session" "/usr/libexec/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland"
+Jan 31 17:31:21 bazzite.something.smwhre cupsd[1641]: REQUEST localhost - - "POST / HTTP/1.1" 200 303 Create-Printer-Subscriptions successful-ok
+Jan 31 17:31:22 bazzite.something.smwhre cupsd[1641]: REQUEST localhost - - "POST / HTTP/1.1" 200 564 Create-Printer-Subscriptions successful-ok
+Jan 31 17:33:18 bazzite.something.smwhre systemd[1]: Starting sssd-kcm.service - SSSD Kerberos Cache Manager...
+Jan 31 17:33:18 bazzite.something.smwhre systemd[1]: Started sssd-kcm.service - SSSD Kerberos Cache Manager.
+Jan 31 17:33:18 bazzite.something.smwhre audit[1]: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=sssd-kcm comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:33:18 bazzite.something.smwhre sssd_kcm[4212]: Starting up
+Jan 31 17:33:52 bazzite.something.smwhre kernel: usb 2-1: new SuperSpeed USB device number 2 using xhci_hcd
+Jan 31 17:33:52 bazzite.something.smwhre kernel: usb 2-1: New USB device found, idVendor=18a5, idProduct=0243, bcdDevice= 1.10
+Jan 31 17:33:52 bazzite.something.smwhre kernel: usb 2-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Jan 31 17:33:52 bazzite.something.smwhre kernel: usb 2-1: Product: STORE N GO
+Jan 31 17:33:52 bazzite.something.smwhre kernel: usb 2-1: Manufacturer: Verbatim
+Jan 31 17:33:52 bazzite.something.smwhre kernel: usb 2-1: SerialNumber: 07183A4116F24171
+Jan 31 17:33:52 bazzite.something.smwhre mtp-probe[4322]: checking bus 2, device 2: "/sys/devices/pci0000:00/0000:00:02.1/0000:05:00.0/0000:06:0c.0/0000:0b:00.0/usb2/2-1"
+Jan 31 17:33:52 bazzite.something.smwhre kernel: usb-storage 2-1:1.0: USB Mass Storage device detected
+Jan 31 17:33:52 bazzite.something.smwhre kernel: scsi host7: usb-storage 2-1:1.0
+Jan 31 17:33:52 bazzite.something.smwhre kernel: usbcore: registered new interface driver usb-storage
+Jan 31 17:33:52 bazzite.something.smwhre kernel: usbcore: registered new interface driver uas
+Jan 31 17:33:52 bazzite.something.smwhre mtp-probe[4331]: checking bus 2, device 2: "/sys/devices/pci0000:00/0000:00:02.1/0000:05:00.0/0000:06:0c.0/0000:0b:00.0/usb2/2-1"
+Jan 31 17:33:54 bazzite.something.smwhre kernel: sd 7:0:0:0: Attached scsi generic sg0 type 0
+Jan 31 17:33:54 bazzite.something.smwhre kernel: sd 7:0:0:0: [sda] 121145344 512-byte logical blocks: (62.0 GB/57.8 GiB)
+Jan 31 17:33:54 bazzite.something.smwhre kernel: sd 7:0:0:0: [sda] Write Protect is off
+Jan 31 17:33:54 bazzite.something.smwhre kernel: sd 7:0:0:0: [sda] Mode Sense: 45 00 00 00
+Jan 31 17:33:54 bazzite.something.smwhre kernel: sd 7:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+Jan 31 17:33:54 bazzite.something.smwhre kernel:  sda: sda1
+Jan 31 17:33:54 bazzite.something.smwhre kernel: sd 7:0:0:0: [sda] Attached SCSI removable disk
+Jan 31 17:34:10 bazzite.something.smwhre kernel: FAT-fs (sda1): Volume was not properly unmounted. Some data may be corrupt. Please run fsck.
+Jan 31 17:34:24 bazzite.something.smwhre cupsd[1641]: REQUEST localhost - - "POST / HTTP/1.1" 200 154 Cancel-Subscription successful-ok
+Jan 31 17:34:24 bazzite.something.smwhre sddm-helper[2108]: Signal received: SIGTERM
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Authentication error: SDDM::Auth::ERROR_INTERNAL "Process crashed"
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Auth: sddm-helper (--socket /tmp/sddm-auth-fa820e0e-dc06-430f-9256-5f742d7fd8b0 --id 1 --start /usr/libexec/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland --user projectUser) crashed (exit code 1)
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Authentication error: SDDM::Auth::ERROR_INTERNAL "Process crashed"
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Auth: sddm-helper exited with 1
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopping avahi-daemon.service - Avahi mDNS/DNS-SD Stack...
+Jan 31 17:34:24 bazzite.something.smwhre bluetoothd[1349]: Stopping SDP server
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Signal received: SIGTERM
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopping sddm.service - Simple Desktop Display Manager...
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopping sssd-kcm.service - SSSD Kerberos Cache Manager...
+Jan 31 17:34:24 bazzite.something.smwhre sssd_kcm[4212]: Shutting down (status = 0)
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopped avahi-daemon.service - Avahi mDNS/DNS-SD Stack.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: sddm.service: Deactivated successfully.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopped sddm.service - Simple Desktop Display Manager.
+Jan 31 17:34:24 bazzite.something.smwhre audit[1]: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=sddm comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: sssd-kcm.service: Deactivated successfully.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopped sssd-kcm.service - SSSD Kerberos Cache Manager.
+Jan 31 17:34:24 bazzite.something.smwhre audit[1]: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=sssd-kcm comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:34:25 bazzite.something.smwhre systemd[1]: Closed avahi-daemon.socket - Avahi mDNS/DNS-SD Stack Activation Socket.
+Jan 31 17:34:25 bazzite.something.smwhre systemd[1]: sssd-kcm.socket: Deactivated successfully.
+Jan 31 17:34:25 bazzite.something.smwhre systemd[1]: Closed sssd-kcm.socket - SSSD Kerberos Cache Manager responder socket.
+Jan 31 17:34:25 bazzite.something.smwhre systemd[1]: systemd-mountfsd.socket: Deactivated successfully.
+Jan 31 17:34:25 bazzite.something.smwhre systemd[1]: Closed systemd-mountfsd.socket - DDI File System Mounter Socket.
+Jan 31 17:34:25 bazzite.something.smwhre systemd[1]: Unmounting usr-share-sddm-themes.mount - KDE writable sddm workaround...

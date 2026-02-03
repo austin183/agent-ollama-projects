@@ -1,0 +1,25 @@
+projectUser@bazzite:~/FullLogs20260101$ grep -iE "warn|err" full_journal_ctl_system_2026-01-31
+Jan 31 11:31:01 bazzite kernel: ACPI: Using IOAPIC for interrupt routing
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKA configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKB configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKC configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKD configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKE configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKF configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKG configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKH configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: AMD-Vi: Interrupt remapping enabled
+Jan 31 11:31:01 bazzite kernel: hub 8-0:1.0: config failed, hub doesn't have any ports! (err -19)
+Jan 31 11:31:01 bazzite kernel: fbcon: Deferring console take-over
+Jan 31 11:31:01 bazzite kernel: RAS: Correctable Errors collector initialized.
+Jan 31 11:31:04 bazzite kernel: fbcon: Deferring console take-over
+Jan 31 17:31:08 bazzite input-remapper-service[1356]: /usr/lib/python3.14/site-packages/inputremapper/configs/input_config.py:30: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+Jan 31 17:31:10 bazzite sddm-helper-start-wayland[1838]: "QSoundEffect(pulseaudio): Error decoding source file:///usr/share/maliit/keyboard2/sounds/key_tick2_quiet.wav\n"
+Jan 31 17:31:11 bazzite sddm-helper-start-wayland[1838]: "QSGContext::initialize: depth buffer support missing, expect rendering errors\nQSGContext::initialize: stencil buffer support missing, expect rendering errors\n"
+Jan 31 17:31:23 bazzite.something.smwhre input-remapper-service[1356]: ERROR: "/home/projectUser/.config/input-remapper-2/config.json" does not exist
+Jan 31 17:31:23 bazzite.something.smwhre input-remapper-service[1356]: ERROR: "/home/projectUser/.config/input-remapper-2/config.json" does not exist
+Jan 31 17:31:23 bazzite.something.smwhre input-remapper-service[1356]: ERROR: "/home/projectUser/.config/input-remapper-2/config.json" does not exist
+Jan 31 17:31:23 bazzite.something.smwhre input-remapper-service[1356]: ERROR: "/home/projectUser/.config/input-remapper-2/config.json" does not exist
+Jan 31 17:31:23 bazzite.something.smwhre input-remapper-service[1356]: ERROR: Request to autoload all before a user told the service about their session using set_config_dir
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Authentication error: SDDM::Auth::ERROR_INTERNAL "Process crashed"
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Authentication error: SDDM::Auth::ERROR_INTERNAL "Process crashed"

@@ -1,0 +1,135 @@
+projectUser@bazzite:~/FullLogs20260101$ grep -i amdgpu full_journal_ctl_system_2026-01-31
+Jan 31 11:31:03 bazzite kernel: [drm] amdgpu kernel modesetting enabled.
+Jan 31 11:31:03 bazzite kernel: amdgpu: vga_switcheroo: detected switching method \_SB_.PCI0.GP17.VGA_.ATPX handle
+Jan 31 11:31:03 bazzite kernel: amdgpu: ATPX version 1, functions 0x00000000
+Jan 31 11:31:03 bazzite kernel: amdgpu: Virtual CRAT table created for CPU
+Jan 31 11:31:03 bazzite kernel: amdgpu: Topology: Add CPU node
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: enabling device (0006 -> 0007)
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: initializing kernel modesetting (IP DISCOVERY 0x1002:0x7550 0x1043:0x0633 0xC0).
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: register mmio base: 0xF6C00000
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: register mmio size: 524288
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 0 <soc24_common>
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 1 <gmc_v12_0>
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 2 <ih_v7_0>
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 3 <psp>
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 4 <smu>
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 5 <dm>
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 6 <gfx_v12_0>
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 7 <sdma_v7_0>
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 8 <vcn_v5_0_0>
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 9 <jpeg_v5_0_0>
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: detected ip block number 10 <mes_v12_0>
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: Fetched VBIOS from VFCT
+Jan 31 11:31:03 bazzite kernel: amdgpu: ATOM BIOS: 115-G295BP00-100
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: vgaarb: deactivate vga console
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: Trusted Memory Zone (TMZ) feature not supported
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: MEM ECC is not presented.
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: SRAM ECC is not presented.
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: vm size is 262144 GB, 4 levels, block size is 9-bit, fragment size is 9-bit
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: VRAM: 16304M 0x0000008000000000 - 0x00000083FAFFFFFF (16304M used)
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: GART: 512M 0x0000000000000000 - 0x000000001FFFFFFF
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: amdgpu: 16304M of VRAM memory ready
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: amdgpu: 15617M of GTT memory ready.
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: PCIE GART of 512M enabled (table at 0x00000083DAB00000).
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] Loading DMUB firmware via PSP: version=0x0A000700
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: Found VCN firmware Version ENC: 1.11 DEC: 9 VEP: 0 Revision: 1
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: RAP: optional rap ta ucode is not available
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: SECUREDISPLAY: optional securedisplay ta ucode is not available
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: smu driver if version = 0x0000002e, smu fw if version = 0x00000032, smu fw program = 0, smu fw version = 0x00684b00 (104.75.0)
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: SMU driver if version not matched
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: SMU is initialized successfully!
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] Display Core v3.2.340 initialized on DCN 4.0.1
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] DP-HDMI FRL PCON supported
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] DMUB hardware initialized: version=0x0A000700
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: [drm] REG_WAIT timeout 1us * 150000 tries - optc401_disable_crtc line:230
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: program CP_MES_CNTL : 0x4000000
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: program CP_MES_CNTL : 0xc000000
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: MES FW version must be >= 0x82 to enable LR compute workaround.
+Jan 31 11:31:04 bazzite kernel: kfd kfd: amdgpu: Allocated 3969056 bytes on gart
+Jan 31 11:31:04 bazzite kernel: kfd kfd: amdgpu: Total number of KFD nodes to be created: 1
+Jan 31 11:31:04 bazzite kernel: amdgpu: Virtual CRAT table created for GPU
+Jan 31 11:31:04 bazzite kernel: amdgpu: Topology: Add dGPU node [0x7550:0x1002]
+Jan 31 11:31:04 bazzite kernel: kfd kfd: amdgpu: added device 1002:7550
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: SE 4, SH per SE 2, CU per SH 8, active_cu_number 64
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: ring gfx_0.0.0 uses VM inv eng 0 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: ring comp_1.0.0 uses VM inv eng 1 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: ring comp_1.1.0 uses VM inv eng 4 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: ring comp_1.0.1 uses VM inv eng 6 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: ring comp_1.1.1 uses VM inv eng 7 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: ring sdma0 uses VM inv eng 8 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: ring sdma1 uses VM inv eng 9 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: ring vcn_unified_0 uses VM inv eng 0 on hub 8
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: ring jpeg_dec uses VM inv eng 1 on hub 8
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: Using BACO for runtime pm
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: [drm] Registered 4 planes with drm panic
+Jan 31 11:31:04 bazzite kernel: [drm] Initialized amdgpu 3.64.0 for 0000:03:00.0 on minor 1
+Jan 31 11:31:04 bazzite kernel: fbcon: amdgpudrmfb (fb0) is primary device
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: [drm] fb0: amdgpudrmfb frame buffer device
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: enabling device (0006 -> 0007)
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: initializing kernel modesetting (IP DISCOVERY 0x1002:0x13C0 0x1043:0x8877 0xCB).
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: register mmio base: 0xF6700000
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: register mmio size: 524288
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: detected ip block number 0 <nv_common>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: detected ip block number 1 <gmc_v10_0>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: detected ip block number 2 <navi10_ih>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: detected ip block number 3 <psp>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: detected ip block number 4 <smu>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: detected ip block number 5 <dm>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: detected ip block number 6 <gfx_v10_0>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: detected ip block number 7 <sdma_v5_2>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: detected ip block number 8 <vcn_v3_0>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: detected ip block number 9 <jpeg_v3_0>
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: Fetched VBIOS from VFCT
+Jan 31 11:31:04 bazzite kernel: amdgpu: ATOM BIOS: 102-RAPHAEL-008
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: Trusted Memory Zone (TMZ) feature disabled as experimental (default)
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: vm size is 262144 GB, 4 levels, block size is 9-bit, fragment size is 9-bit
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: VRAM: 512M 0x000000F400000000 - 0x000000F41FFFFFFF (512M used)
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: GART: 1024M 0x0000000000000000 - 0x000000003FFFFFFF
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: amdgpu: 512M of VRAM memory ready
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: amdgpu: 15617M of GTT memory ready.
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: [drm] Loading DMUB firmware via PSP: version=0x05002E00
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: Found VCN firmware Version ENC: 1.33 DEC: 4 VEP: 0 Revision: 14
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: reserve 0xa00000 from 0xf41e000000 for PSP TMR
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: RAS: optional ras ta ucode is not available
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: RAP: optional rap ta ucode is not available
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: SECUREDISPLAY: optional securedisplay ta ucode is not available
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: SMU is initialized successfully!
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: [drm] Display Core v3.2.340 initialized on DCN 3.1.5
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: [drm] DP-HDMI FRL PCON supported
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: [drm] DMUB hardware initialized: version=0x05002E00
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: kiq ring mec 2 pipe 1 q 0
+Jan 31 11:31:04 bazzite kernel: kfd kfd: amdgpu: Allocated 3969056 bytes on gart
+Jan 31 11:31:04 bazzite kernel: kfd kfd: amdgpu: Total number of KFD nodes to be created: 1
+Jan 31 11:31:04 bazzite kernel: amdgpu: Virtual CRAT table created for GPU
+Jan 31 11:31:04 bazzite kernel: amdgpu: Topology: Add dGPU node [0x13c0:0x1002]
+Jan 31 11:31:04 bazzite kernel: kfd kfd: amdgpu: added device 1002:13c0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: SE 1, SH per SE 1, CU per SH 2, active_cu_number 2
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring gfx_0.0.0 uses VM inv eng 0 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring gfx_0.1.0 uses VM inv eng 1 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring comp_1.0.0 uses VM inv eng 4 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring comp_1.1.0 uses VM inv eng 5 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring comp_1.2.0 uses VM inv eng 6 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring comp_1.3.0 uses VM inv eng 7 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring comp_1.0.1 uses VM inv eng 8 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring comp_1.1.1 uses VM inv eng 9 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring comp_1.2.1 uses VM inv eng 10 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring comp_1.3.1 uses VM inv eng 11 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring kiq_0.2.1.0 uses VM inv eng 12 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring sdma0 uses VM inv eng 13 on hub 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring vcn_dec_0 uses VM inv eng 0 on hub 8
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring vcn_enc_0.0 uses VM inv eng 1 on hub 8
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring vcn_enc_0.1 uses VM inv eng 4 on hub 8
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: ring jpeg_dec uses VM inv eng 5 on hub 8
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: Runtime PM not available
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: [drm] Registered 4 planes with drm panic
+Jan 31 11:31:04 bazzite kernel: [drm] Initialized amdgpu 3.64.0 for 0000:0d:00.0 on minor 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: [drm] Cannot find any crtc or sizes
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: [drm] REG_WAIT timeout 1us * 150000 tries - optc401_disable_crtc line:230
+Jan 31 17:31:06 bazzite kernel: snd_hda_intel 0000:0d:00.1: bound 0000:0d:00.0 (ops amdgpu_dm_audio_component_bind_ops [amdgpu])
+Jan 31 17:31:06 bazzite kernel: snd_hda_intel 0000:03:00.1: bound 0000:03:00.0 (ops amdgpu_dm_audio_component_bind_ops [amdgpu])

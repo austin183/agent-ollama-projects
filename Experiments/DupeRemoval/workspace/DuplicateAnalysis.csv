@@ -1,0 +1,15 @@
+Group ID,Folder,Filename,Size (KB),Match %,Decision,Rationale
+8,/Users/User1/Pictures/Dogs/Bargabah,20161001_155509.jpg,11341,100,KEEP,Main source folder
+8,/Users/User1/PhoneCopy/Bargabah,20161001_155509.jpg,11341,100,ARCHIVE,Backup/secondary location
+9,/Users/User1/Pictures/Dogs/Bargabah,20161001_155516.jpg,12589,100,KEEP,Main source folder
+9,/Users/User1/PhoneCopy/Bargabah,20161001_155516.jpg,12589,100,ARCHIVE,Backup/secondary location
+10,/Users/User1/Pictures/Dogs/Bargabah,20161001_165757.jpg,10613,100,KEEP,Main source folder
+10,/Users/User1/PhoneCopy/Bargabah,20161001_165757.jpg,10613,100,ARCHIVE,Backup/secondary location
+29,/Users/User1/Pictures/Friends,20161008_180223(0).jpg,9755,100,KEEP,Main source folder
+29,/Users/User1/PhoneCopy/Camera,20161008_180223(0).jpg,9755,100,ARCHIVE,Backup/secondary location
+30,/Users/User1/PhoneCopy/Camera,20161008_180223.jpg,9311,100,ARCHIVE,Backup/secondary location
+30,/Users/User1/Pictures/Friends,20161008_180223.jpg,9311,100,KEEP,Main source folder
+2897,/Users/UserA/Pictures/Friends,anonymized_file.ai,623,100,KEEP,Main source folder
+2897,/Users/UserA/Pictures/Friends/Uncategorized,anonymized_file.ai,623,100,KEEP,Main source folder
+2898,/Users/UserA/Music/Musician,AlbumArt_{097DA2D8-8D1F-400A-8052-F85E1DA4BBBF}_Large.jpg,15,100,KEEP,Main source folder
+2898,/Users/UserA/Music/Musician,Folder.jpg,15,100,KEEP,Main source folder

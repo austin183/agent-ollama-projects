@@ -1,0 +1,179 @@
+projectUser@bazzite:~/FullLogs20260101$ grep -iE "acpi|power|dc" full_journal_ctl_system_2026-01-31
+Jan 31 11:31:01 bazzite kernel: Command line: BOOT_IMAGE=(hd0,gpt3)/ostree/default-374696162330b925549cee64679444d2440b032ade6a444374bbbc9dc43853ec/vmlinuz-6.17.7-ba25.fc43.x86_64 ostree=/ostree/boot.0/default/374696162330b925549cee64679444d2440b032ade6a444374bbbc9dc43853ec/0 rhgb quiet root=UUID=23c09f1d-5446-49d1-a5cf-a50a020c9e64 vconsole.keymap=us rootflags=subvol=root rw bluetooth.disable_ertm=1
+Jan 31 11:31:01 bazzite kernel: BIOS-e820: [mem 0x000000000a200000-0x000000000a21dfff] ACPI NVS
+Jan 31 11:31:01 bazzite kernel: BIOS-e820: [mem 0x0000000071d91000-0x0000000071f2dfff] ACPI data
+Jan 31 11:31:01 bazzite kernel: BIOS-e820: [mem 0x0000000071f2e000-0x0000000073f2dfff] ACPI NVS
+Jan 31 11:31:01 bazzite kernel: efi: ACPI=0x71f2d000 ACPI 2.0=0x71f2d014 SMBIOS=0x77aa1000 SMBIOS 3.0=0x77aa0000 MEMATTR=0x65fc8018 ESRT=0x68491418 MOKvar=0x77b33000 RNG=0x71de3018
+Jan 31 11:31:01 bazzite kernel: ACPI: Early table checksum verification disabled
+Jan 31 11:31:01 bazzite kernel: ACPI: RSDP 0x0000000071F2D014 000024 (v02 ALASKA)
+Jan 31 11:31:01 bazzite kernel: ACPI: XSDT 0x0000000071F2C728 0000FC (v01 _ASUS_ Desktop  01072009 AMI  01000013)
+Jan 31 11:31:01 bazzite kernel: ACPI: FACP 0x0000000071F21000 000114 (v06 ALASKA A M I    01072009 AMI  00010013)
+Jan 31 11:31:01 bazzite kernel: ACPI: DSDT 0x0000000071F01000 010D52 (v02 ALASKA A M I    01072009 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: FACS 0x0000000073F14000 000040
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071F23000 00816C (v02 AMD    Splinter 00000002 MSFT 05000000)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071F22000 000221 (v02 ALASKA CPUSSDT  01072009 AMI  01072009)
+Jan 31 11:31:01 bazzite kernel: ACPI: FIDT 0x0000000071F16000 00009C (v01 ALASKA A M I    01072009 AMI  00010013)
+Jan 31 11:31:01 bazzite kernel: ACPI: MCFG 0x0000000071F14000 00003C (v01 ALASKA A M I    01072009 MSFT 00010013)
+Jan 31 11:31:01 bazzite kernel: ACPI: HPET 0x0000000071F13000 000038 (v01 ALASKA A M I    01072009 AMI  00000005)
+Jan 31 11:31:01 bazzite kernel: ACPI: FPDT 0x0000000071F12000 000044 (v01 ALASKA A M I    01072009 AMI  01000013)
+Jan 31 11:31:01 bazzite kernel: ACPI: VFCT 0x0000000071EE7000 0194A0 (v01 ALASKA A M I    00000001 AMD  33504F47)
+Jan 31 11:31:01 bazzite kernel: ACPI: WPBT 0x0000000071F1F000 000040 (v01 ALASKA A M I    00000001 ASUS 00000001)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071F1A000 004DEE (v02 AMD    AMD CPU  00000001 AMD  00000001)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071F19000 000041 (v01 AMD    AppCompD 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: BGRT 0x0000000071F18000 000038 (v01 ALASKA A M I    01072009 AMI  00010013)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DFE000 00169E (v02 AMD    CPMDFIG2 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DFB000 002AA6 (v02 AMD    CDFAAIG2 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071F17000 0008BA (v02 AMD    CPMDFDG2 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DF0000 00A62A (v02 AMD    CPMCMN   00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: BGRT 0x0000000071DEF000 000038 (v01 ALASKA A M I    01072009 AMI  00010013)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DEC000 0029D9 (v02 AMD    AOD      00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: WSMT 0x0000000071DEB000 000028 (v01 ALASKA A M I    01072009 AMI  00010013)
+Jan 31 11:31:01 bazzite kernel: ACPI: APIC 0x0000000071DEA000 00015E (v06 ALASKA A M I    01072009 AMI  00010013)
+Jan 31 11:31:01 bazzite kernel: ACPI: IVRS 0x0000000071DE9000 0000C8 (v02 AMD    AmdTable 00000001 AMD  00000001)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DE8000 000500 (v02 AMD    MEMTOOL0 00000002 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DE7000 0009E6 (v02 AMD    CPMMSOSC 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DE6000 00047C (v02 AMD    AMDWOV   00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DE5000 00053E (v01 AMD    CPMAPMFD 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: SSDT 0x0000000071DE4000 00044E (v02 AMD    AmdTable 00000001 INTL 20230331)
+Jan 31 11:31:01 bazzite kernel: ACPI: MSDM 0x0000000071F15000 000055 (v01 _ASUS_ Desktop  00000001 MSFT 00000000)
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving FACP table memory at [mem 0x71f21000-0x71f21113]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving DSDT table memory at [mem 0x71f01000-0x71f11d51]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving FACS table memory at [mem 0x73f14000-0x73f1403f]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f23000-0x71f2b16b]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f22000-0x71f22220]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving FIDT table memory at [mem 0x71f16000-0x71f1609b]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving MCFG table memory at [mem 0x71f14000-0x71f1403b]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving HPET table memory at [mem 0x71f13000-0x71f13037]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving FPDT table memory at [mem 0x71f12000-0x71f12043]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving VFCT table memory at [mem 0x71ee7000-0x71f0049f]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving WPBT table memory at [mem 0x71f1f000-0x71f1f03f]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f1a000-0x71f1eded]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f19000-0x71f19040]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving BGRT table memory at [mem 0x71f18000-0x71f18037]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71dfe000-0x71dff69d]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71dfb000-0x71dfdaa5]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71f17000-0x71f178b9]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71df0000-0x71dfa629]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving BGRT table memory at [mem 0x71def000-0x71def037]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71dec000-0x71dee9d8]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving WSMT table memory at [mem 0x71deb000-0x71deb027]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving APIC table memory at [mem 0x71dea000-0x71dea15d]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving IVRS table memory at [mem 0x71de9000-0x71de90c7]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de8000-0x71de84ff]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de7000-0x71de79e5]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de6000-0x71de647b]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de5000-0x71de553d]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving SSDT table memory at [mem 0x71de4000-0x71de444d]
+Jan 31 11:31:01 bazzite kernel: ACPI: Reserving MSDM table memory at [mem 0x71f15000-0x71f15054]
+Jan 31 11:31:01 bazzite kernel: ACPI: PM-Timer IO Port: 0x808
+Jan 31 11:31:01 bazzite kernel: ACPI: LAPIC_NMI (acpi_id[0xff] high edge lint[0x1])
+Jan 31 11:31:01 bazzite kernel: ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
+Jan 31 11:31:01 bazzite kernel: ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 low level)
+Jan 31 11:31:01 bazzite kernel: ACPI: Using ACPI (MADT) for SMP configuration information
+Jan 31 11:31:01 bazzite kernel: ACPI: HPET id: 0x10228201 base: 0xfed00000
+Jan 31 11:31:01 bazzite kernel: Kernel command line: BOOT_IMAGE=(hd0,gpt3)/ostree/default-374696162330b925549cee64679444d2440b032ade6a444374bbbc9dc43853ec/vmlinuz-6.17.7-ba25.fc43.x86_64 ostree=/ostree/boot.0/default/374696162330b925549cee64679444d2440b032ade6a444374bbbc9dc43853ec/0 rhgb quiet root=UUID=23c09f1d-5446-49d1-a5cf-a50a020c9e64 vconsole.keymap=us rootflags=subvol=root rw bluetooth.disable_ertm=1
+Jan 31 11:31:01 bazzite kernel: Unknown kernel command line parameters "rhgb ostree=/ostree/boot.0/default/374696162330b925549cee64679444d2440b032ade6a444374bbbc9dc43853ec/0", will be passed to user space.
+Jan 31 11:31:01 bazzite kernel: ACPI: Core revision 20250404
+Jan 31 11:31:01 bazzite kernel: ACPI: PM: Registering ACPI NVS region [mem 0x0a200000-0x0a21dfff] (122880 bytes)
+Jan 31 11:31:01 bazzite kernel: ACPI: PM: Registering ACPI NVS region [mem 0x71f2e000-0x73f2dfff] (33554432 bytes)
+Jan 31 11:31:01 bazzite kernel: acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
+Jan 31 11:31:01 bazzite kernel: ACPI: Added _OSI(Module Device)
+Jan 31 11:31:01 bazzite kernel: ACPI: Added _OSI(Processor Device)
+Jan 31 11:31:01 bazzite kernel: ACPI: Added _OSI(Processor Aggregator Device)
+Jan 31 11:31:01 bazzite kernel: ACPI: 15 ACPI AML tables successfully acquired and loaded
+Jan 31 11:31:01 bazzite kernel: ACPI: Interpreter enabled
+Jan 31 11:31:01 bazzite kernel: ACPI: PM: (supports S0 S3 S4 S5)
+Jan 31 11:31:01 bazzite kernel: ACPI: Using IOAPIC for interrupt routing
+Jan 31 11:31:01 bazzite kernel: PCI: Using host bridge windows from ACPI; if necessary, use "pci=nocrs" and report a bug
+Jan 31 11:31:01 bazzite kernel: ACPI: Enabled 7 GPEs in block 00 to 1F
+Jan 31 11:31:01 bazzite kernel: ACPI: \_SB_.PCI0.GPP0.M237: New power resource
+Jan 31 11:31:01 bazzite kernel: ACPI: \_SB_.PCI0.GPP0.SWUS.M237: New power resource
+Jan 31 11:31:01 bazzite kernel: ACPI: \_SB_.PCI0.GPP0.SWUS.SWDS.M237: New power resource
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+Jan 31 11:31:01 bazzite kernel: acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI EDR HPX-Type3]
+Jan 31 11:31:01 bazzite kernel: acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug SHPCHotplug PME AER PCIeCapability LTR DPC]
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKA configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKB configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKC configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKD configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKE configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKF configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKG configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: PCI: Interrupt link LNKH configured for IRQ 0
+Jan 31 11:31:01 bazzite kernel: ACPI: bus type USB registered
+Jan 31 11:31:01 bazzite kernel: PCI: Using ACPI for IRQ routing
+Jan 31 11:31:01 bazzite kernel: pnp: PnP ACPI init
+Jan 31 11:31:01 bazzite kernel: system 00:05: [mem 0xfedc0000-0xfedc0fff] has been reserved
+Jan 31 11:31:01 bazzite kernel: pnp: PnP ACPI: found 6 devices
+Jan 31 11:31:01 bazzite kernel: clocksource: acpi_pm: mask: 0xffffff max_cycles: 0xffffff, max_idle_ns: 2085701024 ns
+Jan 31 11:31:01 bazzite kernel: pci 0000:03:00.1: D0 power state depends on 0000:03:00.0
+Jan 31 11:31:01 bazzite kernel: pci 0000:0d:00.1: D0 power state depends on 0000:0d:00.0
+Jan 31 11:31:01 bazzite kernel: input: Power Button as /devices/LNXSYSTM:00/LNXSYBUS:00/PNP0C0C:00/input/input0
+Jan 31 11:31:01 bazzite kernel: ACPI: button: Power Button [PWRB]
+Jan 31 11:31:01 bazzite kernel: input: Power Button as /devices/LNXSYSTM:00/LNXPWRBN:00/input/input1
+Jan 31 11:31:01 bazzite kernel: ACPI: button: Power Button [PWRF]
+Jan 31 11:31:01 bazzite kernel: ACPI: bus type drm_connector registered
+Jan 31 11:31:01 bazzite kernel: IPI shorthand broadcast: enabled
+Jan 31 11:31:01 bazzite kernel: PM: genpd: Disabling unused power domains
+Jan 31 11:31:01 bazzite kernel:     ostree=/ostree/boot.0/default/374696162330b925549cee64679444d2440b032ade6a444374bbbc9dc43853ec/0
+Jan 31 11:31:01 bazzite dracut-cmdline[350]: Using kernel command line parameters:  rd.driver.pre=btrfs rd.driver.pre=vfio rd.driver.pre=vfio_iommu_type1 rd.driver.pre=vfio_pci   BOOT_IMAGE=(hd0,gpt3)/ostree/default-374696162330b925549cee64679444d2440b032ade6a444374bbbc9dc43853ec/vmlinuz-6.17.7-ba25.fc43.x86_64 ostree=/ostree/boot.0/default/374696162330b925549cee64679444d2440b032ade6a444374bbbc9dc43853ec/0 rhgb quiet root=UUID=23c09f1d-5446-49d1-a5cf-a50a020c9e64 vconsole.keymap=us rootflags=subvol=root rw bluetooth.disable_ertm=1
+Jan 31 11:31:02 bazzite systemd[1]: systemd-battery-check.service - Check battery level during early boot was skipped because of an unmet condition check (ConditionDirectoryNotEmpty=/sys/class/power_supply).
+Jan 31 11:31:02 bazzite kernel: ACPI: video: Video Device [VGA] (multi-head: yes  rom: no  post: no)
+Jan 31 11:31:03 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] Display Core v3.2.340 initialized on DCN 4.0.1
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:03:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: [drm] Display Core v3.2.340 initialized on DCN 3.1.5
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite kernel: amdgpu 0000:0d:00.0: amdgpu: [drm] PSR support 0, DC PSR ver -1, sink PSR ver 0 DPCD caps 0x0 su_y_granularity 0
+Jan 31 11:31:04 bazzite ostree-prepare-root[722]: Resolved OSTree target to: /sysroot/ostree/deploy/default/deploy/31b61b26f7c00f9836e58cd28fa4f91916ba77467d85dc773296c8d00baa93ac.0
+Jan 31 11:31:04 bazzite ostree-prepare-root[722]: Resolved OSTree target to: /sysroot.tmp/sysroot/ostree/deploy/default/deploy/31b61b26f7c00f9836e58cd28fa4f91916ba77467d85dc773296c8d00baa93ac.0
+Jan 31 17:31:05 bazzite kernel: SELinux:  policy capability netif_wildcard=0
+Jan 31 17:31:05 bazzite kernel: SELinux:  policy capability genfs_seclabel_wildcard=0
+Jan 31 17:31:05 bazzite systemd[1]: systemd-hibernate-clear.service - Clear Stale Hibernate Storage Info was skipped because of an unmet condition check (ConditionPathExists=/sys/firmware/efi/efivars/HibernateLocation-8cf2644b-4b0b-428f-9387-6d876050dc67).
+Jan 31 17:31:06 bazzite kernel: Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+Jan 31 17:31:06 bazzite systemd[1]: systemd-hibernate-clear.service - Clear Stale Hibernate Storage Info was skipped because of an unmet condition check (ConditionPathExists=/sys/firmware/efi/efivars/HibernateLocation-8cf2644b-4b0b-428f-9387-6d876050dc67).
+Jan 31 17:31:06 bazzite systemd[1]: systemd-hibernate-clear.service - Clear Stale Hibernate Storage Info was skipped because of an unmet condition check (ConditionPathExists=/sys/firmware/efi/efivars/HibernateLocation-8cf2644b-4b0b-428f-9387-6d876050dc67).
+Jan 31 17:31:07 bazzite systemd[1]: ldconfig.service - Rebuild Dynamic Linker Cache was skipped because no trigger condition checks were met.
+Jan 31 17:31:07 bazzite systemd[1]: ldconfig.service - Rebuild Dynamic Linker Cache was skipped because no trigger condition checks were met.
+Jan 31 17:31:07 bazzite systemd[1]: systemd-hibernate-clear.service - Clear Stale Hibernate Storage Info was skipped because of an unmet condition check (ConditionPathExists=/sys/firmware/efi/efivars/HibernateLocation-8cf2644b-4b0b-428f-9387-6d876050dc67).
+Jan 31 17:31:08 bazzite dbus-broker-launch[1345]: Looking up NSS group entry for 'power'...
+Jan 31 17:31:08 bazzite dbus-broker-launch[1345]: NSS returned NAME 'power' and GID '981'
+Jan 31 17:31:08 bazzite systemd[1]: Starting upower.service - Daemon for power management...
+Jan 31 17:31:08 bazzite systemd-logind[1389]: Watching system buttons on /dev/input/event1 (Power Button)
+Jan 31 17:31:08 bazzite systemd-logind[1389]: Watching system buttons on /dev/input/event0 (Power Button)
+Jan 31 17:31:08 bazzite systemd[1]: Started upower.service - Daemon for power management.
+Jan 31 17:31:08 bazzite audit[1]: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=upower comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:09 bazzite iwd[1562]:         Permanent Address: dc:56:7b:ee:8a:35
+Jan 31 17:31:17 bazzite.something.smwhre avahi-daemon[1348]: Registering new address record for 2600:1700:14d4:7e80:c1dc:87ba:b85c:bf76 on eno1.*.
+Jan 31 17:31:22 bazzite.something.smwhre systemd[1]: Created slice system-dbus\x2d:1.3\x2dorg.kde.powerdevil.discretegpuhelper.slice - Slice /system/dbus-:1.3-org.kde.powerdevil.discretegpuhelper.
+Jan 31 17:31:22 bazzite.something.smwhre systemd[1]: Started dbus-:1.3-org.kde.powerdevil.discretegpuhelper@0.service.
+Jan 31 17:31:22 bazzite.something.smwhre audit[1]: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=dbus-:1.3-org.kde.powerdevil.discretegpuhelper@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:22 bazzite.something.smwhre systemd[1]: Created slice system-dbus\x2d:1.3\x2dorg.kde.powerdevil.chargethresholdhelper.slice - Slice /system/dbus-:1.3-org.kde.powerdevil.chargethresholdhelper.
+Jan 31 17:31:22 bazzite.something.smwhre systemd[1]: Started dbus-:1.3-org.kde.powerdevil.chargethresholdhelper@0.service.
+Jan 31 17:31:22 bazzite.something.smwhre audit[1]: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=dbus-:1.3-org.kde.powerdevil.chargethresholdhelper@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:22 bazzite.something.smwhre systemd[1]: Created slice system-dbus\x2d:1.3\x2dorg.kde.powerdevil.backlighthelper.slice - Slice /system/dbus-:1.3-org.kde.powerdevil.backlighthelper.
+Jan 31 17:31:22 bazzite.something.smwhre systemd[1]: Started dbus-:1.3-org.kde.powerdevil.backlighthelper@0.service.
+Jan 31 17:31:22 bazzite.something.smwhre audit[1]: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=dbus-:1.3-org.kde.powerdevil.backlighthelper@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:32 bazzite.something.smwhre systemd[1]: dbus-:1.3-org.kde.powerdevil.discretegpuhelper@0.service: Deactivated successfully.
+Jan 31 17:31:32 bazzite.something.smwhre audit[1]: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=dbus-:1.3-org.kde.powerdevil.discretegpuhelper@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:32 bazzite.something.smwhre systemd[1]: dbus-:1.3-org.kde.powerdevil.chargethresholdhelper@0.service: Deactivated successfully.
+Jan 31 17:31:32 bazzite.something.smwhre audit[1]: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=dbus-:1.3-org.kde.powerdevil.chargethresholdhelper@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:32 bazzite.something.smwhre systemd[1]: dbus-:1.3-org.kde.powerdevil.backlighthelper@0.service: Deactivated successfully.
+Jan 31 17:31:32 bazzite.something.smwhre audit[1]: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=dbus-:1.3-org.kde.powerdevil.backlighthelper@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:34:24 bazzite.something.smwhre systemd-logind[1389]: The system will power off now!
+Jan 31 17:34:24 bazzite.something.smwhre systemd-logind[1389]: System is powering down.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Removed slice system-dbus\x2d:1.3\x2dorg.kde.powerdevil.backlighthelper.slice - Slice /system/dbus-:1.3-org.kde.powerdevil.backlighthelper.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Removed slice system-dbus\x2d:1.3\x2dorg.kde.powerdevil.chargethresholdhelper.slice - Slice /system/dbus-:1.3-org.kde.powerdevil.chargethresholdhelper.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Removed slice system-dbus\x2d:1.3\x2dorg.kde.powerdevil.discretegpuhelper.slice - Slice /system/dbus-:1.3-org.kde.powerdevil.discretegpuhelper.
+Jan 31 17:34:24 bazzite.something.smwhre sddm[1789]: Auth: sddm-helper (--socket /tmp/sddm-auth-fa820e0e-dc06-430f-9256-5f742d7fd8b0 --id 1 --start /usr/libexec/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland --user projectUser) crashed (exit code 1)
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopping upower.service - Daemon for power management...
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: upower.service: Deactivated successfully.
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Stopped upower.service - Daemon for power management.
+Jan 31 17:34:24 bazzite.something.smwhre audit[1]: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=upower comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Starting plymouth-poweroff.service - Show Plymouth Power Off Screen...
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Requested transaction contradicts existing jobs: Transaction for sound.target/start is destructive (poweroff.target has 'start' job queued, but 'stop' is included in transaction).
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: sys-devices-pci0000:00-0000:00:08.1-0000:0d:00.1-sound-card1-controlC1.device: Failed to enqueue SYSTEMD_WANTS job, ignoring: Transaction for sound.target/start is destructive (poweroff.target has 'start' job queued, but 'stop' is included in transaction).
+Jan 31 17:34:24 bazzite.something.smwhre systemd[1]: Started plymouth-poweroff.service - Show Plymouth Power Off Screen.
+Jan 31 17:34:24 bazzite.something.smwhre audit[1]: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=plymouth-poweroff comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'

@@ -1,0 +1,26 @@
+projectUser@bazzite:~/FullLogs20260101$ grep -E "kdsv|kpatch|patch" full_journal_ctl_system_2026-01-31
+Jan 31 11:31:02 bazzite systemd[1]: systemd-ask-password-console.path - Dispatch Password Requests to Console Directory Watch was skipped because of an unmet condition check (ConditionPathExists=!/run/plymouth/pid).
+Jan 31 17:31:05 bazzite systemd[1]: systemd-ask-password-console.path - Dispatch Password Requests to Console Directory Watch was skipped because of an unmet condition check (ConditionPathExists=!/run/plymouth/pid).
+Jan 31 17:31:06 bazzite systemd[1]: systemd-ask-password-console.path - Dispatch Password Requests to Console Directory Watch was skipped because of an unmet condition check (ConditionPathExists=!/run/plymouth/pid).
+Jan 31 17:31:06 bazzite systemd[1]: systemd-ask-password-console.path - Dispatch Password Requests to Console Directory Watch was skipped because of an unmet condition check (ConditionPathExists=!/run/plymouth/pid).
+Jan 31 17:31:07 bazzite auditd[1170]: audit dispatcher initialized with q_depth=2000 and 1 active plugins
+Jan 31 17:31:07 bazzite systemd[1]: systemd-ask-password-console.path - Dispatch Password Requests to Console Directory Watch was skipped because of an unmet condition check (ConditionPathExists=!/run/plymouth/pid).
+Jan 31 17:31:09 bazzite systemd[1]: Starting NetworkManager-dispatcher.service - Network Manager Script Dispatcher Service...
+Jan 31 17:31:09 bazzite systemd[1]: Started NetworkManager-dispatcher.service - Network Manager Script Dispatcher Service.
+Jan 31 17:31:09 bazzite audit[1]: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=NetworkManager-dispatcher comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:09 bazzite audit[1]: USER_AVC pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='avc:  denied  { reload } for auid=n/a uid=0 gid=0 path="/etc/systemd/system/iscsi.service" cmdline="" function="bus_unit_method_start_generic" scontext=system_u:system_r:NetworkManager_dispatcher_iscsid_t:s0 tcontext=system_u:system_r:init_t:s0 tclass=system permissive=0 exe="/usr/lib/systemd/systemd" sauid=0 hostname=? addr=? terminal=?'
+Jan 31 17:31:09 bazzite systemd[1]: SELinux access check scon=system_u:system_r:NetworkManager_dispatcher_iscsid_t:s0 tcon=system_u:system_r:init_t:s0 tclass=system perm=reload state=enforcing function=bus_unit_method_start_generic path=/etc/systemd/system/iscsi.service cmdline=n/a: Permission denied
+Jan 31 17:31:10 bazzite wireplumber[1896]: wp-event-dispatcher: wp_event_dispatcher_unregister_hook: assertion 'already_registered_dispatcher == self' failed
+Jan 31 17:31:10 bazzite wireplumber[1896]: wp-event-dispatcher: wp_event_dispatcher_unregister_hook: assertion 'already_registered_dispatcher == self' failed
+Jan 31 17:31:10 bazzite wireplumber[1896]: wp-event-dispatcher: wp_event_dispatcher_unregister_hook: assertion 'already_registered_dispatcher == self' failed
+Jan 31 17:31:10 bazzite wireplumber[1896]: wp-event-dispatcher: wp_event_dispatcher_unregister_hook: assertion 'already_registered_dispatcher == self' failed
+Jan 31 17:31:10 bazzite wireplumber[1896]: wp-event-dispatcher: <WpAsyncEventHook:0x5560b024bfd0> failed: failed to activate item: Object activation aborted: proxy destroyed
+Jan 31 17:31:16 bazzite.something.smwhre audit[1]: USER_AVC pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='avc:  denied  { reload } for auid=n/a uid=0 gid=0 path="/etc/systemd/system/iscsi.service" cmdline="" function="bus_unit_method_start_generic" scontext=system_u:system_r:NetworkManager_dispatcher_iscsid_t:s0 tcontext=system_u:system_r:init_t:s0 tclass=system permissive=0 exe="/usr/lib/systemd/systemd" sauid=0 hostname=? addr=? terminal=?'
+Jan 31 17:31:16 bazzite.something.smwhre systemd[1]: SELinux access check scon=system_u:system_r:NetworkManager_dispatcher_iscsid_t:s0 tcon=system_u:system_r:init_t:s0 tclass=system perm=reload state=enforcing function=bus_unit_method_start_generic path=/etc/systemd/system/iscsi.service cmdline=n/a: Permission denied
+Jan 31 17:31:26 bazzite.something.smwhre systemd[1]: NetworkManager-dispatcher.service: Deactivated successfully.
+Jan 31 17:31:26 bazzite.something.smwhre audit[1]: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=NetworkManager-dispatcher comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+Jan 31 17:31:30 bazzite.something.smwhre dbus-broker[1841]: Dispatched 658 messages @ 2(±8)μs / message.
+Jan 31 17:34:24 bazzite.something.smwhre dbus-broker-launch[1345]: Activation request for 'org.freedesktop.nm_dispatcher' failed.
+Jan 31 17:34:25 bazzite.something.smwhre dbus-broker[1346]: Dispatched 9406 messages @ 2(±6)μs / message.
+Jan 31 17:34:25 bazzite.something.smwhre sedispatch[1173]: sedispatch is exiting on stop request
+Jan 31 17:34:25 bazzite.something.smwhre auditd[1170]: Dispatcher plugins cleaned up
