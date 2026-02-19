@@ -3,10 +3,11 @@
 Extract Skills Script
 
 Uses Ollama's gpt-oss:20b model to extract structured skill information from
-markdown files and create individual skill documentation files.
+text-based documents and create individual skill documentation files.
 
-Scans a user-specified folder for markdown files, extracts skill information
-using AI with template-based prompts, and outputs individual markdown files.
+Scans a user-specified folder for text-based files (filtered by UTF-8 decoding),
+extracts skill information using AI with template-based prompts, and outputs
+individual markdown files.
 """
 
 import argparse
@@ -39,33 +40,75 @@ PERF_METRICS = {
 }
 
 
-def read_markdown_files(folder_path: Path) -> List[Path]:
+def is_text_file(file_path: Path) -> bool:
     """
-    Read all .md files from a directory.
+    Check if a file is a text-based file by attempting UTF-8 decoding.
+
+    Args:
+        file_path: Path to the file to check
+
+    Returns:
+        True if file is text-based, False if binary or unreadable
+    """
+    try:
+        with open(file_path, "rb") as f:
+            chunk = f.read(8192)  # Read first 8KB for checking
+            if not chunk:
+                return False  # Empty files are not text files
+            # Check for null bytes which indicate binary files
+            if b"\x00" in chunk:
+                return False
+            # Try to decode as UTF-8
+            try:
+                chunk.decode("utf-8")
+                return True
+            except UnicodeDecodeError:
+                return False
+    except Exception:
+        return False
+
+
+def read_text_files(folder_path: Path) -> List[tuple]:
+    """
+    Read all text-based files from a directory.
+
+    Filters out binary files by attempting UTF-8 decoding and checking for null bytes.
+    Skips template files and the script itself.
 
     Args:
         folder_path: Path to directory to scan
 
     Returns:
-        List of file paths
+        List of (file_path, content) tuples
     """
     if not folder_path.exists():
         print(f"Error: Source folder '{folder_path}' does not exist.")
         return []
 
-    md_files = []
-    for file_path in folder_path.rglob("*.md"):
+    text_files = []
+    for file_path in folder_path.rglob("*"):
+        # Skip directories
+        if file_path.is_dir():
+            continue
+
+        # Skip template and script files
+        if file_path.name in ["default-preamble.md", "default-output.md", "extract-skills.py"]:
+            continue
+
+        # Check if file is text-based
+        if not is_text_file(file_path):
+            print(f"  Skipping non-text file: {file_path.name}")
+            continue
+
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                # Don't read if it's a template or config file
-                if file_path.name not in ["default-preamble.md", "default-output.md", "extract-skills.py"]:
-                    content = f.read()
-                    md_files.append((file_path, content))
+                content = f.read()
+                text_files.append((file_path, content))
         except Exception as e:
             print(f"  Warning: Could not read {file_path}: {e}")
             continue
 
-    return md_files
+    return text_files
 
 
 def load_template(template_path: Path) -> Optional[str]:
@@ -119,7 +162,7 @@ def build_prompt(file_path: Path, file_content: str, preamble_path: Optional[Pat
 
     Args:
         file_path: Path to the source file
-        file_content: Content of the markdown file
+        file_content: Content of the text-based source file
         preamble_path: Optional path to custom preamble file
 
     Returns:
@@ -312,15 +355,15 @@ def main():
     print(f"Scanning source folder: {source_path}")
     print()
 
-    # Read markdown files
-    print("Reading markdown files...")
-    md_files = read_markdown_files(source_path)
+    # Read text-based files
+    print("Reading text-based files...")
+    text_files = read_text_files(source_path)
 
-    if not md_files:
-        print("No markdown files found.")
+    if not text_files:
+        print("No text-based files found.")
         sys.exit(1)
 
-    print(f"Found {len(md_files)} markdown file(s)")
+    print(f"Found {len(text_files)} text-based file(s)")
     print()
 
     # Process each file
@@ -330,7 +373,7 @@ def main():
     print("Processing files with AI...")
     print("-" * 60)
 
-    for file_path, file_content in md_files:
+    for file_path, file_content in text_files:
         print(f"\n{file_path.relative_to(source_path)}")
 
         # Build prompt
@@ -402,7 +445,7 @@ Examples:
         "--source",
         type=Path,
         required=True,
-        help="Path to folder containing markdown files to extract"
+        help="Path to folder containing text-based files to extract"
     )
     parser.add_argument(
         "--destination",
