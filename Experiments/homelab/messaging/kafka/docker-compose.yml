@@ -1,0 +1,112 @@
+services:
+  kafka:
+    image: docker.io/apache/kafka:3.9.0
+    container_name: homelab-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_AUTO_CREATE_TOPICS: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      TZ: America/New_York
+    volumes:
+      - kafka_kafka_data:/var/lib/kafka/data
+      - ./start-kafka.sh:/start-kafka.sh:ro
+    ports:
+      - "29092:9092/tcp"
+      - "29101:9101/tcp"
+    networks:
+      - homelab-kafka
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    entrypoint: ["/bin/bash", "/start-kafka.sh"]
+
+  kafka-ui:
+    image: docker.io/provectuslabs/kafka-ui:v0.7.2
+    container_name: homelab-kafka-ui
+    restart: unless-stopped
+    environment:
+      KAFKA_CLUSTERS_0_NAME: homelab
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      TZ: America/New_York
+    ports:
+      - "28088:8080/tcp"
+    networks:
+      - homelab-kafka
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  log-producer:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: homelab-kafka-producer
+    restart: unless-stopped
+    command: python /app/workers/producer.py
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC: app.logs
+      KAFKA_ERROR_TOPIC: app.errors
+      LOG_INTERVAL: 5
+      TZ: America/New_York
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./workers:/app/workers
+    networks:
+      - homelab-kafka
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  log-consumer:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: homelab-kafka-consumer
+    restart: unless-stopped
+    command: python /app/workers/consumer.py
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC: app.logs
+      KAFKA_CONSUMER_GROUP: app
+      TZ: America/New_York
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./workers:/app/workers
+    networks:
+      - homelab-kafka
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-kafka-test
+    command: sleep 3600
+    networks:
+      - homelab-kafka
+    depends_on:
+      - kafka
+
+networks:
+  homelab-kafka:
+    driver: bridge
+
+volumes:
+  kafka_kafka_data:

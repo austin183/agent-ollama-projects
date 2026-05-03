@@ -1,0 +1,85 @@
+services:
+  redis:
+    image: docker.io/redis:7.2-alpine
+    container_name: homelab-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - messaging-redis-queue_redis_data:/data
+    ports:
+      - "26379:6379/tcp"
+    networks:
+      - homelab-redis-queue
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  worker:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: homelab-redis-worker
+    restart: unless-stopped
+    command: python /app/worker.py
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - TZ=America/New_York
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./workers:/app
+    networks:
+      - homelab-redis-queue
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redisinsight:
+    image: docker.io/redis/redisinsight:2.42.0
+    container_name: homelab-redisinsight
+    restart: unless-stopped
+    ports:
+      - "25540:5540/tcp"
+    volumes:
+      - messaging-redis-queue_redisinsight_data:/db
+    networks:
+      - homelab-redis-queue
+    depends_on:
+      - redis
+
+  test-producer:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: homelab-redis-producer
+    command: python /app/producer.py
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - TZ=America/New_York
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./workers:/app
+    networks:
+      - homelab-redis-queue
+    depends_on:
+      - redis
+      - worker
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-redis-test
+    command: sleep 3600
+    networks:
+      - homelab-redis-queue
+    depends_on:
+      - redis
+
+networks:
+  homelab-redis-queue:
+    driver: bridge
+
+volumes:
+  messaging-redis-queue_redis_data:
+  messaging-redis-queue_redisinsight_data:

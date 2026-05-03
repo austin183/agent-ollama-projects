@@ -1,0 +1,15 @@
+FROM docker.io/library/python:3.11-slim
+
+RUN pip install --no-cache-dir \
+    Pillow \
+    numpy \
+    psycopg2-binary \
+    watchdog
+
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY watcher.py /app/watcher.py
+
+CMD ["python", "/app/watcher.py"]

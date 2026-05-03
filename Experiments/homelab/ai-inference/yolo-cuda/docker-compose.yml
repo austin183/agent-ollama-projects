@@ -1,0 +1,93 @@
+services:
+  yolo-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: homelab-yolo-cuda-server
+    restart: unless-stopped
+    ports:
+      - "28004:8000/tcp"
+    devices:
+      - nvidia.com/gpu=all
+    environment:
+      - TZ=America/New_York
+      - MODEL_SIZE=nano
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - homelab-yolo-cuda
+
+  postgresql:
+    image: docker.io/library/postgres:16-alpine
+    container_name: homelab-yolo-cuda-pg
+    restart: unless-stopped
+    ports:
+      - "25436:5432/tcp"
+    environment:
+      - POSTGRES_DB=detections
+      - POSTGRES_USER=detect_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - TZ=America/New_York
+    volumes:
+      - yolo-cuda_postgresql_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - homelab-yolo-cuda
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U detect_user -d detections"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  watcher:
+    build:
+      context: .
+      dockerfile: Dockerfile.watcher
+    container_name: homelab-yolo-cuda-watcher
+    restart: unless-stopped
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_NAME=detections
+      - DB_USER=detect_user
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - YOLO_HOST=yolo-server
+      - YOLO_PORT=8000
+      - INPUT_DIR=/input
+      - OUTPUT_DIR=/output
+      - CONFIDENCE_THRESHOLD=0.4
+      - TZ=America/New_York
+    volumes:
+      - ./input:/input
+      - ./output:/output
+    depends_on:
+      yolo-server:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    networks:
+      - homelab-yolo-cuda
+
+  test-client:
+    build:
+      context: .
+      dockerfile: test-client.Dockerfile
+    container_name: homelab-yolo-cuda-test
+    command: sleep 3600
+    networks:
+      - homelab-yolo-cuda
+    depends_on:
+      - postgresql
+      - yolo-server
+
+networks:
+  homelab-yolo-cuda:
+    driver: bridge
+
+volumes:
+  yolo-cuda_postgresql_data:

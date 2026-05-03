@@ -1,0 +1,114 @@
+services:
+  ts-primary:
+    image: docker.io/timescale/timescaledb:2.26.3-pg17
+    container_name: homelab-ts-primary
+    restart: unless-stopped
+    ports:
+      - "15436:5432/tcp"
+    volumes:
+      - timescaledb-replication_primary_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    environment:
+      - TZ=America/New_York
+      - POSTGRES_USER=replicator
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=homelab_db
+    networks:
+      - homelab-timescaledb-replication
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U replicator -d homelab_db"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  ts-standby:
+    image: docker.io/timescale/timescaledb:2.26.3-pg17
+    container_name: homelab-ts-standby
+    restart: unless-stopped
+    ports:
+      - "15437:5432/tcp"
+    volumes:
+      - timescaledb-replication_standby_data:/var/lib/postgresql/data
+    environment:
+      - TZ=America/New_York
+      - POSTGRES_USER=replicator
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=homelab_db
+    networks:
+      - homelab-timescaledb-replication
+    depends_on:
+      - ts-primary
+    command: >
+      sh -c '
+        echo "Waiting for primary to be ready...";
+        for i in $(seq 1 60); do
+          if pg_isready -h ts-primary -p 5432 -U replicator > /dev/null 2>&1; then
+            echo "Primary is ready!";
+            break;
+          fi;
+          echo "Waiting... ($$i/60)";
+          sleep 2;
+        done;
+        echo "Initializing standby from primary...";
+        rm -rf /var/lib/postgresql/data/*;
+        pg_basebackup -h ts-primary -U replicator -D /var/lib/postgresql/data -Fp -Xs -P -R -S standby_slot;
+        touch /var/lib/postgresql/data/standby.signal;
+        exec docker-entrypoint.sh postgres;
+      '
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U replicator -d homelab_db"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  pgadmin:
+    image: docker.io/dpage/pgadmin4:9.9.0
+    container_name: homelab-pgadmin-ts
+    restart: unless-stopped
+    ports:
+      - "18086:80/tcp"
+    volumes:
+      - timescaledb-replication_pgadmin_data:/var/lib/pgadmin
+    environment:
+      - TZ=America/New_York
+      - PGADMIN_DEFAULT_EMAIL=admin@homelab.com
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    networks:
+      - homelab-timescaledb-replication
+    depends_on:
+      - ts-primary
+      - ts-standby
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  test-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-client
+    container_name: homelab-timescaledb-replication-test
+    command: sleep 3600
+    environment:
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - homelab-timescaledb-replication
+    depends_on:
+      - ts-primary
+      - ts-standby
+
+networks:
+  homelab-timescaledb-replication:
+    driver: bridge
+
+volumes:
+  timescaledb-replication_primary_data:
+  timescaledb-replication_standby_data:
+  timescaledb-replication_pgadmin_data:

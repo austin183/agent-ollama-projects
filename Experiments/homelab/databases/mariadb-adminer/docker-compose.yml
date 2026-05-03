@@ -1,0 +1,62 @@
+services:
+  mariadb:
+    image: docker.io/library/mariadb:11
+    container_name: homelab-mariadb
+    restart: unless-stopped
+    ports:
+      - "13306:3306/tcp"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    environment:
+      - TZ=America/New_York
+      - MYSQL_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+      - MYSQL_USER=homelab
+      - MYSQL_PASSWORD=${MARIADB_PASSWORD}
+      - MYSQL_DATABASE=homelab_db
+    networks:
+      - homelab-mariadb-adminer
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  adminer:
+    image: docker.io/library/adminer:4
+    container_name: homelab-mariadb-adminer
+    restart: unless-stopped
+    ports:
+      - "18080:8080/tcp"
+    environment:
+      - TZ=America/New_York
+      - ADMINER_DEFAULT_SERVER=mariadb
+    networks:
+      - homelab-mariadb-adminer
+    depends_on:
+      - mariadb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  test-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-client
+    container_name: homelab-mariadb-adminer-test
+    command: sleep 3600
+    networks:
+      - homelab-mariadb-adminer
+    depends_on:
+      - mariadb
+
+networks:
+  homelab-mariadb-adminer:
+    driver: bridge
+
+volumes:
+  mariadb_data:

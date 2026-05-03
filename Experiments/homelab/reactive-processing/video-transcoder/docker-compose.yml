@@ -1,0 +1,77 @@
+services:
+  postgresql:
+    image: docker.io/library/postgres:16
+    container_name: homelab-pg-videotranscoder
+    restart: unless-stopped
+    ports:
+      - "25435:5432/tcp"
+    volumes:
+      - videotranscoder_pg_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=transcoder
+      - TZ=America/New_York
+    networks:
+      - homelab-videotranscoder-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d transcoder"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  ffmpeg:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: homelab-ffmpeg-cuda
+    restart: unless-stopped
+    devices:
+      - nvidia.com/gpu=all
+    environment:
+      - PG_HOST=postgresql
+      - PG_PORT=5432
+      - PG_USER=${POSTGRES_USER}
+      - PG_PASSWORD=${POSTGRES_PASSWORD}
+      - PG_DB=transcoder
+      - INPUT_DIR=/input
+      - OUTPUT_DIR=/output
+      - ENCODER=nvenc
+      - CRF=23
+      - PRESET=p4
+    volumes:
+      - ./input:/input:ro
+      - ./output:/output
+      - ./watcher.py:/app/watcher.py:ro
+      - ./schema.sql:/app/schema.sql:ro
+      - ./benchmark.sh:/app/benchmark.sh:ro
+    networks:
+      - homelab-videotranscoder-net
+    depends_on:
+      postgresql:
+        condition: service_healthy
+
+  test-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-client
+    container_name: homelab-video-transcoder-test
+    command: sleep 3600
+    environment:
+      - PG_HOST=postgresql
+      - PG_PORT=5432
+      - PG_USER=${POSTGRES_USER}
+      - PG_PASSWORD=${POSTGRES_PASSWORD}
+      - PG_DB=transcoder
+    networks:
+      - homelab-videotranscoder-net
+    depends_on:
+      - postgresql
+
+networks:
+  homelab-videotranscoder-net:
+    driver: bridge
+
+volumes:
+  videotranscoder_pg_data:

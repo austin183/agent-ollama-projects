@@ -1,0 +1,15 @@
+FROM docker.io/library/alpine:3.21
+
+RUN apk add --no-cache \
+    python3 \
+    py3-pillow \
+    py3-numpy \
+    py3-grpcio \
+    py3-grpcio-tools \
+    curl \
+    wget \
+    iputils \
+    bind-tools \
+    bash
+
+WORKDIR /workspace

@@ -1,0 +1,42 @@
+services:
+  sftp:
+    image: docker.io/atmoz/sftp:alpine
+    container_name: homelab-sftp
+    restart: unless-stopped
+    ports:
+      - "2222:22/tcp"
+    volumes:
+      - ./data:/home/labratorian
+      - ./config/auth.conf:/etc/ssh/sshd_config.d/auth.conf:ro
+      - ./config/sshd.pam:/etc/pam.d/sshd:ro
+    environment:
+      - TZ=America/New_York
+      - SFTP_USERS=labratorian:ChangeMe:1000:1000:files
+    networks:
+      - homelab-sftp-network
+    healthcheck:
+      test: ["CMD", "ssh", "-o", "BatchMode=yes", "-p", "22", "labratorian@localhost", "echo alive"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  test-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-client
+    container_name: homelab-sftp-test
+    command: sleep 3600
+    volumes:
+      - ./test-connectivity.sh:/test-connectivity.sh:ro
+    environment:
+      - SFTP_USER=labratorian
+      - SFTP_PASSWORD=ChangeMe
+    networks:
+      - homelab-sftp-network
+    depends_on:
+      - sftp
+
+networks:
+  homelab-sftp-network:
+    driver: bridge

@@ -1,0 +1,107 @@
+services:
+  redis-primary:
+    image: docker.io/library/redis:7.4-alpine
+    container_name: homelab-redis-qrep-primary
+    ports:
+      - "36379:6379/tcp"
+    volumes:
+      - redis_queue_replication_primary_data:/data
+      - ./conf/primary.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - homelab-redis-queue-replication
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis-replica:
+    image: docker.io/library/redis:7.4-alpine
+    container_name: homelab-redis-qrep-replica
+    ports:
+      - "36380:6379/tcp"
+    volumes:
+      - redis_queue_replication_replica_data:/data
+      - ./conf/replica.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - homelab-redis-queue-replication
+    depends_on:
+      - redis-primary
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  worker:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: homelab-redis-qrep-worker
+    restart: unless-stopped
+    command: python /app/worker.py
+    environment:
+      - REDIS_PRIMARY_URL=redis://redis-primary:6379/0
+      - REDIS_REPLICA_URL=redis://redis-replica:6379/0
+      - TZ=America/New_York
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./workers:/app
+    networks:
+      - homelab-redis-queue-replication
+    depends_on:
+      - redis-replica
+
+  producer:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: homelab-redis-qrep-producer
+    command: python /app/producer.py
+    environment:
+      - REDIS_PRIMARY_URL=redis://redis-primary:6379/0
+      - REDIS_REPLICA_URL=redis://redis-replica:6379/0
+      - TZ=America/New_York
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./workers:/app
+    networks:
+      - homelab-redis-queue-replication
+    depends_on:
+      - redis-primary
+      - redis-replica
+
+  redisinsight:
+    image: docker.io/redis/redisinsight:2.42.0
+    container_name: homelab-redis-qrep-insight
+    ports:
+      - "35540:5540/tcp"
+    volumes:
+      - redis_queue_replication_redisinsight_data:/db
+    networks:
+      - homelab-redis-queue-replication
+    depends_on:
+      - redis-primary
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-redis-qrep-test
+    command: sleep 3600
+    networks:
+      - homelab-redis-queue-replication
+    depends_on:
+      - redis-primary
+      - redis-replica
+
+networks:
+  homelab-redis-queue-replication:
+    driver: bridge
+
+volumes:
+  redis_queue_replication_primary_data:
+  redis_queue_replication_replica_data:
+  redis_queue_replication_redisinsight_data:

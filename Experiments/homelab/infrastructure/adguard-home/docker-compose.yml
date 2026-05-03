@@ -1,0 +1,41 @@
+services:
+  adguardhome:
+    image: docker.io/adguard/adguardhome:v0.107.61
+    container_name: homelab-adguard
+    restart: unless-stopped
+    ports:
+      - "5053:53/udp"
+      - "5053:53/tcp"
+      - "3080:80/tcp"
+      - "8443:443/tcp"
+      - "8853:853/tcp"
+      - "3000:3000/tcp"
+    volumes:
+      - ./work:/opt/adguardhome/work
+      - ./conf:/opt/adguardhome/conf
+    environment:
+      - TZ=America/New_York
+      - COREFILE=/etc/coredns/Corefile
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - homelab-adguard-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-adguard-test
+    command: sleep 3600
+    networks:
+      - homelab-adguard-network
+    depends_on:
+      - adguardhome
+
+networks:
+  homelab-adguard-network:
+    driver: bridge

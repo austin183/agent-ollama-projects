@@ -1,0 +1,58 @@
+services:
+  mongodb:
+    image: docker.io/library/mongo:7.0
+    container_name: homelab-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017/tcp"
+    volumes:
+      - mongodb-pgadmin_mongodb_data:/data/db
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    environment:
+      - TZ=America/New_York
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    networks:
+      - homelab-mongodb-pgadmin
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval \"db.adminCommand('ping')\""]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  pgadmin:
+    image: docker.io/dpage/pgadmin4:9.9.0
+    container_name: homelab-pgadmin
+    restart: unless-stopped
+    ports:
+      - "18085:80/tcp"
+    environment:
+      - TZ=America/New_York
+      - PGADMIN_DEFAULT_EMAIL=admin@homelab.com
+      - PGADMIN_DEFAULT_PASSWORD=pgadmin_pass_123
+    networks:
+      - homelab-mongodb-pgadmin
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/misc/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-mongodb-pgadmin-test
+    command: sleep 3600
+    networks:
+      - homelab-mongodb-pgadmin
+    depends_on:
+      - mongodb
+      - pgadmin
+
+networks:
+  homelab-mongodb-pgadmin:
+    driver: bridge
+
+volumes:
+  mongodb-pgadmin_mongodb_data:

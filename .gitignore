@@ -207,3 +207,30 @@ marimo/_lsp/
 __marimo__/
 **/.DS_Store
 **/.claude/settings.local.json
+
+**/agent_docs
+**/ideas
+*.gguf
+
+# BOINC runtime data
+**/boinc-data/
+**/boinc-*-data/
+
+# AdGuard runtime data
+**/adguard-home/work/data/
+
+# Processed output files
+**/processed/
+
+# Sample input files (binaries, large files)
+**/samples/*.mkv
+**/samples/*.png
+**/samples/*.jpg
+**/samples/*.jpeg
+**/samples/*.avif
+**/samples/*.pdf
+**/samples/*.docx
+**/samples/*.odt
+
+# YOLO input images
+**/yolo-cuda/input/*.jpg

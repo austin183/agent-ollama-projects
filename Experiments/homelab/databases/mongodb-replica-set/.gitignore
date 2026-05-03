@@ -1,0 +1,5 @@
+# KeyFile - DO NOT COMMIT
+keyfile/keyfile
+
+# Environment secrets - DO NOT COMMIT
+.env

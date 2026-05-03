@@ -1,0 +1,82 @@
+services:
+  gitea:
+    build: .
+    container_name: homelab-gitea
+    restart: unless-stopped
+    ports:
+      - "3003:3000/tcp"
+    volumes:
+      - gitea_gitea_data:/var/lib/gitea
+      - gitea_gitea_data:/data
+    environment:
+      - TZ=America/New_York
+      - GITEA__DATABASE__DB_TYPE=postgres
+      - GITEA__DATABASE__HOST=postgres:5432
+      - GITEA__DATABASE__NAME=gitea
+      - GITEA__DATABASE__USER=gitea
+      - GITEA__DATABASE__PASSWD=${GITEA_DB_PASSWORD}
+      - GITEA__DATABASE__SCHEMA=
+      - GITEA__DATABASE__SSL_MODE=disable
+      - GITEA__SERVER__SSH_DOMAIN=localhost
+      - GITEA__SERVER__HTTP_PORT=3000
+      - GITEA__SERVER__ROOT_URL=http://localhost:3003/
+      - GITEA__SERVER__DISABLE_SSH=true
+      - GITEA__SERVER__START_SSH_SERVER=false
+      - GITEA__SECURITY__INSTALL_LOCK=true
+      - GITEA__SERVICE__DISABLE_REGISTRATION=true
+      - GITEA__SERVICE__SHOW_REGISTRATION_BUTTON=false
+      - GITEA__SERVICE__ENABLE_NOTIFY_MAIL=false
+      - GITEA__MAILER__ENABLED=false
+      - GITEA__OPENID__ENABLE_OPENID_SIGNIN=true
+      - GITEA__OPENID__ENABLE_OPENID_SIGNUP=false
+      - GITEA__SESSION__PROVIDER=file
+      - GITEA__SESSION__PROVIDER_CONFIG=/var/lib/gitea/data/sessions
+      - GITEA__LOG__MODE=file
+      - GITEA__LOG__LEVEL=Info
+      - GITEA__LOG__ROOT_PATH=/var/lib/gitea/data/log
+      - GITEA_ADMIN_USER=${GITEA_ADMIN_USER}
+      - GITEA_ADMIN_PASSWORD=${GITEA_ADMIN_PASSWORD}
+      - GITEA_ADMIN_EMAIL=${GITEA_ADMIN_EMAIL}
+    networks:
+      - homelab-gitea-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    container_name: homelab-gitea-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=gitea
+      - POSTGRES_PASSWORD=${GITEA_DB_PASSWORD}
+      - POSTGRES_DB=gitea
+      - TZ=America/New_York
+    volumes:
+      - gitea_postgres_data:/var/lib/postgresql/data
+    networks:
+      - homelab-gitea-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gitea"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-gitea-test
+    command: sleep 3600
+    networks:
+      - homelab-gitea-network
+
+volumes:
+  gitea_gitea_data:
+  gitea_postgres_data:
+
+networks:
+  homelab-gitea-network:
+    driver: bridge

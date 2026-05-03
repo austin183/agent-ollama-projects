@@ -1,0 +1,49 @@
+services:
+  openvino-server:
+    image: docker.io/openvino/model_server:2026.1-gpu
+    container_name: homelab-openvino-server
+    restart: unless-stopped
+    user: root
+    cap_add:
+      - SYS_ADMIN
+      - SYS_RAWIO
+    devices:
+      - /dev/dri:/dev/dri
+    ports:
+      - "9002:9000/tcp"
+      - "8002:8000/tcp"
+    volumes:
+      - ./models:/models:ro
+      - ./results:/output
+    environment:
+      - TZ=America/New_York
+      - OVMS_LOG_LEVEL=INFO
+    command: >
+      --model_path /models/resnet50
+      --model_name resnet
+      --port 9000
+      --rest_port 8000
+      --target_device GPU
+    networks:
+      - homelab-openvino
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/v1/models/resnet || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  test-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-client
+    container_name: homelab-openvino-test
+    command: sleep 3600
+    depends_on:
+      - openvino-server
+    networks:
+      - homelab-openvino
+
+networks:
+  homelab-openvino:
+    driver: bridge

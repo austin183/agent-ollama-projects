@@ -1,0 +1,35 @@
+services:
+  pdf-converter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: homelab/pdf-converter:latest
+    container_name: homelab-pdf-converter
+    restart: unless-stopped
+    volumes:
+      - ./input:/input
+      - ./output:/output
+      - ./processed:/processed
+      - ./logs:/logs
+    environment:
+      - TZ=America/New_York
+    networks:
+      - homelab-pdfconv-network
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-pdf-converter-test
+    command: sleep 3600
+    volumes:
+      - ./input:/input
+      - ./output:/output
+      - ./processed:/processed
+      - ./logs:/logs
+    networks:
+      - homelab-pdfconv-network
+    depends_on:
+      - pdf-converter
+
+networks:
+  homelab-pdfconv-network:
+    driver: bridge

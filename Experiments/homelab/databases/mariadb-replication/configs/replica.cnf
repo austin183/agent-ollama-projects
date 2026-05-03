@@ -1,0 +1,4 @@
+[mysqld]
+server-id=2
+read-only=1
+replicate-do-db=homelab_db

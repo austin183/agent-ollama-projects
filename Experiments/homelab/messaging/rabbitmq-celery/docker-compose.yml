@@ -1,0 +1,95 @@
+services:
+  rabbitmq:
+    image: docker.io/rabbitmq:3.13-management-alpine
+    container_name: homelab-rabbitmq
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=homelab
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_DEFAULT_VHOST=/
+      - TZ=America/New_York
+    volumes:
+      - rabbitmq_celery_rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "25672:5672/tcp"
+      - "25673:15672/tcp"
+    networks:
+      - homelab-rabbitmq-celery
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  celery-worker:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: homelab-celery-worker
+    restart: unless-stopped
+    command: celery -A task_worker worker --loglevel=info --concurrency=2
+    environment:
+      - CELERY_BROKER_URL=amqp://homelab:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=rpc://
+      - TZ=America/New_York
+    volumes:
+      - ./workers:/app/workers
+    networks:
+      - homelab-rabbitmq-celery
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  flower:
+    image: docker.io/mher/flower:2.0.1
+    container_name: homelab-flower
+    restart: unless-stopped
+    environment:
+      - FLOWER_PORT=5555
+      - CELERY_BROKER_URL=amqp://homelab:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672//
+      - FLOWER_BASIC_AUTH=${FLOWER_BASIC_AUTH}
+      - TZ=America/New_York
+    ports:
+      - "25555:5555/tcp"
+    networks:
+      - homelab-rabbitmq-celery
+    depends_on:
+      - rabbitmq
+      - celery-worker
+
+  test-producer:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: homelab-test-producer
+    command: /app/workers/wait-and-produce.sh
+    environment:
+      - CELERY_BROKER_URL=amqp://homelab:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672//
+      - TZ=America/New_York
+    volumes:
+      - ./workers:/app/workers
+    networks:
+      - homelab-rabbitmq-celery
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      celery-worker:
+        condition: service_started
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-rabbitmq-celery-test
+    command: sleep 3600
+    networks:
+      - homelab-rabbitmq-celery
+    depends_on:
+      - rabbitmq
+      - flower
+
+networks:
+  homelab-rabbitmq-celery:
+    driver: bridge
+
+volumes:
+  rabbitmq_celery_rabbitmq_data:

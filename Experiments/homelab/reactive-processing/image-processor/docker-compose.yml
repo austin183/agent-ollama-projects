@@ -1,0 +1,58 @@
+services:
+  mongodb:
+    image: docker.io/library/mongo:7.0
+    container_name: homelab-mongo-reactive
+    restart: unless-stopped
+    ports:
+      - "27021:27017/tcp"
+    volumes:
+      - imageprocessor_mongodb_data:/data/db
+    environment:
+      - TZ=America/New_York
+    networks:
+      - homelab-imageproc-net
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval \"db.adminCommand('ping')\""]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  image-watcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: homelab-image-watcher
+    restart: unless-stopped
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - MONGO_DB=image_metadata
+      - MONGO_COLLECTION=images
+      - INPUT_DIR=/input
+      - OUTPUT_DIR=/output
+      - RESIZE_SCALES=0.5,0.25,0.125
+    volumes:
+      - ./input:/input:ro
+      - ./output:/output
+      - ./watcher.py:/app/watcher.py:ro
+    networks:
+      - homelab-imageproc-net
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  test-client:
+    image: docker.io/library/alpine:3.21
+    container_name: homelab-image-processor-test
+    command: sleep 3600
+    networks:
+      - homelab-imageproc-net
+    depends_on:
+      - mongodb
+
+networks:
+  homelab-imageproc-net:
+    driver: bridge
+
+volumes:
+  imageprocessor_mongodb_data:

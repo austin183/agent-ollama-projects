@@ -1,0 +1,11 @@
+# Environment files with secrets
+.env
+
+# SSH private key
+ssh-config/id_rsa
+
+# Backup data (may contain sensitive info)
+data/backups/
+
+# Source data (user files)
+source-data/

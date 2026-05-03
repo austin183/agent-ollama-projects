@@ -1,0 +1,104 @@
+services:
+  openvino-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: homelab-openvino-analyzer-server
+    restart: unless-stopped
+    user: root
+    cap_add:
+      - SYS_ADMIN
+      - SYS_RAWIO
+    devices:
+      - /dev/dri:/dev/dri
+    ports:
+      - "28003:8000/tcp"
+    environment:
+      - TZ=America/New_York
+      - OVMS_LOG_LEVEL=INFO
+    command: >
+      --model_path /models/yolov8n
+      --model_name yolov8n
+      --port 9000
+      --rest_port 8000
+      --target_device GPU
+      --max_batch_size 1
+    networks:
+      - homelab-openvino-analyzer
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/v1/models/yolov8n || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  postgresql:
+    image: docker.io/library/postgres:16-alpine
+    container_name: homelab-openvino-analyzer-pg
+    restart: unless-stopped
+    ports:
+      - "25434:5432/tcp"
+    environment:
+      - POSTGRES_DB=detections
+      - POSTGRES_USER=detect_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - TZ=America/New_York
+    volumes:
+      - openvino-analyzer_postgresql_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - homelab-openvino-analyzer
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U detect_user -d detections"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  image-analyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: homelab-openvino-analyzer
+    restart: unless-stopped
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_NAME=detections
+      - DB_USER=detect_user
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - OVMS_HOST=openvino-server
+      - OVMS_PORT=8000
+      - INPUT_DIR=/input
+      - OUTPUT_DIR=/output
+      - CONFIDENCE_THRESHOLD=0.4
+      - TZ=America/New_York
+    volumes:
+      - ./input:/input
+      - ./output:/output
+    depends_on:
+      openvino-server:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    networks:
+      - homelab-openvino-analyzer
+
+  test-client:
+    build:
+      context: .
+      dockerfile: test-client.Dockerfile
+    container_name: homelab-openvino-analyzer-test
+    command: sleep 3600
+    networks:
+      - homelab-openvino-analyzer
+    depends_on:
+      - postgresql
+      - openvino-server
+
+networks:
+  homelab-openvino-analyzer:
+    driver: bridge
+
+volumes:
+  openvino-analyzer_postgresql_data:

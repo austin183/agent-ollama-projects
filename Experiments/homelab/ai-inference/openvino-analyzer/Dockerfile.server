@@ -1,0 +1,43 @@
+# Stage 1: Build environment - download and convert YOLOv8n model
+FROM docker.io/openvino/ubuntu24_dev:2026.1 AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir onnx
+
+WORKDIR /build
+
+# Download YOLOv8n ONNX model
+RUN wget -q --show-progress -O yolov8n.onnx \
+    "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8n.onnx"
+
+# Convert ONNX to OpenVINO IR format using Python API
+RUN python3 -c "
+import openvino as ov
+import sys
+print('Converting YOLOv8n ONNX to OpenVINO IR...')
+model = ov.convert_model('yolov8n.onnx', model_name='yolov8n', output_dir='/build/yolov8n')
+print('Conversion complete.')
+"
+
+# Verify conversion
+RUN ls -la /build/yolov8n/ && \
+    file /build/yolov8n/model.xml && \
+    file /build/yolov8n/model.bin
+
+# Stage 2: Runtime image
+FROM docker.io/openvino/model_server:2026.1-gpu
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /build/yolov8n /models/yolov8n
+
+# Verify model files exist
+RUN ls -la /models/yolov8n/ && \
+    file /models/yolov8n/model.xml && \
+    file /models/yolov8n/model.bin

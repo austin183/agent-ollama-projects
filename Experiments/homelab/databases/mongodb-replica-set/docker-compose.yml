@@ -1,0 +1,95 @@
+services:
+  mongo1:
+    image: localhost/homelab-mongo-replica:latest
+    container_name: homelab-mongo1
+    restart: unless-stopped
+    command: mongod --replSet homelab-rs --keyFile /data/config/keyfile --bind_ip 0.0.0.0
+    ports:
+      - "27018:27017/tcp"
+    volumes:
+      - mongodbreplicaset_mongo1_data:/data/db
+    environment:
+      - TZ=America/New_York
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    networks:
+      - homelab-mongodb-replica-set
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh -u admin -p ${MONGO_ROOT_PASSWORD} --authenticationDatabase admin --eval \"db.adminCommand('ping')\""]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  mongo2:
+    image: localhost/homelab-mongo-replica:latest
+    container_name: homelab-mongo2
+    restart: unless-stopped
+    command: mongod --replSet homelab-rs --keyFile /data/config/keyfile --bind_ip 0.0.0.0
+    ports:
+      - "27019:27017/tcp"
+    volumes:
+      - mongodbreplicaset_mongo2_data:/data/db
+    environment:
+      - TZ=America/New_York
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    networks:
+      - homelab-mongodb-replica-set
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh -u admin -p ${MONGO_ROOT_PASSWORD} --authenticationDatabase admin --eval \"db.adminCommand('ping')\""]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  mongo3:
+    image: localhost/homelab-mongo-replica:latest
+    container_name: homelab-mongo3
+    restart: unless-stopped
+    command: mongod --replSet homelab-rs --keyFile /data/config/keyfile --bind_ip 0.0.0.0
+    ports:
+      - "27020:27017/tcp"
+    volumes:
+      - mongodbreplicaset_mongo3_data:/data/db
+    environment:
+      - TZ=America/New_York
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    networks:
+      - homelab-mongodb-replica-set
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh -u admin -p ${MONGO_ROOT_PASSWORD} --authenticationDatabase admin --eval \"db.adminCommand('ping')\""]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  mongo-init:
+    image: docker.io/library/mongo:7.0
+    container_name: homelab-mongo-init
+    entrypoint: ["bash", "/scripts/init-replica-set.sh"]
+    environment:
+      - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_USER=admin
+      - MONGO_AUTH_DB=admin
+    volumes:
+      - ./init-replica-set.sh:/scripts/init-replica-set.sh:ro
+    networks:
+      - homelab-mongodb-replica-set
+
+  test-client:
+    image: docker.io/library/alpine:3.21
+    container_name: homelab-mongodb-replica-test
+    command: sleep 3600
+    networks:
+      - homelab-mongodb-replica-set
+
+networks:
+  homelab-mongodb-replica-set:
+    driver: bridge
+
+volumes:
+  mongodbreplicaset_mongo1_data:
+  mongodbreplicaset_mongo2_data:
+  mongodbreplicaset_mongo3_data:

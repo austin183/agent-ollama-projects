@@ -1,0 +1,8 @@
+FROM docker.io/library/alpine:3.21
+
+RUN apk add --no-cache \
+    postgresql-client \
+    curl \
+    wget \
+    iputils \
+    bind-tools

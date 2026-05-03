@@ -1,0 +1,36 @@
+services:
+  llamacpp-vulkan:
+    image: ghcr.io/ggml-org/llama.cpp:server-vulkan
+    container_name: homelab-llamacpp-vulkan
+    restart: unless-stopped
+    ports:
+      - "11436:8080/tcp"
+    volumes:
+      - ./models:/models
+    devices:
+      - /dev/dri:/dev/dri
+    command: >
+      -m /models/gemma-3-1b-it-Q4_K_M.gguf
+      --host 0.0.0.0 --port 8080
+      -c 4096
+    networks:
+      - homelab-llamacpp-vulkan
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  test-client:
+    image: docker.io/library/alpine:3.21
+    container_name: homelab-llamacpp-vulkan-test
+    command: sleep 3600
+    depends_on:
+      - llamacpp-vulkan
+    networks:
+      - homelab-llamacpp-vulkan
+
+networks:
+  homelab-llamacpp-vulkan:
+    driver: bridge

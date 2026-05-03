@@ -1,0 +1,8 @@
+# Environment files with secrets
+lab.env
+
+# Data directory (user files)
+data/
+
+# Container runtime artifacts
+*.pid

@@ -1,0 +1,11 @@
+# Image files processed by the watcher
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.tif
+*.ico
+*.webp
+*.avif

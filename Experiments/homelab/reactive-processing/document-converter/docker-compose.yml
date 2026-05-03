@@ -1,0 +1,35 @@
+services:
+  doc-converter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: homelab/doc-converter:latest
+    container_name: homelab-doc-converter
+    restart: unless-stopped
+    volumes:
+      - ./input:/input
+      - ./output:/output
+      - ./processed:/processed
+      - ./logs:/logs
+    environment:
+      - TZ=America/New_York
+    networks:
+      - homelab-docconv-network
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-doc-converter-test
+    command: sleep 3600
+    volumes:
+      - ./input:/input
+      - ./output:/output
+      - ./processed:/processed
+      - ./logs:/logs
+    networks:
+      - homelab-docconv-network
+    depends_on:
+      - doc-converter
+
+networks:
+  homelab-docconv-network:
+    driver: bridge

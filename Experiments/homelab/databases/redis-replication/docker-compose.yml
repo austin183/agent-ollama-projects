@@ -1,0 +1,60 @@
+services:
+  redis-primary:
+    image: docker.io/library/redis:7.4-alpine
+    container_name: homelab-redis-primary
+    ports:
+      - "46379:6379/tcp"
+    volumes:
+      - homelab_redis_replication_primary_data:/data
+      - ./conf/primary.conf:/usr/local/etc/redis/redis.conf:ro
+    command: >
+      sh -c "sed 's|requirepass .*|requirepass ${REDIS_PASSWORD}|' /usr/local/etc/redis/redis.conf > /tmp/redis.conf && redis-server /tmp/redis.conf"
+    networks:
+      - homelab-redis-replication
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  redis-replica:
+    image: docker.io/library/redis:7.4-alpine
+    container_name: homelab-redis-replica
+    ports:
+      - "46380:6379/tcp"
+    volumes:
+      - homelab_redis_replication_replica_data:/data
+      - ./conf/replica.conf:/usr/local/etc/redis/redis.conf:ro
+    command: >
+      sh -c "sed 's|requirepass .*|requirepass ${REDIS_PASSWORD}|;s|masterauth .*|masterauth ${REDIS_PASSWORD}|' /usr/local/etc/redis/redis.conf > /tmp/redis.conf && redis-server /tmp/redis.conf"
+    networks:
+      - homelab-redis-replication
+    depends_on:
+      - redis-primary
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  test-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-client
+    container_name: homelab-redis-replication-test
+    command: sleep 3600
+    networks:
+      - homelab-redis-replication
+    depends_on:
+      - redis-primary
+      - redis-replica
+
+networks:
+  homelab-redis-replication:
+    driver: bridge
+
+volumes:
+  homelab_redis_replication_primary_data:
+  homelab_redis_replication_replica_data:

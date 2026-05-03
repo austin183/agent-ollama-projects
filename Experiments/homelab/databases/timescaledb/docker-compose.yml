@@ -1,0 +1,39 @@
+services:
+  timescaledb:
+    image: docker.io/timescale/timescaledb:2.26.3-pg17
+    container_name: homelab-timescaledb
+    restart: unless-stopped
+    ports:
+      - "15433:5432/tcp"
+    volumes:
+      - timescaledb_timescaledb_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    environment:
+      - TZ=America/New_York
+      - POSTGRES_USER=homelab
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=homelab_db
+    networks:
+      - homelab-timescaledb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homelab -d homelab_db"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-timescaledb-test
+    command: sleep 3600
+    networks:
+      - homelab-timescaledb
+    depends_on:
+      - timescaledb
+
+networks:
+  homelab-timescaledb:
+    driver: bridge
+
+volumes:
+  timescaledb_timescaledb_data:

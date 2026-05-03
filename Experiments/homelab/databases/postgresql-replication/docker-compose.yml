@@ -1,0 +1,111 @@
+services:
+  primary:
+    image: docker.io/library/postgres:16-alpine
+    container_name: homelab-pg-primary
+    restart: unless-stopped
+    ports:
+      - "15434:5432/tcp"
+    volumes:
+      - postgresql-replication_primary_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    environment:
+      - TZ=America/New_York
+      - POSTGRES_USER=replicator
+      - POSTGRES_PASSWORD=${REPLICATION_PASSWORD}
+      - POSTGRES_DB=homelab_db
+      - POSTGRES_HOST_AUTH_METHOD=scram-sha-256
+    networks:
+      - homelab-postgresql-replication
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U replicator -d homelab_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  standby:
+    image: docker.io/library/postgres:16-alpine
+    container_name: homelab-pg-standby
+    restart: unless-stopped
+    ports:
+      - "15435:5432/tcp"
+    volumes:
+      - postgresql-replication_standby_data:/var/lib/postgresql/data
+    environment:
+      - TZ=America/New_York
+      - POSTGRES_USER=replicator
+      - POSTGRES_PASSWORD=${REPLICATION_PASSWORD}
+      - PGPASSWORD=${REPLICATION_PASSWORD}
+      - POSTGRES_DB=homelab_db
+    networks:
+      - homelab-postgresql-replication
+    depends_on:
+      - primary
+    command: >
+      sh -c '
+        echo "Waiting for primary to be ready...";
+        for i in $(seq 1 60); do
+          if pg_isready -h primary -p 5432 -U replicator > /dev/null 2>&1; then
+            echo "Primary is ready!";
+            break;
+          fi;
+          echo "Waiting... ($i/60)";
+          sleep 2;
+        done;
+        echo "Initializing standby from primary...";
+        pg_basebackup -h primary -U replicator -D $$PGDATA -Fp -Xs -P -R -S standby_slot;
+        exec docker-entrypoint.sh postgres;
+      '
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U replicator -d homelab_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  pgadmin:
+    image: docker.io/dpage/pgadmin4:9.9.0
+    container_name: homelab-pgadmin-replica
+    restart: unless-stopped
+    ports:
+      - "18082:80/tcp"
+    volumes:
+      - postgresql-replication_pgadmin_data:/var/lib/pgadmin
+    environment:
+      - TZ=America/New_York
+      - PGADMIN_DEFAULT_EMAIL=admin@homelab.localdomain
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    networks:
+      - homelab-postgresql-replication
+    depends_on:
+      - primary
+      - standby
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  test-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-client
+    container_name: homelab-postgresql-replication-test
+    command: sleep 3600
+    networks:
+      - homelab-postgresql-replication
+    depends_on:
+      - primary
+      - standby
+
+networks:
+  homelab-postgresql-replication:
+    driver: bridge
+
+volumes:
+  postgresql-replication_primary_data:
+  postgresql-replication_standby_data:
+  postgresql-replication_pgadmin_data:

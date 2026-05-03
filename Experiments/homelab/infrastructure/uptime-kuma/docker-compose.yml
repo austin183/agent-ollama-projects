@@ -1,0 +1,36 @@
+services:
+  uptime-kuma:
+    image: docker.io/louislam/uptime-kuma:1
+    container_name: homelab-uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "3002:3001/tcp"
+    volumes:
+      - uptime-kuma_kuma_data:/app/data
+    environment:
+      - TZ=America/New_York
+    networks:
+      - homelab-uptime-kuma
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3001/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-uptime-kuma-test
+    command: sleep 3600
+    networks:
+      - homelab-uptime-kuma
+    depends_on:
+      - uptime-kuma
+
+volumes:
+  uptime-kuma_kuma_data:
+    driver: local
+
+networks:
+  homelab-uptime-kuma:
+    driver: bridge

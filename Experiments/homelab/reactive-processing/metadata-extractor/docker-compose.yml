@@ -1,0 +1,66 @@
+services:
+  postgresql:
+    image: docker.io/library/postgres:16-alpine
+    container_name: homelab-metadata-pg
+    restart: unless-stopped
+    ports:
+      - "25433:5432/tcp"
+    environment:
+      - POSTGRES_DB=metadata
+      - POSTGRES_USER=metadata_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - TZ=America/New_York
+    volumes:
+      - metadata_extractor_pg_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - homelab-metadata-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metadata_user -d metadata"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  metadata-extractor:
+    build: .
+    container_name: homelab-metadata-extractor
+    restart: unless-stopped
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_NAME=metadata
+      - DB_USER=metadata_user
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - INPUT_DIR=/input
+      - OUTPUT_DIR=/output
+      - TZ=America/New_York
+    volumes:
+      - ./input:/input
+      - ./output:/output
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - homelab-metadata-net
+
+  test-client:
+    build:
+      context: .
+      dockerfile: test-client.Dockerfile
+    container_name: homelab-metadata-extractor-test
+    command: sleep 3600
+    environment:
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - homelab-metadata-net
+    depends_on:
+      - postgresql
+      - metadata-extractor
+
+networks:
+  homelab-metadata-net:
+    driver: bridge
+
+volumes:
+  metadata_extractor_pg_data:

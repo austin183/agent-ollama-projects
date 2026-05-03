@@ -1,0 +1,40 @@
+services:
+  clamav-scanner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: homelab-clamav-scanner
+    restart: unless-stopped
+    environment:
+      - SCAN_DIR=/scan
+      - OUTPUT_DIR=/output
+      - QUARANTINE_DIR=/quarantine
+    volumes:
+      - ./input:/scan:ro
+      - ./output:/output
+      - ./quarantine:/quarantine
+      - clamav_scanner_data:/var/lib/clamav
+    networks:
+      - homelab-clamav-net
+    healthcheck:
+      test: ["CMD-SHELL", "echo STAT | nc -U -w 5 /var/run/clamav/clamd.ctl || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  test-client:
+    image: docker.io/library/alpine:3.21
+    container_name: homelab-clamav-scanner-test
+    command: sleep 3600
+    networks:
+      - homelab-clamav-net
+    depends_on:
+      - clamav-scanner
+
+networks:
+  homelab-clamav-net:
+    driver: bridge
+
+volumes:
+  clamav_scanner_data:

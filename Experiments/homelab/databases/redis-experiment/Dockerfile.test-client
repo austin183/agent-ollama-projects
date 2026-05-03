@@ -1,0 +1,8 @@
+FROM docker.io/alpine:3.21
+
+RUN apk add --no-cache \
+    redis \
+    curl \
+    wget \
+    iputils \
+    bind-tools

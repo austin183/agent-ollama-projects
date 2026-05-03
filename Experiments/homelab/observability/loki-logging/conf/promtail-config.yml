@@ -1,0 +1,36 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /work/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: system-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          hostname: homelab
+    files:
+      select:
+        min_age: "1m"
+      match:
+        - /var/log/*.log
+
+  - job_name: container-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: container-logs
+          hostname: homelab
+    files:
+      select:
+        min_age: "1m"
+      match:
+        - /host-logs/*.log

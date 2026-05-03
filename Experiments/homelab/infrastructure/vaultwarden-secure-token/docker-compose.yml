@@ -1,0 +1,57 @@
+services:
+  init:
+    build:
+      dockerfile: Dockerfile.init
+    container_name: homelab-vaultwarden-secure-token-init
+    volumes:
+      - ./init/hash-token.sh:/hash-token.sh:ro
+      - phc_data:/shared
+    environment:
+      - PLAINTEXT_PASSWORD=${PLAINTEXT_PASSWORD}
+    command: ["sh", "/hash-token.sh"]
+    networks:
+      - homelab-vaultwarden-secure-token
+
+  vaultwarden:
+    image: docker.io/vaultwarden/server:1.35.7
+    container_name: homelab-vaultwarden-secure-token
+    restart: unless-stopped
+    ports:
+      - "8087:80/tcp"
+    volumes:
+      - vaultwarden_data:/data
+      - phc_data:/shared
+    environment:
+      - TZ=America/New_York
+      - WEBSOCKET_ENABLED=true
+      - SIGNUPS_ALLOWED=false
+      - DATABASE_URL=/data/db.sqlite3
+    entrypoint: ["sh", "-c"]
+    command: ['export ADMIN_TOKEN="$(cat /shared/phc-token)"; echo "[INIT] ADMIN_TOKEN loaded"; exec /start.sh']
+    networks:
+      - homelab-vaultwarden-secure-token
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - init
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-vaultwarden-secure-token-test
+    command: sleep 3600
+    networks:
+      - homelab-vaultwarden-secure-token
+    depends_on:
+      - vaultwarden
+
+volumes:
+  vaultwarden_data:
+  phc_data:
+
+networks:
+  homelab-vaultwarden-secure-token:
+    driver: bridge

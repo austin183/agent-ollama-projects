@@ -1,0 +1,106 @@
+services:
+  primary:
+    image: docker.io/library/mariadb:10.11
+    container_name: homelab-mariadb-primary
+    restart: unless-stopped
+    ports:
+      - "13307:3306/tcp"
+    volumes:
+      - mariadb-replication_primary_data:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+      - ./configs/primary.cnf:/etc/mysql/conf.d/server.cnf:ro
+    env_file:
+      - .env
+    environment:
+      - MYSQL_USER=replicator
+      - MYSQL_PASSWORD=${REPLICATOR_PASSWORD}
+      - MYSQL_DATABASE=homelab_db
+    networks:
+      - homelab-mariadb-replication
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  replica:
+    image: docker.io/library/mariadb:10.11
+    container_name: homelab-mariadb-replica
+    restart: unless-stopped
+    ports:
+      - "13308:3306/tcp"
+    volumes:
+      - mariadb-replication_replica_data:/var/lib/mysql
+      - ./configs/replica.cnf:/etc/mysql/conf.d/server.cnf:ro
+    env_file:
+      - .env
+    environment:
+      - MYSQL_USER=replicator
+      - MYSQL_PASSWORD=${REPLICATOR_PASSWORD}
+      - MYSQL_DATABASE=homelab_db
+    networks:
+      - homelab-mariadb-replication
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  replication-init:
+    image: docker.io/library/mariadb:10.11
+    container_name: homelab-mariadb-repl-init
+    restart: "no"
+    entrypoint: ["/bin/bash", "/scripts/setup-replication.sh"]
+    volumes:
+      - ./setup-replication.sh:/scripts/setup-replication.sh:ro
+    env_file:
+      - .env
+    environment:
+      - TZ=America/New_York
+    networks:
+      - homelab-mariadb-replication
+    depends_on:
+      primary:
+        condition: service_healthy
+      replica:
+        condition: service_healthy
+
+  adminer:
+    image: docker.io/library/adminer:4.8.1
+    container_name: homelab-adminer-replica
+    restart: unless-stopped
+    ports:
+      - "18083:8080/tcp"
+    environment:
+      - TZ=America/New_York
+    networks:
+      - homelab-mariadb-replication
+    depends_on:
+      - primary
+      - replica
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-mariadb-replication-test
+    command: sleep 3600
+    networks:
+      - homelab-mariadb-replication
+    depends_on:
+      - primary
+      - replica
+
+networks:
+  homelab-mariadb-replication:
+    driver: bridge
+
+volumes:
+  mariadb-replication_primary_data:
+  mariadb-replication_replica_data:

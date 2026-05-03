@@ -1,0 +1,58 @@
+services:
+  redis:
+    image: docker.io/library/redis:7.4-alpine
+    container_name: homelab-redis
+    restart: unless-stopped
+    ports:
+      - "16379:6379/tcp"
+    volumes:
+      - redis_experiment_redis_data:/data
+      - ./conf/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - homelab-redis-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redisinsight:
+    image: docker.io/redis/redisinsight:2.52
+    container_name: homelab-redisinsight
+    restart: unless-stopped
+    ports:
+      - "15540:5540/tcp"
+    volumes:
+      - redis_experiment_redisinsight_data:/db
+    networks:
+      - homelab-redis-network
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const h=require('http');h.get('http://127.0.0.1:5540/api/healthcheck',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  test-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-client
+    container_name: homelab-redis-test
+    command: sleep 3600
+    networks:
+      - homelab-redis-network
+    depends_on:
+      - redis
+      - redisinsight
+
+networks:
+  homelab-redis-network:
+    driver: bridge
+
+volumes:
+  redis_experiment_redis_data:
+  redis_experiment_redisinsight_data:

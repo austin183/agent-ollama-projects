@@ -1,0 +1,179 @@
+services:
+  rabbitmq1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: homelab-rabbitmq1
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_DEFAULT_VHOST=/
+      - RABBITMQ_NODENAME=rabbit@rabbitmq1
+      - RABBITMQ_ERLANG_COOKIE=${RABBITMQ_CLUSTER_COOKIE}
+      - TZ=America/New_York
+    volumes:
+      - rabbitmq_cluster_rabbitmq1_data:/var/lib/rabbitmq
+    ports:
+      - "35672:5672/tcp"
+      - "35673:15672/tcp"
+      - "35674:25672/tcp"
+    networks:
+      - homelab-rabbitmq-cluster
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  rabbitmq2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: homelab-rabbitmq2
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_DEFAULT_VHOST=/
+      - RABBITMQ_NODENAME=rabbit@rabbitmq2
+      - RABBITMQ_ERLANG_COOKIE=${RABBITMQ_CLUSTER_COOKIE}
+      - TZ=America/New_York
+    volumes:
+      - rabbitmq_cluster_rabbitmq2_data:/var/lib/rabbitmq
+    ports:
+      - "35676:15672/tcp"
+      - "35677:25672/tcp"
+    networks:
+      - homelab-rabbitmq-cluster
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - rabbitmq1
+
+  rabbitmq3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: homelab-rabbitmq3
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_DEFAULT_VHOST=/
+      - RABBITMQ_NODENAME=rabbit@rabbitmq3
+      - RABBITMQ_ERLANG_COOKIE=${RABBITMQ_CLUSTER_COOKIE}
+      - TZ=America/New_York
+    volumes:
+      - rabbitmq_cluster_rabbitmq3_data:/var/lib/rabbitmq
+    ports:
+      - "35679:15672/tcp"
+      - "35680:25672/tcp"
+    networks:
+      - homelab-rabbitmq-cluster
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - rabbitmq1
+
+  cluster-init:
+    image: docker.io/rabbitmq:3.13-management-alpine
+    container_name: homelab-rabbitmq-init
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=${RABBITMQ_CLUSTER_COOKIE}
+    command: >
+      sh -c "
+        echo 'Waiting for rabbitmq1 to be ready...';
+        until rabbitmq-diagnostics --node rabbit@rabbitmq1 -q ping; do
+          echo '  Still waiting...';
+          sleep 3;
+        done;
+        echo 'rabbitmq1 is ready. Verifying cluster...';
+        rabbitmqctl --node rabbit@rabbitmq1 cluster_status;
+        echo 'Cluster init complete.';
+        exit 0
+      "
+    networks:
+      - homelab-rabbitmq-cluster
+    depends_on:
+      - rabbitmq1
+
+  celery-worker:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: homelab-celery-worker
+    restart: unless-stopped
+    command: celery -A task_worker worker --loglevel=info --concurrency=2
+    environment:
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq1:5672//
+      - CELERY_RESULT_BACKEND=rpc://
+      - TZ=America/New_York
+    volumes:
+      - ./workers:/app/workers
+    networks:
+      - homelab-rabbitmq-cluster
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+
+  flower:
+    image: docker.io/mher/flower:2.0.1
+    container_name: homelab-flower
+    restart: unless-stopped
+    environment:
+      - FLOWER_PORT=5555
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq1:5672//
+      - FLOWER_BASIC_AUTH=${FLOWER_BASIC_AUTH}
+      - TZ=America/New_York
+    ports:
+      - "35556:5555/tcp"
+    networks:
+      - homelab-rabbitmq-cluster
+    depends_on:
+      - rabbitmq1
+      - celery-worker
+
+  test-producer:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: homelab-test-producer
+    command: sh -c "sleep 15 && python /app/workers/producer.py"
+    environment:
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq1:5672//
+      - TZ=America/New_York
+    volumes:
+      - ./workers:/app/workers
+    networks:
+      - homelab-rabbitmq-cluster
+    depends_on:
+      - rabbitmq1
+      - celery-worker
+
+  test-client:
+    image: docker.io/alpine:3.21
+    container_name: homelab-rabbitmq-cluster-test
+    command: sleep 3600
+    networks:
+      - homelab-rabbitmq-cluster
+    depends_on:
+      - rabbitmq1
+
+networks:
+  homelab-rabbitmq-cluster:
+    driver: bridge
+
+volumes:
+  rabbitmq_cluster_rabbitmq1_data:
+  rabbitmq_cluster_rabbitmq2_data:
+  rabbitmq_cluster_rabbitmq3_data:

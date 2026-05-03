@@ -1,0 +1,67 @@
+services:
+  postgresql:
+    image: docker.io/library/postgres:16-alpine
+    container_name: homelab-postgresql
+    restart: unless-stopped
+    ports:
+      - "15432:5432/tcp"
+    volumes:
+      - postgresql-pgadmin_postgresql_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    environment:
+      - TZ=America/New_York
+      - POSTGRES_USER=homelab
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=homelab_db
+    networks:
+      - homelab-postgresql-pgadmin
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homelab -d homelab_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  pgadmin:
+    image: docker.io/dpage/pgadmin4:9.9.0
+    container_name: homelab-pgadmin
+    restart: unless-stopped
+    ports:
+      - "18081:80/tcp"
+    volumes:
+      - postgresql-pgadmin_pgadmin_data:/var/lib/pgadmin
+    environment:
+      - TZ=America/New_York
+      - PGADMIN_DEFAULT_EMAIL=admin@homelab.localdomain
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    networks:
+      - homelab-postgresql-pgadmin
+    depends_on:
+      - postgresql
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  test-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-client
+    container_name: homelab-postgresql-pgadmin-test
+    command: sleep 3600
+    networks:
+      - homelab-postgresql-pgadmin
+    depends_on:
+      - postgresql
+
+networks:
+  homelab-postgresql-pgadmin:
+    driver: bridge
+
+volumes:
+  postgresql-pgadmin_postgresql_data:
+  postgresql-pgadmin_pgadmin_data:
