@@ -91,10 +91,12 @@ final class CollageViewModel {
 
     var titleStyle: TitleStyle = .fromUserDefaults() {
         didSet {
-            undoManager.registerUndo(withTarget: self) { target in
-                target.titleStyle = oldValue
+            if !isDraggingTitle {
+                undoManager.registerUndo(withTarget: self) { target in
+                    target.titleStyle = oldValue
+                }
+                undoManager.setActionName("Change Title Style")
             }
-            undoManager.setActionName("Change Title Style")
             titleStyle.saveToUserDefaults()
             updatePreview()
         }
@@ -259,6 +261,7 @@ final class CollageViewModel {
     ) {
         self.saliencyAnalyzer = saliencyAnalyzer
         self.assembler = assembler
+        self.undoManager.levelsOfUndo = 60
         self.backgroundColor = loadColor(key: ViewModelUserDefaultsKeys.backgroundColor, default: .black)
         self.gradientStartColor = loadColor(key: ViewModelUserDefaultsKeys.gradientStartColor, default: .black)
         self.gradientEndColor = loadColor(key: ViewModelUserDefaultsKeys.gradientEndColor, default: .darkGray)
