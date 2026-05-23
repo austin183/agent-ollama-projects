@@ -234,3 +234,6 @@ __marimo__/
 
 # YOLO input images
 **/yolo-cuda/input/*.jpg
+
+**/.playwright-cli/
+**/.playwright-mcp/
