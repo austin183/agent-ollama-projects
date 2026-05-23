@@ -1,0 +1,576 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		D941DEA52FB0ED2B00B1C1C2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D941DE8F2FB0ED2A00B1C1C2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D941DE962FB0ED2A00B1C1C2;
+			remoteInfo = CollageMaker;
+		};
+		D941DEAF2FB0ED2B00B1C1C2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D941DE8F2FB0ED2A00B1C1C2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D941DE962FB0ED2A00B1C1C2;
+			remoteInfo = CollageMaker;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		D941DE972FB0ED2A00B1C1C2 /* CollageMaker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CollageMaker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D941DEA42FB0ED2B00B1C1C2 /* CollageMakerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CollageMakerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D941DEAE2FB0ED2B00B1C1C2 /* CollageMakerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CollageMakerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D941DE992FB0ED2A00B1C1C2 /* CollageMaker */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CollageMaker;
+			sourceTree = "<group>";
+		};
+		D941DEA72FB0ED2B00B1C1C2 /* CollageMakerTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CollageMakerTests;
+			sourceTree = "<group>";
+		};
+		D941DEB12FB0ED2B00B1C1C2 /* CollageMakerUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CollageMakerUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D941DE942FB0ED2A00B1C1C2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D941DEA12FB0ED2B00B1C1C2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D941DEAB2FB0ED2B00B1C1C2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D941DE8E2FB0ED2A00B1C1C2 = {
+			isa = PBXGroup;
+			children = (
+				D941DE992FB0ED2A00B1C1C2 /* CollageMaker */,
+				D941DEA72FB0ED2B00B1C1C2 /* CollageMakerTests */,
+				D941DEB12FB0ED2B00B1C1C2 /* CollageMakerUITests */,
+				D941DE982FB0ED2A00B1C1C2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D941DE982FB0ED2A00B1C1C2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D941DE972FB0ED2A00B1C1C2 /* CollageMaker.app */,
+				D941DEA42FB0ED2B00B1C1C2 /* CollageMakerTests.xctest */,
+				D941DEAE2FB0ED2B00B1C1C2 /* CollageMakerUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D941DE962FB0ED2A00B1C1C2 /* CollageMaker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D941DEB82FB0ED2B00B1C1C2 /* Build configuration list for PBXNativeTarget "CollageMaker" */;
+			buildPhases = (
+				D941DE932FB0ED2A00B1C1C2 /* Sources */,
+				D941DE942FB0ED2A00B1C1C2 /* Frameworks */,
+				D941DE952FB0ED2A00B1C1C2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D941DE992FB0ED2A00B1C1C2 /* CollageMaker */,
+			);
+			name = CollageMaker;
+			packageProductDependencies = (
+			);
+			productName = CollageMaker;
+			productReference = D941DE972FB0ED2A00B1C1C2 /* CollageMaker.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D941DEA32FB0ED2B00B1C1C2 /* CollageMakerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D941DEBB2FB0ED2B00B1C1C2 /* Build configuration list for PBXNativeTarget "CollageMakerTests" */;
+			buildPhases = (
+				D941DEA02FB0ED2B00B1C1C2 /* Sources */,
+				D941DEA12FB0ED2B00B1C1C2 /* Frameworks */,
+				D941DEA22FB0ED2B00B1C1C2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D941DEA62FB0ED2B00B1C1C2 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D941DEA72FB0ED2B00B1C1C2 /* CollageMakerTests */,
+			);
+			name = CollageMakerTests;
+			packageProductDependencies = (
+			);
+			productName = CollageMakerTests;
+			productReference = D941DEA42FB0ED2B00B1C1C2 /* CollageMakerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D941DEAD2FB0ED2B00B1C1C2 /* CollageMakerUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D941DEBE2FB0ED2B00B1C1C2 /* Build configuration list for PBXNativeTarget "CollageMakerUITests" */;
+			buildPhases = (
+				D941DEAA2FB0ED2B00B1C1C2 /* Sources */,
+				D941DEAB2FB0ED2B00B1C1C2 /* Frameworks */,
+				D941DEAC2FB0ED2B00B1C1C2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D941DEB02FB0ED2B00B1C1C2 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D941DEB12FB0ED2B00B1C1C2 /* CollageMakerUITests */,
+			);
+			name = CollageMakerUITests;
+			packageProductDependencies = (
+			);
+			productName = CollageMakerUITests;
+			productReference = D941DEAE2FB0ED2B00B1C1C2 /* CollageMakerUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D941DE8F2FB0ED2A00B1C1C2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2640;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					D941DE962FB0ED2A00B1C1C2 = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
+					D941DEA32FB0ED2B00B1C1C2 = {
+						CreatedOnToolsVersion = 26.4.1;
+						TestTargetID = D941DE962FB0ED2A00B1C1C2;
+					};
+					D941DEAD2FB0ED2B00B1C1C2 = {
+						CreatedOnToolsVersion = 26.4.1;
+						TestTargetID = D941DE962FB0ED2A00B1C1C2;
+					};
+				};
+			};
+			buildConfigurationList = D941DE922FB0ED2A00B1C1C2 /* Build configuration list for PBXProject "CollageMaker" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D941DE8E2FB0ED2A00B1C1C2;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D941DE982FB0ED2A00B1C1C2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D941DE962FB0ED2A00B1C1C2 /* CollageMaker */,
+				D941DEA32FB0ED2B00B1C1C2 /* CollageMakerTests */,
+				D941DEAD2FB0ED2B00B1C1C2 /* CollageMakerUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D941DE952FB0ED2A00B1C1C2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D941DEA22FB0ED2B00B1C1C2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D941DEAC2FB0ED2B00B1C1C2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D941DE932FB0ED2A00B1C1C2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D941DEA02FB0ED2B00B1C1C2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D941DEAA2FB0ED2B00B1C1C2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D941DEA62FB0ED2B00B1C1C2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D941DE962FB0ED2A00B1C1C2 /* CollageMaker */;
+			targetProxy = D941DEA52FB0ED2B00B1C1C2 /* PBXContainerItemProxy */;
+		};
+		D941DEB02FB0ED2B00B1C1C2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D941DE962FB0ED2A00B1C1C2 /* CollageMaker */;
+			targetProxy = D941DEAF2FB0ED2B00B1C1C2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		D941DEB62FB0ED2B00B1C1C2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		D941DEB72FB0ED2B00B1C1C2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		D941DEB92FB0ED2B00B1C1C2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = austin183.indie.CollageMaker;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		D941DEBA2FB0ED2B00B1C1C2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = austin183.indie.CollageMaker;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		D941DEBC2FB0ED2B00B1C1C2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = austin183.indie.CollageMakerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CollageMaker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CollageMaker";
+			};
+			name = Debug;
+		};
+		D941DEBD2FB0ED2B00B1C1C2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = austin183.indie.CollageMakerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CollageMaker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CollageMaker";
+			};
+			name = Release;
+		};
+		D941DEBF2FB0ED2B00B1C1C2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = austin183.indie.CollageMakerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = CollageMaker;
+			};
+			name = Debug;
+		};
+		D941DEC02FB0ED2B00B1C1C2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = austin183.indie.CollageMakerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = CollageMaker;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D941DE922FB0ED2A00B1C1C2 /* Build configuration list for PBXProject "CollageMaker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D941DEB62FB0ED2B00B1C1C2 /* Debug */,
+				D941DEB72FB0ED2B00B1C1C2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D941DEB82FB0ED2B00B1C1C2 /* Build configuration list for PBXNativeTarget "CollageMaker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D941DEB92FB0ED2B00B1C1C2 /* Debug */,
+				D941DEBA2FB0ED2B00B1C1C2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D941DEBB2FB0ED2B00B1C1C2 /* Build configuration list for PBXNativeTarget "CollageMakerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D941DEBC2FB0ED2B00B1C1C2 /* Debug */,
+				D941DEBD2FB0ED2B00B1C1C2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D941DEBE2FB0ED2B00B1C1C2 /* Build configuration list for PBXNativeTarget "CollageMakerUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D941DEBF2FB0ED2B00B1C1C2 /* Debug */,
+				D941DEC02FB0ED2B00B1C1C2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D941DE8F2FB0ED2A00B1C1C2 /* Project object */;
+}

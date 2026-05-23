@@ -1,0 +1,2 @@
+# Panel Editor Resizing by the Four Corners
+When I click on any of the four corners to resize the overlay, the cursor should stay on the corner that was clicked why the overlay resizes.  However, at the start, the ovelay box jumps so that the cursor is somewhere in the middle of the overlay.  Dragging while clicked will still perform the resize, but the presentation looks strange and gives misleading feedback to the user since the overlay initially jumps out of place.

@@ -1,0 +1,11 @@
+_agent_docs/log-output/**
+_agent_docs/images/**
+
+# macOS
+.DS_Store
+
+# Xcode
+*.xcuserstate
+
+# Playwright CLI
+.playwright-cli/

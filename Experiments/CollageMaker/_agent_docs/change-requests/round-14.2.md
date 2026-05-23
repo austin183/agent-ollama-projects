@@ -1,0 +1,2 @@
+# Bugs from round-14.1.md
+There are a few bugs.  The Click and Drag on the panel editor scrolls the opposite direction than expected. Clicking in the Top Right corner acts like a scroll action, and clicking the other three corners makes the overlay jump so the cursor is on the top left corner, even if that forces the overlay outside the bounds of the image itself.  Do you think these are quick fixes, or do you think we should write out our session notes and tackle these next time?  

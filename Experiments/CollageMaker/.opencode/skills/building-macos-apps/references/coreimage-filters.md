@@ -1,0 +1,150 @@
+# CoreImage — Filters and GPU Processing
+
+## CIContext
+
+```swift
+// Create context for rendering
+let context = CIContext(options: [.useSoftwareRenderer: false])
+
+// Render CIImage to CGImage
+let cgImage = context.createCGImage(ciImage, from: ciImage.extent)!
+```
+
+## Built-in Filters
+
+Access via `CIFilter` or `CIFilterGenerator`:
+
+| Category | Filters |
+|---|---|
+| Blur | `CIGaussianBlur`, `CIMotionBlur` |
+| Color | `CIColorControls`, `CIToneCurve` |
+| Geometry | `CIAffineTransform`, `CICrop` |
+| Composite | `CISourceOverCompositing`, `CIBlendWithMask` |
+
+## CIImage Operations
+
+```swift
+CIImage(contentsOf: url)           // From URL
+CIImage(cgImage: cgImage)          // From CGImage
+ciImage.cropping(to: CGRect)       // Crop
+ciImage.applyingFilter("CIGaussianBlur", parameters: [:])  // Apply filter
+```
+
+## Custom Kernels
+
+`CIKernel` is being deprecated in favor of Metal Shading Language (MSL) via `CIImageProcessorKernel`.
+
+```swift
+let kernel = CIKernel(source: """
+    kernel vec4 process(__sample s) {
+        return vec4(s.rgb * 2.0, 1.0);
+    }
+""")
+```
+
+## vImage (Accelerate Framework)
+
+High-performance CPU image processing using vector instructions.
+
+| Operation | Function | Purpose |
+|---|---|---|
+| Resize | `vImageScale_ARGB8888` | Scale image |
+| Convert | `vImageConvert_BGRA8888toARGB8888` | Pixel format |
+| Blend | `vImageBlend_ARGB8888` | Alpha blend |
+| Convolution | `vImageConvolve3x3` | Kernel (blur, sharpen) |
+
+### CVPixelBuffer Access
+
+```swift
+import CoreVideo
+
+CVPixelBufferLockBaseAddress(buffer, .readOnly)
+defer { CVPixelBufferUnlockBaseAddress(buffer, .readOnly) }
+
+let width = CVPixelBufferGetWidth(buffer)
+let height = CVPixelBufferGetHeight(buffer)
+let bytesPerRow = CVPixelBufferGetBytesPerRow(buffer)
+let baseAddress = CVPixelBufferGetBaseAddress(buffer)
+```
+
+## CoreGraphics Compositing Example
+
+```swift
+func assemble(panels: [Panel], cgImages: [CGImage?], crops: [CropInfo]) -> Data? {
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    let bitmapInfo: CGBitmapInfo = [.byteOrder32Big]
+
+    guard let context = CGContext(
+        data: nil, width: Int(width), height: Int(height),
+        bitsPerComponent: 8, bytesPerRow: 0,
+        space: colorSpace, bitmapInfo: bitmapInfo.rawValue
+    ) else { return nil }
+
+    // Flip to top-left origin — IMPORTANT: Only flip when exporting to file
+    // (JPEG/PNG). Do NOT flip when rendering to NSBitmapImageRep for display
+    // via NSImage → SwiftUI Image(nsImage:), as the AppKit bridge handles
+    // the bottom-left to top-left conversion automatically.
+    context.translateBy(x: 0, y: height)
+    context.scaleBy(x: 1, y: -1)
+
+    context.setFillColor(backgroundColor.cgColor)
+    context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+
+    context.interpolationQuality = .high
+    for panel in panels {
+        guard let cg = cgImages[panel.imageIndex] else { continue }
+        context.clip(to: panel.frame)
+        let cropped = cg.cropping(to: sourceRect) ?? cg
+        context.draw(cropped, in: panel.frame)
+    }
+
+    // Title: use NSAttributedString.draw(at:) — CGContext text API is deprecated
+    guard let finalImage = context.makeImage() else { return nil }
+    let bitmapRep = NSBitmapImageRep(cgImage: finalImage)
+    return bitmapRep.representation(using: .jpeg, properties: [.compressionFactor: 0.92])
+}
+```
+
+### Gradient Full-Coverage Line Length
+
+When drawing a linear gradient from center that must cover all four corners at any angle, use the true diagonal half-length, not `min(w, h) / 2`:
+
+```swift
+let halfDiag = sqrt(w * w + h * h) / 2.0
+let center = CGPoint(x: w / 2, y: h / 2)
+let angleRad = gradientAngle * .pi / 180.0
+
+let start = CGPoint(
+    x: center.x - halfDiag * cos(angleRad),
+    y: center.y - halfDiag * sin(angleRad)
+)
+let end = CGPoint(
+    x: center.x + halfDiag * cos(angleRad),
+    y: center.y + halfDiag * sin(angleRad)
+)
+
+context.drawLinearGradient(
+    gradient!,
+    start: start,
+    end: end,
+    options: []
+)
+```
+
+Using `min(w, h) / 2` produces a line only as long as the smaller dimension's radius, leaving corners uncovered on non-square canvases.
+
+**Key points:**
+- `bytesPerRow: 0` lets system calculate it
+- `[.byteOrder32Big]` = 32-bit RGBX, no alpha — fine for production, but `makeImage()` may return `nil` in tests
+- `interpolationQuality = .high` for resize quality
+- Use `NSAttributedString.draw(at:)` for text overlays (see `nsattributedstring-drawing.md`)
+
+## Pitfalls
+
+- **CGContext `[.byteOrder32Big]` test failures** — `makeImage()` returns `nil` in test environment; use `NSBitmapImageRep` with RGBA
+- **`NSColorSpaceName.sRGB`** — doesn't exist; use `.deviceRGB`
+- **CGContext text** — `selectFont`/`showTextAtPoint` deprecated, use `NSAttributedString.draw(at:)`
+- **CGContext Y-flip with NSBitmapImageRep display** — Do NOT flip the CGContext Y-axis (`translateBy` + `scaleBy`) when rendering to `NSBitmapImageRep` that will be displayed via `NSImage` → SwiftUI `Image(nsImage:)`. The AppKit/SwiftUI bridge handles the bottom-left to top-left conversion automatically. Flipping the CGContext will render images upside down. The flip IS correct for direct CGContext drawing in `NSView.draw(_:)` or when exporting to file (JPEG/PNG), where you want the output in top-left orientation.
+- **Canvas-to-UI coordinate conversion** — When overlaying SwiftUI hit areas on top of a CoreGraphics-rendered image, the hit area coordinates must account for Y-axis inversion (CoreGraphics bottom-left vs SwiftUI top-left) AND aspect-ratio fitting (`.aspectRatio(contentMode: .fit)` scales down, not up). The fitted size formula: if canvas aspect > preview aspect, constrain by preview width (`fittedWidth = previewWidth, fittedHeight = previewWidth / canvasAspect`); otherwise constrain by preview height.
+- **NSImage display size hint vs actual resolution** — `NSImage(cgImage:size:)` `size` parameter is a display hint for AppKit, not the actual pixel dimensions. The underlying bitmap retains its original resolution. SwiftUI's `Image(nsImage:)` ignores this hint and uses the bitmap's actual pixel dimensions, then scales via `.aspectRatio(contentMode: .fit)`. Coordinate conversion must use the actual canvas resolution, not the hint size.
+- **EXIF coordinate mismatch with CGImage overlays** — `Image(nsImage:)` applies EXIF orientation corrections (rotation, flip) before display, but `sourceRect` coordinates from CGImage operations live in raw pixel space. The overlay appears shifted or rotated. Fix: create `NSImage(cgImage: image.cgImage, size: .zero)` to strip EXIF metadata, ensuring the displayed image matches the CGImage coordinate space.

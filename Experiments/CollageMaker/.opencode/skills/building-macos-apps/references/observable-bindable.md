@@ -1,0 +1,252 @@
+# @Observable and @Bindable — macOS 14+ State Management
+
+`@Observable` is a Swift 5.9+ macro that replaces `ObservableObject` + `@Published`. It synthesizes observation code at compile time for **stored properties only**.
+
+## @Observable Class
+
+```swift
+@Observable
+@MainActor
+final class CollageViewModel {
+    var title: String = ""
+    var panels: [Panel] = []
+    var previewImage: NSImage?
+}
+```
+
+**Key differences from ObservableObject:**
+- No `@Published` needed — all `var` stored properties are automatically observed
+- No `objectWillChange` publisher
+- Use `@Bindable` in views, not `@ObservedObject`/`@EnvironmentObject`
+
+## @Bindable in Views
+
+Views consuming an `@Observable` class **must** use `@Bindable var`. A plain `let` parameter will render once and never update.
+
+```swift
+struct ContentView: View {
+    @Bindable var viewModel: CollageViewModel  // Correct — SwiftUI auto-tracks all property changes
+
+    var body: some View {
+        TextField("Title", text: $viewModel.title)
+        Image(nsImage: viewModel.previewImage ?? NSImage())
+    }
+}
+```
+
+```swift
+// WRONG — stale after first render
+struct ContentView: View {
+    let viewModel: CollageViewModel  // SwiftUI does NOT set up observation
+
+    var body: some View {
+        TextField("Title", text: $viewModel.title)  // Binding won't work
+    }
+}
+```
+
+## Persisting Properties: Stored + didSet
+
+`@Observable` **cannot track computed properties**. A computed property with `get`/`set` will persist correctly but **never triggers SwiftUI re-renders**.
+
+### The Pattern
+
+Convert `UserDefaults`-backed computed properties to stored properties with `didSet`:
+
+```swift
+@Observable
+@MainActor
+final class CollageViewModel {
+    // Correct — triggers re-render AND persists
+    var title: String = UserDefaults.standard.string(forKey: "title") ?? "" {
+        didSet { UserDefaults.standard.set(title, forKey: "title") }
+    }
+
+    var backgroundStyle: BackgroundStyle = BackgroundStyle(rawValue: UserDefaults.standard.string(forKey: "bgStyle") ?? "") ?? .solid {
+        didSet { UserDefaults.standard.set(backgroundStyle.rawValue, forKey: "bgStyle") }
+    }
+}
+```
+
+```swift
+// WRONG — persists but NEVER triggers re-render
+@Observable
+@MainActor
+final class CollageViewModel {
+    var backgroundStyle: BackgroundStyle {
+        get { BackgroundStyle(rawValue: UserDefaults.standard.string(forKey: "bgStyle") ?? "") ?? .solid }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: "bgStyle") }
+    }
+}
+```
+
+### Property Type Comparison
+
+| Property Type | Triggers Re-render? | Persistable? |
+|---|---|---|
+| Stored (`var x = value`) | Yes | No (in-memory only) |
+| Stored + `didSet` | Yes | Yes (write to disk in `didSet`) |
+| Computed (`get`/`set`) | **No** | Yes (but invisible to SwiftUI) |
+
+### UserDefaults Typed Getter Defaults Trap
+
+`UserDefaults.double(forKey:)`, `.integer(forKey:)`, and `.bool(forKey:)` return the type's **zero value** (`0.0`, `0`, `false`) for missing keys — not `nil`. This causes silent wrong defaults (e.g., opacity initializing to `0` making an image invisible).
+
+| Method | Missing Key Returns | Safe? |
+|---|---|---|
+| `string(forKey:)` | `nil` | Safe — use `?? default` |
+| `data(forKey:)` | `nil` | Safe — use `?? default` |
+| `double(forKey:)` | `0.0` | **Unsafe** — check `object(forKey:)` first |
+| `integer(forKey:)` | `0` | **Unsafe** — check `object(forKey:)` first |
+| `bool(forKey:)` | `false` | **Unsafe** — check `object(forKey:)` first |
+
+**Safe default pattern:**
+```swift
+var backgroundOpacity: Double = {
+    if UserDefaults.standard.object(forKey: "bgOpacity") != nil {
+        return UserDefaults.standard.double(forKey: "bgOpacity")
+    }
+    return 1.0  // intentional default, not 0.0
+}() {
+    didSet { UserDefaults.standard.set(backgroundOpacity, forKey: "bgOpacity") }
+}
+```
+
+### Color Persistence Helper
+
+Extract `saveColor`/`loadColor` methods to avoid repeating `NSKeyedArchiver` boilerplate:
+
+```swift
+@Observable
+@MainActor
+final class CollageViewModel {
+    var backgroundColor: NSColor = loadColor("bgColor", default: .white) {
+        didSet { saveColor(backgroundColor, key: "bgColor") }
+    }
+
+    private func saveColor(_ color: NSColor, key: String) {
+        if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
+    private func loadColor(_ key: String, default: NSColor) -> NSColor {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) else {
+            return `default`
+        }
+        return color
+    }
+}
+```
+
+## Side Effects with didSet
+
+When a property change requires a side effect (e.g., regenerating preview), call it in `didSet`:
+
+**Critical rule: `didSet` is the single source of side effects.** Every stored property that affects a rendered output (preview, layout, export) must call its side effect method in `didSet`. Relying on `.onChange` in views is fragile — SwiftUI may recreate the view struct, losing the `.onChange` tracker. The ViewModel owns the trigger logic.
+
+**Audit checklist:** For each property, ask "Does this affect the rendered preview?" If yes, `didSet` must call `updatePreview()` (or equivalent). Missing a single `updatePreview()` call means the UI control works locally but the preview stays stale.
+
+```swift
+@Observable
+@MainActor
+final class CollageViewModel {
+    var gutter: Double = 10 {
+        didSet { updatePreview() }
+    }
+
+    var previewImage: NSImage?
+
+    func updatePreview() {
+        Task.detached { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            // ... heavy rendering ...
+            Task { @MainActor [preview = result] in
+                self?.previewImage = preview
+            }
+        }
+    }
+}
+```
+
+## View Binding Rules
+
+| Declaration | Observes @Observable? | Safe? |
+|---|---|---|
+| `@Bindable var viewModel: MyViewModel` | Yes | Yes |
+| `let viewModel: MyViewModel` | **No** | No — stale after first render |
+| `@StateObject` + `@ObservedObject` | N/A (legacy) | Use for `ObservableObject` only |
+
+## Passing @Observable to Child Views
+
+```swift
+// Root-owned with @State
+struct ParentView: View {
+    @State private var viewModel = CollageViewModel()
+
+    var body: some View {
+        ChildView(viewModel: viewModel)  // Pass as value — child uses @Bindable
+    }
+}
+
+// Child uses @Bindable
+struct ChildView: View {
+    @Bindable var viewModel: CollageViewModel
+
+    var body: some View {
+        Slider(value: $viewModel.gutter, in: 0...50)
+    }
+}
+```
+
+## Diagnosing @Observable Issues
+
+If a binding "works locally" (TextField shows typed text, Slider moves) but dependent views don't update:
+
+1. **Check if the ViewModel property is computed instead of stored** — computed properties are invisible to `@Observable`
+2. **Check if the consuming view uses `@Bindable`** — `let` will not observe changes
+3. **Check if side effects are called in `didSet`** — `updatePreview()` won't fire from a computed setter
+
+### Debugging: Verify Observation
+
+Add a `print()` in `didSet` to confirm the property is stored and being assigned:
+
+```swift
+var title: String = "" {
+    didSet { print("title changed: \(title)") }  // Should print on every change
+}
+```
+
+If the print doesn't fire, the property is either computed or being mutated in-place.
+
+## Migration from ObservableObject
+
+When migrating from `ObservableObject` to `@Observable`:
+
+| ObservableObject Pattern | @Observable Equivalent |
+|---|---|
+| `class VM: ObservableObject` | `@Observable class VM` |
+| `@Published var x: Int` | `var x: Int` |
+| `@ObservedObject var vm: VM` | `@Bindable var vm: VM` |
+| `@EnvironmentObject var vm: VM` | `@Environment var vm: VM` |
+| `.onChange(of: vm.x)` | `.onChange(of: vm.x)` (same API) |
+| `.onReceive(vm.$x.dropFirst())` | Not needed — `@Bindable` tracks automatically |
+| `objectWillChange.send()` | `vm._observation.send()` (rarely needed) |
+
+**Note:** `@Observable` and `ObservableObject` can coexist in the same codebase. Migrate incrementally.
+
+## Summary Rules
+
+1. **All `@Observable` properties that drive UI must be stored** — computed properties are invisible to SwiftUI
+2. **Use `didSet` for persistence and side effects** — this is the only way to combine observation with `UserDefaults`
+3. **Views must use `@Bindable var`** — `let` will not observe changes
+4. **Root views own `@Observable` with `@State`** — children receive via `@Bindable`
+5. **Extract color persistence helpers** — `saveColor`/`loadColor` reduce boilerplate for `NSColor` properties
+
+## Pitfalls
+
+- **`@Observable` computed property** — appears to work (value persists) but **never triggers re-render**. Convert to stored property with `didSet` for persistence
+- **`let viewModel: MyObservableVM`** — view renders once with initial state and never updates. Must use `@Bindable var`
+- **Binding "works locally" but dependent views stale** — TextField shows text, Slider moves, but preview doesn't update. Check: (a) property is computed not stored, (b) view uses `let` not `@Bindable`, (c) `updatePreview()` not called in `didSet`
+- **UserDefaults typed getters return zero for missing keys** — `UserDefaults.double(forKey:)`, `.integer(forKey:)`, and `.bool(forKey:)` return `0`, `0`, and `false` respectively when the key doesn't exist (unlike `.string(forKey:)` and `.data(forKey:)` which return `nil`). This causes silent wrong defaults. Safe pattern: check `object(forKey:)` first, then call the typed getter only if the key exists.
