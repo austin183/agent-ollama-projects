@@ -82,10 +82,10 @@ struct CollageEditorView: View {
     }
 
     var body: some View {
-        if viewModel.previewImage != nil {
+        if let previewImage = viewModel.previewImage {
             GeometryReader { geometry in
                 ZStack {
-                    Image(nsImage: viewModel.previewImage!)
+                    Image(nsImage: previewImage)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: geometry.size.width, height: geometry.size.height)

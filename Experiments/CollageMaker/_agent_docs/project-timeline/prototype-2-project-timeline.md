@@ -54,3 +54,4 @@
 | 43 | 2026-05-22 | Round 14.3 CR: fixed overlay jump on corner resize — container-to-source conversion now accounts for letterboxing offset ([details](sessions/session-043.md)) |
 | 44 | 2026-05-22 | AGENTS.md review and progressive disclosure — trimmed inline details, added skill reference links for testing, build, coordinates, windowing ([details](sessions/session-044.md)) |
 | 45 | 2026-05-23 | Round 15 CR: performance degradation fix — capped undo stack at 60, guarded `titleStyle.didSet` undo during drag, reverted unnecessary scroll debounce ([details](sessions/session-045.md)) |
+| 46 | 2026-05-25 | Round 14.4 CR: fixed Clear All crash — force unwrap `previewImage!` in CollageEditorView replaced with `if let` capture before GeometryReader closure ([details](sessions/session-046.md)) |
