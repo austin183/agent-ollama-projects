@@ -18,7 +18,7 @@ Please implement 4 of the plan for @_agent_docs/plans/2026-05-20-review-fixes.md
 
 # Small Change Requests
 ```
-Please work on the change request in @_agent_docs/change-requests/round-14.4.md using our macos skills for guidance. 
+Please work on the change request in @_agent_docs/change-requests/round-15.1.md using our macos skills for guidance. 
 ```
 
 # Review
@@ -55,7 +55,7 @@ Please use the learnings in @_agent_docs/learnings/nsviarepresentable-color-pick
 
 ## Apply Research to Skills
 ```
-/skills-best-practice Can you please review the research documents in @_agent_docs/learnings/gesture-undo-batching-learnings.md and see how we can refine our macos-app-builder skill?
+/skills-best-practice Can you please review the research documents in @_agent_docs/learnings/dynamic-zoom-limits-learnings.md and see how we can refine our macos-app-builder skill?
 ```
 
 ## Skill Housekeeping

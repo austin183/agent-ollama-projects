@@ -8,42 +8,84 @@ Guidance for building macOS SwiftUI desktop applications with image processing, 
 
 ## Reference Files
 
+### UI Patterns
+
 | Topic | Reference |
 |-------|-----------|
-| **Desktop Conventions (Rules, Anti-Patterns, Workflows)** | [references/desktop-conventions.md](references/desktop-conventions.md) |
-| **Scene Types (WindowGroup, Window, DocumentGroup)** | [references/windowing.md](references/windowing.md) |
-| **Window Management (macOS 15+ modifiers)** | [references/window-management.md](references/window-management.md) |
-| **Commands and Menus** | [references/commands-menus.md](references/commands-menus.md) |
-| **Settings** | [references/settings.md](references/settings.md) |
-| **Split Views and Inspectors** | [references/split-inspectors.md](references/split-inspectors.md) |
-| **Menu Bar Extras** | [references/menu-bar-extra.md](references/menu-bar-extra.md) |
-| **@Observable, @Bindable (macOS 14+)** | [references/observable-bindable.md](references/observable-bindable.md) |
-| **@Published, Combine, State, Input (legacy)** | [references/combine-published.md](references/combine-published.md) |
-| **FocusedValues (Cross-View Communication)** | [references/focused-values.md](references/focused-values.md) |
-| **NSAttributedString Drawing** | [references/nsattributedstring-drawing.md](references/nsattributedstring-drawing.md) |
-| **Swift Concurrency** | [references/swift-concurrency.md](references/swift-concurrency.md) |
-| **CoreImage, CoreGraphics, Compositing** | [references/coreimage-filters.md](references/coreimage-filters.md) |
-| **Vision API Details** | [references/vision-api-details.md](references/vision-api-details.md) |
-| **Testing Patterns** | [references/testing-patterns.md](references/testing-patterns.md) |
-| **SwiftUI Gestures** | [references/swiftui-gestures.md](references/swiftui-gestures.md) |
-| **SwiftUI Overlay Patterns** | [references/swiftui-overlays.md](references/swiftui-overlays.md) |
-| **Scroll Views** | [references/scroll-views.md](references/scroll-views.md) |
-| **CGRect Equality and Lookup** | [references/cgrect-equality-crop-lookup.md](references/cgrect-equality-crop-lookup.md) |
-| **Coordinate System Traps** | [references/coordinate-systems.md](references/coordinate-systems.md) |
-| **NSViewRepresentable** | [references/nsviarepresentable.md](references/nsviarepresentable.md) |
-| **AppKit Interop (Bridging)** | [references/appkit-interop.md](references/appkit-interop.md) |
-| **Drag and Drop** | [references/drag-and-drop.md](references/drag-and-drop.md) |
-| **File Export and Import** | [references/file-export-import.md](references/file-export-import.md) |
-| **Codable AppKit Types** | [references/codable-appkit.md](references/codable-appkit.md) |
-| **vImage Processing** | [references/vimage-processing.md](references/vimage-processing.md) |
-| **Build, Run, Debug Scripts** | [references/build-and-run.md](references/build-and-run.md) |
-| **HIG: Accessibility** | [references/hig-accessibility.md](references/hig-accessibility.md) |
-| **HIG: Alerts and Feedback** | [references/hig-alerts-feedback.md](references/hig-alerts-feedback.md) |
-| **HIG: Keyboard Shortcuts** | [references/hig-keyboard-shortcuts.md](references/hig-keyboard-shortcuts.md) |
-| **HIG: Context Menus** | [references/hig-context-menus.md](references/hig-context-menus.md) |
-| **HIG: Progress Indicators** | [references/hig-progress-indicators.md](references/hig-progress-indicators.md) |
-| **HIG: Undo and Redo** | [references/hig-undo-redo.md](references/hig-undo-redo.md) |
-| **HIG: Sidebars** | [references/hig-sidebars.md](references/hig-sidebars.md) |
+| **Split Views and Inspectors** | [references/ui/split-inspectors.md](references/ui/split-inspectors.md) |
+| **SwiftUI Overlay Patterns** | [references/ui/swiftui-overlays.md](references/ui/swiftui-overlays.md) |
+| **Scroll Views** | [references/ui/scroll-views.md](references/ui/scroll-views.md) |
+| **CGRect Equality and Lookup** | [references/ui/cgrect-equality-crop-lookup.md](references/ui/cgrect-equality-crop-lookup.md) |
+| **File Input (Drag-Drop, PhotosPicker, Panels)** | [references/ui/file-input.md](references/ui/file-input.md) |
+| **File Export and Import** | [references/ui/file-export-import.md](references/ui/file-export-import.md) |
+
+### Gestures
+
+| Topic | Reference |
+|-------|-----------|
+| **SwiftUI Gestures (Core APIs)** | [references/gestures/swiftui-gestures.md](references/gestures/swiftui-gestures.md) |
+| **Gesture Targeting (Per-Panel Hit Testing)** | [references/gestures/gesture-targeting.md](references/gestures/gesture-targeting.md) |
+| **Resize Handles (Edge & Corner)** | [references/gestures/resize-handles.md](references/gestures/resize-handles.md) |
+| **Drag and Drop** | [references/gestures/drag-and-drop.md](references/gestures/drag-and-drop.md) |
+
+### AppKit Interop
+
+| Topic | Reference |
+|-------|-----------|
+| **NSViewRepresentable** | [references/appkit/nsviarepresentable.md](references/appkit/nsviarepresentable.md) |
+| **AppKit Interop (Bridging)** | [references/appkit/appkit-interop.md](references/appkit/appkit-interop.md) |
+| **NSTextView Binding** | [references/appkit/nstextview-binding.md](references/appkit/nstextview-binding.md) |
+| **NSColorWell** | [references/appkit/nscolorwell.md](references/appkit/nscolorwell.md) |
+| **NSAttributedString Drawing** | [references/appkit/nsattributedstring-drawing.md](references/appkit/nsattributedstring-drawing.md) |
+| **Codable AppKit Types** | [references/appkit/codable-appkit.md](references/appkit/codable-appkit.md) |
+
+### State Management
+
+| Topic | Reference |
+|-------|-----------|
+| **@Observable, @Bindable (macOS 14+)** | [references/state/observable-bindable.md](references/state/observable-bindable.md) |
+| **@Published, Combine, State, Input (legacy)** | [references/state/combine-published.md](references/state/combine-published.md) |
+| **FocusedValues (Cross-View Communication)** | [references/state/focused-values.md](references/state/focused-values.md) |
+| **Swift Concurrency** | [references/state/swift-concurrency.md](references/state/swift-concurrency.md) |
+
+### Graphics and Vision
+
+| Topic | Reference |
+|-------|-----------|
+| **Coordinate System Traps** | [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) |
+| **CoreImage, CoreGraphics, Compositing** | [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md) |
+| **Vision API Details** | [references/graphics/vision-api-details.md](references/graphics/vision-api-details.md) |
+| **vImage Processing** | [references/graphics/vimage-processing.md](references/graphics/vimage-processing.md) |
+
+### Testing
+
+| Topic | Reference |
+|-------|-----------|
+| **Testing Patterns** | [references/testing/testing-patterns.md](references/testing/testing-patterns.md) |
+
+### Desktop Conventions and HIG
+
+| Topic | Reference |
+|-------|-----------|
+| **Desktop Conventions (Rules, Anti-Patterns, Workflows)** | [references/conventions/desktop-conventions.md](references/conventions/desktop-conventions.md) |
+| **HIG: Accessibility** | [references/conventions/hig-accessibility.md](references/conventions/hig-accessibility.md) |
+| **HIG: Alerts and Feedback** | [references/conventions/hig-alerts-feedback.md](references/conventions/hig-alerts-feedback.md) |
+| **HIG: Keyboard Shortcuts** | [references/conventions/hig-keyboard-shortcuts.md](references/conventions/hig-keyboard-shortcuts.md) |
+| **HIG: Context Menus** | [references/conventions/hig-context-menus.md](references/conventions/hig-context-menus.md) |
+| **HIG: Progress Indicators** | [references/conventions/hig-progress-indicators.md](references/conventions/hig-progress-indicators.md) |
+| **HIG: Undo and Redo** | [references/conventions/hig-undo-redo.md](references/conventions/hig-undo-redo.md) |
+| **HIG: Sidebars** | [references/conventions/hig-sidebars.md](references/conventions/hig-sidebars.md) |
+
+### Tooling
+
+| Topic | Reference |
+|-------|-----------|
+| **Scene Types (WindowGroup, Window, DocumentGroup)** | [references/tooling/windowing.md](references/tooling/windowing.md) |
+| **Window Management (macOS 15+ modifiers)** | [references/tooling/window-management.md](references/tooling/window-management.md) |
+| **Commands and Menus** | [references/tooling/commands-menus.md](references/tooling/commands-menus.md) |
+| **Settings** | [references/tooling/settings.md](references/tooling/settings.md) |
+| **Menu Bar Extras** | [references/tooling/menu-bar-extra.md](references/tooling/menu-bar-extra.md) |
+| **Build, Run, Debug Scripts** | [references/tooling/build-and-run.md](references/tooling/build-and-run.md) |
 
 ## Project Structure
 
@@ -80,7 +122,7 @@ AppTarget/
 
 ## Coordinate System Traps
 
-Vision, CoreGraphics, and NSImage use different origins. See [references/coordinate-systems.md](references/coordinate-systems.md) for conversion functions, EXIF mismatch fixes, canvas-to-preview mapping, and normalized position storage.
+Vision, CoreGraphics, and NSImage use different origins. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) for conversion functions, EXIF mismatch fixes, canvas-to-preview mapping, and normalized position storage.
 
 **Critical mismatches:**
 - Vision: bottom-left (0,0), normalized 0-1
@@ -92,7 +134,7 @@ Vision, CoreGraphics, and NSImage use different origins. See [references/coordin
 
 ### @Observable (macOS 14+, preferred)
 
-See [references/observable-bindable.md](references/observable-bindable.md).
+See [references/state/observable-bindable.md](references/state/observable-bindable.md).
 
 **Critical rules:**
 - **`@Observable` cannot track computed properties** -- all properties driving UI must be stored. Use `didSet` for `UserDefaults` persistence
@@ -101,7 +143,7 @@ See [references/observable-bindable.md](references/observable-bindable.md).
 
 ### @ObservableObject (legacy, still valid)
 
-See [references/combine-published.md](references/combine-published.md).
+See [references/state/combine-published.md](references/state/combine-published.md).
 
 **Critical rules:**
 - **Never** store reference types in `@State` -- lost silently on re-render
@@ -112,7 +154,7 @@ See [references/combine-published.md](references/combine-published.md).
 
 ## Codable AppKit Types
 
-Several AppKit types don't conform to `Codable`. See [references/codable-appkit.md](references/codable-appkit.md) for:
+Several AppKit types don't conform to `Codable`. See [references/appkit/codable-appkit.md](references/appkit/codable-appkit.md) for:
 - `NSColor` via `NSKeyedArchiver` with custom `encode`/`init(from:)`
 - Backward-compatible `decodeIfPresent` for new model fields
 - `NSTextAlignment` via `rawValue`
@@ -123,7 +165,7 @@ Several AppKit types don't conform to `Codable`. See [references/codable-appkit.
 
 ## Concurrency Patterns
 
-See [references/swift-concurrency.md](references/swift-concurrency.md).
+See [references/state/swift-concurrency.md](references/state/swift-concurrency.md).
 
 **Key patterns:**
 - `Task { [weak self] }` -- inherits MainActor, use for ViewModel updates
@@ -135,7 +177,7 @@ See [references/swift-concurrency.md](references/swift-concurrency.md).
 
 ## Finder Drag Gotcha
 
-Finder drag payloads send `public.file-url`, not the content type. See [references/drag-and-drop.md](references/drag-and-drop.md) for the extraction pattern.
+Finder drag payloads send `public.file-url`, not the content type. See [references/gestures/drag-and-drop.md](references/gestures/drag-and-drop.md) for the extraction pattern.
 
 **Key points:**
 - Accept `UTType.fileURL.identifier` for Finder drags
@@ -152,7 +194,7 @@ NSImage -> CGImage -> VNImageRequestHandler -> ML observations
 
 ## Vision Framework
 
-See [references/vision-api-details.md](references/vision-api-details.md).
+See [references/graphics/vision-api-details.md](references/graphics/vision-api-details.md).
 
 **Key points:**
 - Use `actor` for thread-safe async isolation
@@ -162,7 +204,7 @@ See [references/vision-api-details.md](references/vision-api-details.md).
 
 ## vImage Processing
 
-See [references/vimage-processing.md](references/vimage-processing.md).
+See [references/graphics/vimage-processing.md](references/graphics/vimage-processing.md).
 
 **Quick reference:**
 - **Blurred background:** `tentConvolve(kernelSize: 31)` -- best speed/quality balance
@@ -172,7 +214,7 @@ See [references/vimage-processing.md](references/vimage-processing.md).
 
 ## CoreGraphics Compositing
 
-See [references/coreimage-filters.md](references/coreimage-filters.md).
+See [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md).
 
 **Key points:**
 - `bytesPerRow: 0` lets system calculate it
@@ -181,19 +223,21 @@ See [references/coreimage-filters.md](references/coreimage-filters.md).
 
 ## Gesture Patterns
 
-See [references/swiftui-gestures.md](references/swiftui-gestures.md) for comprehensive gesture targeting, composition, and coordinate space patterns.
+See [references/gestures/swiftui-gestures.md](references/gestures/swiftui-gestures.md) for comprehensive gesture targeting, composition, and coordinate space patterns.
 
 **Key pitfalls:**
 - **Per-region gesture targeting:** Parent-level gesture + `startLocation` hit-test on first `onChanged`. Do NOT use `.simultaneousGesture` on per-panel ZStack overlays
 - **`MagnificationGesture` has no location** -- `Value` is `CGFloat` only. Target the selected panel
 - **`MagnificationGesture` values are cumulative** -- use `baseZoom / magnification` (division), NOT multiplication
+- **Dynamic zoom bounds** -- compute zoom-out limit from content: `min(imageW/panelW, imageH/panelH)`. Never hardcode — see [references/gestures/swiftui-gestures.md](references/gestures/swiftui-gestures.md)
 - **No `.onStarted`** -- Use `@State` flag in first `onChanged`
 - **Live preview:** Use `finish: Bool` parameter + cancel stale `Task.detached` with `previewTask?.cancel()`
 - **Canvas is NOT suitable** for interactive elements
+- **Corner resize aspect ratio:** Use dominant-dimension pattern — compare `rawW / rawH` to target aspect ratio, derive the other dimension. Use `min`/`abs` for uniform bounding box across all four corners
 
 ## Scroll Views
 
-See [references/scroll-views.md](references/scroll-views.md).
+See [references/ui/scroll-views.md](references/ui/scroll-views.md).
 
 **Key decisions:**
 - **Canvas panning is NOT a scroll operation** -- use raw `scrollWheel(with:)` on `NSView` overlay
@@ -202,22 +246,22 @@ See [references/scroll-views.md](references/scroll-views.md).
 
 ## CGRect Equality
 
-See [references/cgrect-equality-crop-lookup.md](references/cgrect-equality-crop-lookup.md).
+See [references/ui/cgrect-equality-crop-lookup.md](references/ui/cgrect-equality-crop-lookup.md).
 
 **Problem:** `CGRect ==` uses exact equality -- computed `CGFloat` values from layout division have precision errors.
 **Solution:** Add `id: UUID` to layout items, use `[UUID: Item]` dictionary for O(1) access.
 
 ## File Export and Import
 
-See [references/file-export-import.md](references/file-export-import.md) for `.fileExporter` with `ReferenceFileDocument` and `.importsItemProviders` patterns.
+See [references/ui/file-export-import.md](references/ui/file-export-import.md) for `.fileExporter` with `ReferenceFileDocument` and `.importsItemProviders` patterns.
 
 ## FocusedValues
 
-See [references/focused-values.md](references/focused-values.md) for communicating selection state from detail views to menu bar commands without binding traversal.
+See [references/state/focused-values.md](references/state/focused-values.md) for communicating selection state from detail views to menu bar commands without binding traversal.
 
 ## SwiftUI Overlay Patterns
 
-See [references/swiftui-overlays.md](references/swiftui-overlays.md) for eoFill cutout overlays and fixed container image previews.
+See [references/ui/swiftui-overlays.md](references/ui/swiftui-overlays.md) for eoFill cutout overlays and fixed container image previews.
 
 ## Version Requirements
 
@@ -259,13 +303,13 @@ open "$HOME/Library/Developer/Xcode/DerivedData/AppName-*/Build/Products/Debug/A
 
 | Topic | Reference |
 |-------|-----------|
-| Accessibility | [references/hig-accessibility.md](references/hig-accessibility.md) |
-| Alerts and Feedback | [references/hig-alerts-feedback.md](references/hig-alerts-feedback.md) |
-| Keyboard Shortcuts | [references/hig-keyboard-shortcuts.md](references/hig-keyboard-shortcuts.md) |
-| Context Menus | [references/hig-context-menus.md](references/hig-context-menus.md) |
-| Progress Indicators | [references/hig-progress-indicators.md](references/hig-progress-indicators.md) |
-| Undo and Redo | [references/hig-undo-redo.md](references/hig-undo-redo.md) |
-| Sidebars | [references/hig-sidebars.md](references/hig-sidebars.md) |
+| Accessibility | [references/conventions/hig-accessibility.md](references/conventions/hig-accessibility.md) |
+| Alerts and Feedback | [references/conventions/hig-alerts-feedback.md](references/conventions/hig-alerts-feedback.md) |
+| Keyboard Shortcuts | [references/conventions/hig-keyboard-shortcuts.md](references/conventions/hig-keyboard-shortcuts.md) |
+| Context Menus | [references/conventions/hig-context-menus.md](references/conventions/hig-context-menus.md) |
+| Progress Indicators | [references/conventions/hig-progress-indicators.md](references/conventions/hig-progress-indicators.md) |
+| Undo and Redo | [references/conventions/hig-undo-redo.md](references/conventions/hig-undo-redo.md) |
+| Sidebars | [references/conventions/hig-sidebars.md](references/conventions/hig-sidebars.md) |
 
 ## Implementation Phases
 
@@ -294,8 +338,8 @@ When GUI behavior is unclear (agent cannot observe running app):
     b. Log actual values, not just nil/non-nil -- dimensions, opacity, color components
     c. Check `UserDefaults` defaults -- typed getters (`.double`, `.integer`, `.bool`) return zero for missing keys
     d. Check thread affinity -- AppKit methods (`NSImage.cgImage`, `NSColor.cgColor`) called on background threads may silently return `nil`
-9. **NSColorWell color stale** -- `NSColor ==` compares `CGColor` values, which differ across color spaces. Never guard `updateNSView` with `!=`. Always assign `well.color = color` unconditionally. See [references/nsviarepresentable.md](references/nsviarepresentable.md)
-10. **NSTextView re-entrancy loop** -- If `textDidChange` normalizes text into a binding, the SwiftUI re-render may call `updateNSView`, which mutates `typingAttributes`, firing another `textDidChange`. Fix with coordinator guard flag + early return in `updateNSView`. See [references/nsviarepresentable.md](references/nsviarepresentable.md)
+9. **NSColorWell color stale** -- `NSColor ==` compares `CGColor` values, which differ across color spaces. Never guard `updateNSView` with `!=`. Always assign `well.color = color` unconditionally. See [references/appkit/nscolorwell.md](references/appkit/nscolorwell.md)
+10. **NSTextView re-entrancy loop** -- If `textDidChange` normalizes text into a binding, the SwiftUI re-render may call `updateNSView`, which mutates `typingAttributes`, firing another `textDidChange`. Fix with coordinator guard flag + early return in `updateNSView`. See [references/appkit/nstextview-binding.md](references/appkit/nstextview-binding.md)
 
 ## Logging Quality
 

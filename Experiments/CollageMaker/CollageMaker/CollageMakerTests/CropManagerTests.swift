@@ -95,9 +95,9 @@ import Testing
         #expect(crop.sourceRect.origin.y <= maxOY + 1)
     }
 
-    @Test func pinchZoomChangesCropSize() {
+    @Test func pinchZoomInReducesCropSize() {
         let manager = CropManager()
-        let image = createTestImageItem(size: CGSize(width: 400, height: 400))
+        let image = createTestImageItem(size: CGSize(width: 4000, height: 4000))
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
 
         manager.computeInitialCrops(panels: panels, images: [image])
@@ -109,13 +109,36 @@ import Testing
         manager.applyPinch(panelId: panelId, panels: panels, images: [image])
 
         let newSize = manager.cropMap[panelId]!.sourceRect.size
-        #expect(newSize.width > originalSize.width)
-        #expect(newSize.height > originalSize.height)
+        #expect(newSize.width < originalSize.width)
+        #expect(newSize.height < originalSize.height)
     }
 
-    @Test func pinchZoomClampsMin() {
+    @Test func pinchZoomOutIncreasesCropSize() {
         let manager = CropManager()
-        let image = createTestImageItem(size: CGSize(width: 400, height: 400))
+        let image = createTestImageItem(size: CGSize(width: 8000, height: 4000))
+        let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
+
+        manager.computeInitialCrops(panels: panels, images: [image])
+        let panelId = panels[0].id
+
+        manager.beginPinch(panelId: panelId)
+        manager.pinch(magnification: 4.0)
+        manager.applyPinch(panelId: panelId, panels: panels, images: [image])
+
+        let zoomedInSize = manager.cropMap[panelId]!.sourceRect.size
+
+        manager.beginPinch(panelId: panelId)
+        manager.pinch(magnification: 0.5)
+        manager.applyPinch(panelId: panelId, panels: panels, images: [image])
+
+        let newSize = manager.cropMap[panelId]!.sourceRect.size
+        #expect(newSize.width > zoomedInSize.width)
+        #expect(newSize.height > zoomedInSize.height)
+    }
+
+    @Test func pinchZoomClampsToFullImage() {
+        let manager = CropManager()
+        let image = createTestImageItem(size: CGSize(width: 8000, height: 4000))
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
 
         manager.computeInitialCrops(panels: panels, images: [image])
@@ -126,27 +149,27 @@ import Testing
         manager.applyPinch(panelId: panelId, panels: panels, images: [image])
 
         let crop = manager.cropMap[panelId]!
-        let panelSize = crop.destinationRect.size
-        let zoom = crop.sourceRect.width / panelSize.width
-        #expect(zoom >= 0.4)
+        #expect(crop.sourceRect.width <= image.size.width + 1)
+        #expect(crop.sourceRect.height <= image.size.height + 1)
     }
 
-    @Test func pinchZoomClampsMax() {
+    @Test func pinchZoomClampsTo2xZoomIn() {
         let manager = CropManager()
-        let image = createTestImageItem(size: CGSize(width: 400, height: 400))
+        let image = createTestImageItem(size: CGSize(width: 4000, height: 4000))
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
 
         manager.computeInitialCrops(panels: panels, images: [image])
         let panelId = panels[0].id
 
         manager.beginPinch(panelId: panelId)
-        manager.pinch(magnification: 100.0)
+        manager.pinch(magnification: 10.0)
         manager.applyPinch(panelId: panelId, panels: panels, images: [image])
 
         let crop = manager.cropMap[panelId]!
         let panelSize = crop.destinationRect.size
         let zoom = crop.sourceRect.width / panelSize.width
-        #expect(zoom <= 3.1)
+        #expect(zoom >= 0.5 - 0.001)
+        #expect(zoom <= 0.55)
     }
 
     @Test func resetCropRestoresInitial() {
@@ -330,34 +353,45 @@ import Testing
     @Test func translateZoomUsesDivisionNotMultiplication() {
         let baseZoom: CGFloat = 1.0
         let magnification: CGFloat = 2.0
+        let imageSize = CGSize(width: 4000, height: 4000)
+        let panelSize = CGSize(width: 960, height: 540)
 
-        let newZoom = CropManager.translateZoom(magnification: magnification, baseZoom: baseZoom)
+        let newZoom = CropManager.translateZoom(magnification: magnification, baseZoom: baseZoom, imageSize: imageSize, panelSize: panelSize)
 
         #expect(newZoom == 0.5)
     }
 
-    @Test func translateZoomClampsToMinimum() {
-        let baseZoom: CGFloat = 0.5
-        let magnification: CGFloat = 2.0
+    @Test func translateZoomClampsToFullImageMax() {
+        let baseZoom: CGFloat = 10.0
+        let magnification: CGFloat = 0.5
+        let imageSize = CGSize(width: 8000, height: 4000)
+        let panelSize = CGSize(width: 1920, height: 1080)
 
-        let newZoom = CropManager.translateZoom(magnification: magnification, baseZoom: baseZoom)
+        let newZoom = CropManager.translateZoom(magnification: magnification, baseZoom: baseZoom, imageSize: imageSize, panelSize: panelSize)
 
-        #expect(newZoom >= 0.5)
+        let maxZoomOut = Swift.min(imageSize.width / panelSize.width, imageSize.height / panelSize.height)
+        #expect(newZoom <= maxZoomOut + 0.0001)
+        #expect(newZoom >= maxZoomOut - 0.0001)
     }
 
-    @Test func translateZoomClampsToMaximum() {
-        let baseZoom: CGFloat = 3.0
-        let magnification: CGFloat = 0.5
+    @Test func translateZoomClampsTo2xZoomIn() {
+        let baseZoom: CGFloat = 0.5
+        let magnification: CGFloat = 2.0
+        let imageSize = CGSize(width: 4000, height: 4000)
+        let panelSize = CGSize(width: 960, height: 540)
 
-        let newZoom = CropManager.translateZoom(magnification: magnification, baseZoom: baseZoom)
+        let newZoom = CropManager.translateZoom(magnification: magnification, baseZoom: baseZoom, imageSize: imageSize, panelSize: panelSize)
 
-        #expect(newZoom <= 3.0)
+        #expect(newZoom >= 0.5 - 0.0001)
+        #expect(newZoom <= 0.5 + 0.0001)
     }
 
     @Test func translateZoomIdentityForMagnificationOne() {
         let baseZoom: CGFloat = 1.5
+        let imageSize = CGSize(width: 4000, height: 4000)
+        let panelSize = CGSize(width: 960, height: 540)
 
-        let newZoom = CropManager.translateZoom(magnification: 1.0, baseZoom: baseZoom)
+        let newZoom = CropManager.translateZoom(magnification: 1.0, baseZoom: baseZoom, imageSize: imageSize, panelSize: panelSize)
 
         #expect(newZoom == baseZoom)
     }

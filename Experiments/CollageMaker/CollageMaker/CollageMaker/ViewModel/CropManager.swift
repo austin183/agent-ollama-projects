@@ -141,7 +141,9 @@ final class CropManager {
 
         let image = images[imageIndex]
         let panelSize = crop.destinationRect.size
-        let newZoom = clamp(baseZoom / zoomDelta, min: 0.5, max: 3.0)
+
+        let maxZoomOut = Swift.min(image.size.width / panelSize.width, image.size.height / panelSize.height)
+        let newZoom = clamp(baseZoom / zoomDelta, min: 0.5, max: maxZoomOut)
         let scaledW = panelSize.width * newZoom
         let scaledH = panelSize.height * newZoom
 
@@ -202,9 +204,10 @@ final class CropManager {
         return nil
     }
 
-    static func translateZoom(magnification: CGFloat, baseZoom: CGFloat) -> CGFloat {
+    static func translateZoom(magnification: CGFloat, baseZoom: CGFloat, imageSize: CGSize, panelSize: CGSize) -> CGFloat {
         let newZoom = baseZoom / magnification
-        return Swift.max(0.5, Swift.min(3.0, newZoom))
+        let maxZoomOut = Swift.min(imageSize.width / panelSize.width, imageSize.height / panelSize.height)
+        return Swift.max(0.5, Swift.min(maxZoomOut, newZoom))
     }
 
     static func screenToCanvasPoint(_ screenPoint: CGPoint, in previewSize: CGSize) -> CGPoint {

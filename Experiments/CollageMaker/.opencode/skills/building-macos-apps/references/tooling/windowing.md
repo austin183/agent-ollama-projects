@@ -47,4 +47,4 @@ struct SampleApp: App {
 
 ## See Also
 
-- `references/window-management.md` — macOS 15+ SwiftUI window modifiers: toolbar presentation, drag regions, placement, borderless windows
+- `window-management.md` — macOS 15+ SwiftUI window modifiers: toolbar presentation, drag regions, placement, borderless windows

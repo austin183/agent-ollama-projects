@@ -2,7 +2,7 @@
 
 macOS 15+ SwiftUI window and scene customization. For older deployment targets, use AppKit bridging or availability guards.
 
-**See also:** `references/windowing.md` — Scene types (`WindowGroup`, `Window`, `DocumentGroup`) and when to use each.
+**See also:** `windowing.md` — Scene types (`WindowGroup`, `Window`, `DocumentGroup`) and when to use each.
 
 ## Workflow
 

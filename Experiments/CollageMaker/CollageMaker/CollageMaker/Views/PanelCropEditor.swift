@@ -108,7 +108,7 @@ struct PanelCropEditor: View {
                 .accessibilityLabel("Reset crop")
                 .accessibilityHint("Restores the default crop for this image")
 
-                Text("Drag to move · Corner drag to zoom")
+                Text("Drag to move · Corner drag to zoom (proportional)")
                     .accessibilityHidden(true)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -225,41 +225,68 @@ struct PanelCropEditor: View {
         fittedH: CGFloat,
         baseSourceRect: CGRect
     ) {
-        let currentW = abs(value.location.x - anchor.x)
-        let currentH = abs(value.location.y - anchor.y)
+        let panelAspect = panel.frame.width / panel.frame.height
+
+        let rawW = abs(value.location.x - anchor.x)
+        let rawH = abs(value.location.y - anchor.y)
+
+        var newW: CGFloat
+        var newH: CGFloat
+        if rawW / rawH > panelAspect {
+            newW = max(1, rawW)
+            newH = newW / panelAspect
+        } else {
+            newH = max(1, rawH)
+            newW = newH * panelAspect
+        }
 
         let newMinX = min(anchor.x, value.location.x)
         let newMinY = min(anchor.y, value.location.y)
 
-        var newRect = CGRect(
-            x: newMinX,
-            y: newMinY,
-            width: max(1, currentW),
-            height: max(1, currentH)
-        )
+        var clampedOX = max(0, min(newMinX, container.width - newW))
+        var clampedOY = max(0, min(newMinY, container.height - newH))
 
-        newRect = CGRect(
-            x: max(0, min(newRect.origin.x, container.width - newRect.width)),
-            y: max(0, min(newRect.origin.y, container.height - newRect.height)),
-            width: max(1, min(newRect.width, container.width)),
-            height: max(1, min(newRect.height, container.height))
-        )
+        if clampedOX + newW > container.width {
+            clampedOX = container.width - newW
+        }
+        if clampedOY + newH > container.height {
+            clampedOY = container.height - newH
+        }
 
         let offsetX = (container.width - fittedW) / 2
         let offsetY = (container.height - fittedH) / 2
 
         let sourceOrigin = CGPoint(
-            x: (newRect.origin.x - offsetX) / fittedW * image.size.width,
-            y: (newRect.origin.y - offsetY) / fittedH * image.size.height
+            x: (clampedOX - offsetX) / fittedW * image.size.width,
+            y: (clampedOY - offsetY) / fittedH * image.size.height
         )
-        let sourceSize = CGSize(
-            width: newRect.width / fittedW * image.size.width,
-            height: newRect.height / fittedH * image.size.height
+        var sourceSize = CGSize(
+            width: newW / fittedW * image.size.width,
+            height: newH / fittedH * image.size.height
         )
+
+        let imageAspect = image.size.width / image.size.height
+        let maxSourceW: CGFloat
+        let maxSourceH: CGFloat
+        if imageAspect > panelAspect {
+            maxSourceH = image.size.height
+            maxSourceW = maxSourceH * panelAspect
+        } else {
+            maxSourceW = image.size.width
+            maxSourceH = maxSourceW / panelAspect
+        }
+        let minSourceW = panel.frame.width / 2
+        let minSourceH = panel.frame.height / 2
+
+        sourceSize.width = Swift.max(minSourceW, Swift.min(maxSourceW, sourceSize.width))
+        sourceSize.height = Swift.max(minSourceH, Swift.min(maxSourceH, sourceSize.height))
+
+        let clampedOriginX = Swift.max(0, Swift.min(sourceOrigin.x, max(0, image.size.width - sourceSize.width)))
+        let clampedOriginY = Swift.max(0, Swift.min(sourceOrigin.y, max(0, image.size.height - sourceSize.height)))
 
         viewModel.applyOverlayCrop(
             panelId: panel.id,
-            sourceRect: CGRect(origin: sourceOrigin, size: sourceSize)
+            sourceRect: CGRect(x: clampedOriginX, y: clampedOriginY, width: sourceSize.width, height: sourceSize.height)
         )
     }
 }

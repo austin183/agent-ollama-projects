@@ -19,7 +19,7 @@ bash script/build_and_run.sh --telemetry  # launch + tail subsystem logs
 bash script/build_and_run.sh --verify     # build, launch, exit 0 on success
 ```
 
-The script kills any running instance before building and locates the `.app` in DerivedData by globbing. See the `building-macos-apps` skill → `references/build-and-run.md` for script patterns and debugging tips.
+The script kills any running instance before building and locates the `.app` in DerivedData by globbing. See the `building-macos-apps` skill → `references/tooling/build-and-run.md` for script patterns and debugging tips.
 
 ## Tests
 
@@ -30,7 +30,7 @@ Unit tests use **Swift Testing** (`@Test`, `@Suite`, `#expect`). UI tests use **
 xcodebuild test -project CollageMaker/CollageMaker.xcodeproj -scheme CollageMaker -destination 'platform=macOS,arch=arm64' -only-testing:CollageMakerTests
 ```
 
-Test fixture helpers are in `CollageMakerTests/TestHelpers.swift`. See `CollageViewModelTests.swift` for the mocking pattern. See the `building-macos-apps` skill → `references/testing-patterns.md` for AppKit init, CGImage fixtures, concurrency races, serialization, and diagnostic patterns.
+Test fixture helpers are in `CollageMakerTests/TestHelpers.swift`. See `CollageViewModelTests.swift` for the mocking pattern. See the `building-macos-apps` skill → `references/testing/testing-patterns.md` for AppKit init, CGImage fixtures, concurrency races, serialization, and diagnostic patterns.
 
 ## Architecture
 
@@ -57,7 +57,7 @@ Key conventions:
 - **Services are actors or plain classes behind protocols** — enables mocking in tests
 - **All logging uses `OSLog`** with subsystem `austin183.indie.CollageMaker`
 - **UserDefaults keys** are centralized in `ViewModelUserDefaultsKeys` inside `CollageViewModel.swift`
-- **Coordinate systems**: Vision (bottom-left, normalized) vs CoreGraphics vs NSImage (top-left). See `building-macos-apps` skill → `references/coordinate-systems.md`.
+- **Coordinate systems**: Vision (bottom-left, normalized) vs CoreGraphics vs NSImage (top-left). See `building-macos-apps` skill → `references/graphics/coordinate-systems.md`.
 
 ## Important gotchas
 
@@ -69,9 +69,9 @@ Key conventions:
 
 The `building-macos-apps` skill provides detailed patterns for:
 - **State management**: `@Observable`, `@Bindable`, concurrency — see skill main file
-- **Testing**: fixtures, mocks, races, diagnostics — `references/testing-patterns.md`
-- **Build and run**: scripts, logging, debugging — `references/build-and-run.md`
-- **Coordinate systems**: Vision/CoreGraphics/NSImage flips, EXIF, fit math — `references/coordinate-systems.md`
-- **Gestures**: targeting, magnification, live preview — `references/swiftui-gestures.md`
-- **Vision framework**: actor isolation, saliency heat maps — `references/vision-api-details.md`
-- **Windowing**: `WindowGroup`, `Settings` scenes — `references/windowing.md`
+- **Testing**: fixtures, mocks, races, diagnostics — `references/testing/testing-patterns.md`
+- **Build and run**: scripts, logging, debugging — `references/tooling/build-and-run.md`
+- **Coordinate systems**: Vision/CoreGraphics/NSImage flips, EXIF, fit math — `references/graphics/coordinate-systems.md`
+- **Gestures**: targeting, magnification, live preview — `references/gestures/swiftui-gestures.md`
+- **Vision framework**: actor isolation, saliency heat maps — `references/graphics/vision-api-details.md`
+- **Windowing**: `WindowGroup`, `Settings` scenes — `references/tooling/windowing.md`

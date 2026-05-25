@@ -37,4 +37,4 @@ Conditionally disable import by passing empty array when no selection exists.
 
 ## Drag-and-Drop Reference
 
-For full drag-and-drop patterns (Transferable API, onMove reordering, NSItemProvider, Finder drag extraction), see [drag-and-drop.md](drag-and-drop.md).
+For full drag-and-drop patterns (Transferable API, onMove reordering, NSItemProvider, Finder drag extraction), see [../gestures/drag-and-drop.md](../gestures/drag-and-drop.md).
