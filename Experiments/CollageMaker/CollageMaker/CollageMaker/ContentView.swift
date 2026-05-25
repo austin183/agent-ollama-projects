@@ -13,7 +13,7 @@ struct ContentView: View {
     @Environment(\.showingClearAlert) private var showingClearAlert
     @State private var isDragging = false
     @State private var searchQuery = ""
-    @State private var showDetail = true
+    @State private var isDetailCollapsed = false
 
     private let imageTypes: [UTType] = [.jpeg, .png, .tiff, .heic, .heif]
 
@@ -30,11 +30,46 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             sidebar
-        } content: {
-            editor
         } detail: {
-            if showDetail {
-                detail
+            HStack(spacing: 0) {
+                CollageEditorView(viewModel: viewModel)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if !isDetailCollapsed {
+                    detail
+                }
+            }
+            .frame(minWidth: 400, minHeight: 300)
+            .toolbar {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    Button {
+                        Task { [weak viewModel] in
+                            await viewModel?.exportCollage()
+                        }
+                    } label: {
+                        Label("Export", systemImage: "arrowshape.down.circle.fill")
+                    }
+                    .disabled(viewModel.isProcessing || viewModel.images.isEmpty)
+                    .accessibilityLabel("Export collage as JPEG")
+                    .accessibilityHint("Opens save dialog")
+
+                    Button {
+                        viewModel.browseImages()
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                    }
+                    .help("Add Images")
+                    .accessibilityLabel("Add Images")
+                    .accessibilityHint("Opens file picker")
+
+                    Button {
+                        isDetailCollapsed.toggle()
+                    } label: {
+                        Image(systemName: "sidebar.right")
+                    }
+                    .help("Toggle Right Sidebar")
+                    .accessibilityLabel("Toggle Right Sidebar")
+                }
             }
         }
         .alert("Clear All Images?", isPresented: showingClearAlert) {
@@ -122,7 +157,7 @@ struct ContentView: View {
                         }
                         .onTapGesture {
                             viewModel.selectPanelForImage(at: index)
-                            showDetail = true
+                            isDetailCollapsed = false
                         }
                     }
                     .onMove { from, to in
@@ -228,45 +263,6 @@ struct ContentView: View {
         .onTapGesture {
             if viewModel.images.isEmpty {
                 viewModel.browseImages()
-            }
-        }
-    }
-
-    private var editor: some View {
-        VStack(spacing: 0) {
-            CollageEditorView(viewModel: viewModel)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .frame(minWidth: 400, minHeight: 300)
-        .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                Button {
-                    Task { [weak viewModel] in
-                        await viewModel?.exportCollage()
-                    }
-                } label: {
-                    Label("Export", systemImage: "arrowshape.down.circle.fill")
-                }
-                .disabled(viewModel.isProcessing || viewModel.images.isEmpty)
-                .accessibilityLabel("Export collage as JPEG")
-                .accessibilityHint("Opens save dialog")
-
-                Button {
-                    viewModel.browseImages()
-                } label: {
-                    Image(systemName: "plus.circle.fill")
-                }
-                .help("Add Images")
-                .accessibilityLabel("Add Images")
-                .accessibilityHint("Opens file picker")
-
-                Button {
-                    showDetail.toggle()
-                } label: {
-                    Image(systemName: "sidebar.right")
-                }
-                .help("Toggle Right Sidebar")
-                .accessibilityLabel("Toggle Right Sidebar")
             }
         }
     }

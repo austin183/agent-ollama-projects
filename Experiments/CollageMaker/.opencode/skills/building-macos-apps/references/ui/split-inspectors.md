@@ -58,3 +58,4 @@ Form {
 - Avoid swapping the whole root layout with top-level conditionals when selection changes
 - Avoid hiding too much detail behind modal sheets when an inspector or secondary column fits better
 - If the layout requires AppKit split view delegation, use AppKit interop
+- **3-column `NavigationSplitView` has no way to collapse only the detail column** — `columnVisibility` offers `.all`, `.contentOnly`, `.detailOnly`, `.firstTwoOnly` but none give "sidebar + content without detail". If you need independent right-panel toggle, use a 2-column `(sidebar:detail:)` initializer with an `HStack` inside the detail column containing the main view + conditional panel, with the main view using `.frame(maxWidth: .infinity)` to reclaim space when the panel is hidden

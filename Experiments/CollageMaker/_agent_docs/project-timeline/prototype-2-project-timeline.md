@@ -57,3 +57,4 @@
 | 46 | 2026-05-25 | Round 14.4 CR: fixed Clear All crash — force unwrap `previewImage!` in CollageEditorView replaced with `if let` capture before GeometryReader closure ([details](sessions/session-046.md)) |
 | 47 | 2026-05-25 | Round 14.5 CR: proportional corner resize in Panel Editor — crop overlay now maintains panel aspect ratio ([details](sessions/session-047.md)) |
 | 48 | 2026-05-25 | Round 15.1 CR: dynamic zoom limits — pinch zoom-out now reaches full image extent, zoom-in capped at 2x, corner-drag clamped ([details](sessions/session-048.md)) |
+| 49 | 2026-05-25 | Round 15.2 CR: right sidebar collapse fix — switched to 2-column NavigationSplitView, editor + panel in HStack, proper space reclamation on toggle ([details](sessions/session-049.md)) |

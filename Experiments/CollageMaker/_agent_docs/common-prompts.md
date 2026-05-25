@@ -18,7 +18,7 @@ Please implement 4 of the plan for @_agent_docs/plans/2026-05-20-review-fixes.md
 
 # Small Change Requests
 ```
-Please work on the change request in @_agent_docs/change-requests/round-15.1.md using our macos skills for guidance. 
+Please work on the change request in @_agent_docs/change-requests/round-15.2.md using our macos skills for guidance. 
 ```
 
 # Review
