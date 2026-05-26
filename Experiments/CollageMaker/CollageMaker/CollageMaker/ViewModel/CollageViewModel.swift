@@ -37,6 +37,7 @@ final class CollageViewModel {
     private var isInitializing = false
     private var saliencyResults: [Int: SaliencyResult] = [:]
     private var exportTask: Task<Void, Error>?
+    private var saveDebounceTask: Task<Void, Never>?
 
     var images: [ImageItem] = []
     var panels: [ImagePanel] = []
@@ -50,7 +51,7 @@ final class CollageViewModel {
                 target.layoutStyle = oldValue
             }
             undoManager.setActionName("Change Layout")
-            persistence.save(self)
+            debouncedSave()
             logger.info("Layout style changed to \(self.layoutStyle.rawValue, privacy: .public)")
             regenerateLayout()
         }
@@ -63,7 +64,7 @@ final class CollageViewModel {
                 target.titleAttrString = oldValue
             }
             undoManager.setActionName("Edit Title")
-            persistence.save(self)
+            debouncedSave()
             updatePreview()
         }
     }
@@ -81,7 +82,7 @@ final class CollageViewModel {
                 }
                 undoManager.setActionName("Change Title Style")
             }
-            persistence.save(self)
+            debouncedSave()
             updatePreview()
         }
     }
@@ -93,7 +94,7 @@ final class CollageViewModel {
                 target.gutter = oldValue
             }
             undoManager.setActionName("Change Gutter")
-            persistence.save(self)
+            debouncedSave()
             regenerateLayout()
         }
     }
@@ -107,7 +108,7 @@ final class CollageViewModel {
                 target.backgroundColor = oldValue
             }
             undoManager.setActionName("Change Background Color")
-            persistence.save(self)
+            debouncedSave()
             updatePreview()
         }
     }
@@ -119,7 +120,7 @@ final class CollageViewModel {
                 target.exportQuality = oldValue
             }
             undoManager.setActionName("Change Export Quality")
-            persistence.save(self)
+            debouncedSave()
         }
     }
 
@@ -130,7 +131,7 @@ final class CollageViewModel {
                 target.backgroundStyle = oldValue
             }
             undoManager.setActionName("Change Background Style")
-            persistence.save(self)
+            debouncedSave()
             updatePreview()
         }
     }
@@ -142,7 +143,7 @@ final class CollageViewModel {
                 target.gradientStartColor = oldValue
             }
             undoManager.setActionName("Change Gradient Start Color")
-            persistence.save(self)
+            debouncedSave()
             updatePreview()
         }
     }
@@ -154,7 +155,7 @@ final class CollageViewModel {
                 target.gradientEndColor = oldValue
             }
             undoManager.setActionName("Change Gradient End Color")
-            persistence.save(self)
+            debouncedSave()
             updatePreview()
         }
     }
@@ -166,7 +167,7 @@ final class CollageViewModel {
                 target.gradientAngle = oldValue
             }
             undoManager.setActionName("Change Gradient Angle")
-            persistence.save(self)
+            debouncedSave()
             updatePreview()
         }
     }
@@ -177,7 +178,7 @@ final class CollageViewModel {
             if backgroundImage == nil {
                 backgroundImagePath = nil
             }
-            persistence.save(self)
+            debouncedSave()
             updatePreview()
         }
     }
@@ -189,7 +190,7 @@ final class CollageViewModel {
                 target.backgroundOpacity = oldValue
             }
             undoManager.setActionName("Change Background Opacity")
-            persistence.save(self)
+            debouncedSave()
             updatePreview()
         }
     }
@@ -199,7 +200,7 @@ final class CollageViewModel {
     var customImageOrder: [Int] = [] {
         didSet {
             guard !isInitializing else { return }
-            persistence.save(self)
+            debouncedSave()
         }
     }
 
@@ -212,6 +213,16 @@ final class CollageViewModel {
 
     func dismissExportSuccess() {
         exportSuccessMessage = nil
+    }
+
+    private func debouncedSave() {
+        saveDebounceTask?.cancel()
+        let persistence = self.persistence
+        saveDebounceTask = Task { [weak self, persistence] in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard let self else { return }
+            persistence.save(self)
+        }
     }
 
     convenience init() {
@@ -290,9 +301,16 @@ final class CollageViewModel {
         let newItems = await withTaskGroup(of: ImageItem?.self) { group in
             for url in urls {
                 group.addTask {
-                    guard let data = try? Data(contentsOf: url),
-                          let nsImage = NSImage(data: data),
-                          let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+                    guard let data = FileManager.default.contents(atPath: url.path) else { return nil }
+
+                    let imagePair = await MainActor.run { () -> (NSImage, CGImage)? in
+                        guard let nsImage = NSImage(data: data),
+                              let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+                            return nil
+                        }
+                        return (nsImage, cgImage)
+                    }
+                    guard let (nsImage, cgImage) = imagePair else { return nil }
 
                     let thumbSize: CGSize
                     if cgImage.width > cgImage.height {
@@ -546,22 +564,18 @@ final class CollageViewModel {
             for (i, result) in results.enumerated() {
                 indexed[i] = result
             }
-            await MainActor.run {
-                logger.info("Saliency analysis complete: \(indexed.count) result(s)")
-                saliencyResults = indexed
-                cropManager.computeCropsFromSaliency(
-                    panels: panels,
-                    images: images,
-                    results: indexed
-                )
-                cropMap = cropManager.cropMap
-                updatePreview()
-            }
+            logger.info("Saliency analysis complete: \(indexed.count) result(s)")
+            saliencyResults = indexed
+            cropManager.computeCropsFromSaliency(
+                panels: panels,
+                images: images,
+                results: indexed
+            )
+            cropMap = cropManager.cropMap
+            updatePreview()
         } catch {
             logger.error("Saliency analysis failed: \(error.localizedDescription, privacy: .public)")
-            await MainActor.run {
-                errorMessage = error.localizedDescription
-            }
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -585,11 +599,11 @@ final class CollageViewModel {
         cropManager.applyPan(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
         cropMap = cropManager.cropMap
 
-        previewDebounce?.cancel()
-        previewDebounce = DispatchWorkItem { [weak self] in
+        previewDebounceTask?.cancel()
+        previewDebounceTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 150_000_000)
             self?.updatePreview()
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: previewDebounce!)
     }
 
     func beginPinch(panelId: UUID) {
@@ -706,31 +720,32 @@ final class CollageViewModel {
     // MARK: - Preview & Export
 
     private var previewTask: Task<Void, Never>?
-    private var previewDebounce: DispatchWorkItem?
+    private var previewDebounceTask: Task<Void, Never>?
 
     func updatePreview() {
         guard !panels.isEmpty else { return }
 
         let config = AssemblyConfig(
-            panels: self.panels,
-            crops: self.cropMap,
-            panelAssignments: self.panelAssignments,
-            titleAttrString: self.titleAttrString,
-            titleStyle: self.titleStyle,
-            backgroundColor: self.backgroundColor,
-            backgroundStyle: self.backgroundStyle,
-            gradientStartColor: self.gradientStartColor,
-            gradientEndColor: self.gradientEndColor,
-            gradientAngle: self.gradientAngle,
-            backgroundOpacity: self.backgroundOpacity,
+            panels: panels,
+            crops: cropMap,
+            panelAssignments: panelAssignments,
+            titleAttrString: titleAttrString,
+            titleStyle: titleStyle,
+            backgroundColor: backgroundColor,
+            backgroundStyle: backgroundStyle,
+            gradientStartColor: gradientStartColor,
+            gradientEndColor: gradientEndColor,
+            gradientAngle: gradientAngle,
+            backgroundOpacity: backgroundOpacity,
             canvasSize: CanvasConfig.defaultCanvasSize
         )
-        let cgImages = self.images.map { $0.cgImage }
-        let backgroundImageCG = self.backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
-        let assembler = self.assembler
+        let cgImages = images.map { $0.cgImage }
+        let backgroundImageCG = backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        let assembler = assembler
 
         previewTask?.cancel()
-        previewTask = Task.detached { [weak self] in
+        previewTask = Task.detached { [weak self, config, cgImages, backgroundImageCG, assembler] in
+            guard let self else { return }
             let result = assembler.assemblePreviewWithCGImages(
                 config: config,
                 cgImages: cgImages,
@@ -738,7 +753,7 @@ final class CollageViewModel {
                 previewSize: CanvasConfig.defaultPreviewSize
             )
             Task { @MainActor in
-                self?.previewImage = result
+                self.previewImage = result
             }
         }
     }
@@ -790,7 +805,7 @@ final class CollageViewModel {
         let quality = self.exportQuality
         let assembler = self.assembler
 
-        exportTask = Task.detached {
+        exportTask = Task.detached { [assembler, config, cgImages, backgroundImageCG, quality, url] in
             let data = assembler.assembleWithCGImages(
                 config: config,
                 cgImages: cgImages,

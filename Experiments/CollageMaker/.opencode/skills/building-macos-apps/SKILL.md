@@ -330,17 +330,18 @@ When GUI behavior is unclear (agent cannot observe running app):
 2. **Check state wrapper choices** -- `@State` with reference types, `@ObservedObject` stored properties, and missing `@EnvironmentObject` injection are the most common culprits
 3. **Check @Observable property types** -- computed properties are invisible to `@Observable`. If a binding "works locally" but dependent views don't update, the property is likely computed. Also check that the view uses `@Bindable var`, not `let`
 4. **Check for spurious undo entries at launch** -- `didSet` fires during `init` property assignment, registering unwanted undo actions and triggering redundant persistence. Use an `isInitializing` guard. See [references/state/observable-bindable.md](references/state/observable-bindable.md)
-5. **Check `.onChange` vs `.onReceive`** -- `.onChange(of:)` loses its previous-value tracker when SwiftUI recreates the view struct. Use `.onReceive(viewModel.$property.dropFirst())` for reliable reaction to `@Published` changes.
-6. **Check CGRect equality** -- lookups by `frame == targetRect` may fail due to `CGFloat` precision errors. Use `id`-based lookup instead.
-7. **Extract view-local mutable state** to `@MainActor final class` + `@StateObject` when the view needs timers, debouncers, or other reference-type members
-8. **Runtime debugging:** `print()` goes to stdout (not visible in `log stream`). Use `os_log` for unified log, or run app from terminal to see `print()` output.
-9. **Visual element "doesn't appear" diagnostic:** When rendering code looks correct but nothing shows up:
+5. **Check `.onChange` vs `.onReceive`** -- `.onChange(of:)` loses its previous-value tracker when SwiftUI recreates view struct. Use `.onReceive(viewModel.$property.dropFirst())` for reliable reaction to `@Published` changes.
+6. **Check `@State` UUID-cache staleness** -- If hit-testing, overlays, or gesture highlights fail intermittently after operations that regenerate collections (layout changes, image swaps), the `@State [UUID: CGRect]` cache may be stale for one render cycle. Fix: compute frames on-the-fly in `GeometryReader` closure instead of caching in `@State`. See [references/state/observable-bindable.md](references/state/observable-bindable.md)
+7. **Check CGRect equality** -- lookups by `frame == targetRect` may fail due to `CGFloat` precision errors. Use `id`-based lookup instead.
+8. **Extract view-local mutable state** to `@MainActor final class` + `@StateObject` when the view needs timers, debouncers, or other reference-type members
+9. **Runtime debugging:** `print()` goes to stdout (not visible in `log stream`). Use `os_log` for unified log, or run app from terminal to see `print()` output.
+10. **Visual element "doesn't appear" diagnostic:** When rendering code looks correct but nothing shows up:
      a. Add `Logger` at pipeline boundaries -- file load, CGImage extraction, style branch, draw call
      b. Log actual values, not just nil/non-nil -- dimensions, opacity, color components
      c. Check `UserDefaults` defaults -- typed getters (`.double`, `.integer`, `.bool`) return zero for missing keys
      d. Check thread affinity -- AppKit methods (`NSImage.cgImage`, `NSColor.cgColor`) called on background threads may silently return `nil`
-10. **NSColorWell color stale** -- `NSColor ==` compares `CGColor` values, which differ across color spaces. Never guard `updateNSView` with `!=`. Always assign `well.color = color` unconditionally. See [references/appkit/nscolorwell.md](references/appkit/nscolorwell.md)
-11. **NSTextView re-entrancy loop** -- If `textDidChange` normalizes text into a binding, the SwiftUI re-render may call `updateNSView`, which mutates `typingAttributes`, firing another `textDidChange`. Fix with coordinator guard flag + early return in `updateNSView`. See [references/appkit/nstextview-binding.md](references/appkit/nstextview-binding.md)
+11. **NSColorWell color stale** -- `NSColor ==` compares `CGColor` values, which differ across color spaces. Never guard `updateNSView` with `!=`. Always assign `well.color = color` unconditionally. See [references/appkit/nscolorwell.md](references/appkit/nscolorwell.md)
+12. **NSTextView re-entrancy loop** -- If `textDidChange` normalizes text into a binding, the SwiftUI re-render may call `updateNSView`, which mutates `typingAttributes`, firing another `textDidChange`. Fix with coordinator guard flag + early return in `updateNSView`. See [references/appkit/nstextview-binding.md](references/appkit/nstextview-binding.md)
 
 ## Logging Quality
 

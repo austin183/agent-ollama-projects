@@ -216,7 +216,9 @@ class StyleableTextViewHolder: ObservableObject {
     let objectWillChange = PassthroughSubject<StyleableTextViewHolder, Never>()
     var textView: NSTextView? {
         didSet {
-            objectWillChange.send(self)
+            DispatchQueue.main.async {
+                self.objectWillChange.send(self)
+            }
         }
     }
 }

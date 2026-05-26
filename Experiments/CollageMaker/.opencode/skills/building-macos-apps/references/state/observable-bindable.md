@@ -306,6 +306,34 @@ When migrating from `ObservableObject` to `@Observable`:
 5. **Extract color persistence helpers** — `saveColor`/`loadColor` reduce boilerplate for `NSColor` properties
 6. **Guard `didSet` during initialization** — use `isInitializing` flag to prevent undo registrations, redundant persistence, and premature side effects when loading saved state in `init`
 7. **No `@MainActor` default params in init** — use init overloads instead of `init(dep: MainActorDep = MainActorDep())`
+8. **`@State` UUID cache staleness** — When `@State` caches `[UUID: Value]` and the source collection regenerates with new UUIDs, the cache is stale for one render cycle. Compute on-the-fly in `GeometryReader` closure for correctness-critical paths (hit-testing, overlays). See "@State Cache Staleness with UUID Collections" above.
+
+## @State Cache Staleness with UUID Collections
+
+When a view caches derived data in `@State` keyed by UUIDs (e.g., `[UUID: CGRect]` for panel frames), and the source collection can be regenerated with **new UUIDs**, the cache becomes stale for one render cycle. The `.onChange` that updates the cache fires *after* the first re-render body evaluation.
+
+**The gap:**
+1. ViewModel updates collection with new UUIDs
+2. SwiftUI re-renders body — `@State` cache still holds old UUIDs
+3. `.onChange` fires and updates cache
+4. SwiftUI re-renders again (now in sync)
+
+Steps 2–3 is the gap. Anything reading the cache during the first render — hit-testing in gesture closures, selected-outline overlays, `ForEach` conditional rendering — will fail or show stale state.
+
+**Fix: Compute on-the-fly in GeometryReader closure**
+
+```swift
+GeometryReader { geometry in
+    let panelFrames = viewModel.panels.reduce(into: [UUID: CGRect]()) { dict, panel in
+        dict[panel.id] = canvasToPreviewFrame(panel.frame, in: geometry.size)
+    }
+    // panelFrames is always fresh — no staleness gap
+}
+```
+
+**When @State caching is still valid:** For collections whose UUIDs are stable across updates (e.g., panels that persist across layout changes, or frames that only change during window resize). The staleness gap only occurs when UUIDs are replaced.
+
+**Performance trade-off:** On-the-fly computation adds O(n) work per render. For typical collections (≤20 items), this is negligible. For large collections, keep the `@State` cache for `ForEach` rendering but compute fresh values inside gesture handlers where correctness matters.
 
 ## Pitfalls
 

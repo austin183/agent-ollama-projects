@@ -19,8 +19,6 @@ struct CollageEditorView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var pinchPanelId: UUID?
-    @State private var scaledPanelFrames: [UUID: CGRect] = [:]
-    @State private var scaledTitleFrame: CGRect?
     @State private var dragTitleLocked = false
     @State private var titleResizeEdge: TitleResizeEdge = .none
     @State private var dragSourcePanelId: UUID?
@@ -30,16 +28,6 @@ struct CollageEditorView: View {
     @State private var oldTitleStyle: TitleStyle?
     @State private var dragTitleOffset = CGPoint.zero
 
-    private struct LayoutKey: Equatable {
-        let width: Double
-        let height: Double
-        let panelIds: [UUID]
-        let cropKeys: [UUID]
-        let titleFrameX: Double
-        let titleFrameY: Double
-        let titleFrameW: Double
-        let titleFrameH: Double
-    }
 
     private var titleCanvasFrame: CGRect? {
         guard !viewModel.titleAttrString.string.isEmpty else { return nil }
@@ -84,6 +72,11 @@ struct CollageEditorView: View {
     var body: some View {
         if let previewImage = viewModel.previewImage {
             GeometryReader { geometry in
+                let panelFrames = viewModel.panels.reduce(into: [UUID: CGRect]()) { dict, panel in
+                    dict[panel.id] = canvasToPreviewFrame(panel.frame, in: geometry.size)
+                }
+                let titleFrame = titleCanvasFrame.map { canvasToPreviewFrame($0, in: geometry.size) }
+
                 ZStack {
                     Image(nsImage: previewImage)
                         .resizable()
@@ -92,7 +85,7 @@ struct CollageEditorView: View {
                         .id("preview")
 
                     ForEach(viewModel.panels) { panel in
-                        if let scaledFrame = scaledPanelFrames[panel.id] {
+                        if let scaledFrame = panelFrames[panel.id] {
                             let imageIndex = viewModel.getEffectiveImageIndex(for: panel.id)
                             PanelHitArea(
                                 panel: panel,
@@ -116,7 +109,7 @@ struct CollageEditorView: View {
                         }
                     }
 
-                    if let scaled = scaledTitleFrame, !viewModel.title.isEmpty {
+                    if let scaled = titleFrame, !viewModel.title.isEmpty {
                         Rectangle()
                             .fill(Color.clear)
                             .stroke(Color.orange, lineWidth: 1.5)
@@ -139,7 +132,7 @@ struct CollageEditorView: View {
                     }
 
                     if let sourceId = dragSourcePanelId,
-                       let scaledFrame = scaledPanelFrames[sourceId] {
+                       let scaledFrame = panelFrames[sourceId] {
                         Rectangle()
                             .fill(Color.clear)
                             .stroke(Color.cyan, lineWidth: 2.5)
@@ -148,7 +141,7 @@ struct CollageEditorView: View {
                     }
 
                     if let targetId = dragTargetPanelId,
-                       let scaledFrame = scaledPanelFrames[targetId],
+                       let scaledFrame = panelFrames[targetId],
                        targetId != dragSourcePanelId {
                         Rectangle()
                             .fill(Color.clear)
@@ -170,7 +163,7 @@ struct CollageEditorView: View {
 
                     if let selectedId = viewModel.selectedPanelId,
                         let selectedPanel = viewModel.panels.first(where: { $0.id == selectedId }),
-                        let scaledFrame = scaledPanelFrames[selectedId] {
+                        let scaledFrame = panelFrames[selectedId] {
                         Rectangle()
                             .fill(Color.clear)
                             .stroke(Color.white, lineWidth: 2)
@@ -209,24 +202,25 @@ struct CollageEditorView: View {
                     DragGesture(minimumDistance: 5)
                         .onChanged { value in
                             if !dragTitleLocked {
-                                if let tf = scaledTitleFrame {
-                                    let handleThreshold = resizeHandleWidth + 2
-                                    if tf.minX - handleThreshold <= value.startLocation.x,
-                                       value.startLocation.x <= tf.minX + handleThreshold,
-                                       tf.minY <= value.startLocation.y, value.startLocation.y <= tf.maxY {
-                                         dragTitleLocked = true
-                                         titleResizeEdge = .left
-                                         viewModel.isDraggingTitle = true
-                                         oldTitleStyle = viewModel.titleStyle
-                                         return
-                                    } else if tf.maxX - handleThreshold <= value.startLocation.x,
-                                               value.startLocation.x <= tf.maxX + handleThreshold,
-                                               tf.minY <= value.startLocation.y, value.startLocation.y <= tf.maxY {
-                                         dragTitleLocked = true
-                                         titleResizeEdge = .right
-                                         viewModel.isDraggingTitle = true
-                                         oldTitleStyle = viewModel.titleStyle
-                                         return
+                                guard let titleCanvas = titleCanvasFrame else { return }
+                                let tf = canvasToPreviewFrame(titleCanvas, in: geometry.size)
+                                let handleThreshold = resizeHandleWidth + 2
+                                if tf.minX - handleThreshold <= value.startLocation.x,
+                                   value.startLocation.x <= tf.minX + handleThreshold,
+                                   tf.minY <= value.startLocation.y, value.startLocation.y <= tf.maxY {
+                                  dragTitleLocked = true
+                                  titleResizeEdge = .left
+                                  viewModel.isDraggingTitle = true
+                                  oldTitleStyle = viewModel.titleStyle
+                                  return
+                                } else if tf.maxX - handleThreshold <= value.startLocation.x,
+                                           value.startLocation.x <= tf.maxX + handleThreshold,
+                                           tf.minY <= value.startLocation.y, value.startLocation.y <= tf.maxY {
+                                  dragTitleLocked = true
+                                  titleResizeEdge = .right
+                                  viewModel.isDraggingTitle = true
+                                  oldTitleStyle = viewModel.titleStyle
+                                  return
                                 } else if tf.contains(value.startLocation) {
                                       let startCanvas = CropManager.screenToCanvasPoint(value.startLocation, in: geometry.size)
                                       if let tfCanvas = titleCanvasFrame {
@@ -241,7 +235,6 @@ struct CollageEditorView: View {
                                       viewModel.isDraggingTitle = true
                                       oldTitleStyle = viewModel.titleStyle
                                     }
-                                }
                                 return
                             }
 
@@ -295,7 +288,8 @@ struct CollageEditorView: View {
                             guard !viewModel.isDraggingTitle else { return }
 
                             if dragSourcePanelId == nil {
-                                if let titleFrame = scaledTitleFrame {
+                                if let tc = titleCanvasFrame {
+                                    let titleFrame = canvasToPreviewFrame(tc, in: geometry.size)
                                     let handleThreshold = resizeHandleWidth + 2
                                     let inResizeHandle = (titleFrame.minX - handleThreshold <= value.startLocation.x &&
                                         value.startLocation.x <= titleFrame.minX + handleThreshold &&
@@ -361,28 +355,18 @@ struct CollageEditorView: View {
                         }
                 )
                 .onTapGesture { location in
-                    if let titleFrame = scaledTitleFrame, titleFrame.contains(location) {
+                    if let titleFrame, titleFrame.contains(location) {
                         return
                     }
                     if let id = panelAt(location: location, in: geometry.size) {
                         viewModel.selectedPanelId = id
-                        if let panel = viewModel.panels.first(where: { $0.id == id }),
-                           let sf = scaledPanelFrames[id] {
-                            logger.info("Selected panel idx=\(panel.imageIndex), canvas=\(DebugHelpers.rectStr(panel.frame)), scaled=\(DebugHelpers.rectStr(sf)), tap=\(DebugHelpers.pointStr(location)), contains=\(sf.contains(location))")
+                        if let panel = viewModel.panels.first(where: { $0.id == id }) {
+                            let freshFrame = canvasToPreviewFrame(panel.frame, in: geometry.size)
+                            logger.info("Selected panel idx=\(panel.imageIndex), canvas=\(DebugHelpers.rectStr(panel.frame)), scaled=\(DebugHelpers.rectStr(freshFrame)), tap=\(DebugHelpers.pointStr(location)), contains=\(freshFrame.contains(location))")
                         }
                     } else {
                         viewModel.selectedPanelId = nil
                                 logger.info("Deselected panel, tap=\(DebugHelpers.pointStr(location))")
-                    }
-                }
-                .onChange(of: LayoutKey(width: Double(geometry.size.width), height: Double(geometry.size.height), panelIds: viewModel.panels.map { $0.id }, cropKeys: Array(viewModel.cropMap.keys), titleFrameX: layoutTitleFrame.origin.x, titleFrameY: layoutTitleFrame.origin.y, titleFrameW: layoutTitleFrame.width, titleFrameH: layoutTitleFrame.height)) { _, _ in
-                    scaledPanelFrames = viewModel.panels.reduce(into: [:]) { dict, panel in
-                        dict[panel.id] = canvasToPreviewFrame(panel.frame, in: geometry.size)
-                    }
-                    if let titleFrame = titleCanvasFrame {
-                        scaledTitleFrame = canvasToPreviewFrame(titleFrame, in: geometry.size)
-                    } else {
-                        scaledTitleFrame = nil
                     }
                 }
             }
@@ -396,13 +380,14 @@ struct CollageEditorView: View {
     }
 
     private func panelAt(location: CGPoint, in previewSize: CGSize) -> UUID? {
-        _ = previewSize
-        if let id = CropManager.hitTestPanel(at: location, panelFrames: scaledPanelFrames) {
-            if let panel = viewModel.panels.first(where: { $0.id == id }),
-               let frame = scaledPanelFrames[id] {
-                logger.debug("panelAt: idx=\(panel.imageIndex) frame=\(DebugHelpers.rectStr(frame)) tap=\(DebugHelpers.pointStr(location)) hits=true")
-                return id
-            }
+        let freshFrames = viewModel.panels.reduce(into: [:]) { dict, panel in
+            dict[panel.id] = canvasToPreviewFrame(panel.frame, in: previewSize)
+        }
+        if let id = CropManager.hitTestPanel(at: location, panelFrames: freshFrames),
+           let panel = viewModel.panels.first(where: { $0.id == id }),
+           let frame = freshFrames[id] {
+            logger.debug("panelAt: idx=\(panel.imageIndex) frame=\(DebugHelpers.rectStr(frame)) tap=\(DebugHelpers.pointStr(location)) hits=true")
+            return id
         }
         return nil
     }
