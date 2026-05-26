@@ -308,6 +308,20 @@ final class TrackingAssembler: CollageAssembly {
 }
 ```
 
+## Testing Extracted Pure-Math Utilities
+
+When extracting shared math from duplicated code paths (e.g., fit calculations, coordinate transforms), write a dedicated test file for the utility **before** refactoring the call sites. Test with concrete known values to catch branch-direction bugs:
+
+```swift
+@Test func fitLandscapeIntoPortrait() {
+    let result = FitMath.fit(CGSize(width: 1920, height: 1080), into: CGSize(width: 746, height: 821))
+    #expect(result.fittedSize.width == 746)  // width constrains
+    #expect(result.fittedSize.height == 418)  // derived from aspect
+}
+```
+
+Call-site tests (e.g., CropManager, CoordinateConverter) exercise the utility indirectly but won't catch implementation bugs in the utility itself — they'll only surface as downstream failures (broken hit-testing, wrong overlays).
+
 ## Aspect Ratio Math in Coordinate Tests
 
 When writing tests for coordinate conversion that implements `.aspectRatio(contentMode: .fit)` math, expected values depend entirely on the relative aspect ratios of image and container:

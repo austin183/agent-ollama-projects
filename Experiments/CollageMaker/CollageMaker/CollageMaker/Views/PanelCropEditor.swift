@@ -131,17 +131,10 @@ struct PanelCropEditor: View {
         crop: CropInfo,
         container: CGSize
     ) {
-        let imageAspect = image.size.width / image.size.height
-        let containerAspect = container.width / container.height
+        let (fittedSize, fitOffset) = FitMath.fit(image.size, into: container)
 
-        let (fittedW, fittedH): (CGFloat, CGFloat)
-        if imageAspect > containerAspect {
-            fittedW = container.width
-            fittedH = container.width / imageAspect
-        } else {
-            fittedH = container.height
-            fittedW = container.height * imageAspect
-        }
+        let fittedW = fittedSize.width
+        let fittedH = fittedSize.height
 
         let scaleX = image.size.width / fittedW
         let scaleY = image.size.height / fittedH
@@ -171,6 +164,7 @@ struct PanelCropEditor: View {
                 container: container,
                 fittedW: fittedW,
                 fittedH: fittedH,
+                fitOffset: fitOffset,
                 baseSourceRect: dragBaseSourceRect
             )
 
@@ -183,6 +177,7 @@ struct PanelCropEditor: View {
                 container: container,
                 fittedW: fittedW,
                 fittedH: fittedH,
+                fitOffset: fitOffset,
                 baseSourceRect: dragBaseSourceRect
             )
 
@@ -195,6 +190,7 @@ struct PanelCropEditor: View {
                 container: container,
                 fittedW: fittedW,
                 fittedH: fittedH,
+                fitOffset: fitOffset,
                 baseSourceRect: dragBaseSourceRect
             )
 
@@ -207,6 +203,7 @@ struct PanelCropEditor: View {
                 container: container,
                 fittedW: fittedW,
                 fittedH: fittedH,
+                fitOffset: fitOffset,
                 baseSourceRect: dragBaseSourceRect
             )
 
@@ -223,6 +220,7 @@ struct PanelCropEditor: View {
         container: CGSize,
         fittedW: CGFloat,
         fittedH: CGFloat,
+        fitOffset: CGPoint,
         baseSourceRect: CGRect
     ) {
         let panelAspect = panel.frame.width / panel.frame.height
@@ -253,28 +251,18 @@ struct PanelCropEditor: View {
             clampedOY = container.height - newH
         }
 
-        let offsetX = (container.width - fittedW) / 2
-        let offsetY = (container.height - fittedH) / 2
-
         let sourceOrigin = CGPoint(
-            x: (clampedOX - offsetX) / fittedW * image.size.width,
-            y: (clampedOY - offsetY) / fittedH * image.size.height
+            x: (clampedOX - fitOffset.x) / fittedW * image.size.width,
+            y: (clampedOY - fitOffset.y) / fittedH * image.size.height
         )
         var sourceSize = CGSize(
             width: newW / fittedW * image.size.width,
             height: newH / fittedH * image.size.height
         )
 
-        let imageAspect = image.size.width / image.size.height
-        let maxSourceW: CGFloat
-        let maxSourceH: CGFloat
-        if imageAspect > panelAspect {
-            maxSourceH = image.size.height
-            maxSourceW = maxSourceH * panelAspect
-        } else {
-            maxSourceW = image.size.width
-            maxSourceH = maxSourceW / panelAspect
-        }
+        let maxSourceRect = FitMath.sourceRect(imageSize: image.size, panelSize: panel.frame.size)
+        let maxSourceW = maxSourceRect.width
+        let maxSourceH = maxSourceRect.height
         let minSourceW = panel.frame.width / 2
         let minSourceH = panel.frame.height / 2
 

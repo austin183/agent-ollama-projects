@@ -212,21 +212,10 @@ final class CropManager {
 
     static func screenToCanvasPoint(_ screenPoint: CGPoint, in previewSize: CGSize) -> CGPoint {
         let canvasSize = CanvasConfig.defaultCanvasSize
-        let canvasAspect = canvasSize.width / canvasSize.height
-        let previewAspect = previewSize.width / previewSize.height
+        let (fittedSize, offset) = FitMath.fit(canvasSize, into: previewSize)
 
-        var fittedSize: CGSize
-        if canvasAspect > previewAspect {
-            fittedSize = CGSize(width: previewSize.width, height: previewSize.width / canvasAspect)
-        } else {
-            fittedSize = CGSize(width: previewSize.height * canvasAspect, height: previewSize.height)
-        }
-
-        let offsetX = (previewSize.width - fittedSize.width) / 2
-        let offsetY = (previewSize.height - fittedSize.height) / 2
-
-        let canvasX = (screenPoint.x - offsetX) / fittedSize.width * canvasSize.width
-        let canvasY = canvasSize.height - (screenPoint.y - offsetY) / fittedSize.height * canvasSize.height
+        let canvasX = (screenPoint.x - offset.x) / fittedSize.width * canvasSize.width
+        let canvasY = canvasSize.height - (screenPoint.y - offset.y) / fittedSize.height * canvasSize.height
 
         return CGPoint(x: canvasX, y: canvasY)
     }
@@ -239,24 +228,7 @@ final class CropManager {
     }
 
     private func computeBestFitSource(imageSize: CGSize, panelSize: CGSize) -> CGRect {
-        let imageAspect = imageSize.width / imageSize.height
-        let panelAspect = panelSize.width / panelSize.height
-
-        var sourceW: CGFloat
-        var sourceH: CGFloat
-
-        if imageAspect > panelAspect {
-            sourceH = imageSize.height
-            sourceW = sourceH * panelAspect
-        } else {
-            sourceW = imageSize.width
-            sourceH = sourceW / panelAspect
-        }
-
-        let originX = (imageSize.width - sourceW) / 2
-        let originY = (imageSize.height - sourceH) / 2
-
-        return CGRect(x: originX, y: originY, width: sourceW, height: sourceH)
+        FitMath.sourceRect(imageSize: imageSize, panelSize: panelSize)
     }
 
     private func endGesture() {
@@ -275,50 +247,26 @@ final class CropManager {
 
 struct CoordinateConverter {
     static func canvasToPreviewFrame(_ canvasRect: CGRect, in previewSize: CGSize, canvasSize: CGSize) -> CGRect {
-        let canvasAspect = canvasSize.width / canvasSize.height
-        let previewAspect = previewSize.width / previewSize.height
-
-        var fittedSize: CGSize
-        if canvasAspect > previewAspect {
-            fittedSize = CGSize(width: previewSize.width, height: previewSize.width / canvasAspect)
-        } else {
-            fittedSize = CGSize(width: previewSize.height * canvasAspect, height: previewSize.height)
-        }
-
-        let offsetX = (previewSize.width - fittedSize.width) / 2
-        let offsetY = (previewSize.height - fittedSize.height) / 2
+        let (fittedSize, offset) = FitMath.fit(canvasSize, into: previewSize)
 
         let flippedY = canvasSize.height - canvasRect.origin.y - canvasRect.height
 
         return CGRect(
-            x: offsetX + canvasRect.origin.x / canvasSize.width * fittedSize.width,
-            y: offsetY + flippedY / canvasSize.height * fittedSize.height,
+            x: offset.x + canvasRect.origin.x / canvasSize.width * fittedSize.width,
+            y: offset.y + flippedY / canvasSize.height * fittedSize.height,
             width: canvasRect.width / canvasSize.width * fittedSize.width,
             height: canvasRect.height / canvasSize.height * fittedSize.height
         )
     }
 
     static func sourceRectInContainer(_ crop: CropInfo, imageSize: CGSize, container: CGSize) -> CGRect {
-        let imageAspect = imageSize.width / imageSize.height
-        let containerAspect = container.width / container.height
-
-        let (fittedW, fittedH): (CGFloat, CGFloat)
-        if imageAspect > containerAspect {
-            fittedW = container.width
-            fittedH = container.width / imageAspect
-        } else {
-            fittedH = container.height
-            fittedW = container.height * imageAspect
-        }
-
-        let offsetX = (container.width - fittedW) / 2
-        let offsetY = (container.height - fittedH) / 2
+        let (fittedSize, offset) = FitMath.fit(imageSize, into: container)
 
         return CGRect(
-            x: offsetX + crop.sourceRect.origin.x / imageSize.width * fittedW,
-            y: offsetY + crop.sourceRect.origin.y / imageSize.height * fittedH,
-            width: crop.sourceRect.width / imageSize.width * fittedW,
-            height: crop.sourceRect.height / imageSize.height * fittedH
+            x: offset.x + crop.sourceRect.origin.x / imageSize.width * fittedSize.width,
+            y: offset.y + crop.sourceRect.origin.y / imageSize.height * fittedSize.height,
+            width: crop.sourceRect.width / imageSize.width * fittedSize.width,
+            height: crop.sourceRect.height / imageSize.height * fittedSize.height
         )
     }
 }

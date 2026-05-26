@@ -131,7 +131,8 @@ final class MockAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: mockSaliency, assembler: MockAssembler())
         vm.images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.panels = LayoutGenerator.generate(numImages: 1, style: .hero)
-        vm.cropManager_computeInitialCrops()
+        vm.cropManager.computeInitialCrops(panels: vm.panels, images: vm.images)
+        vm.cropMap = vm.cropManager.cropMap
 
         await vm.analyzeSaliency()
         #expect(vm.errorMessage != nil)
@@ -207,44 +208,5 @@ final class MockAssembler: CollageAssembly {
 
         vm.moveImages(from: IndexSet(integer: 0), to: 2)
         #expect(vm.images.count == 3)
-    }
-}
-
-// Extension to expose cropManager for testing
-extension CollageViewModel {
-    func cropManager_computeInitialCrops() {
-        cropMap = [:]
-        for panel in panels {
-            guard panel.imageIndex < images.count else { continue }
-            let image = images[panel.imageIndex]
-            let panelSize = panel.frame.size
-            let cropRect = computeBestFitSource(imageSize: image.size, panelSize: panelSize)
-            cropMap[panel.id] = CropInfo(
-                panelId: panel.id,
-                sourceRect: cropRect,
-                destinationRect: panel.frame
-            )
-        }
-    }
-
-    private func computeBestFitSource(imageSize: CGSize, panelSize: CGSize) -> CGRect {
-        let imageAspect = imageSize.width / imageSize.height
-        let panelAspect = panelSize.width / panelSize.height
-
-        var sourceW: CGFloat
-        var sourceH: CGFloat
-
-        if imageAspect > panelAspect {
-            sourceH = imageSize.height
-            sourceW = sourceH * panelAspect
-        } else {
-            sourceW = imageSize.width
-            sourceH = sourceW / panelAspect
-        }
-
-        let originX = (imageSize.width - sourceW) / 2
-        let originY = (imageSize.height - sourceH) / 2
-
-        return CGRect(x: originX, y: originY, width: sourceW, height: sourceH)
     }
 }

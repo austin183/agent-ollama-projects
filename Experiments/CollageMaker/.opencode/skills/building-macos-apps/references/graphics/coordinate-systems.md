@@ -86,6 +86,21 @@ Conversion steps:
 4. Flip Y from top-left to bottom-left (CoreGraphics)
 5. Convert back to top-left normalized for storage
 
+## Fit Math Branch Direction Gotcha
+
+When implementing "fit source into container," the branch that triggers on `sourceAspect > containerAspect` (source is **wider**) should fill the container's **width** — not the height. The wider source hits the width wall first.
+
+```swift
+// CORRECT: wider source (higher aspect) → fill width
+if sourceAspect >= containerAspect {
+    fittedSize = CGSize(width: containerWidth, height: containerWidth / sourceAspect)
+} else {
+    fittedSize = CGSize(width: containerHeight * sourceAspect, height: containerHeight)
+}
+```
+
+**Mnemonic:** The `>` branch fills the constraining dimension. Source is wider → width constrains → fill width. Getting this backwards produces a fitted size too small in one dimension and too large in the other, breaking hit-testing.
+
 ## Source Rect to Fitted Container Mapping
 
 When mapping a rect from image pixel space to a SwiftUI container using `.aspectRatio(contentMode: .fit)` without Y-flip (e.g., sourceRect from CGImage crop, where coordinates are already top-left):

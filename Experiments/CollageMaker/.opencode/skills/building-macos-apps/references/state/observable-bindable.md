@@ -170,6 +170,67 @@ final class CollageViewModel {
 }
 ```
 
+## Initialization Guard for didSet Side Effects
+
+When `@Observable` properties have `didSet` observers that register undo, persist to `UserDefaults`, or trigger side effects (like `updatePreview()`), assigning those properties during `init` fires the `didSet` — causing unwanted undo registrations, redundant persistence writes, and premature side effects before the object is fully constructed.
+
+**Fix: `isInitializing` guard**
+
+```swift
+@Observable
+@MainActor
+final class CollageViewModel {
+    private var isInitializing = false
+
+    var gutter: CGFloat = 0 {
+        didSet {
+            guard !isInitializing else { return }
+            undoManager.registerUndo(withTarget: self) { target in
+                target.gutter = oldValue
+            }
+            persistence.save(self)
+            regenerateLayout()
+        }
+    }
+
+    init(persistence: Persistence) {
+        isInitializing = true
+        let bundle = persistence.load()
+        self.gutter = bundle.gutter       // didSet fires but returns immediately
+        self.layoutStyle = bundle.layoutStyle
+        // ... all properties ...
+        isInitializing = false
+    }
+}
+```
+
+**Why this pattern:**
+- Zero undo entries at launch — undo stack starts clean
+- No redundant persistence — `save(self)` during init writes values already in `UserDefaults`
+- No premature side effects — `updatePreview()` won't run before panels/images are set up
+- Safe for undo replay — when undo restores a value, `isInitializing` is `false`, so `didSet` runs normally
+
+## @MainActor Init Default Parameter Trap
+
+When a dependency class is `@MainActor`, you cannot use it as a default parameter value in `init`:
+
+```swift
+// DOES NOT COMPILE — default params are evaluated in a nonisolated context
+init(persistence: Persistence = UserDefaultsPersistence()) { }
+```
+
+**Fix: Use init overloads:**
+
+```swift
+convenience init() {
+    self.init(persistence: UserDefaultsPersistence())
+}
+
+init(persistence: Persistence) {
+    // ...
+}
+```
+
 ## View Binding Rules
 
 | Declaration | Observes @Observable? | Safe? |
@@ -243,6 +304,8 @@ When migrating from `ObservableObject` to `@Observable`:
 3. **Views must use `@Bindable var`** — `let` will not observe changes
 4. **Root views own `@Observable` with `@State`** — children receive via `@Bindable`
 5. **Extract color persistence helpers** — `saveColor`/`loadColor` reduce boilerplate for `NSColor` properties
+6. **Guard `didSet` during initialization** — use `isInitializing` flag to prevent undo registrations, redundant persistence, and premature side effects when loading saved state in `init`
+7. **No `@MainActor` default params in init** — use init overloads instead of `init(dep: MainActorDep = MainActorDep())`
 
 ## Pitfalls
 
@@ -250,3 +313,5 @@ When migrating from `ObservableObject` to `@Observable`:
 - **`let viewModel: MyObservableVM`** — view renders once with initial state and never updates. Must use `@Bindable var`
 - **Binding "works locally" but dependent views stale** — TextField shows text, Slider moves, but preview doesn't update. Check: (a) property is computed not stored, (b) view uses `let` not `@Bindable`, (c) `updatePreview()` not called in `didSet`
 - **UserDefaults typed getters return zero for missing keys** — `UserDefaults.double(forKey:)`, `.integer(forKey:)`, and `.bool(forKey:)` return `0`, `0`, and `false` respectively when the key doesn't exist (unlike `.string(forKey:)` and `.data(forKey:)` which return `nil`). This causes silent wrong defaults. Safe pattern: check `object(forKey:)` first, then call the typed getter only if the key exists.
+- **`didSet` fires during `init`** — Assigning properties in `init` triggers `didSet`, causing spurious undo entries, redundant `UserDefaults` writes, and premature side effects. Use an `isInitializing` guard in each `didSet` to skip side effects during initialization.
+- **`@MainActor` default param in `init`** — `init(dep: SomeMainActorClass = SomeMainActorClass())` won't compile. Use `convenience init()` overloads instead.

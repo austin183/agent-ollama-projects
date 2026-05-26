@@ -9,6 +9,7 @@ private let logger = Logger(
     category: "ViewModel"
 )
 
+// Kept for backward compatibility — ExportPanel still references it (Item 2 will remove).
 enum ViewModelUserDefaultsKeys {
     static let layoutStyle = "layoutStyle"
     static let gutter = "gutter"
@@ -29,9 +30,11 @@ enum ViewModelUserDefaultsKeys {
 final class CollageViewModel {
     private let saliencyAnalyzer: SaliencyAnalysis
     private let assembler: CollageAssembly
-    private let cropManager = CropManager()
+    private let persistence: UserDefaultsPersistence
+    let cropManager = CropManager()
     private let scrollPanManager = ScrollPanManager()
     let undoManager = UndoManager()
+    private var isInitializing = false
     private var saliencyResults: [Int: SaliencyResult] = [:]
     private var exportTask: Task<Void, Error>?
 
@@ -40,47 +43,27 @@ final class CollageViewModel {
     var cropMap: [UUID: CropInfo] = [:]
     var selectedPanelId: UUID?
 
-    var layoutStyle: LayoutStyle = LayoutStyle(rawValue: UserDefaults.standard.string(forKey: ViewModelUserDefaultsKeys.layoutStyle) ?? "hero") ?? .hero {
+    var layoutStyle: LayoutStyle = .hero {
         didSet {
+            guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.layoutStyle = oldValue
             }
             undoManager.setActionName("Change Layout")
-            UserDefaults.standard.set(self.layoutStyle.rawValue, forKey: ViewModelUserDefaultsKeys.layoutStyle)
+            persistence.save(self)
             logger.info("Layout style changed to \(self.layoutStyle.rawValue, privacy: .public)")
             regenerateLayout()
         }
     }
 
-    var titleAttrString: NSAttributedString = {
-        if let data = UserDefaults.standard.data(forKey: "titleAttrString"),
-           let attr = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSAttributedString.self, from: data) {
-            return attr
-        }
-        if let oldTitle = UserDefaults.standard.string(forKey: ViewModelUserDefaultsKeys.title), !oldTitle.isEmpty {
-            return NSAttributedString(string: oldTitle)
-        }
-        if let defaultTitle = UserDefaults.standard.string(forKey: "defaultTitle"), !defaultTitle.isEmpty {
-            let fontFamily = UserDefaults.standard.string(forKey: "defaultFontFamily") ?? ""
-            let fontSize = UserDefaults.standard.double(forKey: "defaultFontSize")
-            let font: NSFont
-            if !fontFamily.isEmpty, let f = NSFont(name: fontFamily, size: fontSize) {
-                font = f
-            } else {
-                font = NSFont.boldSystemFont(ofSize: fontSize)
-            }
-            return NSAttributedString(string: defaultTitle, attributes: [.font: font])
-        }
-        return NSAttributedString(string: "")
-    }() {
+    var titleAttrString: NSAttributedString = NSAttributedString(string: "") {
         didSet {
+            guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.titleAttrString = oldValue
             }
             undoManager.setActionName("Edit Title")
-            if let data = try? NSKeyedArchiver.archivedData(withRootObject: titleAttrString, requiringSecureCoding: false) {
-                UserDefaults.standard.set(data, forKey: "titleAttrString")
-            }
+            persistence.save(self)
             updatePreview()
         }
     }
@@ -89,151 +72,134 @@ final class CollageViewModel {
         titleAttrString.string
     }
 
-    var titleStyle: TitleStyle = .fromUserDefaults() {
+    var titleStyle: TitleStyle = .default {
         didSet {
+            guard !isInitializing else { return }
             if !isDraggingTitle {
                 undoManager.registerUndo(withTarget: self) { target in
                     target.titleStyle = oldValue
                 }
                 undoManager.setActionName("Change Title Style")
             }
-            titleStyle.saveToUserDefaults()
+            persistence.save(self)
             updatePreview()
         }
     }
 
-    var gutter: CGFloat = CGFloat(UserDefaults.standard.double(forKey: ViewModelUserDefaultsKeys.gutter)) {
+    var gutter: CGFloat = 0 {
         didSet {
+            guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.gutter = oldValue
             }
             undoManager.setActionName("Change Gutter")
-            UserDefaults.standard.set(Double(gutter), forKey: ViewModelUserDefaultsKeys.gutter)
+            persistence.save(self)
             regenerateLayout()
         }
     }
 
     var scrollSensitivity: CGFloat = 1.6
 
-    private func saveColor(_ color: NSColor, key: String) {
-        if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
-            UserDefaults.standard.set(data, forKey: key)
-        }
-    }
-
-    private func loadColor(key: String, default: NSColor) -> NSColor {
-        if let data = UserDefaults.standard.data(forKey: key),
-           let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
-            return color
-        }
-        return `default`
-    }
-
     var backgroundColor: NSColor = .black {
         didSet {
+            guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.backgroundColor = oldValue
             }
             undoManager.setActionName("Change Background Color")
-            saveColor(backgroundColor, key: ViewModelUserDefaultsKeys.backgroundColor)
+            persistence.save(self)
             updatePreview()
         }
     }
 
-    var exportQuality: Double = UserDefaults.standard.double(forKey: ViewModelUserDefaultsKeys.exportQuality) {
+    var exportQuality: Double = 0 {
         didSet {
+            guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.exportQuality = oldValue
             }
             undoManager.setActionName("Change Export Quality")
-            UserDefaults.standard.set(exportQuality, forKey: ViewModelUserDefaultsKeys.exportQuality)
+            persistence.save(self)
         }
     }
 
-    var backgroundStyle: BackgroundStyle = BackgroundStyle(rawValue: UserDefaults.standard.string(forKey: ViewModelUserDefaultsKeys.backgroundStyle) ?? "solid") ?? .solid {
+    var backgroundStyle: BackgroundStyle = .solid {
         didSet {
+            guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.backgroundStyle = oldValue
             }
             undoManager.setActionName("Change Background Style")
-            UserDefaults.standard.set(backgroundStyle.rawValue, forKey: ViewModelUserDefaultsKeys.backgroundStyle)
+            persistence.save(self)
             updatePreview()
         }
     }
 
     var gradientStartColor: NSColor = .black {
         didSet {
+            guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.gradientStartColor = oldValue
             }
             undoManager.setActionName("Change Gradient Start Color")
-            saveColor(gradientStartColor, key: ViewModelUserDefaultsKeys.gradientStartColor)
+            persistence.save(self)
             updatePreview()
         }
     }
 
     var gradientEndColor: NSColor = .darkGray {
         didSet {
+            guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.gradientEndColor = oldValue
             }
             undoManager.setActionName("Change Gradient End Color")
-            saveColor(gradientEndColor, key: ViewModelUserDefaultsKeys.gradientEndColor)
+            persistence.save(self)
             updatePreview()
         }
     }
 
-    var gradientAngle: Double = UserDefaults.standard.double(forKey: ViewModelUserDefaultsKeys.gradientAngle) {
+    var gradientAngle: Double = 0 {
         didSet {
+            guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.gradientAngle = oldValue
             }
             undoManager.setActionName("Change Gradient Angle")
-            UserDefaults.standard.set(gradientAngle, forKey: ViewModelUserDefaultsKeys.gradientAngle)
+            persistence.save(self)
             updatePreview()
         }
     }
 
     var backgroundImage: NSImage? {
         didSet {
+            guard !isInitializing else { return }
             if backgroundImage == nil {
-                UserDefaults.standard.removeObject(forKey: ViewModelUserDefaultsKeys.backgroundImagePath)
+                backgroundImagePath = nil
             }
+            persistence.save(self)
             updatePreview()
         }
     }
-    var backgroundOpacity: Double = {
-        if UserDefaults.standard.object(forKey: ViewModelUserDefaultsKeys.backgroundOpacity) != nil {
-            return UserDefaults.standard.double(forKey: ViewModelUserDefaultsKeys.backgroundOpacity)
-        }
-        return 1.0
-    }() {
+    var backgroundImagePath: String?
+    var backgroundOpacity: Double = 1.0 {
         didSet {
+            guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.backgroundOpacity = oldValue
             }
             undoManager.setActionName("Change Background Opacity")
-            UserDefaults.standard.set(backgroundOpacity, forKey: ViewModelUserDefaultsKeys.backgroundOpacity)
+            persistence.save(self)
             updatePreview()
         }
     }
 
     var panelAssignments: [UUID: Int] = [:]
 
-    private let jsonEncoder = JSONEncoder()
-    private let jsonDecoder = JSONDecoder()
-
-    var customImageOrder: [Int] = {
-        if let data = UserDefaults.standard.data(forKey: ViewModelUserDefaultsKeys.customImageOrder),
-           let order = try? JSONDecoder().decode([Int].self, from: data) {
-            return order
-        }
-        return []
-    }() {
+    var customImageOrder: [Int] = [] {
         didSet {
-            if let data = try? jsonEncoder.encode(customImageOrder) {
-                UserDefaults.standard.set(data, forKey: ViewModelUserDefaultsKeys.customImageOrder)
-            }
+            guard !isInitializing else { return }
+            persistence.save(self)
         }
     }
 
@@ -251,27 +217,54 @@ final class CollageViewModel {
     convenience init() {
         self.init(
             saliencyAnalyzer: SaliencyAnalyzer(),
-            assembler: CollageAssembler()
+            assembler: CollageAssembler(),
+            persistence: UserDefaultsPersistence()
+        )
+    }
+
+    convenience init(
+        saliencyAnalyzer: SaliencyAnalysis,
+        assembler: CollageAssembly
+    ) {
+        self.init(
+            saliencyAnalyzer: saliencyAnalyzer,
+            assembler: assembler,
+            persistence: UserDefaultsPersistence()
         )
     }
 
     init(
         saliencyAnalyzer: SaliencyAnalysis,
-        assembler: CollageAssembly
+        assembler: CollageAssembly,
+        persistence: UserDefaultsPersistence
     ) {
         self.saliencyAnalyzer = saliencyAnalyzer
         self.assembler = assembler
+        self.persistence = persistence
         self.undoManager.levelsOfUndo = 60
-        self.backgroundColor = loadColor(key: ViewModelUserDefaultsKeys.backgroundColor, default: .black)
-        self.gradientStartColor = loadColor(key: ViewModelUserDefaultsKeys.gradientStartColor, default: .black)
-        self.gradientEndColor = loadColor(key: ViewModelUserDefaultsKeys.gradientEndColor, default: .darkGray)
-        if let path = UserDefaults.standard.string(forKey: ViewModelUserDefaultsKeys.backgroundImagePath),
-           let url = URL(string: path),
-           FileManager.default.fileExists(atPath: path),
-           let data = try? Data(contentsOf: url),
-           let image = NSImage(data: data) {
-            self.backgroundImage = image
-        }
+
+        isInitializing = true
+        let bundle = persistence.load()
+        self.layoutStyle = bundle.layoutStyle
+        self.titleAttrString = bundle.titleAttrString
+        self.titleStyle = bundle.titleStyle
+        self.gutter = bundle.gutter
+        self.backgroundColor = bundle.backgroundColor
+        self.exportQuality = bundle.exportQuality
+        self.backgroundStyle = bundle.backgroundStyle
+        self.gradientStartColor = bundle.gradientStartColor
+        self.gradientEndColor = bundle.gradientEndColor
+        self.gradientAngle = bundle.gradientAngle
+        self.backgroundImagePath = bundle.backgroundImagePath
+        self.backgroundImage = bundle.backgroundImage
+        self.backgroundOpacity = bundle.backgroundOpacity
+        self.customImageOrder = bundle.customImageOrder
+        isInitializing = false
+    }
+
+    func setBackgroundImage(_ image: NSImage?, path: String?) {
+        backgroundImagePath = path
+        backgroundImage = image
     }
 
     // MARK: - Image Loading
@@ -441,7 +434,6 @@ final class CollageViewModel {
         panelAssignments.removeAll()
         customImageOrder.removeAll()
         backgroundImage = nil
-        UserDefaults.standard.removeObject(forKey: ViewModelUserDefaultsKeys.backgroundImagePath)
     }
 
     // MARK: - Layout
@@ -768,7 +760,7 @@ final class CollageViewModel {
         savePanel.allowedContentTypes = [.jpeg]
         savePanel.nameFieldStringValue = "collage.jpg"
 
-        if let folderPath = UserDefaults.standard.string(forKey: "defaultExportFolder"),
+        if let folderPath = UserDefaults.standard.string(forKey: UserDefaultsPersistence.Keys.defaultExportFolder),
            let folderUrl = URL(string: folderPath), folderUrl.folderExists {
             savePanel.directoryURL = folderUrl
         }
@@ -777,7 +769,7 @@ final class CollageViewModel {
         guard response == .OK, let url = savePanel.url else { return nil }
         logger.info("Export to \(url.lastPathComponent, privacy: .public)")
 
-        UserDefaults.standard.set(url.deletingLastPathComponent().path, forKey: "defaultExportFolder")
+        UserDefaults.standard.set(url.deletingLastPathComponent().path, forKey: UserDefaultsPersistence.Keys.defaultExportFolder)
 
         let config = AssemblyConfig(
             panels: self.panels,

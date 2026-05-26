@@ -236,9 +236,7 @@ struct ExportPanel: View {
             if response == .OK, let url = panel.url,
                 let data = try? Data(contentsOf: url),
                 let image = NSImage(data: data) {
-                viewModel?.backgroundImage = image
-                UserDefaults.standard.set(url.path, forKey: ViewModelUserDefaultsKeys.backgroundImagePath)
-                viewModel?.updatePreview()
+                viewModel?.setBackgroundImage(image, path: url.path)
             }
         }
     }
