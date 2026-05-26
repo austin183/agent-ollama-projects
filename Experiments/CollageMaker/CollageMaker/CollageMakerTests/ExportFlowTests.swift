@@ -21,27 +21,14 @@ final class TrackingAssembler: CollageAssembly {
     var lastPreviewPanels: [ImagePanel] = []
     var lastPreviewTitle: String = ""
 
-    func assemble(config: AssemblyConfig, images: [NSImage], backgroundImage: NSImage?, quality: Double) -> Data? {
-        return Data()
-    }
-
-    func assemblePreview(config: AssemblyConfig, images: [NSImage], backgroundImage: NSImage?, previewSize: CGSize) -> NSImage? {
-        previewCalls += 1
-        lastPreviewCanvasSize = config.canvasSize
-        lastPreviewPreviewSize = previewSize
-        lastPreviewPanels = config.panels
-        lastPreviewTitle = config.titleAttrString.string
-        return NSImage(size: previewSize)
-    }
-
     func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) -> Data? {
         assembleCalls += 1
-        lastAssemblePanels = config.panels
+        lastAssemblePanels = config.layout.panels
         lastAssembleCgImages = cgImages
-        lastAssembleCrops = config.crops
-        lastAssembleAssignments = config.panelAssignments
-        lastAssembleTitle = config.titleAttrString.string
-        lastAssembleTitleStyle = config.titleStyle
+        lastAssembleCrops = config.layout.crops
+        lastAssembleAssignments = config.layout.panelAssignments
+        lastAssembleTitle = config.title.attrString.string
+        lastAssembleTitleStyle = config.title.style
         lastAssembleCanvasSize = config.canvasSize
         lastAssembleQuality = quality
         return Data([0xFF, 0xD8, 0xFF, 0xE0])
@@ -51,8 +38,8 @@ final class TrackingAssembler: CollageAssembly {
         previewCalls += 1
         lastPreviewCanvasSize = config.canvasSize
         lastPreviewPreviewSize = previewSize
-        lastPreviewPanels = config.panels
-        lastPreviewTitle = config.titleAttrString.string
+        lastPreviewPanels = config.layout.panels
+        lastPreviewTitle = config.title.attrString.string
         return NSImage(size: previewSize)
     }
 }

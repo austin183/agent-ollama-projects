@@ -30,14 +30,6 @@ final class MockAssembler: CollageAssembly {
     var assembleData: Data? = Data()
     var assemblePreviewImage: NSImage? = NSImage(size: CanvasConfig.defaultPreviewSize)
 
-    func assemble(config: AssemblyConfig, images: [NSImage], backgroundImage: NSImage?, quality: Double) -> Data? {
-        assembleData
-    }
-
-    func assemblePreview(config: AssemblyConfig, images: [NSImage], backgroundImage: NSImage?, previewSize: CGSize) -> NSImage? {
-        assemblePreviewImage
-    }
-
     func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) -> Data? {
         assembleData
     }

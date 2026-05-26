@@ -60,3 +60,5 @@
 | 49 | 2026-05-25 | Round 15.2 CR: right sidebar collapse fix — switched to 2-column NavigationSplitView, editor + panel in HStack, proper space reclamation on toggle ([details](sessions/session-049.md)) |
 | 50 | 2026-05-25 | Arch review Item 1: extracted UserDefaultsPersistence service — consolidated all keys, PersistenceBundle for init, simplified 13 didSet observers ([details](sessions/session-050.md)) |
 | 51 | 2026-05-25 | Arch review Items 2, 3, 4: fixed ExportPanel.chooseBackgroundImage duplication, removed test extension duplication, extracted FitMath utility for aspect-ratio fit math ([details](sessions/session-051.md)) |
+| 52 | 2026-05-25 | Arch review Items 5, 6: split AssemblyConfig into LayoutConfig/TitleConfig/BackgroundConfig sub-configs, reduced CollageAssembly protocol from 4 to 2 methods with NSImage wrappers in default extension ([details](sessions/session-052.md)) |
+| 53 | 2026-05-26 | Arch review Item 7: added missing tests for ScrollPanManager, TitleMetrics, FontMerger — 3 new files, 32 tests, 150 total passing ([details](sessions/session-053.md)) |

@@ -9,20 +9,6 @@ private let logger = Logger(
 )
 
 protocol CollageAssembly {
-    func assemble(
-        config: AssemblyConfig,
-        images: [NSImage],
-        backgroundImage: NSImage?,
-        quality: Double
-    ) -> Data?
-
-    func assemblePreview(
-        config: AssemblyConfig,
-        images: [NSImage],
-        backgroundImage: NSImage?,
-        previewSize: CGSize
-    ) -> NSImage?
-
     func assembleWithCGImages(
         config: AssemblyConfig,
         cgImages: [CGImage?],
@@ -38,7 +24,7 @@ protocol CollageAssembly {
     ) -> NSImage?
 }
 
-final class CollageAssembler: CollageAssembly {
+extension CollageAssembly {
     func assemble(
         config: AssemblyConfig,
         images: [NSImage],
@@ -70,14 +56,16 @@ final class CollageAssembler: CollageAssembly {
             previewSize: previewSize
         )
     }
+}
 
+final class CollageAssembler: CollageAssembly {
     func assembleWithCGImages(
         config: AssemblyConfig,
         cgImages: [CGImage?],
         backgroundImage: CGImage?,
         quality: Double
     ) -> Data? {
-        logger.info("Assembling collage: \(config.panels.count) panels, \(Int(config.canvasSize.width))x\(Int(config.canvasSize.height))")
+        logger.info("Assembling collage: \(config.layout.panels.count) panels, \(Int(config.canvasSize.width))x\(Int(config.canvasSize.height))")
 
         guard let (context, bitmapRep) = createBitmapContext(
             config: config,
@@ -92,17 +80,17 @@ final class CollageAssembler: CollageAssembly {
 
         drawPanels(
             into: context,
-            panels: config.panels,
+            panels: config.layout.panels,
             cgImages: cgImages,
-            crops: config.crops,
-            panelAssignments: config.panelAssignments
+            crops: config.layout.crops,
+            panelAssignments: config.layout.panelAssignments
         )
 
-        if !config.titleAttrString.string.isEmpty {
+        if !config.title.attrString.string.isEmpty {
             drawTitle(
                 into: context,
-                titleAttrString: config.titleAttrString,
-                titleStyle: config.titleStyle,
+                titleAttrString: config.title.attrString,
+                titleStyle: config.title.style,
                 canvasWidth: config.canvasSize.width,
                 canvasHeight: config.canvasSize.height
             )
@@ -135,17 +123,17 @@ final class CollageAssembler: CollageAssembly {
 
         drawPanels(
             into: context,
-            panels: config.panels,
+            panels: config.layout.panels,
             cgImages: cgImages,
-            crops: config.crops,
-            panelAssignments: config.panelAssignments
+            crops: config.layout.crops,
+            panelAssignments: config.layout.panelAssignments
         )
 
-        if !config.titleAttrString.string.isEmpty {
+        if !config.title.attrString.string.isEmpty {
             drawTitle(
                 into: context,
-                titleAttrString: config.titleAttrString,
-                titleStyle: config.titleStyle,
+                titleAttrString: config.title.attrString,
+                titleStyle: config.title.style,
                 canvasWidth: config.canvasSize.width,
                 canvasHeight: config.canvasSize.height
             )
@@ -180,27 +168,27 @@ final class CollageAssembler: CollageAssembly {
         NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
         let ctx = NSGraphicsContext.current!.cgContext
 
-        switch config.backgroundStyle {
+        switch config.background.style {
         case .solid:
-            ctx.setFillColor(config.backgroundColor.cgColor)
+            ctx.setFillColor(config.background.color.cgColor)
             ctx.fill(CGRect(x: 0, y: 0, width: config.canvasSize.width, height: config.canvasSize.height))
 
         case .gradient:
             drawGradient(
                 into: ctx,
                 size: config.canvasSize,
-                startColor: config.gradientStartColor,
-                endColor: config.gradientEndColor,
-                angle: config.gradientAngle
+                startColor: config.background.gradientStartColor,
+                endColor: config.background.gradientEndColor,
+                angle: config.background.gradientAngle
             )
 
         case .image:
             drawImageBackground(
                 into: ctx,
                 size: config.canvasSize,
-                backgroundColor: config.backgroundColor,
+                backgroundColor: config.background.color,
                 backgroundImage: backgroundImage,
-                opacity: config.backgroundOpacity
+                opacity: config.background.opacity
             )
         }
 

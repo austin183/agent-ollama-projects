@@ -1,18 +1,30 @@
 import AppKit
 import CoreGraphics
 
-struct AssemblyConfig {
+struct LayoutConfig {
     let panels: [ImagePanel]
     let crops: [UUID: CropInfo]
     let panelAssignments: [UUID: Int]
-    let titleAttrString: NSAttributedString
-    let titleStyle: TitleStyle
-    let backgroundColor: NSColor
-    let backgroundStyle: BackgroundStyle
+}
+
+struct TitleConfig {
+    let attrString: NSAttributedString
+    let style: TitleStyle
+}
+
+struct BackgroundConfig {
+    let style: BackgroundStyle
+    let color: NSColor
     let gradientStartColor: NSColor
     let gradientEndColor: NSColor
     let gradientAngle: Double
-    let backgroundOpacity: Double
+    let opacity: Double
+}
+
+struct AssemblyConfig {
+    let layout: LayoutConfig
+    let title: TitleConfig
+    let background: BackgroundConfig
     let canvasSize: CGSize
 
     init(
@@ -29,17 +41,23 @@ struct AssemblyConfig {
         backgroundOpacity: Double,
         canvasSize: CGSize
     ) {
-        self.panels = panels
-        self.crops = crops
-        self.panelAssignments = panelAssignments
-        self.titleAttrString = titleAttrString
-        self.titleStyle = titleStyle
-        self.backgroundColor = backgroundColor
-        self.backgroundStyle = backgroundStyle
-        self.gradientStartColor = gradientStartColor
-        self.gradientEndColor = gradientEndColor
-        self.gradientAngle = gradientAngle
-        self.backgroundOpacity = backgroundOpacity
+        self.layout = LayoutConfig(
+            panels: panels,
+            crops: crops,
+            panelAssignments: panelAssignments
+        )
+        self.title = TitleConfig(
+            attrString: titleAttrString,
+            style: titleStyle
+        )
+        self.background = BackgroundConfig(
+            style: backgroundStyle,
+            color: backgroundColor,
+            gradientStartColor: gradientStartColor,
+            gradientEndColor: gradientEndColor,
+            gradientAngle: gradientAngle,
+            opacity: backgroundOpacity
+        )
         self.canvasSize = canvasSize
     }
 }
