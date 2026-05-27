@@ -8,6 +8,11 @@ private let logger = Logger(
     category: "Analysis"
 )
 
+private let perfLogger = Logger(
+    subsystem: Bundle.main.bundleIdentifier!,
+    category: "performance"
+)
+
 enum SaliencyError: Error {
     case invalidImage
     case analysisFailed
@@ -20,6 +25,9 @@ protocol SaliencyAnalysis {
 
 actor SaliencyAnalyzer: SaliencyAnalysis {
     func analyze(_ cgImage: CGImage) async throws -> SaliencyResult {
+        let analyzeStart = ContinuousClock.now
+        defer { perfLogger.debug("Single Image Saliency completed in \(ContinuousClock.now - analyzeStart)") }
+
         let width = cgImage.width
         let height = cgImage.height
 

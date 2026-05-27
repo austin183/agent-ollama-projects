@@ -56,7 +56,7 @@ Key conventions:
 - **`@MainActor` + `@Observable`** on `CollageViewModel` — all UI state lives here
 - **Services are actors or plain classes behind protocols** — enables mocking in tests
 - **All logging uses `OSLog`** with subsystem `austin183.indie.CollageMaker`
-- **UserDefaults keys** are centralized in `ViewModelUserDefaultsKeys` inside `CollageViewModel.swift`
+- **UserDefaults keys** are centralized in `UserDefaultsPersistence.Keys`
 - **Coordinate systems**: Vision (bottom-left, normalized) vs CoreGraphics vs NSImage (top-left). See `building-macos-apps` skill → `references/graphics/coordinate-systems.md`.
 
 ## Important gotchas

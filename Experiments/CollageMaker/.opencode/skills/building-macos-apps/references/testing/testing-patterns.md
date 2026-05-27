@@ -391,6 +391,58 @@ guard to != fromFirst else { return oldPos }
 
 **Alternative:** Use half-open range `..<` where semantically appropriate — `(a+1)..<b` produces an empty range when `a+1 >= b`, which is safe. But this changes loop semantics (excludes the upper bound), so verify correctness.
 
+## Performance Tests with XCTClockMetric and XCTCPUMetric
+
+Write performance tests to establish baselines and catch regressions:
+
+```swift
+import XCTest
+
+@MainActor
+final class PerformanceTests: XCTestCase {
+    func testScrollPreviewUpdate() async throws {
+        let vm = CollageViewModel(assembler: TrackingAssembler())
+        vm.addImages([createTestImageItem()])
+
+        measure(metrics: [
+            XCTClockMetric(),
+            XCTCPUMetric()
+        ]) {
+            for _ in 0..<20 {
+                vm.scrollPanDelta(by: CGSize(width: 5, height: 3))
+            }
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+    }
+}
+```
+
+**Key points:**
+- Accept first run as baseline, then lower as you optimize
+- Tests fail if runtime exceeds baseline by a significant margin
+- Use mocks (TrackingAssembler) for deterministic measurements
+- Include `await Task.sleep` after `Task.detached` work to let it complete before the measure block ends
+
+## OSSignpost Markers for Profiling
+
+Add `OSSignposter` intervals around expensive operations to make them visible in Instruments:
+
+```swift
+import os.signpost
+
+private let logger = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "performance")
+private let signposter = OSSignposter(logger: logger)
+
+func updatePreview() {
+    let signpost = signposter.makeSignpostIdentifier()
+    let interval = signposter.beginInterval("Preview Assembly", signpost)
+    defer { signposter.endInterval("Preview Assembly", signpost, interval) }
+    // ... work ...
+}
+```
+
+See [references/tooling/performance-debugging.md](../tooling/performance-debugging.md) for signpost placement guidance.
+
 ## Pitfalls
 
 - **`xcodebuild test` skips Swift Testing** — use `-only-testing:TargetName` flag

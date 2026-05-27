@@ -8,12 +8,12 @@ Can you please help me think through how we can address the change request in @_
 ## Review
 (In Plan Mode (Tab Key to change Modes))
 ```
-Please use our macos skills to help me address the review changes received in @_agent_docs/reviews/2026-05-25-architectural-review.md
+Please use our macos skills to help me address the review changes received in @_agent_docs/reviews/2026-05-26-full-architectural-review.md
 ```
 
 # Implement
 ```
-Please implement the plan for @_agent_docs/plans/round-16-concurrency-modernization.md using our macos skills for guidance.
+Please implement the plan for @_agent_docs/plans/2026-05-26-architectural-review-fixes.md using our macos skills for guidance.
 ```
 
 # Small Change Requests

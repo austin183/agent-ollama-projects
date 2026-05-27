@@ -280,6 +280,29 @@ class ViewModel: ObservableObject {
 }
 ```
 
+## Task.detached Priority Propagation
+
+A `Task.detached` does not inherit priority from its creation context — it runs at `.medium` QoS by default. Choose an appropriate priority for background work:
+
+```swift
+// Default .medium — fine for most background work
+Task.detached {
+    heavyComputation()
+}
+
+// .background — for work that shouldn't interrupt interactive tasks
+Task.detached(priority: .background) {
+    persistence.save(data)
+}
+
+// .userInitiated — for work triggered directly by user action
+Task.detached(priority: .userInitiated) {
+    processUserSelection()
+}
+```
+
+**Rule:** Use `.background` for persistence saves and cache updates. Use `.userInitiated` for work the user is waiting for. Default `.medium` for analysis and rendering.
+
 ## Summary Rules
 
 1. **Mark ViewModel as `@MainActor`** — all `@Published` properties are main-thread-safe

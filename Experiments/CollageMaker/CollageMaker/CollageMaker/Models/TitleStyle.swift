@@ -33,25 +33,6 @@ struct TitleStyle: Codable, Equatable {
 }
 
 extension TitleStyle {
-    static func fromUserDefaults() -> TitleStyle {
-        guard let data = UserDefaults.standard.data(forKey: UserDefaultsKeys.titleStyle) else {
-            return .default
-        }
-        return (try? JSONDecoder().decode(TitleStyle.self, from: data)) ?? .default
-    }
-
-    func saveToUserDefaults() {
-        if let data = try? JSONEncoder().encode(self) {
-            UserDefaults.standard.set(data, forKey: UserDefaultsKeys.titleStyle)
-        }
-    }
-}
-
-private enum UserDefaultsKeys {
-    static let titleStyle = "titleStyle"
-}
-
-extension TitleStyle {
     private enum CodingKeys: String, CodingKey {
         case fontFamily, fontSize, fontColorData, backgroundColorData, alignment, showBackground, positionX, positionY, width
     }

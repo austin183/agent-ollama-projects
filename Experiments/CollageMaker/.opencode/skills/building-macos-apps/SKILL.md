@@ -86,6 +86,7 @@ Guidance for building macOS SwiftUI desktop applications with image processing, 
 | **Settings** | [references/tooling/settings.md](references/tooling/settings.md) |
 | **Menu Bar Extras** | [references/tooling/menu-bar-extra.md](references/tooling/menu-bar-extra.md) |
 | **Build, Run, Debug Scripts** | [references/tooling/build-and-run.md](references/tooling/build-and-run.md) |
+| **Performance Debugging** | [references/tooling/performance-debugging.md](references/tooling/performance-debugging.md) |
 
 ## Project Structure
 
@@ -284,6 +285,16 @@ See [references/ui/swiftui-overlays.md](references/ui/swiftui-overlays.md) for e
 - **CGImage caching** -- Extract `CGImage` from `NSImage` once at load time. Repeated `nsImage.cgImage(forProposedRect:)` calls are expensive
 - **Background preview rendering** -- Move heavy CoreGraphics work to `Task.detached` with captured values, dispatch results back with `Task { @MainActor in self?.previewImage = result }`. Cancel stale tasks before starting new ones.
 - **No computed NSImage in body** -- Never create `NSImage(cgImage:size:)` in a computed property accessed from `body`. SwiftUI calls `body` frequently during layout, allocating a new `NSImage` per render cycle. Pass as a stored `let` parameter from the parent view.
+
+### Main Thread Timing Budgets
+
+| Interaction type | Budget | Exceeding causes |
+|---|---|---|
+| Discrete (tap, key press) | < 50ms main thread work | Hang (>100ms noticeable) |
+| Continuous (scroll, drag, animation) at 60Hz | < 5ms per frame | Hitch (frame drop) |
+| Continuous at 120Hz | < 5ms per frame | Hitch (frame drop) |
+
+**Rule:** Main thread = UI work only. All computation, I/O, and networking goes to background. See [references/tooling/performance-debugging.md](references/tooling/performance-debugging.md) for Instruments templates, sanitizers, OSSignpost, and profiling workflows.
 
 ## CLI Build and Launch
 

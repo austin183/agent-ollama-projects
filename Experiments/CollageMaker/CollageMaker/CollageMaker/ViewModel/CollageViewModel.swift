@@ -9,21 +9,11 @@ private let logger = Logger(
     category: "ViewModel"
 )
 
-// Kept for backward compatibility — ExportPanel still references it (Item 2 will remove).
-enum ViewModelUserDefaultsKeys {
-    static let layoutStyle = "layoutStyle"
-    static let gutter = "gutter"
-    static let backgroundColor = "backgroundColor"
-    static let exportQuality = "exportQuality"
-    static let title = "title"
-    static let backgroundStyle = "backgroundStyle"
-    static let gradientStartColor = "gradientStartColor"
-    static let gradientEndColor = "gradientEndColor"
-    static let gradientAngle = "gradientAngle"
-    static let backgroundOpacity = "backgroundOpacity"
-    static let customImageOrder = "customImageOrder"
-    static let backgroundImagePath = "backgroundImagePath"
-}
+private let perfLogger = Logger(
+    subsystem: Bundle.main.bundleIdentifier!,
+    category: "performance"
+)
+
 
 @MainActor
 @Observable
@@ -113,7 +103,7 @@ final class CollageViewModel {
         }
     }
 
-    var exportQuality: Double = 0 {
+    var exportQuality: Double = 0.92 {
         didSet {
             guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
@@ -175,6 +165,10 @@ final class CollageViewModel {
     var backgroundImage: NSImage? {
         didSet {
             guard !isInitializing else { return }
+            undoManager.registerUndo(withTarget: self) { target in
+                target.backgroundImage = oldValue
+            }
+            undoManager.setActionName("Change Background Image")
             if backgroundImage == nil {
                 backgroundImagePath = nil
             }
@@ -195,6 +189,10 @@ final class CollageViewModel {
         }
     }
 
+    /// Maps panel UUIDs to image indices for custom assignments.
+    /// Intentionally NOT persisted — panel UUIDs change on every layout
+    /// regeneration. The canonical persisted source is `customImageOrder`,
+    /// which is used to rebuild panelAssignments in `regenerateLayout()`.
     var panelAssignments: [UUID: Int] = [:]
 
     var customImageOrder: [Int] = [] {
@@ -459,6 +457,9 @@ final class CollageViewModel {
     func regenerateLayout() {
         guard !images.isEmpty else { return }
 
+        let layoutStart = ContinuousClock.now
+        defer { perfLogger.debug("Layout Regeneration completed in \(ContinuousClock.now - layoutStart)") }
+
         if customImageOrder.isEmpty || customImageOrder.count != images.count {
             customImageOrder = Array(0..<images.count)
         }
@@ -559,6 +560,8 @@ final class CollageViewModel {
         defer { isProcessing = false }
 
         do {
+            let saliencyStart = ContinuousClock.now
+            defer { perfLogger.debug("Saliency Analysis completed in \(ContinuousClock.now - saliencyStart)") }
             let results = try await saliencyAnalyzer.analyzeAll(images.map { $0.cgImage })
             var indexed: [Int: SaliencyResult] = [:]
             for (i, result) in results.enumerated() {
@@ -596,6 +599,9 @@ final class CollageViewModel {
     }
 
     func applyPanLive() {
+        let panStart = ContinuousClock.now
+        defer { perfLogger.debug("Pan Application completed in \(ContinuousClock.now - panStart)") }
+
         cropManager.applyPan(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
         cropMap = cropManager.cropMap
 
@@ -724,6 +730,9 @@ final class CollageViewModel {
 
     func updatePreview() {
         guard !panels.isEmpty else { return }
+
+        let previewStart = ContinuousClock.now
+        defer { perfLogger.debug("Preview Assembly completed in \(ContinuousClock.now - previewStart)") }
 
         let config = AssemblyConfig(
             panels: panels,

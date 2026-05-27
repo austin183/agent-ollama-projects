@@ -64,7 +64,9 @@ final class UserDefaultsPersistence {
     func save(_ viewModel: CollageViewModel) {
         defaults.set(viewModel.layoutStyle.rawValue, forKey: Keys.layoutStyle)
         saveTitleAttrString(viewModel.titleAttrString)
-        viewModel.titleStyle.saveToUserDefaults()
+        if let data = try? JSONEncoder().encode(viewModel.titleStyle) {
+            defaults.set(data, forKey: Keys.titleStyle)
+        }
         defaults.set(Double(viewModel.gutter), forKey: Keys.gutter)
         saveColor(viewModel.backgroundColor, key: Keys.backgroundColor)
         defaults.set(viewModel.exportQuality, forKey: Keys.exportQuality)
@@ -91,10 +93,21 @@ final class UserDefaultsPersistence {
         ) ?? .hero
 
         let titleAttrString = loadTitleAttrString()
-        let titleStyle = TitleStyle.fromUserDefaults()
+        let titleStyle: TitleStyle
+        if let data = defaults.data(forKey: Keys.titleStyle),
+           let decoded = try? JSONDecoder().decode(TitleStyle.self, from: data) {
+            titleStyle = decoded
+        } else {
+            titleStyle = .default
+        }
         let gutter = CGFloat(defaults.double(forKey: Keys.gutter))
         let backgroundColor = loadColor(key: Keys.backgroundColor, default: .black)
-        let exportQuality = defaults.double(forKey: Keys.exportQuality)
+        let exportQuality: Double
+        if defaults.object(forKey: Keys.exportQuality) != nil {
+            exportQuality = defaults.double(forKey: Keys.exportQuality)
+        } else {
+            exportQuality = 0.92
+        }
         let backgroundStyle = BackgroundStyle(
             rawValue: defaults.string(forKey: Keys.backgroundStyle) ?? "solid"
         ) ?? .solid
