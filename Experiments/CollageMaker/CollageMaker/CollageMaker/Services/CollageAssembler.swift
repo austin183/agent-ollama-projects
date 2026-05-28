@@ -22,6 +22,25 @@ protocol CollageAssembly {
         backgroundImage: CGImage?,
         previewSize: CGSize
     ) -> NSImage?
+
+    func renderPanel(
+        crop: CropInfo,
+        cgImage: CGImage,
+        panelSize: CGSize
+    ) -> NSImage?
+
+    func renderBackground(
+        config: BackgroundConfig,
+        canvasSize: CGSize,
+        backgroundImage: CGImage?,
+        previewSize: CGSize
+    ) -> NSImage?
+
+    func renderTitle(
+        titleAttrString: NSAttributedString,
+        titleStyle: TitleStyle,
+        canvasSize: CGSize
+    ) -> NSImage?
 }
 
 extension CollageAssembly {
@@ -312,5 +331,147 @@ final class CollageAssembler: CollageAssembly {
         }
 
         attributedString.draw(in: CGRect(x: drawX, y: baselineY, width: drawWidth, height: boundingBox.height))
+    }
+
+    // MARK: - Per-Panel Rendering
+
+    func renderPanel(
+        crop: CropInfo,
+        cgImage: CGImage,
+        panelSize: CGSize
+    ) -> NSImage? {
+        let bitmapRep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(panelSize.width),
+            pixelsHigh: Int(panelSize.height),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 32
+        )
+        guard let bitmapRep else { return nil }
+        bitmapRep.size = panelSize
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
+        guard let context = NSGraphicsContext.current?.cgContext else { return nil }
+        context.interpolationQuality = .high
+
+        let sourceRect = crop.sourceRect
+        let destRect = CGRect(origin: .zero, size: panelSize)
+
+        context.saveGState()
+        context.clip(to: destRect)
+
+        if let cropped = cgImage.cropping(to: sourceRect) {
+            context.draw(cropped, in: destRect)
+        } else {
+            context.draw(cgImage, in: destRect)
+        }
+
+        context.restoreGState()
+
+        guard let finalImage = bitmapRep.cgImage else {
+            return nil
+        }
+        return NSImage(cgImage: finalImage, size: panelSize)
+    }
+
+    func renderBackground(
+        config: BackgroundConfig,
+        canvasSize: CGSize,
+        backgroundImage: CGImage?,
+        previewSize: CGSize
+    ) -> NSImage? {
+        let bitmapRep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(canvasSize.width),
+            pixelsHigh: Int(canvasSize.height),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 32
+        )
+        guard let bitmapRep else { return nil }
+        bitmapRep.size = canvasSize
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
+        guard let context = NSGraphicsContext.current?.cgContext else { return nil }
+
+        switch config.style {
+        case .solid:
+            context.setFillColor(config.color.cgColor)
+            context.fill(CGRect(x: 0, y: 0, width: canvasSize.width, height: canvasSize.height))
+
+        case .gradient:
+            drawGradient(
+                into: context,
+                size: canvasSize,
+                startColor: config.gradientStartColor,
+                endColor: config.gradientEndColor,
+                angle: config.gradientAngle
+            )
+
+        case .image:
+            drawImageBackground(
+                into: context,
+                size: canvasSize,
+                backgroundColor: config.color,
+                backgroundImage: backgroundImage,
+                opacity: config.opacity
+            )
+        }
+
+        guard let finalImage = bitmapRep.cgImage else {
+            return nil
+        }
+        return NSImage(cgImage: finalImage, size: previewSize)
+    }
+
+    func renderTitle(
+        titleAttrString: NSAttributedString,
+        titleStyle: TitleStyle,
+        canvasSize: CGSize
+    ) -> NSImage? {
+        guard !titleAttrString.string.isEmpty else { return nil }
+
+        let bitmapRep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(canvasSize.width),
+            pixelsHigh: Int(canvasSize.height),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 32
+        )
+        guard let bitmapRep else { return nil }
+        bitmapRep.size = canvasSize
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
+        guard let context = NSGraphicsContext.current?.cgContext else { return nil }
+
+        drawTitle(
+            into: context,
+            titleAttrString: titleAttrString,
+            titleStyle: titleStyle,
+            canvasWidth: canvasSize.width,
+            canvasHeight: canvasSize.height
+        )
+
+        guard let finalImage = bitmapRep.cgImage else {
+            return nil
+        }
+        return NSImage(cgImage: finalImage, size: canvasSize)
     }
 }

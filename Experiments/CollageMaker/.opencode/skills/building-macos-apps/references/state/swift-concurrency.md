@@ -303,6 +303,17 @@ Task.detached(priority: .userInitiated) {
 
 **Rule:** Use `.background` for persistence saves and cache updates. Use `.userInitiated` for work the user is waiting for. Default `.medium` for analysis and rendering.
 
+## Async State Races in @Observable Views
+
+When multiple `Task.detached` tasks update different `@Observable` properties that a view's `body` reads together (e.g., `panelRenderedImages` and `previewImage`), the view may see inconsistent intermediate states. The `body` evaluates synchronously and sees whatever state happens to be set at that moment.
+
+**Symptom:** Rendering mode flips unpredictably during rapid interactions. One rendering path clears its state before the other path's replacement is ready, leaving a blank frame.
+
+**Fixes:**
+- **Don't clear old state until new state is confirmed ready** — Keep stale content visible during the async gap
+- **Batch related updates** — Use a single `Task { @MainActor in ... }` block to set multiple related properties atomically
+- **Consolidate into a single property** — E.g., a `RenderingMode` enum that encapsulates which rendering path is active, rather than inferring mode from independent properties
+
 ## Summary Rules
 
 1. **Mark ViewModel as `@MainActor`** — all `@Published` properties are main-thread-safe
@@ -313,6 +324,7 @@ Task.detached(priority: .userInitiated) {
 6. **Never store `@ObservedObject` in View structs** with `@MainActor` ViewModel — use `@EnvironmentObject`
 7. **Use `defer { isProcessing = false }`** to ensure processing state is always reset
 8. **Extract CoreGraphics types on main thread before `Task.detached`** — Convert `NSImage` → `CGImage` and `NSColor` → `CGColor` on the main thread. Never call AppKit methods from a detached task.
+9. **Avoid clearing shared state before async replacement** — Multiple `Task.detached` tasks racing to update related `@Observable` properties create inconsistent intermediate states. Don't clear old state until new state is ready, or batch updates in a single `@MainActor` block.
 
 ## Pitfalls
 

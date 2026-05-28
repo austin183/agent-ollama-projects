@@ -8,6 +8,8 @@ import Testing
 final class TrackingAssembler: CollageAssembly {
     var assembleCalls = 0
     var previewCalls = 0
+    var renderPanelCalls = 0
+    var renderBackgroundCalls = 0
     var lastAssemblePanels: [ImagePanel] = []
     var lastAssembleCgImages: [CGImage?] = []
     var lastAssembleCrops: [UUID: CropInfo] = [:]
@@ -41,6 +43,20 @@ final class TrackingAssembler: CollageAssembly {
         lastPreviewPanels = config.layout.panels
         lastPreviewTitle = config.title.attrString.string
         return NSImage(size: previewSize)
+    }
+
+    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) -> NSImage? {
+        renderPanelCalls += 1
+        return NSImage(size: panelSize)
+    }
+
+    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) -> NSImage? {
+        renderBackgroundCalls += 1
+        return NSImage(size: previewSize)
+    }
+
+    func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) -> NSImage? {
+        return nil
     }
 }
 

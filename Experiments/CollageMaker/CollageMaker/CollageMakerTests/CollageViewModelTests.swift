@@ -37,6 +37,18 @@ final class MockAssembler: CollageAssembly {
     func assemblePreviewWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, previewSize: CGSize) -> NSImage? {
         assemblePreviewImage
     }
+
+    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) -> NSImage? {
+        return NSImage(size: panelSize)
+    }
+
+    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) -> NSImage? {
+        return NSImage(size: previewSize)
+    }
+
+    func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) -> NSImage? {
+        return nil
+    }
 }
 
 // MARK: - Tests

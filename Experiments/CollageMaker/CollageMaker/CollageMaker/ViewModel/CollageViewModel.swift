@@ -203,6 +203,10 @@ final class CollageViewModel {
     }
 
     var previewImage: NSImage?
+    var previewBackgroundImage: NSImage?
+    var panelRenderedImages: [UUID: NSImage] = [:]
+    var titleImage: NSImage?
+    var isLiveGesturing: Bool = false
     var isProcessing: Bool = false
     var isExporting: Bool = false
     var isDraggingTitle: Bool = false
@@ -445,6 +449,9 @@ final class CollageViewModel {
         saliencyResults.removeAll()
         selectedPanelId = nil
         previewImage = nil
+        previewBackgroundImage = nil
+        panelRenderedImages.removeAll()
+        titleImage = nil
         isProcessing = false
         errorMessage = nil
         panelAssignments.removeAll()
@@ -494,7 +501,9 @@ final class CollageViewModel {
         }
 
         cropMap = cropManager.cropMap
+        panelRenderedImages.removeAll()
         updatePreview()
+        updateAllPanelPreviews()
     }
 
     func setLayoutStyle(_ style: LayoutStyle) {
@@ -511,6 +520,7 @@ final class CollageViewModel {
         panelAssignments[panelId] = imageIndex
         resetCrop(panelId: panelId)
         updatePreview()
+        updatePanelPreview(panelId: panelId)
     }
 
     func getEffectiveImageIndex(for panelId: UUID) -> Int? {
@@ -549,6 +559,8 @@ final class CollageViewModel {
         }
 
         updatePreview()
+        updatePanelPreview(panelId: sourceId)
+        updatePanelPreview(panelId: targetId)
     }
 
     // MARK: - Saliency
@@ -576,6 +588,7 @@ final class CollageViewModel {
             )
             cropMap = cropManager.cropMap
             updatePreview()
+            updateAllPanelPreviews()
         } catch {
             logger.error("Saliency analysis failed: \(error.localizedDescription, privacy: .public)")
             errorMessage = error.localizedDescription
@@ -608,7 +621,9 @@ final class CollageViewModel {
         previewDebounceTask?.cancel()
         previewDebounceTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 150_000_000)
-            self?.updatePreview()
+            if let panelId = self?.cropManager.activePanelId {
+                self?.updatePanelPreview(panelId: panelId)
+            }
         }
     }
 
@@ -629,7 +644,14 @@ final class CollageViewModel {
     func applyPinchLive() {
         cropManager.applyPinch(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
         cropMap = cropManager.cropMap
-        updatePreview()
+
+        panelPreviewTask?.cancel()
+        panelPreviewTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            if let panelId = self?.cropManager.activePanelId {
+                self?.updatePanelPreview(panelId: panelId)
+            }
+        }
     }
 
     func resetCrop(panelId: UUID) {
@@ -645,6 +667,7 @@ final class CollageViewModel {
         cropManager.resetCrop(panelId: panelId, panels: panels, images: images, panelAssignments: panelAssignments)
         cropMap = cropManager.cropMap
         updatePreview()
+        updatePanelPreview(panelId: panelId)
     }
 
     // MARK: - Overlay Crop (Panel Editor drag/resize)
@@ -676,6 +699,7 @@ final class CollageViewModel {
         var tmp = cropMap
         cropMap = tmp
         updatePreview()
+        updatePanelPreview(panelId: panelId)
     }
 
     // MARK: - Scroll Pan (delegated to ScrollPanManager)
@@ -701,7 +725,14 @@ final class CollageViewModel {
                     finish: false
                 )
                 cropMap = cropManager.cropMap
-                updatePreview()
+
+                previewDebounceTask?.cancel()
+                previewDebounceTask = Task { [weak self] in
+                    try? await Task.sleep(nanoseconds: 150_000_000)
+                    if let panelId = self?.scrollPanManager.activePanelId {
+                        self?.updatePanelPreview(panelId: panelId)
+                    }
+                }
             },
             commit: { [weak self] in
                 guard let self, let id = scrollPanManager.activePanelId else { return }
@@ -727,6 +758,61 @@ final class CollageViewModel {
 
     private var previewTask: Task<Void, Never>?
     private var previewDebounceTask: Task<Void, Never>?
+    private var panelPreviewTask: Task<Void, Never>?
+    private var backgroundTask: Task<Void, Never>?
+    private var titleTask: Task<Void, Never>?
+
+    func updatePanelPreview(panelId: UUID) {
+        guard let panel = panels.first(where: { $0.id == panelId }),
+              let crop = cropMap[panelId] else { return }
+
+        let effectiveIndex = panelAssignments[panelId] ?? panel.imageIndex
+        guard effectiveIndex < images.count else { return }
+
+        let cgImage = images[effectiveIndex].cgImage
+        let panelSize = panel.frame.size
+        let assembler = self.assembler
+
+        panelPreviewTask?.cancel()
+        panelPreviewTask = Task.detached { [weak self, cgImage, crop, panelSize, assembler] in
+            guard let self else { return }
+            let result = assembler.renderPanel(
+                crop: crop,
+                cgImage: cgImage,
+                panelSize: panelSize
+            )
+            Task { @MainActor in
+                self.panelRenderedImages[panelId] = result
+            }
+        }
+    }
+
+    func updateBackground() {
+        let bgConfig = BackgroundConfig(
+            style: backgroundStyle,
+            color: backgroundColor,
+            gradientStartColor: gradientStartColor,
+            gradientEndColor: gradientEndColor,
+            gradientAngle: gradientAngle,
+            opacity: backgroundOpacity
+        )
+        let backgroundImageCG = backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        let assembler = self.assembler
+
+        backgroundTask?.cancel()
+        backgroundTask = Task.detached { [weak self, bgConfig, backgroundImageCG, assembler] in
+            guard let self else { return }
+            let result = assembler.renderBackground(
+                config: bgConfig,
+                canvasSize: CanvasConfig.defaultCanvasSize,
+                backgroundImage: backgroundImageCG,
+                previewSize: CanvasConfig.defaultPreviewSize
+            )
+            Task { @MainActor in
+                self.previewBackgroundImage = result
+            }
+        }
+    }
 
     func updatePreview() {
         guard !panels.isEmpty else { return }
@@ -763,6 +849,35 @@ final class CollageViewModel {
             )
             Task { @MainActor in
                 self.previewImage = result
+            }
+        }
+
+        updateBackground()
+        updateTitleImage()
+    }
+
+    func updateAllPanelPreviews() {
+        for panel in panels {
+            updatePanelPreview(panelId: panel.id)
+        }
+    }
+
+    func updateTitleImage() {
+        let titleAttrString = self.titleAttrString
+        let titleStyle = self.titleStyle
+        let canvasSize = CanvasConfig.defaultCanvasSize
+        let assembler = self.assembler
+
+        titleTask?.cancel()
+        titleTask = Task.detached { [weak self, titleAttrString, titleStyle, canvasSize, assembler] in
+            guard let self else { return }
+            let result = assembler.renderTitle(
+                titleAttrString: titleAttrString,
+                titleStyle: titleStyle,
+                canvasSize: canvasSize
+            )
+            Task { @MainActor in
+                self.titleImage = result
             }
         }
     }

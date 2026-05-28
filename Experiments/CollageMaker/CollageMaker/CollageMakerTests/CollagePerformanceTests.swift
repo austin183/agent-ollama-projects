@@ -15,15 +15,15 @@ import Testing
         vm.images = [image]
         vm.regenerateLayout()
 
-        let initialPreviewCalls = trackingAssembler.previewCalls
+        let initialPanelCalls = trackingAssembler.renderPanelCalls
 
         for _ in 0..<20 {
             vm.scrollPanDelta(CGSize(width: 5, height: 3))
         }
 
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        try? await Task.sleep(nanoseconds: 300_000_000)
 
-        #expect(trackingAssembler.previewCalls > initialPreviewCalls)
+        #expect(trackingAssembler.renderPanelCalls > initialPanelCalls)
     }
 
     @Test func scrollPanMultipleIterations() async {

@@ -16,6 +16,10 @@ final class CropManager {
         Array(cropMap.values).sorted { $0.destinationRect.origin.y < $1.destinationRect.origin.y }
     }
 
+    var activePanelId: UUID? {
+        gestureActivePanelId
+    }
+
     func computeInitialCrops(panels: [ImagePanel], images: [ImageItem]) {
         cropMap.removeAll()
         for panel in panels {

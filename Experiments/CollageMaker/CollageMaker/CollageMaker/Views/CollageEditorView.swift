@@ -78,11 +78,38 @@ struct CollageEditorView: View {
                 let titleFrame = titleCanvasFrame.map { canvasToPreviewFrame($0, in: geometry.size) }
 
                 ZStack {
-                    Image(nsImage: previewImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                        .id("preview")
+                    if viewModel.panelRenderedImages.isEmpty {
+                        Image(nsImage: previewImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .id("preview")
+                    } else {
+                        if let bg = viewModel.previewBackgroundImage {
+                            Image(nsImage: bg)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: geometry.size.width, height: geometry.size.height)
+                        }
+
+                        ForEach(viewModel.panels) { panel in
+                            if let renderedImage = viewModel.panelRenderedImages[panel.id],
+                               let scaledFrame = panelFrames[panel.id] {
+                                Image(nsImage: renderedImage)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: scaledFrame.width, height: scaledFrame.height)
+                                    .position(x: scaledFrame.midX, y: scaledFrame.midY)
+                            }
+                        }
+
+                        if let titleImg = viewModel.titleImage {
+                            Image(nsImage: titleImg)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: geometry.size.width, height: geometry.size.height)
+                        }
+                    }
 
                     ForEach(viewModel.panels) { panel in
                         if let scaledFrame = panelFrames[panel.id] {
@@ -109,7 +136,7 @@ struct CollageEditorView: View {
                         }
                     }
 
-                    if let scaled = titleFrame, !viewModel.title.isEmpty {
+                    if !viewModel.isLiveGesturing, let scaled = titleFrame, !viewModel.title.isEmpty {
                         Rectangle()
                             .fill(Color.clear)
                             .stroke(Color.orange, lineWidth: 1.5)
@@ -185,6 +212,7 @@ struct CollageEditorView: View {
                         selectedPanelId: viewModel.selectedPanelId,
                         onPanBegan: { id in
                             self.viewModel.undoManager.beginUndoGrouping()
+                            self.viewModel.isLiveGesturing = true
                             self.viewModel.beginScrollPan(panelId: id)
                             return true
                         },
@@ -192,9 +220,12 @@ struct CollageEditorView: View {
                             self.viewModel.scrollPanDelta(delta)
                         },
                         onPanEnded: {
+                            self.viewModel.isLiveGesturing = false
                             self.viewModel.undoManager.setActionName("Adjust Crop")
                             self.viewModel.undoManager.endUndoGrouping()
                             self.viewModel.endScrollPan()
+                            self.viewModel.updatePreview()
+                            self.viewModel.updateAllPanelPreviews()
                         }
                     )
                 }
@@ -339,6 +370,7 @@ struct CollageEditorView: View {
                                 pinchPanelId = id
                                 viewModel.beginPinch(panelId: id)
                                 viewModel.undoManager.beginUndoGrouping()
+                                viewModel.isLiveGesturing = true
                             }
                             if pinchPanelId != nil {
                                 viewModel.pinch(magnification: value)
@@ -346,11 +378,13 @@ struct CollageEditorView: View {
                             }
                         }
                         .onEnded { _ in
+                            viewModel.isLiveGesturing = false
                             if let id = pinchPanelId {
                                 viewModel.applyPinch(panelId: id)
                                 viewModel.undoManager.setActionName("Adjust Crop")
                                 viewModel.undoManager.endUndoGrouping()
                             }
+                            viewModel.updateAllPanelPreviews()
                             pinchPanelId = nil
                         }
                 )

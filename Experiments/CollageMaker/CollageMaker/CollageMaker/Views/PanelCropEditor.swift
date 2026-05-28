@@ -57,6 +57,7 @@ struct PanelCropEditor: View {
                                         dragBaseSize = visRect.size
                                         dragBaseSourceRect = crop.sourceRect
                                         if overlayDragMode != .none {
+                                            viewModel.isLiveGesturing = true
                                             viewModel.beginOverlayCropUndo(panelId: panel.id)
                                         }
                                     }
@@ -72,6 +73,7 @@ struct PanelCropEditor: View {
                                 }
                                 .onEnded { _ in
                                 if overlayDragMode != .none {
+                                    viewModel.isLiveGesturing = false
                                     viewModel.endOverlayCropUndo()
                                 }
                                     overlayDragMode = .none
