@@ -10,7 +10,7 @@ private let logger = Logger(
 )
 
 private let perfLogger = Logger(
-    subsystem: Bundle.main.bundleIdentifier!,
+    subsystem: "austin183.indie.CollageMaker",
     category: "performance"
 )
 
@@ -31,8 +31,13 @@ final class CollageViewModel {
 
     var images: [ImageItem] = []
     var panels: [ImagePanel] = []
-    var cropMap: [UUID: CropInfo] = [:]
     var selectedPanelId: UUID?
+
+    /// Single source of truth for crop state — delegated to CropManager.
+    var cropMap: [UUID: CropInfo] {
+        get { cropManager.cropMap }
+        set { cropManager.cropMap = newValue }
+    }
 
     var layoutStyle: LayoutStyle = .hero {
         didSet {
@@ -223,7 +228,14 @@ final class CollageViewModel {
         saveDebounceTask = Task { [weak self, persistence] in
             try? await Task.sleep(nanoseconds: 300_000_000)
             guard let self else { return }
-            persistence.save(self)
+            do {
+                try persistence.save(self)
+            } catch {
+                logger.error("Persistence save failed: \(error.localizedDescription, privacy: .public)")
+                if !Task.isCancelled {
+                    self.errorMessage = "Failed to save: \(error.localizedDescription)"
+                }
+            }
         }
     }
 
@@ -445,7 +457,7 @@ final class CollageViewModel {
         exportTask = nil
         images.removeAll()
         panels.removeAll()
-        cropMap.removeAll()
+        cropManager.cropMap.removeAll()
         saliencyResults.removeAll()
         selectedPanelId = nil
         previewImage = nil
@@ -500,7 +512,6 @@ final class CollageViewModel {
             )
         }
 
-        cropMap = cropManager.cropMap
         panelRenderedImages.removeAll()
         updatePreview()
         updateAllPanelPreviews()
@@ -555,7 +566,6 @@ final class CollageViewModel {
         if let cropA = cropMap[sourceId], let cropB = cropMap[targetId] {
             cropMap[sourceId] = CropInfo(panelId: sourceId, sourceRect: cropB.sourceRect, destinationRect: cropA.destinationRect)
             cropMap[targetId] = CropInfo(panelId: targetId, sourceRect: cropA.sourceRect, destinationRect: cropB.destinationRect)
-            cropManager.cropMap = cropMap
         }
 
         updatePreview()
@@ -586,7 +596,6 @@ final class CollageViewModel {
                 images: images,
                 results: indexed
             )
-            cropMap = cropManager.cropMap
             updatePreview()
             updateAllPanelPreviews()
         } catch {
@@ -607,7 +616,6 @@ final class CollageViewModel {
 
     func applyPan(panelId: UUID?) {
         cropManager.applyPan(panelId: panelId, panels: panels, images: images, panelAssignments: panelAssignments, finish: true)
-        cropMap = cropManager.cropMap
         updatePreview()
     }
 
@@ -616,7 +624,6 @@ final class CollageViewModel {
         defer { perfLogger.debug("Pan Application completed in \(ContinuousClock.now - panStart)") }
 
         cropManager.applyPan(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
-        cropMap = cropManager.cropMap
 
         previewDebounceTask?.cancel()
         previewDebounceTask = Task { [weak self] in
@@ -637,13 +644,11 @@ final class CollageViewModel {
 
     func applyPinch(panelId: UUID?) {
         cropManager.applyPinch(panelId: panelId, panels: panels, images: images, panelAssignments: panelAssignments, finish: true)
-        cropMap = cropManager.cropMap
         updatePreview()
     }
 
     func applyPinchLive() {
         cropManager.applyPinch(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
-        cropMap = cropManager.cropMap
 
         panelPreviewTask?.cancel()
         panelPreviewTask = Task { [weak self] in
@@ -659,13 +664,11 @@ final class CollageViewModel {
         if let oldCrop = cropMap[panelId] {
             undoManager.registerUndo(withTarget: self) { target in
                 target.cropMap[panelId] = oldCrop
-                target.cropManager.cropMap = target.cropMap
                 target.updatePreview()
             }
             undoManager.setActionName("Reset Crop")
         }
         cropManager.resetCrop(panelId: panelId, panels: panels, images: images, panelAssignments: panelAssignments)
-        cropMap = cropManager.cropMap
         updatePreview()
         updatePanelPreview(panelId: panelId)
     }
@@ -677,7 +680,6 @@ final class CollageViewModel {
         undoManager.beginUndoGrouping()
         undoManager.registerUndo(withTarget: self) { target in
             target.cropMap[panelId] = oldCrop
-            target.cropManager.cropMap[panelId] = oldCrop
             target.updatePreview()
         }
     }
@@ -694,10 +696,7 @@ final class CollageViewModel {
             sourceRect: sourceRect,
             destinationRect: crop.destinationRect
         )
-        cropMap[panelId] = newCrop
         cropManager.cropMap[panelId] = newCrop
-        var tmp = cropMap
-        cropMap = tmp
         updatePreview()
         updatePanelPreview(panelId: panelId)
     }
@@ -724,7 +723,6 @@ final class CollageViewModel {
                     panelAssignments: panelAssignments,
                     finish: false
                 )
-                cropMap = cropManager.cropMap
 
                 previewDebounceTask?.cancel()
                 previewDebounceTask = Task { [weak self] in
@@ -744,7 +742,6 @@ final class CollageViewModel {
                     finish: true
                 )
                 cropManager.beginPan(panelId: id)
-                cropMap = cropManager.cropMap
                 updatePreview()
             }
         )
@@ -752,6 +749,25 @@ final class CollageViewModel {
 
     func endScrollPan() {
         scrollPanManager.endScrollPan()
+    }
+
+    // MARK: - Config
+
+    private func buildAssemblyConfig() -> AssemblyConfig {
+        AssemblyConfig(
+            panels: panels,
+            crops: cropMap,
+            panelAssignments: panelAssignments,
+            titleAttrString: titleAttrString,
+            titleStyle: titleStyle,
+            backgroundColor: backgroundColor,
+            backgroundStyle: backgroundStyle,
+            gradientStartColor: gradientStartColor,
+            gradientEndColor: gradientEndColor,
+            gradientAngle: gradientAngle,
+            backgroundOpacity: backgroundOpacity,
+            canvasSize: CanvasConfig.defaultCanvasSize
+        )
     }
 
     // MARK: - Preview & Export
@@ -820,20 +836,7 @@ final class CollageViewModel {
         let previewStart = ContinuousClock.now
         defer { perfLogger.debug("Preview Assembly completed in \(ContinuousClock.now - previewStart)") }
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: cropMap,
-            panelAssignments: panelAssignments,
-            titleAttrString: titleAttrString,
-            titleStyle: titleStyle,
-            backgroundColor: backgroundColor,
-            backgroundStyle: backgroundStyle,
-            gradientStartColor: gradientStartColor,
-            gradientEndColor: gradientEndColor,
-            gradientAngle: gradientAngle,
-            backgroundOpacity: backgroundOpacity,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = buildAssemblyConfig()
         let cgImages = images.map { $0.cgImage }
         let backgroundImageCG = backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
         let assembler = assembler
@@ -910,20 +913,7 @@ final class CollageViewModel {
 
         UserDefaults.standard.set(url.deletingLastPathComponent().path, forKey: UserDefaultsPersistence.Keys.defaultExportFolder)
 
-        let config = AssemblyConfig(
-            panels: self.panels,
-            crops: self.cropMap,
-            panelAssignments: self.panelAssignments,
-            titleAttrString: self.titleAttrString,
-            titleStyle: self.titleStyle,
-            backgroundColor: self.backgroundColor,
-            backgroundStyle: self.backgroundStyle,
-            gradientStartColor: self.gradientStartColor,
-            gradientEndColor: self.gradientEndColor,
-            gradientAngle: self.gradientAngle,
-            backgroundOpacity: self.backgroundOpacity,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = self.buildAssemblyConfig()
         let cgImages = self.images.map { $0.cgImage }
         let backgroundImageCG = self.backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
         let quality = self.exportQuality

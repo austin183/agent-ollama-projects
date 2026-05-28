@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct CollageCommands: Commands {
     let viewModel: CollageViewModel
     @Binding var showingClearAlert: Bool

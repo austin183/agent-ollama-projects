@@ -51,14 +51,14 @@ struct UserDefaultsColorView: NSViewRepresentable {
 }
 
 struct SettingsView: View {
-    @AppStorage("layoutStyle") private var defaultLayout = "hero"
-    @AppStorage("gutter") private var defaultGutter: Double = 8
-    @AppStorage("exportQuality") private var defaultQuality: Double = 0.92
-    @AppStorage("defaultTitle") private var defaultTitle = ""
-    @AppStorage("defaultFontFamily") private var defaultFontFamily = ""
-    @AppStorage("defaultFontSize") private var defaultFontSize: Double = 48
-    @AppStorage("defaultExportFolder") private var defaultExportFolder = ""
-    @AppStorage("backgroundStyle") private var settingsBackgroundStyle = "solid"
+    @AppStorage(UserDefaultsPersistence.Keys.layoutStyle) private var defaultLayout = "hero"
+    @AppStorage(UserDefaultsPersistence.Keys.gutter) private var defaultGutter: Double = 8
+    @AppStorage(UserDefaultsPersistence.Keys.exportQuality) private var defaultQuality: Double = 0.92
+    @AppStorage(UserDefaultsPersistence.Keys.defaultTitle) private var defaultTitle = ""
+    @AppStorage(UserDefaultsPersistence.Keys.defaultFontFamily) private var defaultFontFamily = ""
+    @AppStorage(UserDefaultsPersistence.Keys.defaultFontSize) private var defaultFontSize: Double = 48
+    @AppStorage(UserDefaultsPersistence.Keys.defaultExportFolder) private var defaultExportFolder = ""
+    @AppStorage(UserDefaultsPersistence.Keys.backgroundStyle) private var settingsBackgroundStyle = "solid"
 
     @State private var solidColor: NSColor = .black
     @State private var gradientStart: NSColor = .black
@@ -132,21 +132,21 @@ struct SettingsView: View {
                     HStack {
                         Text("Color")
                         Spacer()
-                        UserDefaultsColorView(color: $solidColor, key: "backgroundColor", defaultValue: .black)
+                        UserDefaultsColorView(color: $solidColor, key: UserDefaultsPersistence.Keys.backgroundColor, defaultValue: .black)
                             .frame(width: 32, height: 22)
                     }
                 } else if backgroundStyleRaw == .gradient {
                     HStack {
                         Text("Start")
                         Spacer()
-                        UserDefaultsColorView(color: $gradientStart, key: "gradientStartColor", defaultValue: .black)
+                        UserDefaultsColorView(color: $gradientStart, key: UserDefaultsPersistence.Keys.gradientStartColor, defaultValue: .black)
                             .frame(width: 32, height: 22)
                     }
 
                     HStack {
                         Text("End")
                         Spacer()
-                        UserDefaultsColorView(color: $gradientEnd, key: "gradientEndColor", defaultValue: .darkGray)
+                        UserDefaultsColorView(color: $gradientEnd, key: UserDefaultsPersistence.Keys.gradientEndColor, defaultValue: .darkGray)
                             .frame(width: 32, height: 22)
                     }
 
@@ -160,11 +160,11 @@ struct SettingsView: View {
                         .font(.caption)
                         Slider(value: $gradientAngleValue, in: 0...360, step: 1)
                             .onChange(of: gradientAngleValue) { _, newValue in
-                                UserDefaults.standard.set(newValue, forKey: "gradientAngle")
+                                UserDefaults.standard.set(newValue, forKey: UserDefaultsPersistence.Keys.gradientAngle)
                             }
                     }
                     .onAppear {
-                        gradientAngleValue = UserDefaults.standard.double(forKey: "gradientAngle")
+                        gradientAngleValue = UserDefaults.standard.double(forKey: UserDefaultsPersistence.Keys.gradientAngle)
                     }
                 }
             }

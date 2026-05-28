@@ -281,6 +281,94 @@ var title: String = "" {
 
 If the print doesn't fire, the property is either computed or being mutated in-place.
 
+## @Observable Delegation Chains
+
+When a ViewModel delegates a property to a sub-manager via a computed property, SwiftUI observation breaks. `@Observable` only tracks stored properties on the observed instance — it cannot see through computed properties into another object.
+
+### The Problem
+
+```swift
+@Observable @MainActor final class CollageViewModel {
+    let cropManager = CropManager()
+
+    // Computed delegation — INVISIBLE to SwiftUI observation on CollageViewModel
+    var cropMap: [UUID: CropInfo] {
+        get { cropManager.cropMap }
+        set { cropManager.cropMap = newValue }
+    }
+}
+
+// View reads through computed property — NEVER receives updates
+struct MyView: View {
+    @Bindable var viewModel: CollageViewModel
+    var body: some View {
+        ForEach(viewModel.panels) { panel in
+            let crop = viewModel.cropMap[panel.id]  // Won't update on cropManager mutations
+        }
+    }
+}
+```
+
+Root cause: `viewModel.cropMap` is a function call from SwiftUI's perspective. It observes `CollageViewModel`, but `cropManager.cropMap` is a different object that `CollageViewModel`'s observation system doesn't know about.
+
+### The Fix (Both Parts Required)
+
+1. **Make the delegate `@Observable`** — so mutations emit observation events
+2. **Have the view read the delegate directly** — so SwiftUI registers the delegate as an observation dependency
+
+```swift
+@Observable @MainActor final class CropManager {  // Part 1: @Observable
+    var cropMap: [UUID: CropInfo] = [:]
+}
+
+@Observable @MainActor final class CollageViewModel {
+    let cropManager = CropManager()
+
+    var cropMap: [UUID: CropInfo] {  // Convenience accessor for non-view code
+        get { cropManager.cropMap }
+        set { cropManager.cropMap = newValue }
+    }
+}
+
+// Part 2: View reads delegate directly
+struct MyView: View {
+    @Bindable var viewModel: CollageViewModel
+    var body: some View {
+        ForEach(viewModel.panels) { panel in
+            let crop = viewModel.cropManager.cropMap[panel.id]  // Updates correctly
+        }
+    }
+}
+```
+
+### Delegation Chain Rules
+
+| Scenario | Observation Works? | Fix |
+|---|---|---|
+| Stored property on `@Observable` class | Yes | None needed |
+| Computed property reading another object | **No** | Make delegate `@Observable` + read delegate directly in view |
+| View reads through computed property (`vm.cropMap`) | **No** | Read delegate directly (`vm.cropManager.cropMap`) |
+| View reads delegate directly but delegate is plain class | **No** | Add `@Observable` to delegate |
+
+### Diagnostic Clues
+
+If a view updates for some state changes but not others after refactoring:
+1. Check if any properties changed from stored to computed
+2. Check if the delegate object is `@Observable`
+3. Check if the view reads the delegate directly (not through the computed property)
+4. The symptom is typically partial: stored properties still update, delegated properties don't
+
+### Eliminating Dual State — Verification Checklist
+
+When unifying dual state (e.g., removing a shadow copy from ViewModel):
+1. Remove the stored property from the secondary owner
+2. Add a computed property that delegates to the primary owner
+3. Grep for `= primaryOwner.property` to find all manual sync lines
+4. Remove each sync line
+5. Verify grep returns zero matches
+6. Build and run — check for observation gaps (views that stop updating)
+7. If observation gaps appear: ensure delegate is `@Observable` + views read delegate directly
+
 ## Migration from ObservableObject
 
 When migrating from `ObservableObject` to `@Observable`:
@@ -307,6 +395,7 @@ When migrating from `ObservableObject` to `@Observable`:
 6. **Guard `didSet` during initialization** — use `isInitializing` flag to prevent undo registrations, redundant persistence, and premature side effects when loading saved state in `init`
 7. **No `@MainActor` default params in init** — use init overloads instead of `init(dep: MainActorDep = MainActorDep())`
 8. **`@State` UUID cache staleness** — When `@State` caches `[UUID: Value]` and the source collection regenerates with new UUIDs, the cache is stale for one render cycle. Compute on-the-fly in `GeometryReader` closure for correctness-critical paths (hit-testing, overlays). See "@State Cache Staleness with UUID Collections" above.
+9. **@Observable delegation chains** — Computed properties that delegate to sub-managers break SwiftUI observation. Fix: make the delegate `@Observable` AND have views read the delegate directly (e.g., `vm.cropManager.cropMap`, not `vm.cropMap`). Both parts are required.
 
 ## @State Cache Staleness with UUID Collections
 
@@ -343,3 +432,4 @@ GeometryReader { geometry in
 - **UserDefaults typed getters return zero for missing keys** — `UserDefaults.double(forKey:)`, `.integer(forKey:)`, and `.bool(forKey:)` return `0`, `0`, and `false` respectively when the key doesn't exist (unlike `.string(forKey:)` and `.data(forKey:)` which return `nil`). This causes silent wrong defaults. Safe pattern: check `object(forKey:)` first, then call the typed getter only if the key exists.
 - **`didSet` fires during `init`** — Assigning properties in `init` triggers `didSet`, causing spurious undo entries, redundant `UserDefaults` writes, and premature side effects. Use an `isInitializing` guard in each `didSet` to skip side effects during initialization.
 - **`@MainActor` default param in `init`** — `init(dep: SomeMainActorClass = SomeMainActorClass())` won't compile. Use `convenience init()` overloads instead.
+- **@Observable delegation chain** — A computed property on an `@Observable` class that delegates to a sub-manager (e.g., `var cropMap { cropManager.cropMap }`) breaks observation. SwiftUI only tracks stored properties on the observed instance. Fix requires BOTH: (a) make the delegate `@Observable`, (b) views read `vm.cropManager.cropMap` directly, not through the computed property.

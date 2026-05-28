@@ -19,6 +19,10 @@ struct SaliencyResult {
         var originX = center.x - halfW
         var originY = center.y - halfH
 
+        // Vision's saliency center is in normalized image coordinates.
+        // For portrait images, VNImageRequestHandler rotates the buffer 90°,
+        // causing x/y to be swapped relative to the source CGImage.
+        // We swap back so the crop origin is correct in CGImage space.
         if imageSize.width < imageSize.height {
             originX = center.y - halfW
             originY = center.x - halfH

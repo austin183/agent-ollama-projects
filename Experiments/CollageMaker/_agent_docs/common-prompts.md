@@ -8,7 +8,7 @@ Can you please help me think through how we can address the change request in @_
 ## Review
 (In Plan Mode (Tab Key to change Modes))
 ```
-Please use our macos skills to help me address the review changes received in @_agent_docs/reviews/2026-05-26-full-architectural-review.md
+Please use our macos skills to help me address the review changes received in @_agent_docs/reviews/2026-05-28-full-architectural-review.md
 ```
 
 # Implement
@@ -50,7 +50,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/layered-rendering-title-occlusion-learnings.md and @_agent_docs/learnings/per-panel-incremental-rendering-learnings.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/layered-rendering-title-occlusion-learnings.md and @_agent_docs/learnings/observable-delegation-chain-learnings.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Apply Research to Skills

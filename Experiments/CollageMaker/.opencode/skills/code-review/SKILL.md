@@ -70,12 +70,13 @@ Review for adherence to SOLID design principles:
 ## Step-by-Step Review Process
 
 ### 1. Understand Context
+Don't ask a subagent to read you the contents of files.  That is an inefficient way to get the contents of files you are interested in.
 
 1. Read the commit message and PR description
 2. Review any related design documents or issues
 3. Understand the intended behavior and edge cases
 
-### 2. High-Level Design Review
+### 2. Run a Subagent for High-Level Design Review for each Domain
 
 Focus on architecture and SOLID principles:
 
@@ -86,7 +87,7 @@ Focus on architecture and SOLID principles:
 
 ### 3. Detailed Code Review
 
-#### For each file:
+#### Run Subagents for each aspect of the review for each file:
 
 1. **Read the overall structure**
    - Are classes/functions organized logically?

@@ -197,13 +197,13 @@ struct CollageEditorView: View {
                             .frame(width: scaledFrame.width, height: scaledFrame.height)
                             .position(x: scaledFrame.midX, y: scaledFrame.midY)
                             .onAppear {
-                                logger.info("Highlight: panel \(DebugHelpers.rectStr(selectedPanel.frame)), scaled \(DebugHelpers.rectStr(scaledFrame)), preview \(DebugHelpers.sizeStr(geometry.size))")
+                                logger.debug("Highlight: panel \(DebugHelpers.rectStr(selectedPanel.frame)), scaled \(DebugHelpers.rectStr(scaledFrame)), preview \(DebugHelpers.sizeStr(geometry.size))")
                             }
                     } else if let selectedId = viewModel.selectedPanelId {
                         Rectangle()
                             .fill(Color.clear)
                             .onAppear {
-                                logger.info("Highlight: panel id \(selectedId.uuidString) NOT FOUND in panels (count \(viewModel.panels.count))")
+                                logger.debug("Highlight: panel id \(selectedId.uuidString) NOT FOUND in panels (count \(viewModel.panels.count))")
                             }
                     }
                 }

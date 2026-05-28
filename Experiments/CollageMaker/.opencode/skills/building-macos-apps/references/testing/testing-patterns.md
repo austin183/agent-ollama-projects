@@ -443,6 +443,30 @@ func updatePreview() {
 
 See [references/tooling/performance-debugging.md](../tooling/performance-debugging.md) for signpost placement guidance.
 
+## UserDefaults Test Suite Stability
+
+A computed property that creates a new `UserDefaults(suiteName: UUID())` on each access produces a different suite per read. Save and load go to different suites, causing every test assertion to fail.
+
+**Fix:** Store the suite as a stable instance property initialized in `init`:
+
+```swift
+// WRONG — new suite per access, save/load go to different suites
+class TestPersistence {
+    var userDefaults: UserDefaults {
+        UserDefaults(suiteName: UUID().uuidString)!  // Different UUID each call
+    }
+}
+
+// CORRECT — stable suite for the lifetime of the instance
+class TestPersistence {
+    private let userDefaults: UserDefaults
+
+    init() {
+        userDefaults = UserDefaults(suiteName: UUID().uuidString)!  // One UUID, stable
+    }
+}
+```
+
 ## Pitfalls
 
 - **`xcodebuild test` skips Swift Testing** — use `-only-testing:TargetName` flag
@@ -458,3 +482,4 @@ See [references/tooling/performance-debugging.md](../tooling/performance-debuggi
 - **Mock method symmetry** — If the protocol has multiple methods (e.g., export vs preview assembler), the mock must track fields on every method the ViewModel actually calls. Asserting on the wrong method's tracking data produces silently passing tests
 - **Aspect ratio assumption** — When testing coordinate math, never assume which axis constrains. Compute fitted dimensions first, then offset, then mapped rect
 - **`sed` for bulk test fixes** — When Swift Testing version doesn't support `tolerance:`, `find -exec sed -i '' 's/, tolerance: 0\.01//g' {} +'` across the test directory is the fastest way to fix many occurrences
+- **UserDefaults test suite instability** — A computed property that creates `UserDefaults(suiteName: UUID())` each access generates a different suite per read, so save/load go to different suites. Store as a stable instance property initialized in `init`.

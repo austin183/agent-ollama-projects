@@ -16,7 +16,7 @@ struct PanelCropEditor: View {
     }
 
     private var currentCrop: CropInfo? {
-        viewModel.cropMap[panel.id]
+        viewModel.cropManager.cropMap[panel.id]
     }
 
     var body: some View {
@@ -32,7 +32,7 @@ struct PanelCropEditor: View {
                             CropPreviewView(
                                 nsImage: image.nsImage,
                                 imageSize: image.size,
-                                crop: viewModel.cropMap[panel.id],
+                                crop: viewModel.cropManager.cropMap[panel.id],
                                 containerSize: geo.size
                             )
                             .accessibilityLabel("Crop preview")
