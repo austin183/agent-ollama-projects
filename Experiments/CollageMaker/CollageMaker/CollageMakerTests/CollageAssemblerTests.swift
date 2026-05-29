@@ -356,4 +356,123 @@ import Testing
 
         #expect(data != nil)
     }
+
+    // MARK: - Concurrent rendering (RenderQueue thread safety)
+
+    @Test func concurrentAssemblePreviewCallsComplete() async {
+        let cgImage = createTestCGImage(color: .systemBlue, size: CGSize(width: 200, height: 200))
+        let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
+        let crops: [UUID: CropInfo] = [panels[0].id: CropInfo(
+            panelId: panels[0].id,
+            sourceRect: CGRect(origin: .zero, size: CGSize(width: 200, height: 200)),
+            destinationRect: panels[0].frame
+        )]
+
+        let config = AssemblyConfig(
+            panels: panels,
+            crops: crops,
+            panelAssignments: [:],
+            titleAttrString: NSAttributedString(string: ""),
+            titleStyle: .default,
+            backgroundColor: .black,
+            backgroundStyle: .solid,
+            gradientStartColor: .black,
+            gradientEndColor: .darkGray,
+            gradientAngle: 135,
+            backgroundOpacity: 1.0,
+            canvasSize: CanvasConfig.defaultCanvasSize
+        )
+
+        let tasks = (0..<10).map { _ in
+            Task.detached {
+                self.assembler.assemblePreviewWithCGImages(
+                    config: config,
+                    cgImages: [cgImage],
+                    backgroundImage: nil,
+                    previewSize: CanvasConfig.defaultPreviewSize
+                )
+            }
+        }
+
+        let allResults = await withTaskGroup(of: NSImage?.self) { group in
+            var results: [NSImage?] = []
+            for task in tasks {
+                group.addTask { await task.value }
+            }
+            for await result in group {
+                results.append(result)
+            }
+            return results
+        }
+
+        #expect(allResults.allSatisfy { $0 != nil })
+    }
+
+    @Test func concurrentRenderPanelCallsComplete() async {
+        let cgImage = createTestCGImage(color: .systemGreen, size: CGSize(width: 200, height: 200))
+        let panelId = UUID()
+        let crop = CropInfo(
+            panelId: panelId,
+            sourceRect: CGRect(x: 0, y: 0, width: 200, height: 200),
+            destinationRect: CGRect(x: 0, y: 0, width: 100, height: 100)
+        )
+
+        let tasks = (0..<10).map { _ in
+            Task.detached {
+                self.assembler.renderPanel(
+                    crop: crop,
+                    cgImage: cgImage,
+                    panelSize: CGSize(width: 100, height: 100)
+                )
+            }
+        }
+
+        let allResults = await withTaskGroup(of: NSImage?.self) { group in
+            var results: [NSImage?] = []
+            for task in tasks {
+                group.addTask { await task.value }
+            }
+            for await result in group {
+                results.append(result)
+            }
+            return results
+        }
+
+        #expect(allResults.allSatisfy { $0 != nil })
+    }
+
+    @Test func concurrentRenderBackgroundCallsComplete() async {
+        let config = BackgroundConfig(
+            style: .solid,
+            color: .systemBlue,
+            gradientStartColor: .black,
+            gradientEndColor: .darkGray,
+            gradientAngle: 0,
+            opacity: 1.0
+        )
+
+        let tasks = (0..<10).map { _ in
+            Task.detached {
+                self.assembler.renderBackground(
+                    config: config,
+                    canvasSize: CanvasConfig.defaultCanvasSize,
+                    backgroundImage: nil,
+                    previewSize: CanvasConfig.defaultPreviewSize
+                )
+            }
+        }
+
+        let allResults = await withTaskGroup(of: NSImage?.self) { group in
+            var results: [NSImage?] = []
+            for task in tasks {
+                group.addTask { await task.value }
+            }
+            for await result in group {
+                results.append(result)
+            }
+            return results
+        }
+
+        #expect(allResults.allSatisfy { $0 != nil })
+    }
 }

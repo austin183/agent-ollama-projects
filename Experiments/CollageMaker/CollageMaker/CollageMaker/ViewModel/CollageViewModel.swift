@@ -22,6 +22,7 @@ final class CollageViewModel {
     private let assembler: CollageAssembly
     private let persistence: UserDefaultsPersistence
     let cropManager = CropManager()
+    let previewManager: PreviewManager
     private let scrollPanManager = ScrollPanManager()
     let undoManager = UndoManager()
     private var isInitializing = false
@@ -95,6 +96,7 @@ final class CollageViewModel {
     }
 
     var scrollSensitivity: CGFloat = 1.6
+    private var scrollCommitTimer: DispatchWorkItem?
 
     var backgroundColor: NSColor = .black {
         didSet {
@@ -207,10 +209,22 @@ final class CollageViewModel {
         }
     }
 
-    var previewImage: NSImage?
-    var previewBackgroundImage: NSImage?
-    var panelRenderedImages: [UUID: NSImage] = [:]
-    var titleImage: NSImage?
+    var previewImage: NSImage? {
+        get { previewManager.previewImage }
+        set { previewManager.previewImage = newValue }
+    }
+    var previewBackgroundImage: NSImage? {
+        get { previewManager.previewBackgroundImage }
+        set { previewManager.previewBackgroundImage = newValue }
+    }
+    var panelRenderedImages: [UUID: NSImage] {
+        get { previewManager.panelRenderedImages }
+        set { previewManager.panelRenderedImages = newValue }
+    }
+    var titleImage: NSImage? {
+        get { previewManager.titleImage }
+        set { previewManager.titleImage = newValue }
+    }
     var isLiveGesturing: Bool = false
     var isProcessing: Bool = false
     var isExporting: Bool = false
@@ -240,9 +254,10 @@ final class CollageViewModel {
     }
 
     convenience init() {
+        let assembler = CollageAssembler()
         self.init(
             saliencyAnalyzer: SaliencyAnalyzer(),
-            assembler: CollageAssembler(),
+            assembler: assembler,
             persistence: UserDefaultsPersistence()
         )
     }
@@ -266,6 +281,7 @@ final class CollageViewModel {
         self.saliencyAnalyzer = saliencyAnalyzer
         self.assembler = assembler
         self.persistence = persistence
+        self.previewManager = PreviewManager(assembler: assembler)
         self.undoManager.levelsOfUndo = 60
 
         isInitializing = true
@@ -398,7 +414,7 @@ final class CollageViewModel {
         let first = from.first
         let last = from.last
         let count = images.count
-        let oldOrder = images.map { $0.id }
+        _ = images.map { $0.id }
         let oldCustomOrder = customImageOrder
 
         if let first, let last, !customImageOrder.isEmpty {
@@ -460,10 +476,7 @@ final class CollageViewModel {
         cropManager.cropMap.removeAll()
         saliencyResults.removeAll()
         selectedPanelId = nil
-        previewImage = nil
-        previewBackgroundImage = nil
-        panelRenderedImages.removeAll()
-        titleImage = nil
+        previewManager.clearAll()
         isProcessing = false
         errorMessage = nil
         panelAssignments.removeAll()
@@ -512,7 +525,7 @@ final class CollageViewModel {
             )
         }
 
-        panelRenderedImages.removeAll()
+        previewManager.panelRenderedImages.removeAll()
         updatePreview()
         updateAllPanelPreviews()
     }
@@ -710,44 +723,48 @@ final class CollageViewModel {
     }
 
     func scrollPanDelta(_ delta: CGSize) {
-        scrollPanManager.scrollPanDelta(
-            delta,
-            sensitivity: scrollSensitivity,
-            applyLive: { [weak self] in
-                guard let self else { return }
-                cropManager.pan(by: scrollPanManager.accumulator)
-                cropManager.applyPan(
-                    panelId: nil,
-                    panels: panels,
-                    images: images,
-                    panelAssignments: panelAssignments,
-                    finish: false
-                )
+        scrollPanManager.accumulateDelta(delta, sensitivity: scrollSensitivity)
 
-                previewDebounceTask?.cancel()
-                previewDebounceTask = Task { [weak self] in
-                    try? await Task.sleep(nanoseconds: 150_000_000)
-                    if let panelId = self?.scrollPanManager.activePanelId {
-                        self?.updatePanelPreview(panelId: panelId)
-                    }
-                }
-            },
-            commit: { [weak self] in
-                guard let self, let id = scrollPanManager.activePanelId else { return }
-                cropManager.applyPan(
-                    panelId: id,
-                    panels: panels,
-                    images: images,
-                    panelAssignments: panelAssignments,
-                    finish: true
-                )
-                cropManager.beginPan(panelId: id)
-                updatePreview()
-            }
+        cropManager.pan(by: scrollPanManager.accumulator)
+        cropManager.applyPan(
+            panelId: nil,
+            panels: panels,
+            images: images,
+            panelAssignments: panelAssignments,
+            finish: false
         )
+
+        previewDebounceTask?.cancel()
+        previewDebounceTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            if let panelId = self?.scrollPanManager.activePanelId {
+                self?.updatePanelPreview(panelId: panelId)
+            }
+        }
+
+        scheduleScrollPanCommit()
+    }
+
+    private func scheduleScrollPanCommit() {
+        scrollCommitTimer?.cancel()
+        scrollCommitTimer = DispatchWorkItem { [weak self] in
+            guard let self, let id = self.scrollPanManager.activePanelId else { return }
+            self.cropManager.applyPan(
+                panelId: id,
+                panels: self.panels,
+                images: self.images,
+                panelAssignments: self.panelAssignments,
+                finish: true
+            )
+            self.cropManager.beginPan(panelId: id)
+            self.updatePreview()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: scrollCommitTimer!)
     }
 
     func endScrollPan() {
+        scrollCommitTimer?.cancel()
+        scrollCommitTimer = nil
         scrollPanManager.endScrollPan()
     }
 
@@ -772,11 +789,8 @@ final class CollageViewModel {
 
     // MARK: - Preview & Export
 
-    private var previewTask: Task<Void, Never>?
     private var previewDebounceTask: Task<Void, Never>?
     private var panelPreviewTask: Task<Void, Never>?
-    private var backgroundTask: Task<Void, Never>?
-    private var titleTask: Task<Void, Never>?
 
     func updatePanelPreview(panelId: UUID) {
         guard let panel = panels.first(where: { $0.id == panelId }),
@@ -787,20 +801,13 @@ final class CollageViewModel {
 
         let cgImage = images[effectiveIndex].cgImage
         let panelSize = panel.frame.size
-        let assembler = self.assembler
 
-        panelPreviewTask?.cancel()
-        panelPreviewTask = Task.detached { [weak self, cgImage, crop, panelSize, assembler] in
-            guard let self else { return }
-            let result = assembler.renderPanel(
-                crop: crop,
-                cgImage: cgImage,
-                panelSize: panelSize
-            )
-            Task { @MainActor in
-                self.panelRenderedImages[panelId] = result
-            }
-        }
+        previewManager.updatePanelPreview(
+            crop: crop,
+            cgImage: cgImage,
+            panelSize: panelSize,
+            panelId: panelId
+        )
     }
 
     func updateBackground() {
@@ -813,21 +820,13 @@ final class CollageViewModel {
             opacity: backgroundOpacity
         )
         let backgroundImageCG = backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
-        let assembler = self.assembler
 
-        backgroundTask?.cancel()
-        backgroundTask = Task.detached { [weak self, bgConfig, backgroundImageCG, assembler] in
-            guard let self else { return }
-            let result = assembler.renderBackground(
-                config: bgConfig,
-                canvasSize: CanvasConfig.defaultCanvasSize,
-                backgroundImage: backgroundImageCG,
-                previewSize: CanvasConfig.defaultPreviewSize
-            )
-            Task { @MainActor in
-                self.previewBackgroundImage = result
-            }
-        }
+        previewManager.updateBackground(
+            config: bgConfig,
+            canvasSize: CanvasConfig.defaultCanvasSize,
+            backgroundImage: backgroundImageCG,
+            previewSize: CanvasConfig.defaultPreviewSize
+        )
     }
 
     func updatePreview() {
@@ -839,50 +838,33 @@ final class CollageViewModel {
         let config = buildAssemblyConfig()
         let cgImages = images.map { $0.cgImage }
         let backgroundImageCG = backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
-        let assembler = assembler
 
-        previewTask?.cancel()
-        previewTask = Task.detached { [weak self, config, cgImages, backgroundImageCG, assembler] in
-            guard let self else { return }
-            let result = assembler.assemblePreviewWithCGImages(
-                config: config,
-                cgImages: cgImages,
-                backgroundImage: backgroundImageCG,
-                previewSize: CanvasConfig.defaultPreviewSize
-            )
-            Task { @MainActor in
-                self.previewImage = result
-            }
-        }
+        previewManager.updatePreview(
+            config: config,
+            cgImages: cgImages,
+            backgroundImage: backgroundImageCG,
+            previewSize: CanvasConfig.defaultPreviewSize
+        )
 
         updateBackground()
         updateTitleImage()
     }
 
     func updateAllPanelPreviews() {
-        for panel in panels {
-            updatePanelPreview(panelId: panel.id)
-        }
+        previewManager.updateAllPanelPreviews(
+            panels: panels,
+            crops: cropMap,
+            images: images,
+            panelAssignments: panelAssignments
+        )
     }
 
     func updateTitleImage() {
-        let titleAttrString = self.titleAttrString
-        let titleStyle = self.titleStyle
-        let canvasSize = CanvasConfig.defaultCanvasSize
-        let assembler = self.assembler
-
-        titleTask?.cancel()
-        titleTask = Task.detached { [weak self, titleAttrString, titleStyle, canvasSize, assembler] in
-            guard let self else { return }
-            let result = assembler.renderTitle(
-                titleAttrString: titleAttrString,
-                titleStyle: titleStyle,
-                canvasSize: canvasSize
-            )
-            Task { @MainActor in
-                self.titleImage = result
-            }
-        }
+        previewManager.updateTitleImage(
+            titleAttrString: titleAttrString,
+            titleStyle: titleStyle,
+            canvasSize: CanvasConfig.defaultCanvasSize
+        )
     }
 
     func exportCollage() async -> URL? {

@@ -57,7 +57,7 @@ import Testing
 
     @Test func mergesItalicTrait() {
         let baseDescriptor = NSFont.systemFont(ofSize: 20).fontDescriptor
-        let italicDescriptor = baseDescriptor.withSymbolicTraits(.italic) ?? baseDescriptor
+        let italicDescriptor = baseDescriptor.withSymbolicTraits(.italic)
         let italicFont = NSFont(descriptor: italicDescriptor, size: 20) ?? NSFont.systemFont(ofSize: 20)
         let merged = FontMerger.merge(italicFont, baseFamily: "Helvetica", targetSize: 36)
 
@@ -69,7 +69,6 @@ import Testing
 
     @Test func mergesMultipleTraits() {
         let descriptor = NSFont.systemFont(ofSize: 20).fontDescriptor.withSymbolicTraits([.bold, .italic])
-            ?? NSFont.systemFont(ofSize: 20).fontDescriptor
         let combinedFont = NSFont(descriptor: descriptor, size: 20) ?? NSFont.systemFont(ofSize: 20)
         let merged = FontMerger.merge(combinedFont, baseFamily: "Helvetica", targetSize: 36)
 

@@ -19,7 +19,7 @@ struct FontMerger {
 
         let traits = existing.fontDescriptor.symbolicTraits
         let baseDescriptor = defaultFont.fontDescriptor
-        let mergedDescriptor = baseDescriptor.withSymbolicTraits(traits) ?? baseDescriptor
+        let mergedDescriptor = baseDescriptor.withSymbolicTraits(traits)
         return NSFont(descriptor: mergedDescriptor, size: targetSize) ?? defaultFont
     }
 }

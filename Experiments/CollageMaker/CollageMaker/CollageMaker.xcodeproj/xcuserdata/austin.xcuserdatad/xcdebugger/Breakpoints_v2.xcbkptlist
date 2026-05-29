@@ -16,7 +16,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "262"
             endingLineNumber = "262"
-            landmarkName = "drawPanels(into:panels:cgImages:crops:panelAssignments:)"
+            landmarkName = "drawImageBackground(into:size:backgroundColor:backgroundImage:opacity:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

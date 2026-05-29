@@ -295,7 +295,7 @@ struct ContentView: View {
 
                             if let url, url.isFileURL {
                                 let ext = url.pathExtension
-                                if let uti = try? UTType(filenameExtension: ext),
+                                if let uti = UTType(filenameExtension: ext),
                                    imageTypes.contains(uti) {
                                     continuation.resume(returning: url)
                                 } else {

@@ -314,6 +314,36 @@ When multiple `Task.detached` tasks update different `@Observable` properties th
 - **Batch related updates** — Use a single `Task { @MainActor in ... }` block to set multiple related properties atomically
 - **Consolidate into a single property** — E.g., a `RenderingMode` enum that encapsulates which rendering path is active, rather than inferring mode from independent properties
 
+## @Observable State Updates from Background Work
+
+When updating an `@Observable` `@MainActor` class from heavy background work, prefer `await Task.detached { ... }.value` over nested `Task { @MainActor in ... }`:
+
+```swift
+@Observable @MainActor final class PreviewManager {
+    var previewImage: NSImage?
+
+    func render() {
+        previewTask?.cancel()
+        previewTask = Task { [weak self] in
+            guard let self else { return }
+            let result = await Task.detached {
+                // Off-main-actor rendering work
+                renderPreview()
+            }.value
+            self.previewImage = result  // Back on MainActor via outer Task
+        }
+    }
+}
+```
+
+**Why this pattern:**
+1. Outer `Task` inherits `MainActor` — assignment to `self.previewImage` is safe
+2. `[weak self]` prevents retain cycles
+3. `await Task.detached { ... }.value` runs work off-main-actor and returns the result
+4. Cancellation propagates naturally — cancelling `previewTask` cancels the inner detached task
+
+**Contrast with nested pattern:** `Task.detached { [weak self] in ... Task { @MainActor in self?.previewImage = result } }` works but requires manual actor hopping and doesn't propagate cancellation to the inner work.
+
 ## Summary Rules
 
 1. **Mark ViewModel as `@MainActor`** — all `@Published` properties are main-thread-safe

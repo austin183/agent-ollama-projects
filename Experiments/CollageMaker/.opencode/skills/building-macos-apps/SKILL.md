@@ -171,10 +171,12 @@ See [references/state/swift-concurrency.md](references/state/swift-concurrency.m
 **Key patterns:**
 - `Task { [weak self] }` -- inherits MainActor, use for ViewModel updates
 - `Task.detached` -- off MainActor, use for heavy computation
+- **`Task { [weak self] in let result = await Task.detached { ... }.value; self.prop = result }`** -- preferred pattern for @Observable state updates from background work. Cancellation propagates, no manual actor hop needed. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
 - `defer { isProcessing = false }` -- always reset processing state
 - Cancel previous `Task` before starting new one
 - **Extract `CGImage`/`CGColor` on main thread before `Task.detached`** -- AppKit types are not thread-safe
 - **Capture `NSAttributedString` as `let` before `Task.detached`** -- not `Sendable`, same pattern as `NSColor`
+- **`NSGraphicsContext.current` is NOT thread-safe** -- concurrent `Task.detached` rendering tasks can clobber each other's context. Mitigate with a serial `DispatchQueue`. See [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md)
 
 ## Finder Drag Gotcha
 
@@ -329,7 +331,7 @@ open "$HOME/Library/Developer/Xcode/DerivedData/AppName-*/Build/Products/Debug/A
 
 1. **Models** -- Define data structs first (Identifiable, Equatable, Codable). Include `id: UUID` in layout items
 2. **Services** -- Pure computation and framework wrappers (testable in isolation)
-3. **ViewModel** -- `@MainActor @Observable` class (preferred) or `ObservableObject`. All properties driving UI must be stored; use `didSet` for persistence
+3. **ViewModel** -- `@MainActor @Observable` class (preferred) or `ObservableObject`. All properties driving UI must be stored; use `didSet` for persistence. When it reaches 3+ related async tasks or 3+ related properties for a subsystem, extract into a dedicated `@Observable` manager (pure accumulator pattern preferred)
 4. **Views** -- UI components using `@Bindable` for `@Observable` state, or `@EnvironmentObject` for legacy
 5. **App Wiring** -- Entry point with `.environmentObject(viewModel)` on root view
 6. **Build Verification** -- Zero errors, zero warnings

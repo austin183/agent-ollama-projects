@@ -397,6 +397,55 @@ When migrating from `ObservableObject` to `@Observable`:
 8. **`@State` UUID cache staleness** — When `@State` caches `[UUID: Value]` and the source collection regenerates with new UUIDs, the cache is stale for one render cycle. Compute on-the-fly in `GeometryReader` closure for correctness-critical paths (hit-testing, overlays). See "@State Cache Staleness with UUID Collections" above.
 9. **@Observable delegation chains** — Computed properties that delegate to sub-managers break SwiftUI observation. Fix: make the delegate `@Observable` AND have views read the delegate directly (e.g., `vm.cropManager.cropMap`, not `vm.cropMap`). Both parts are required.
 
+## Extracting Managers from @Observable ViewModels
+
+When a ViewModel grows beyond simple state + side effects, extract a dedicated `@Observable` manager for a focused subsystem.
+
+### When to Extract
+
+| Signal | Threshold |
+|---|---|
+| Related async tasks | 3+ |
+| Related stored properties | 3+ |
+| Method responsibility | Methods doing both orchestration AND rendering |
+| Test complexity | Tests need to mock rendering separately from business logic |
+
+### Pure Accumulator Pattern
+
+Prefer managers that only accumulate and report, leaving domain logic to the ViewModel:
+
+```
+Tightly coupled: Manager accepts closures capturing domain state
+Moderately coupled: Manager returns events, caller handles logic
+Pure accumulator: Manager only stores raw data, caller owns all logic
+```
+
+```swift
+// Pure accumulator — knows nothing about crops, panels, or images
+@Observable @MainActor final class ScrollPanManager {
+    var activePanelId: UUID?
+    var accumulator: CGSize = .zero
+
+    func scroll(delta: CGSize, sensitivity: Double) {
+        accumulator.width += delta.width * sensitivity
+        accumulator.height += delta.height * sensitivity
+    }
+}
+
+// ViewModel owns crop computation, commit timing, and preview scheduling
+@Observable @MainActor final class CollageViewModel {
+    let scrollPanManager = ScrollPanManager()
+
+    func handleScroll(delta: CGSize) {
+        scrollPanManager.scroll(delta: delta, sensitivity: sensitivity)
+        applyCropFrom(scrollPanManager.accumulator, panelId: scrollPanManager.activePanelId)
+        schedulePreview()
+    }
+}
+```
+
+**Why:** Inverting the dependency (manager knows nothing about domain) makes the manager testable in isolation and reusable across different ViewModels.
+
 ## @State Cache Staleness with UUID Collections
 
 When a view caches derived data in `@State` keyed by UUIDs (e.g., `[UUID: CGRect]` for panel frames), and the source collection can be regenerated with **new UUIDs**, the cache becomes stale for one render cycle. The `.onChange` that updates the cache fires *after* the first re-render body evaluation.

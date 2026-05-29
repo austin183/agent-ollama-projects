@@ -35,7 +35,7 @@ import Testing
         vm.images = images
         vm.regenerateLayout()
 
-        for iteration in 0..<10 {
+        for _ in 0..<10 {
             for delta in 1...5 {
                 vm.scrollPanDelta(CGSize(width: CGFloat(delta), height: CGFloat(delta)))
             }

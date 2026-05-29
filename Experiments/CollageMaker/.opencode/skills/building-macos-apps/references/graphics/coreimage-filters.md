@@ -139,6 +139,47 @@ Using `min(w, h) / 2` produces a line only as long as the smaller dimension's ra
 - `interpolationQuality = .high` for resize quality
 - Use `NSAttributedString.draw(at:)` for text overlays (see `nsattributedstring-drawing.md`)
 
+## NSGraphicsContext.current Thread Safety
+
+Each `Task.detached` rendering call creates its own `NSBitmapImageRep` and sets `NSGraphicsContext.current`. Even though each task has an isolated bitmap, **concurrent tasks can interleave** between `saveGraphicsState()` and `NSGraphicsContext.current = ...`, causing one task's context to be clobbered by another.
+
+**Fix: Serial DispatchQueue**
+
+```swift
+class RenderQueue {
+    private let queue = DispatchQueue(label: "austin183.indie.CollageMaker.render")
+
+    func render<T>(_ work: () -> T) -> T {
+        queue.sync(execute: work)
+    }
+}
+```
+
+Wrap each rendering method's body with the serial queue:
+
+```swift
+func renderPreview() -> NSImage? {
+    renderQueue.render {
+        let bitmapRep = NSBitmapImageRep(...)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
+        // ... drawing ...
+        NSGraphicsContext.restoreGraphicsState()
+        return NSImage(cgImage: bitmapRep.cgImage!, size: canvasSize)
+    }
+}
+```
+
+**Decision tree:**
+
+| Scenario | Risk | Mitigation |
+|---|---|---|
+| Single rendering call per task | Low | `saveGraphicsState()` / `restoreGraphicsState()` sufficient |
+| Multiple concurrent tasks, each with own bitmap | Medium | Serial `DispatchQueue` wraps each method |
+| Shared bitmap across tasks | High | Must serialize + coordinate access |
+
+A serial `DispatchQueue` is simpler than an actor (no async overhead) and sufficient since rendering is already off-main-actor via `Task.detached`.
+
 ## Pitfalls
 
 - **CGContext `[.byteOrder32Big]` test failures** — `makeImage()` returns `nil` in test environment; use `NSBitmapImageRep` with RGBA
