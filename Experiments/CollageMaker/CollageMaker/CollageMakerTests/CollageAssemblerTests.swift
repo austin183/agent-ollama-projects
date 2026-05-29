@@ -8,40 +8,6 @@ import Testing
 
     private let assembler = CollageAssembler()
 
-    @Test func assemblePreviewReturnsImage() {
-        let image = createTestImageItem(color: .systemBlue, size: CGSize(width: 200, height: 200))
-        let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
-        let crops: [UUID: CropInfo] = [panels[0].id: CropInfo(
-            panelId: panels[0].id,
-            sourceRect: CGRect(origin: .zero, size: image.size),
-            destinationRect: panels[0].frame
-        )]
-
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: .default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
-
-        let preview = assembler.assemblePreview(
-            config: config,
-            images: [image.nsImage],
-            backgroundImage: nil,
-            previewSize: CanvasConfig.defaultPreviewSize
-        )
-
-        #expect(preview != nil)
-    }
-
     @Test func assemblePreviewWithCGImagesReturnsImage() {
         let cgImage = createTestCGImage(color: .systemBlue, size: CGSize(width: 200, height: 200))
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
@@ -385,7 +351,7 @@ import Testing
 
         let tasks = (0..<10).map { _ in
             Task.detached {
-                self.assembler.assemblePreviewWithCGImages(
+                await self.assembler.assemblePreviewWithCGImages(
                     config: config,
                     cgImages: [cgImage],
                     backgroundImage: nil,
@@ -419,7 +385,7 @@ import Testing
 
         let tasks = (0..<10).map { _ in
             Task.detached {
-                self.assembler.renderPanel(
+                await self.assembler.renderPanel(
                     crop: crop,
                     cgImage: cgImage,
                     panelSize: CGSize(width: 100, height: 100)

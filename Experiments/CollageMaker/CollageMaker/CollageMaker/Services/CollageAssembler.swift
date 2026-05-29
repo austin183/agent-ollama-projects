@@ -59,22 +59,6 @@ extension CollageAssembly {
             quality: quality
         )
     }
-
-    func assemblePreview(
-        config: AssemblyConfig,
-        images: [NSImage],
-        backgroundImage: NSImage?,
-        previewSize: CGSize
-    ) -> NSImage? {
-        let cgImages = images.compactMap { $0.cgImage(forProposedRect: nil, context: nil, hints: nil) }
-        let bgCGImage = backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
-        return assemblePreviewWithCGImages(
-            config: config,
-            cgImages: cgImages,
-            backgroundImage: bgCGImage,
-            previewSize: previewSize
-        )
-    }
 }
 
 final class CollageAssembler: CollageAssembly {
