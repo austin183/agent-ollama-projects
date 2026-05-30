@@ -205,9 +205,11 @@ struct CollageEditorView: View {
                             self.viewModel.isLiveGesturing = false
                             self.viewModel.undoManager.setActionName("Adjust Crop")
                             self.viewModel.undoManager.endUndoGrouping()
+                            let panelId = self.viewModel.cropManager.scrollPanActivePanelId
                             self.viewModel.endScrollPan()
-                            self.viewModel.updatePreview()
-                            self.viewModel.updateAllPanelPreviews()
+                            if let panelId {
+                                self.viewModel.updatePanelPreview(panelId: panelId)
+                            }
                         }
                     )
                 }
@@ -367,7 +369,6 @@ struct CollageEditorView: View {
                                 viewModel.undoManager.setActionName("Adjust Crop")
                                 viewModel.undoManager.endUndoGrouping()
                             }
-                            viewModel.updateAllPanelPreviews()
                             gestureCoordinator.pinchPanelId = nil
                         }
                 )

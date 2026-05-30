@@ -461,7 +461,6 @@ final class CollageViewModel {
     func assignImage(_ imageIndex: Int, to panelId: UUID) {
         panelAssignments[panelId] = imageIndex
         resetCrop(panelId: panelId)
-        updatePreview()
         updatePanelPreview(panelId: panelId)
     }
 
@@ -499,7 +498,6 @@ final class CollageViewModel {
             cropMap[targetId] = CropInfo(panelId: targetId, sourceRect: cropA.sourceRect, destinationRect: cropB.destinationRect)
         }
 
-        updatePreview()
         updatePanelPreview(panelId: sourceId)
         updatePanelPreview(panelId: targetId)
     }
@@ -547,7 +545,9 @@ final class CollageViewModel {
 
     func applyPan(panelId: UUID?) {
         cropManager.applyPan(panelId: panelId, panels: panels, images: images, panelAssignments: panelAssignments, finish: true)
-        updatePreview()
+        if let panelId {
+            updatePanelPreview(panelId: panelId)
+        }
     }
 
     func applyPanLive() {
@@ -576,7 +576,9 @@ final class CollageViewModel {
 
     func applyPinch(panelId: UUID?) {
         cropManager.applyPinch(panelId: panelId, panels: panels, images: images, panelAssignments: panelAssignments, finish: true)
-        updatePreview()
+        if let panelId {
+            updatePanelPreview(panelId: panelId)
+        }
     }
 
     func applyPinchLive() {
@@ -597,12 +599,11 @@ final class CollageViewModel {
         if let oldCrop = cropMap[panelId] {
             undoManager.registerUndo(withTarget: self) { target in
                 target.cropMap[panelId] = oldCrop
-                target.updatePreview()
+                target.updatePanelPreview(panelId: panelId)
             }
             undoManager.setActionName("Reset Crop")
         }
         cropManager.resetCrop(panelId: panelId, panels: panels, images: images, panelAssignments: panelAssignments)
-        updatePreview()
         updatePanelPreview(panelId: panelId)
     }
 
@@ -613,7 +614,7 @@ final class CollageViewModel {
         undoManager.beginUndoGrouping()
         undoManager.registerUndo(withTarget: self) { target in
             target.cropMap[panelId] = oldCrop
-            target.updatePreview()
+            target.updatePanelPreview(panelId: panelId)
         }
     }
 
@@ -641,7 +642,6 @@ final class CollageViewModel {
 
     func finishOverlayCrop(panelId: UUID) {
         panelPreviewTask?.cancel()
-        updatePreview()
         updatePanelPreview(panelId: panelId)
     }
 
@@ -689,7 +689,6 @@ final class CollageViewModel {
             )
             self.cropManager.beginPan(panelId: id)
             self.notifyCropMapChanged()
-            self.updatePreview()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: scrollCommitTimer!)
     }
@@ -811,7 +810,7 @@ final class CollageViewModel {
 
     func finishTitleDrag() {
         titleDebounceTask?.cancel()
-        updatePreview()
+        updateTitleImage()
     }
 
     func setTitleFontFamily(_ family: String) {
