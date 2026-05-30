@@ -1,6 +1,10 @@
 import CoreGraphics
 import Foundation
 
+protocol LayoutStrategy {
+    func generate(numImages: Int, canvasSize: CGSize, gutter: CGFloat, imageOrder: [Int]?, mosaicSeed: UInt64?) -> [ImagePanel]
+}
+
 struct LayoutGenerator {
     static func generate(
         numImages: Int,
@@ -10,24 +14,22 @@ struct LayoutGenerator {
         imageOrder: [Int]? = nil,
         mosaicSeed: UInt64? = nil
     ) -> [ImagePanel] {
+        style.makeStrategy().generate(
+            numImages: numImages,
+            canvasSize: canvasSize,
+            gutter: gutter,
+            imageOrder: imageOrder,
+            mosaicSeed: mosaicSeed
+        )
+    }
+}
+
+// MARK: - Layout Strategies
+
+struct UniformLayoutStrategy: LayoutStrategy {
+    func generate(numImages: Int, canvasSize: CGSize, gutter: CGFloat, imageOrder: [Int]?, mosaicSeed: UInt64?) -> [ImagePanel] {
         guard numImages > 0 else { return [] }
 
-        switch style {
-        case .uniform:
-            return generateUniform(numImages: numImages, canvasSize: canvasSize, gutter: gutter, imageOrder: imageOrder)
-        case .hero:
-            return generateHero(numImages: numImages, canvasSize: canvasSize, gutter: gutter, imageOrder: imageOrder)
-        case .mosaic:
-            return generateMosaic(numImages: numImages, canvasSize: canvasSize, gutter: gutter, imageOrder: imageOrder, seed: mosaicSeed)
-        }
-    }
-
-    private static func generateUniform(
-        numImages: Int,
-        canvasSize: CGSize,
-        gutter: CGFloat,
-        imageOrder: [Int]? = nil
-    ) -> [ImagePanel] {
         let columns: Int
         let rows: Int
 
@@ -57,15 +59,19 @@ struct LayoutGenerator {
 
         return panels
     }
+}
 
-    private static func generateHero(
-        numImages: Int,
-        canvasSize: CGSize,
-        gutter: CGFloat,
-        imageOrder: [Int]? = nil
-    ) -> [ImagePanel] {
+struct HeroLayoutStrategy: LayoutStrategy {
+    func generate(numImages: Int, canvasSize: CGSize, gutter: CGFloat, imageOrder: [Int]?, mosaicSeed: UInt64?) -> [ImagePanel] {
+        guard numImages > 0 else { return [] }
         guard numImages >= 2 else {
-            return generateUniform(numImages: numImages, canvasSize: canvasSize, gutter: gutter, imageOrder: imageOrder)
+            return UniformLayoutStrategy().generate(
+                numImages: numImages,
+                canvasSize: canvasSize,
+                gutter: gutter,
+                imageOrder: imageOrder,
+                mosaicSeed: mosaicSeed
+            )
         }
 
         let midX = canvasSize.width / 2
@@ -102,14 +108,10 @@ struct LayoutGenerator {
 
         return panels
     }
+}
 
-    private static func generateMosaic(
-        numImages: Int,
-        canvasSize: CGSize,
-        gutter: CGFloat,
-        imageOrder: [Int]? = nil,
-        seed: UInt64? = nil
-    ) -> [ImagePanel] {
+struct MosaicLayoutStrategy: LayoutStrategy {
+    func generate(numImages: Int, canvasSize: CGSize, gutter: CGFloat, imageOrder: [Int]?, mosaicSeed: UInt64?) -> [ImagePanel] {
         guard numImages > 0 else { return [] }
 
         if numImages == 1 {
@@ -120,7 +122,7 @@ struct LayoutGenerator {
         var remaining = CGRect(origin: .zero, size: canvasSize)
         var panels: [ImagePanel] = []
         var imageIdx = 0
-        var rng = seed.map { SplitMix64(seed: $0) }
+        var rng = mosaicSeed.map { SplitMix64(seed: $0) }
 
         let maxSplits = min(numImages, 20)
 
@@ -187,7 +189,20 @@ struct LayoutGenerator {
     }
 }
 
-// SplitMix64 — simple, fast seeded PRNG for reproducible mosaic layouts
+// MARK: - LayoutStyle factory
+
+extension LayoutStyle {
+    func makeStrategy() -> LayoutStrategy {
+        switch self {
+        case .uniform: return UniformLayoutStrategy()
+        case .hero: return HeroLayoutStrategy()
+        case .mosaic: return MosaicLayoutStrategy()
+        }
+    }
+}
+
+// MARK: - Seeded PRNG
+
 struct SplitMix64: RandomNumberGenerator {
     var state: UInt64
 

@@ -8,7 +8,7 @@ private let logger = Logger(
     category: "Export"
 )
 
-protocol CollageAssembly {
+protocol CollageRenderer {
     func assembleWithCGImages(
         config: AssemblyConfig,
         cgImages: [CGImage?],
@@ -22,26 +22,34 @@ protocol CollageAssembly {
         backgroundImage: CGImage?,
         previewSize: CGSize
     ) -> NSImage?
+}
 
+protocol PanelRenderer {
     func renderPanel(
         crop: CropInfo,
         cgImage: CGImage,
         panelSize: CGSize
     ) -> NSImage?
+}
 
+protocol BackgroundRenderer {
     func renderBackground(
         config: BackgroundConfig,
         canvasSize: CGSize,
         backgroundImage: CGImage?,
         previewSize: CGSize
     ) -> NSImage?
+}
 
+protocol TitleRenderer {
     func renderTitle(
         titleAttrString: NSAttributedString,
         titleStyle: TitleStyle,
         canvasSize: CGSize
     ) -> NSImage?
 }
+
+protocol CollageAssembly: CollageRenderer, PanelRenderer, BackgroundRenderer, TitleRenderer {}
 
 extension CollageAssembly {
     func assemble(
@@ -71,37 +79,13 @@ final class CollageAssembler: CollageAssembly {
         quality: Double
     ) -> Data? {
         renderQueue.sync {
-            logger.info("Assembling collage: \(config.layout.panels.count) panels, \(Int(config.canvasSize.width))x\(Int(config.canvasSize.height))")
-
-            guard let (context, bitmapRep) = createBitmapContext(
+            guard let bitmapRep = renderIntoContext(
                 config: config,
+                cgImages: cgImages,
                 backgroundImage: backgroundImage
             ) else {
-                logger.error("Failed to create bitmap context for collage: \(Int(config.canvasSize.width))x\(Int(config.canvasSize.height))")
                 return nil
             }
-            defer { NSGraphicsContext.restoreGraphicsState() }
-
-            context.interpolationQuality = .high
-
-            drawPanels(
-                into: context,
-                panels: config.layout.panels,
-                cgImages: cgImages,
-                crops: config.layout.crops,
-                panelAssignments: config.layout.panelAssignments
-            )
-
-            if !config.title.attrString.string.isEmpty {
-                drawTitle(
-                    into: context,
-                    titleAttrString: config.title.attrString,
-                    titleStyle: config.title.style,
-                    canvasWidth: config.canvasSize.width,
-                    canvasHeight: config.canvasSize.height
-                )
-            }
-
             guard let finalImage = bitmapRep.cgImage else {
                 logger.error("Failed to extract CGImage from bitmap rep")
                 return nil
@@ -118,41 +102,58 @@ final class CollageAssembler: CollageAssembly {
         previewSize: CGSize
     ) -> NSImage? {
         renderQueue.sync {
-            guard let (context, bitmapRep) = createBitmapContext(
+            guard let bitmapRep = renderIntoContext(
                 config: config,
+                cgImages: cgImages,
                 backgroundImage: backgroundImage
             ) else {
-                logger.error("Failed to create bitmap context for preview: \(Int(config.canvasSize.width))x\(Int(config.canvasSize.height))")
                 return nil
             }
-            defer { NSGraphicsContext.restoreGraphicsState() }
-
-            context.interpolationQuality = .high
-
-            drawPanels(
-                into: context,
-                panels: config.layout.panels,
-                cgImages: cgImages,
-                crops: config.layout.crops,
-                panelAssignments: config.layout.panelAssignments
-            )
-
-            if !config.title.attrString.string.isEmpty {
-                drawTitle(
-                    into: context,
-                    titleAttrString: config.title.attrString,
-                    titleStyle: config.title.style,
-                    canvasWidth: config.canvasSize.width,
-                    canvasHeight: config.canvasSize.height
-                )
-            }
-
             guard let finalImage = bitmapRep.cgImage else {
                 logger.error("Failed to extract CGImage from bitmap rep for preview")
                 return nil
             }
             return NSImage(cgImage: finalImage, size: previewSize)
         }
+    }
+
+    private func renderIntoContext(
+        config: AssemblyConfig,
+        cgImages: [CGImage?],
+        backgroundImage: CGImage?
+    ) -> NSBitmapImageRep? {
+        logger.info("Rendering collage: \(config.layout.panels.count) panels, \(Int(config.canvasSize.width))x\(Int(config.canvasSize.height))")
+
+        guard let (context, bitmapRep) = createBitmapContext(
+            config: config,
+            backgroundImage: backgroundImage
+        ) else {
+            logger.error("Failed to create bitmap context: \(Int(config.canvasSize.width))x\(Int(config.canvasSize.height))")
+            return nil
+        }
+        defer { NSGraphicsContext.restoreGraphicsState() }
+
+        context.interpolationQuality = .high
+
+        drawPanels(
+            into: context,
+            panels: config.layout.panels,
+            cgImages: cgImages,
+            crops: config.layout.crops,
+            panelAssignments: config.layout.panelAssignments
+        )
+
+        if !config.title.attrString.string.isEmpty {
+            drawTitle(
+                into: context,
+                titleAttrString: config.title.attrString,
+                titleStyle: config.title.style,
+                canvasWidth: config.canvasSize.width,
+                canvasHeight: config.canvasSize.height
+            )
+        }
+
+        return bitmapRep
     }
 
     private func createBitmapContext(

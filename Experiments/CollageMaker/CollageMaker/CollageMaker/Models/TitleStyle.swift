@@ -34,19 +34,15 @@ struct TitleStyle: Codable, Equatable {
 
 extension TitleStyle {
     private enum CodingKeys: String, CodingKey {
-        case fontFamily, fontSize, fontColorData, backgroundColorData, alignment, showBackground, positionX, positionY, width
+        case fontFamily, fontSize, fontColorHex, backgroundColorHex, alignment, showBackground, positionX, positionY, width
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(fontFamily, forKey: .fontFamily)
         try container.encode(fontSize, forKey: .fontSize)
-        if let data = try? NSKeyedArchiver.archivedData(withRootObject: fontColor, requiringSecureCoding: false) {
-            try container.encode(data, forKey: .fontColorData)
-        }
-        if let data = try? NSKeyedArchiver.archivedData(withRootObject: backgroundColor, requiringSecureCoding: false) {
-            try container.encode(data, forKey: .backgroundColorData)
-        }
+        try container.encode(fontColor.rgbaHex, forKey: .fontColorHex)
+        try container.encode(backgroundColor.rgbaHex, forKey: .backgroundColorHex)
         try container.encode(alignment.rawValue, forKey: .alignment)
         try container.encode(showBackground, forKey: .showBackground)
         try container.encode(positionX, forKey: .positionX)
@@ -64,15 +60,15 @@ extension TitleStyle {
         positionY = try container.decodeIfPresent(CGFloat.self, forKey: .positionY) ?? TitleStyle.default.positionY
         width = try container.decodeIfPresent(CGFloat.self, forKey: .width) ?? TitleStyle.default.width
 
-        if let data = try? container.decode(Data.self, forKey: .fontColorData),
-            let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
+        if let hex = try? container.decode(String.self, forKey: .fontColorHex),
+           let color = NSColor(rgbaHex: hex) {
             fontColor = color
         } else {
             fontColor = TitleStyle.default.fontColor
         }
 
-        if let data = try? container.decode(Data.self, forKey: .backgroundColorData),
-            let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
+        if let hex = try? container.decode(String.self, forKey: .backgroundColorHex),
+           let color = NSColor(rgbaHex: hex) {
             backgroundColor = color
         } else {
             backgroundColor = TitleStyle.default.backgroundColor

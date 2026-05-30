@@ -31,13 +31,9 @@ struct CollageEditorView: View {
 
     private var titleCanvasFrame: CGRect? {
         guard !viewModel.titleAttrString.string.isEmpty else { return nil }
+        guard let metrics = viewModel.titleMetrics else { return nil }
         let style = viewModel.titleStyle
         let canvasSize = CanvasConfig.defaultCanvasSize
-
-        let metrics = TitleMetrics(
-            preparedString: TitleMetrics.prepare(viewModel.titleAttrString, style: style),
-            style: style
-        )
 
         let drawWidth = style.effectiveWidth(canvasWidth: canvasSize.width)
         let boundingBox = metrics.boundingBox
@@ -57,12 +53,7 @@ struct CollageEditorView: View {
     }
 
     private var titleMinWidth: CGFloat {
-        guard !viewModel.titleAttrString.string.isEmpty else { return 0 }
-        let metrics = TitleMetrics(
-            preparedString: TitleMetrics.prepare(viewModel.titleAttrString, style: viewModel.titleStyle),
-            style: viewModel.titleStyle
-        )
-        return metrics.minNaturalWidth
+        viewModel.titleMetrics?.minNaturalWidth ?? 0
     }
 
     private var layoutTitleFrame: CGRect {

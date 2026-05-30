@@ -178,6 +178,10 @@ See [references/state/swift-concurrency.md](references/state/swift-concurrency.m
 - **Capture `NSAttributedString` as `let` before `Task.detached`** -- not `Sendable`, same pattern as `NSColor`
 - **`NSGraphicsContext.current` is NOT thread-safe** -- concurrent `Task.detached` rendering tasks can clobber each other's context. Mitigate with a serial `DispatchQueue`. See [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md)
 
+## Swift Compilation Gotchas
+
+- **Same-file extension ordering:** Swift compiles each `.swift` file as a separate compilation unit. Within a single file, an `extension` on a type from another file cannot reference types defined later in the same file. Place the extension **after** any local types it references, or move the extension to the extended type's own file (cross-file references have no ordering constraint).
+
 ## Finder Drag Gotcha
 
 Finder drag payloads send `public.file-url`, not the content type. See [references/gestures/drag-and-drop.md](references/gestures/drag-and-drop.md) for the extraction pattern.

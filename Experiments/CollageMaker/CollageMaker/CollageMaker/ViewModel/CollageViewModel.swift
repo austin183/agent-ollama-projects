@@ -23,13 +23,13 @@ final class CollageViewModel {
     private let persistence: UserDefaultsPersistence
     let cropManager = CropManager()
     let previewManager: PreviewManager
-    private let scrollPanManager = ScrollPanManager()
     let undoManager = UndoManager()
     private var isInitializing = false
     private var saliencyResults: [Int: SaliencyResult] = [:]
     private var exportTask: Task<Void, Error>?
     private var saveDebounceTask: Task<Void, Never>?
     private var cropMapVersion = 0
+    private var cachedTitleMetrics: TitleMetrics?
 
     var images: [ImageItem] = []
     var panels: [ImagePanel] = []
@@ -65,6 +65,7 @@ final class CollageViewModel {
 
     var titleAttrString: NSAttributedString = NSAttributedString(string: "") {
         didSet {
+            cachedTitleMetrics = nil
             guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.titleAttrString = oldValue
@@ -81,6 +82,7 @@ final class CollageViewModel {
 
     var titleStyle: TitleStyle = .default {
         didSet {
+            cachedTitleMetrics = nil
             guard !isInitializing else { return }
             if !isDraggingTitle {
                 undoManager.registerUndo(withTarget: self) { target in
@@ -243,6 +245,17 @@ final class CollageViewModel {
     var isDraggingTitle: Bool = false
     var errorMessage: String?
     var exportSuccessMessage: String?
+
+    var titleMetrics: TitleMetrics? {
+        guard !titleAttrString.string.isEmpty else { return nil }
+        if cachedTitleMetrics == nil {
+            cachedTitleMetrics = TitleMetrics(
+                preparedString: TitleMetrics.prepare(titleAttrString, style: titleStyle),
+                style: titleStyle
+            )
+        }
+        return cachedTitleMetrics
+    }
 
     func dismissExportSuccess() {
         exportSuccessMessage = nil
@@ -743,30 +756,26 @@ final class CollageViewModel {
         finishOverlayCrop(panelId: panelId)
     }
 
-    // MARK: - Scroll Pan (delegated to ScrollPanManager)
+    // MARK: - Scroll Pan (delegated to CropManager)
 
     func beginScrollPan(panelId: UUID) {
-        scrollPanManager.beginScrollPan(panelId: panelId) { [weak self] pid in
-            self?.cropManager.beginPan(panelId: pid)
-        }
+        cropManager.beginScrollPan(panelId: panelId)
     }
 
     func scrollPanDelta(_ delta: CGSize) {
-        scrollPanManager.accumulateDelta(delta, sensitivity: scrollSensitivity)
-
-        cropManager.pan(by: scrollPanManager.accumulator)
-        cropManager.applyPan(
-            panelId: nil,
+        cropManager.scrollPanAccumulateDelta(delta, sensitivity: scrollSensitivity)
+        cropManager.scrollPanApply(
             panels: panels,
             images: images,
             panelAssignments: panelAssignments,
             finish: false
         )
+        notifyCropMapChanged()
 
         previewDebounceTask?.cancel()
         previewDebounceTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 150_000_000)
-            if let panelId = self?.scrollPanManager.activePanelId {
+            if let panelId = self?.cropManager.scrollPanActivePanelId {
                 self?.updatePanelPreview(panelId: panelId)
             }
         }
@@ -777,15 +786,15 @@ final class CollageViewModel {
     private func scheduleScrollPanCommit() {
         scrollCommitTimer?.cancel()
         scrollCommitTimer = DispatchWorkItem { [weak self] in
-            guard let self, let id = self.scrollPanManager.activePanelId else { return }
-            self.cropManager.applyPan(
-                panelId: id,
+            guard let self, let id = self.cropManager.scrollPanActivePanelId else { return }
+            self.cropManager.scrollPanApply(
                 panels: self.panels,
                 images: self.images,
                 panelAssignments: self.panelAssignments,
                 finish: true
             )
             self.cropManager.beginPan(panelId: id)
+            self.notifyCropMapChanged()
             self.updatePreview()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: scrollCommitTimer!)
@@ -794,7 +803,7 @@ final class CollageViewModel {
     func endScrollPan() {
         scrollCommitTimer?.cancel()
         scrollCommitTimer = nil
-        scrollPanManager.endScrollPan()
+        cropManager.endScrollPan()
     }
 
     // MARK: - Config

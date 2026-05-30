@@ -13,12 +13,52 @@ final class CropManager {
     private var panDelta: CGSize = .zero
     private var zoomDelta: CGFloat = 1.0
 
+    // Scroll pan state
+    private var scrollPanPanelId: UUID?
+    private var scrollPanAccumulator: CGSize = .zero
+
     var cropsArray: [CropInfo] {
         Array(cropMap.values).sorted { $0.destinationRect.origin.y < $1.destinationRect.origin.y }
     }
 
     var activePanelId: UUID? {
-        gestureActivePanelId
+        scrollPanPanelId ?? gestureActivePanelId
+    }
+
+    // MARK: - Scroll Pan
+
+    func beginScrollPan(panelId: UUID) {
+        scrollPanPanelId = panelId
+        scrollPanAccumulator = .zero
+        beginPan(panelId: panelId)
+    }
+
+    func scrollPanAccumulateDelta(_ delta: CGSize, sensitivity: CGFloat) {
+        guard scrollPanPanelId != nil else { return }
+        scrollPanAccumulator.width += delta.width * sensitivity
+        scrollPanAccumulator.height += delta.height * sensitivity
+    }
+
+    func scrollPanApply(panels: [ImagePanel], images: [ImageItem], panelAssignments: [UUID: Int] = [:], finish: Bool = true) {
+        pan(by: scrollPanAccumulator)
+        applyPan(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: finish)
+    }
+
+    func endScrollPan() {
+        scrollPanPanelId = nil
+        scrollPanAccumulator = .zero
+    }
+
+    var scrollPanHasActivePan: Bool {
+        scrollPanPanelId != nil
+    }
+
+    var scrollPanActivePanelId: UUID? {
+        scrollPanPanelId
+    }
+
+    var scrollPanAccumulatorValue: CGSize {
+        scrollPanAccumulator
     }
 
     func computeInitialCrops(panels: [ImagePanel], images: [ImageItem]) {

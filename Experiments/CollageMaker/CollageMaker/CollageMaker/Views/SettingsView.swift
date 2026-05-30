@@ -10,8 +10,8 @@ struct UserDefaultsColorView: NSViewRepresentable {
         let well = NSColorWell()
         well.alphaValue = 1.0
 
-        if let data = UserDefaults.standard.data(forKey: key),
-           let saved = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
+        if let hex = UserDefaults.standard.string(forKey: key),
+           let saved = NSColor(rgbaHex: hex) {
             color = saved
         } else {
             color = defaultValue
@@ -41,9 +41,7 @@ struct UserDefaultsColorView: NSViewRepresentable {
 
         @objc func colorChanged(_ sender: NSColorWell) {
             colorBinding.wrappedValue = sender.color
-            if let data = try? NSKeyedArchiver.archivedData(withRootObject: sender.color, requiringSecureCoding: false) {
-                UserDefaults.standard.set(data, forKey: key)
-            }
+            UserDefaults.standard.set(sender.color.rgbaHex, forKey: key)
         }
     }
 }

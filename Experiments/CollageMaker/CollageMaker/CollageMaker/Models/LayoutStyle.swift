@@ -22,4 +22,5 @@ enum LayoutStyle: String, CaseIterable, Identifiable, Codable {
         case .mosaic: "photo.on.rectangle.angled"
         }
     }
+
 }
