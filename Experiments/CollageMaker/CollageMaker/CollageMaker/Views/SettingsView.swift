@@ -46,6 +46,10 @@ struct UserDefaultsColorView: NSViewRepresentable {
     }
 }
 
+/// macOS Settings scene.
+/// Values stored here serve as defaults for NEW collage sessions.
+/// Changes do NOT affect the currently active collage — the active
+/// CollageViewModel owns its own independent state.
 struct SettingsView: View {
     @AppStorage(UserDefaultsPersistence.Keys.layoutStyle) private var defaultLayout = "hero"
     @AppStorage(UserDefaultsPersistence.Keys.gutter) private var defaultGutter: Double = 8

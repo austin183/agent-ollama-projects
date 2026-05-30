@@ -23,7 +23,7 @@ Do NOT flag:
 
 If you are not certain an issue is real, do not flag it. False positives erode trust and waste reviewer time.
 
-In addition to the above, each subagent should be told the PR title and description. This will help provide context regarding the author's intent.
+Many times a diff will include changes in the _agent_docs folder.  These often include context about intention behind the code diffs.
 
 2. For each issue found in step 1, read the relevant source files to validate the issue with high confidence. For example, if "variable is not defined" was flagged, verify it's actually undefined in scope. If a CLAUDE.md violation was flagged, verify the rule applies to this file.
 

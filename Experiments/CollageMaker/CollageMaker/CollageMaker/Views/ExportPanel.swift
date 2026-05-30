@@ -184,22 +184,22 @@ struct ExportPanel: View {
                 }
             }) {
                 HStack {
-                    if viewModel.isExporting {
+                    if viewModel.exportManager.isExporting {
                         ProgressView()
                             .accessibilityHidden(true)
                     } else {
                         Image(systemName: "arrowshape.down.circle.fill")
                     }
-                    Text(viewModel.isExporting ? "Exporting collage..." : "Export JPEG")
+                    Text(viewModel.exportManager.isExporting ? "Exporting collage..." : "Export JPEG")
                 }
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(viewModel.isProcessing || viewModel.images.isEmpty)
+            .disabled(viewModel.isProcessing || viewModel.imageLibrary.images.isEmpty)
             .accessibilityLabel("Export collage as JPEG")
             .accessibilityHint("Opens save dialog")
 
-            if let success = viewModel.exportSuccessMessage {
+            if let success = viewModel.exportManager.successMessage {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
@@ -219,10 +219,10 @@ struct ExportPanel: View {
             }
         }
         .padding()
-        .task(id: viewModel.exportSuccessMessage) {
-            if viewModel.exportSuccessMessage != nil {
+        .task(id: viewModel.exportManager.successMessage) {
+            if viewModel.exportManager.successMessage != nil {
                 try? await Task.sleep(for: .seconds(3))
-                viewModel.dismissExportSuccess()
+                viewModel.exportManager.dismissSuccess()
             }
         }
     }

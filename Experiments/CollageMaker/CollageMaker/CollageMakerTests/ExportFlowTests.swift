@@ -72,7 +72,7 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
 
         let images = (0..<2).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
@@ -84,7 +84,7 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
@@ -96,7 +96,7 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
@@ -108,7 +108,7 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
 
         let images = (0..<4).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
@@ -120,7 +120,7 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.regenerateLayout()
         vm.titleAttrString = NSAttributedString(string: "My Collage")
 
@@ -134,7 +134,7 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
 
         let images = (0..<3).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         let panels = vm.panels
@@ -157,7 +157,7 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
 
         let images = (0..<2).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         let panels = vm.panels
@@ -176,7 +176,7 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
 
         let image = createTestImageItem(size: CGSize(width: 4000, height: 4000))
-        vm.images = [image]
+        vm.imageLibrary.images = [image]
         vm.regenerateLayout()
 
         let panelId = vm.panels[0].id
@@ -198,12 +198,12 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
 
         let images = (0..<2).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         vm.clearAll()
 
-        #expect(vm.images.isEmpty)
+        #expect(vm.imageLibrary.images.isEmpty)
         #expect(vm.panels.isEmpty)
         #expect(vm.cropMap.isEmpty)
         #expect(vm.panelAssignments.isEmpty)
@@ -216,7 +216,7 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
 
         let image = createTestImageItem(size: CGSize(width: 200, height: 200))
-        vm.images = [image]
+        vm.imageLibrary.images = [image]
         vm.setLayoutStyle(.uniform)
 
         let uniformCrop = vm.cropMap[vm.panels[0].id]?.sourceRect
@@ -232,7 +232,7 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
 
         let images = (0..<3).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         #expect(vm.panelAssignments.count == vm.panels.count)
@@ -246,7 +246,7 @@ final class TrackingAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
 
         let images = (0..<4).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.gutter = 0
 
         let panelsNoGutter = vm.panels.map { $0.frame }

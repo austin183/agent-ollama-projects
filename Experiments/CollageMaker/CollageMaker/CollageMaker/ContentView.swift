@@ -19,9 +19,9 @@ struct ContentView: View {
 
     private var filteredImages: [(index: Int, item: ImageItem)] {
         if searchQuery.isEmpty {
-            return viewModel.images.enumerated().map { ($0.offset, $0.element) }
+            return viewModel.imageLibrary.images.enumerated().map { ($0.offset, $0.element) }
         } else {
-            return viewModel.images.enumerated()
+            return viewModel.imageLibrary.images.enumerated()
                 .filter { $0.element.filename.localizedCaseInsensitiveContains(searchQuery) }
                 .map { ($0.offset, $0.element) }
         }
@@ -49,7 +49,7 @@ struct ContentView: View {
                     } label: {
                         Label("Export", systemImage: "arrowshape.down.circle.fill")
                     }
-                    .disabled(viewModel.isProcessing || viewModel.images.isEmpty)
+                    .disabled(viewModel.isProcessing || viewModel.imageLibrary.images.isEmpty)
                     .accessibilityLabel("Export collage as JPEG")
                     .accessibilityHint("Opens save dialog")
 
@@ -106,7 +106,7 @@ struct ContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 6))
 
             Section("Images") {
-                if viewModel.images.isEmpty {
+                if viewModel.imageLibrary.images.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "photo.on.rectangle.angled")
                             .font(.system(size: 28))
@@ -203,16 +203,16 @@ struct ContentView: View {
                 }
             }
 
-            if !viewModel.images.isEmpty {
+            if !viewModel.imageLibrary.images.isEmpty {
                 Section("Status") {
                     HStack {
                         if viewModel.isProcessing {
                             ProgressView()
                                 .frame(width: 16, height: 16)
                                 .accessibilityHidden(true)
-                            Text(viewModel.isExporting
+                            Text(viewModel.exportManager.isExporting
                                 ? "Exporting collage..."
-                                : "Analyzing \(viewModel.images.count) image(s)...")
+                                : "Analyzing \(viewModel.imageLibrary.images.count) image(s)...")
                                 .foregroundStyle(.secondary)
                                 .accessibilityLabel("Processing status")
                         } else {
@@ -227,10 +227,10 @@ struct ContentView: View {
                 }
             }
 
-            if viewModel.panels.count < viewModel.images.count {
+            if viewModel.panels.count < viewModel.imageLibrary.images.count {
                 Section("Notice") {
                     Label(
-                        "Only \(viewModel.panels.count) of \(viewModel.images.count) images are in the layout",
+                        "Only \(viewModel.panels.count) of \(viewModel.imageLibrary.images.count) images are in the layout",
                         systemImage: "info.circle"
                     )
                     .foregroundStyle(.secondary)
@@ -261,7 +261,7 @@ struct ContentView: View {
             return true
         }
         .onTapGesture {
-            if viewModel.images.isEmpty {
+            if viewModel.imageLibrary.images.isEmpty {
                 viewModel.browseImages()
             }
         }

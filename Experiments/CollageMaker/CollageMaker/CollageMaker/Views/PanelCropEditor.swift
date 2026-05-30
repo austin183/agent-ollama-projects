@@ -11,8 +11,8 @@ struct PanelCropEditor: View {
 
     private var currentImage: ImageItem? {
         guard let idx = viewModel.getEffectiveImageIndex(for: panel.id),
-              idx < viewModel.images.count else { return nil }
-        return viewModel.images[idx]
+               idx < viewModel.imageLibrary.images.count else { return nil }
+        return viewModel.imageLibrary.images[idx]
     }
 
     private var currentCrop: CropInfo? {

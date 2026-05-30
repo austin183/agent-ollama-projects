@@ -12,7 +12,7 @@ import Testing
         let vm = CollageViewModel(saliencyAnalyzer: mockSaliency, assembler: trackingAssembler)
 
         let image = createTestImageItem(size: CGSize(width: 200, height: 200))
-        vm.images = [image]
+        vm.imageLibrary.images = [image]
         vm.regenerateLayout()
 
         let initialPanelCalls = trackingAssembler.renderPanelCalls
@@ -32,7 +32,7 @@ import Testing
         let vm = CollageViewModel(saliencyAnalyzer: mockSaliency, assembler: trackingAssembler)
 
         let images = (0..<5).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         for _ in 0..<10 {

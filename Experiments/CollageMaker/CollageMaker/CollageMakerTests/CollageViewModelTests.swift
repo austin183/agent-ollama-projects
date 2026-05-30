@@ -60,7 +60,7 @@ final class MockAssembler: CollageAssembly {
 
     @Test func initialStateIsEmpty() {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: MockAssembler())
-        #expect(vm.images.isEmpty)
+        #expect(vm.imageLibrary.images.isEmpty)
         #expect(vm.panels.isEmpty)
         #expect(vm.cropMap.isEmpty)
         #expect(vm.selectedPanelId == nil)
@@ -82,7 +82,7 @@ final class MockAssembler: CollageAssembly {
         let vm = CollageViewModel(saliencyAnalyzer: mockSaliency, assembler: mockAssembler)
 
         let images = (0..<3).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.setLayoutStyle(.uniform)
         #expect(vm.layoutStyle == .uniform)
     }
@@ -94,7 +94,7 @@ final class MockAssembler: CollageAssembly {
         vm.titleAttrString = NSAttributedString(string: "Test")
         vm.gutter = 10
         vm.clearAll()
-        #expect(vm.images.isEmpty)
+        #expect(vm.imageLibrary.images.isEmpty)
         #expect(vm.panels.isEmpty)
         #expect(vm.cropMap.isEmpty)
         #expect(vm.previewImage == nil)
@@ -133,9 +133,9 @@ final class MockAssembler: CollageAssembly {
         let mockSaliency = MockSaliencyAnalyzer()
         mockSaliency.shouldThrow = true
         let vm = CollageViewModel(saliencyAnalyzer: mockSaliency, assembler: MockAssembler())
-        vm.images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
+        vm.imageLibrary.images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.panels = LayoutGenerator.generate(numImages: 1, style: .hero)
-        vm.cropManager.computeInitialCrops(panels: vm.panels, images: vm.images)
+        vm.cropManager.computeInitialCrops(panels: vm.panels, images: vm.imageLibrary.images)
         vm.cropMap = vm.cropManager.cropMap
 
         await vm.analyzeSaliency()
@@ -161,7 +161,7 @@ final class MockAssembler: CollageAssembly {
         let image = createTestImageItem(size: CGSize(width: 200, height: 200))
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
 
-        vm.images = [image]
+        vm.imageLibrary.images = [image]
         vm.panels = panels
 
         CropManager().computeInitialCrops(panels: panels, images: [image])
@@ -177,7 +177,7 @@ final class MockAssembler: CollageAssembly {
     @Test func moveImagesToStart() {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: MockAssembler())
         let images = (0..<5).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.customImageOrder = [0, 1, 2, 3, 4]
 
         vm.moveImages(from: IndexSet(integer: 3), to: 0)
@@ -187,7 +187,7 @@ final class MockAssembler: CollageAssembly {
     @Test func moveImagesToEnd() {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: MockAssembler())
         let images = (0..<5).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.customImageOrder = [0, 1, 2, 3, 4]
 
         vm.moveImages(from: IndexSet(integer: 0), to: 4)
@@ -197,7 +197,7 @@ final class MockAssembler: CollageAssembly {
     @Test func moveImagesSingleElement() {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: MockAssembler())
         let images = (0..<1).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.customImageOrder = [0]
 
         vm.moveImages(from: IndexSet(integer: 0), to: 0)
@@ -207,10 +207,10 @@ final class MockAssembler: CollageAssembly {
     @Test func moveImagesWithEmptyCustomOrder() {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: MockAssembler())
         let images = (0..<3).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
-        vm.images = images
+        vm.imageLibrary.images = images
         vm.customImageOrder = []
 
         vm.moveImages(from: IndexSet(integer: 0), to: 2)
-        #expect(vm.images.count == 3)
+        #expect(vm.imageLibrary.images.count == 3)
     }
 }

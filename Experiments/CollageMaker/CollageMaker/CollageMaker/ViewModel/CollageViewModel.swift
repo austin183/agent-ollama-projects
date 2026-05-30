@@ -19,19 +19,29 @@ private let perfLogger = Logger(
 @Observable
 final class CollageViewModel {
     private let saliencyAnalyzer: SaliencyAnalysis
-    private let assembler: CollageAssembly
+    private let assembler: any CollageAssembly
     private let persistence: UserDefaultsPersistence
     let cropManager = CropManager()
     let previewManager: PreviewManager
     let undoManager = UndoManager()
+    let imageLibrary = ImageLibraryManager()
     private var isInitializing = false
     private var saliencyResults: [Int: SaliencyResult] = [:]
-    private var exportTask: Task<Void, Error>?
     private var saveDebounceTask: Task<Void, Never>?
     private var cropMapVersion = 0
     private var cachedTitleMetrics: TitleMetrics?
 
-    var images: [ImageItem] = []
+    var exportManager: ExportManager = ExportManager(assembler: CollageAssembler())
+
+    var images: [ImageItem] { imageLibrary.images }
+    var customImageOrder: [Int] {
+        get { imageLibrary.customImageOrder }
+        set {
+            guard !isInitializing else { return }
+            imageLibrary.customImageOrder = newValue
+            debouncedSave()
+        }
+    }
     var panels: [ImagePanel] = []
     var selectedPanelId: UUID?
 
@@ -216,13 +226,6 @@ final class CollageViewModel {
     /// which is used to rebuild panelAssignments in `regenerateLayout()`.
     var panelAssignments: [UUID: Int] = [:]
 
-    var customImageOrder: [Int] = [] {
-        didSet {
-            guard !isInitializing else { return }
-            debouncedSave()
-        }
-    }
-
     var previewImage: NSImage? {
         get { previewManager.previewImage }
         set { previewManager.previewImage = newValue }
@@ -241,10 +244,10 @@ final class CollageViewModel {
     }
     var isLiveGesturing: Bool = false
     var isProcessing: Bool = false
-    var isExporting: Bool = false
+    var isExporting: Bool { exportManager.isExporting }
     var isDraggingTitle: Bool = false
     var errorMessage: String?
-    var exportSuccessMessage: String?
+    var exportSuccessMessage: String? { exportManager.successMessage }
 
     var titleMetrics: TitleMetrics? {
         guard !titleAttrString.string.isEmpty else { return nil }
@@ -258,7 +261,7 @@ final class CollageViewModel {
     }
 
     func dismissExportSuccess() {
-        exportSuccessMessage = nil
+        exportManager.dismissSuccess()
     }
 
     private func debouncedSave() {
@@ -267,14 +270,7 @@ final class CollageViewModel {
         saveDebounceTask = Task { [weak self, persistence] in
             try? await Task.sleep(nanoseconds: 300_000_000)
             guard let self else { return }
-            do {
-                try persistence.save(self)
-            } catch {
-                logger.error("Persistence save failed: \(error.localizedDescription, privacy: .public)")
-                if !Task.isCancelled {
-                    self.errorMessage = "Failed to save: \(error.localizedDescription)"
-                }
-            }
+            persistence.save(self)
         }
     }
 
@@ -307,7 +303,12 @@ final class CollageViewModel {
         self.assembler = assembler
         self.persistence = persistence
         self.previewManager = PreviewManager(assembler: assembler)
+        self.exportManager = ExportManager(assembler: assembler)
         self.undoManager.levelsOfUndo = 60
+
+        imageLibrary.onImagesChanged = { [weak self] in
+            self?.regenerateLayout()
+        }
 
         isInitializing = true
         let bundle = persistence.load()
@@ -324,7 +325,7 @@ final class CollageViewModel {
         self.backgroundImagePath = bundle.backgroundImagePath
         self.backgroundImage = bundle.backgroundImage
         self.backgroundOpacity = bundle.backgroundOpacity
-        self.customImageOrder = bundle.customImageOrder
+        imageLibrary.customImageOrder = bundle.customImageOrder
         isInitializing = false
     }
 
@@ -336,83 +337,12 @@ final class CollageViewModel {
     // MARK: - Image Loading
 
     func browseImages() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = true
-        panel.allowedContentTypes = [.jpeg, .png, .tiff, .heic, .heif]
-
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        panel.begin { [weak self] response in
-            if response == .OK {
-                Task { [weak self] in
-                    await self?.addImages(from: panel.urls)
-                }
-            }
-        }
+        imageLibrary.browseImages()
     }
 
     func addImages(from urls: [URL]) async {
-        let newItems = await withTaskGroup(of: ImageItem?.self) { group in
-            for url in urls {
-                group.addTask {
-                    guard let data = FileManager.default.contents(atPath: url.path) else { return nil }
-
-                    let imagePair = await MainActor.run { () -> (NSImage, CGImage)? in
-                        guard let nsImage = NSImage(data: data),
-                              let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-                            return nil
-                        }
-                        return (nsImage, cgImage)
-                    }
-                    guard let (nsImage, cgImage) = imagePair else { return nil }
-
-                    let thumbSize: CGSize
-                    if cgImage.width > cgImage.height {
-                        thumbSize = CGSize(width: 64, height: CGFloat(cgImage.height) * 64 / CGFloat(cgImage.width))
-                    } else {
-                        thumbSize = CGSize(width: CGFloat(cgImage.width) * 64 / CGFloat(cgImage.height), height: 64)
-                    }
-
-                    guard let context = CGContext(
-                        data: nil,
-                        width: Int(thumbSize.width),
-                        height: Int(thumbSize.height),
-                        bitsPerComponent: 8,
-                        bytesPerRow: 0,
-                        space: CGColorSpaceCreateDeviceRGB(),
-                        bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue
-                    ) else { return nil }
-
-                    context.interpolationQuality = .high
-                    context.draw(cgImage, in: CGRect(origin: .zero, size: thumbSize))
-
-                    guard let drawnCG = context.makeImage() else { return nil }
-                    let thumbnail = NSImage(cgImage: drawnCG, size: thumbSize)
-
-                    return ImageItem(
-                        nsImage: nsImage,
-                        cgImage: cgImage,
-                        thumbnail: thumbnail,
-                        filename: url.lastPathComponent,
-                        size: CGSize(width: cgImage.width, height: cgImage.height)
-                    )
-                }
-            }
-
-            var items: [ImageItem] = []
-            for await item in group {
-                if let item { items.append(item) }
-            }
-            return items
-        }
-
-        guard !newItems.isEmpty else { return }
-        logger.info("Added \(newItems.count) image(s); total count \(self.images.count + newItems.count)")
-        images.append(contentsOf: newItems)
-        regenerateLayout()
-
-        if !isProcessing {
+        await imageLibrary.addImages(from: urls)
+        if !images.isEmpty && !isProcessing {
             Task { [weak self] in
                 await self?.analyzeSaliency()
             }
@@ -420,15 +350,12 @@ final class CollageViewModel {
     }
 
     func removeImage(at index: Int) {
-        guard index < images.count else { return }
-        let removed = images[index]
+        guard let (removed, at) = imageLibrary.removeImage(at: index) else { return }
         undoManager.registerUndo(withTarget: self) { target in
-            target.images.insert(removed, at: index)
+            target.imageLibrary.images.insert(removed, at: at)
             target.regenerateLayout()
         }
         undoManager.setActionName("Remove Image")
-        images.remove(at: index)
-        regenerateLayout()
 
         Task { [weak self] in
             await self?.analyzeSaliency()
@@ -436,66 +363,34 @@ final class CollageViewModel {
     }
 
     func moveImages(from: IndexSet, to: Int) {
-        let first = from.first
-        let last = from.last
-        let count = images.count
         let oldCustomOrder = customImageOrder
-
-        if let first, let last, !customImageOrder.isEmpty {
-            let oldPos = buildMoveMapping(fromFirst: first, fromLast: last, to: to, count: count)
-            customImageOrder = customImageOrder.map { customImageOrder[oldPos[$0]] }
-        }
-
+        imageLibrary.moveImages(from: from, to: to)
+        panelAssignments.removeAll()
         undoManager.registerUndo(withTarget: self) { target in
             target.customImageOrder = oldCustomOrder
             target.regenerateLayout()
         }
         undoManager.setActionName("Reorder Images")
 
-        images.move(fromOffsets: from, toOffset: to)
-        panelAssignments.removeAll()
-        regenerateLayout()
-
         Task { [weak self] in
             await self?.analyzeSaliency()
         }
     }
 
-    private func buildMoveMapping(fromFirst: Int, fromLast: Int, to: Int, count: Int) -> [Int] {
-        var oldPos = Array(0..<count)
-
-        guard to != fromFirst else { return oldPos }
-
-        if to < fromFirst {
-            oldPos[to] = fromLast
-            for i in to..<fromLast {
-                oldPos[i + 1] = i
-            }
-        } else {
-            oldPos[to] = fromFirst
-            for i in (fromFirst + 1)...to {
-                oldPos[i - 1] = i
-            }
-        }
-
-        return oldPos
-    }
-
     func clearAll() {
         guard !images.isEmpty else { return }
         logger.info("Clear all images")
-        let oldImages = images, oldPanels = panels, oldCropMap = cropMap, oldCustomOrder = customImageOrder
+        let oldPanels = panels, oldCropMap = cropMap
+        let oldImages = imageLibrary.clearAll()
         undoManager.registerUndo(withTarget: self) { target in
-            target.images = oldImages
+            target.imageLibrary.images = oldImages
             target.panels = oldPanels
             target.cropMap = oldCropMap
-            target.customImageOrder = oldCustomOrder
+            target.backgroundImage = nil
             target.regenerateLayout()
         }
         undoManager.setActionName("Clear All")
-        exportTask?.cancel()
-        exportTask = nil
-        images.removeAll()
+        exportManager.exportTask?.cancel()
         panels.removeAll()
         cropManager.cropMap.removeAll()
         saliencyResults.removeAll()
@@ -504,7 +399,6 @@ final class CollageViewModel {
         isProcessing = false
         errorMessage = nil
         panelAssignments.removeAll()
-        customImageOrder.removeAll()
         backgroundImage = nil
     }
 
@@ -808,7 +702,7 @@ final class CollageViewModel {
 
     // MARK: - Config
 
-    private func buildAssemblyConfig() -> AssemblyConfig {
+    func buildAssemblyConfig() -> AssemblyConfig {
         AssemblyConfig(
             panels: panels,
             crops: cropMap,
@@ -949,63 +843,7 @@ final class CollageViewModel {
     }
 
     func exportCollage() async -> URL? {
-        guard !panels.isEmpty else { return nil }
-
-        exportTask?.cancel()
-        isProcessing = true
-        isExporting = true
-        exportSuccessMessage = nil
-        defer { isProcessing = false; isExporting = false }
-
-        // NOTE: NSApplication.shared.runModal(for:) blocks the main thread.
-        // This is unavoidable for NSSavePanel — Apple provides no async
-        // alternative. The panel is presented modally and returns only
-        // when the user confirms or cancels.
-        let savePanel = NSSavePanel()
-        savePanel.allowedContentTypes = [.jpeg]
-        savePanel.nameFieldStringValue = "collage.jpg"
-
-        if let folderPath = UserDefaults.standard.string(forKey: UserDefaultsPersistence.Keys.defaultExportFolder),
-           let folderUrl = URL(string: folderPath), folderUrl.folderExists {
-            savePanel.directoryURL = folderUrl
-        }
-
-        let response = NSApplication.shared.runModal(for: savePanel)
-        guard response == .OK, let url = savePanel.url else { return nil }
-        logger.info("Export to \(url.lastPathComponent, privacy: .public)")
-
-        UserDefaults.standard.set(url.deletingLastPathComponent().path, forKey: UserDefaultsPersistence.Keys.defaultExportFolder)
-
-        let config = self.buildAssemblyConfig()
-        let cgImages = self.images.map { $0.cgImage }
-        let backgroundImageCG = self.backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
-        let quality = self.exportQuality
-        let assembler = self.assembler
-
-        exportTask = Task.detached { [assembler, config, cgImages, backgroundImageCG, quality, url] in
-            let data = assembler.assembleWithCGImages(
-                config: config,
-                cgImages: cgImages,
-                backgroundImage: backgroundImageCG,
-                quality: quality
-            )
-            if let data {
-                try data.write(to: url)
-                logger.info("Exported collage: \(Int(data.count / 1024)) KB")
-            }
-        }
-
-        do {
-            try await exportTask?.value
-            exportSuccessMessage = "Saved to \(url.lastPathComponent)"
-            return url
-        } catch {
-            if !Task.isCancelled {
-                logger.error("Export failed: \(error.localizedDescription, privacy: .public)")
-                errorMessage = error.localizedDescription
-            }
-            return nil
-        }
+        await exportManager.export(viewModel: self)
     }
 }
 

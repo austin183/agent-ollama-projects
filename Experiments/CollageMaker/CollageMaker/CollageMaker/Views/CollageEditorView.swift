@@ -8,7 +8,7 @@ private let logger = Logger(
     category: "Editor"
 )
 
-private enum TitleResizeEdge {
+enum TitleResizeEdge {
     case none, left, right
 }
 
@@ -17,16 +17,7 @@ private let resizeHandleWidth: CGFloat = 8
 struct CollageEditorView: View {
     @Bindable var viewModel: CollageViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    @State private var pinchPanelId: UUID?
-    @State private var dragTitleLocked = false
-    @State private var titleResizeEdge: TitleResizeEdge = .none
-    @State private var dragSourcePanelId: UUID?
-    @State private var dragTargetPanelId: UUID?
-    @State private var dragCursorLocation: CGPoint?
-    @State private var dragSourceImageIndex: Int = 0
-    @State private var oldTitleStyle: TitleStyle?
-    @State private var dragTitleOffset = CGPoint.zero
+    @StateObject private var gestureCoordinator = GestureCoordinator()
 
 
     private var titleCanvasFrame: CGRect? {
@@ -149,7 +140,7 @@ struct CollageEditorView: View {
                             .help("Drag to resize title width")
                     }
 
-                    if let sourceId = dragSourcePanelId,
+                    if let sourceId = gestureCoordinator.dragSourcePanelId,
                        let scaledFrame = panelFrames[sourceId] {
                         Rectangle()
                             .fill(Color.clear)
@@ -158,9 +149,9 @@ struct CollageEditorView: View {
                             .position(x: scaledFrame.midX, y: scaledFrame.midY)
                     }
 
-                    if let targetId = dragTargetPanelId,
+                    if let targetId = gestureCoordinator.dragTargetPanelId,
                        let scaledFrame = panelFrames[targetId],
-                       targetId != dragSourcePanelId {
+                       targetId != gestureCoordinator.dragSourcePanelId {
                         Rectangle()
                             .fill(Color.clear)
                             .stroke(Color.green, lineWidth: 2.5)
@@ -168,10 +159,10 @@ struct CollageEditorView: View {
                             .position(x: scaledFrame.midX, y: scaledFrame.midY)
                     }
 
-                    if let cursorLoc = dragCursorLocation,
-                       dragSourcePanelId != nil,
-                       dragSourceImageIndex < viewModel.images.count {
-                        Image(nsImage: viewModel.images[dragSourceImageIndex].thumbnail)
+                    if let cursorLoc = gestureCoordinator.dragCursorLocation,
+                       gestureCoordinator.dragSourcePanelId != nil,
+                        gestureCoordinator.dragSourceImageIndex < viewModel.imageLibrary.images.count {
+                        Image(nsImage: viewModel.imageLibrary.images[gestureCoordinator.dragSourceImageIndex].thumbnail)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 48, height: 48)
@@ -223,39 +214,39 @@ struct CollageEditorView: View {
                 .simultaneousGesture(
                     DragGesture(minimumDistance: 5)
                         .onChanged { value in
-                            if !dragTitleLocked {
+                            if !gestureCoordinator.dragTitleLocked {
                                 guard let titleCanvas = titleCanvasFrame else { return }
                                 let tf = canvasToPreviewFrame(titleCanvas, in: geometry.size)
                                 let handleThreshold = resizeHandleWidth + 2
                                 if tf.minX - handleThreshold <= value.startLocation.x,
                                    value.startLocation.x <= tf.minX + handleThreshold,
                                    tf.minY <= value.startLocation.y, value.startLocation.y <= tf.maxY {
-                                  dragTitleLocked = true
-                                  titleResizeEdge = .left
+                                  gestureCoordinator.dragTitleLocked = true
+                                  gestureCoordinator.titleResizeEdge = .left
                                   viewModel.isDraggingTitle = true
-                                  oldTitleStyle = viewModel.titleStyle
+                                  gestureCoordinator.oldTitleStyle = viewModel.titleStyle
                                   return
                                 } else if tf.maxX - handleThreshold <= value.startLocation.x,
                                            value.startLocation.x <= tf.maxX + handleThreshold,
                                            tf.minY <= value.startLocation.y, value.startLocation.y <= tf.maxY {
-                                  dragTitleLocked = true
-                                  titleResizeEdge = .right
+                                  gestureCoordinator.dragTitleLocked = true
+                                  gestureCoordinator.titleResizeEdge = .right
                                   viewModel.isDraggingTitle = true
-                                  oldTitleStyle = viewModel.titleStyle
+                                  gestureCoordinator.oldTitleStyle = viewModel.titleStyle
                                   return
                                 } else if tf.contains(value.startLocation) {
                                       let startCanvas = CropManager.screenToCanvasPoint(value.startLocation, in: geometry.size)
                                       if let tfCanvas = titleCanvasFrame {
                                           let titleCenterCanvasY = tfCanvas.minY + tfCanvas.height / 2
-                                          dragTitleOffset = CGPoint(
+                                          gestureCoordinator.dragTitleOffset = CGPoint(
                                               x: tfCanvas.midX - startCanvas.x,
                                               y: titleCenterCanvasY - startCanvas.y
                                           )
                                       }
-                                      dragTitleLocked = true
-                                      titleResizeEdge = .none
+                                      gestureCoordinator.dragTitleLocked = true
+                                      gestureCoordinator.titleResizeEdge = .none
                                       viewModel.isDraggingTitle = true
-                                      oldTitleStyle = viewModel.titleStyle
+                                      gestureCoordinator.oldTitleStyle = viewModel.titleStyle
                                     }
                                 return
                             }
@@ -263,11 +254,11 @@ struct CollageEditorView: View {
                             let canvasSize = CanvasConfig.defaultCanvasSize
                             let canvasPoint = CropManager.screenToCanvasPoint(value.location, in: geometry.size)
 
-                            if titleResizeEdge != .none {
+                            if gestureCoordinator.titleResizeEdge != .none {
                                 let canvasX = canvasPoint.x
                                 var style = viewModel.titleStyle
                                 let minX = titleMinWidth
-                                if titleResizeEdge == .right {
+                                if gestureCoordinator.titleResizeEdge == .right {
                                     if let tf = titleCanvasFrame {
                                         let newWidth = max(minX, canvasX - tf.minX)
                                         style.width = newWidth
@@ -283,24 +274,24 @@ struct CollageEditorView: View {
                                 viewModel.titleStyle = style
                             } else {
                                 var style = viewModel.titleStyle
-                                style.positionX = (canvasPoint.x + dragTitleOffset.x) / canvasSize.width
-                                style.positionY = 1.0 - (canvasPoint.y + dragTitleOffset.y) / canvasSize.height
+                                style.positionX = (canvasPoint.x + gestureCoordinator.dragTitleOffset.x) / canvasSize.width
+                                style.positionY = 1.0 - (canvasPoint.y + gestureCoordinator.dragTitleOffset.y) / canvasSize.height
                                 viewModel.titleStyle = style
                             }
                         }
                         .onEnded { _ in
-                            if dragTitleLocked {
-                                if let oldStyle = oldTitleStyle {
+                            if gestureCoordinator.dragTitleLocked {
+                                if let oldStyle = gestureCoordinator.oldTitleStyle {
                                     viewModel.undoManager.registerUndo(withTarget: viewModel) { target in
                                         target.titleStyle = oldStyle
                                     }
                                     viewModel.undoManager.setActionName("Move Title")
                                 }
-                                oldTitleStyle = nil
+                                gestureCoordinator.oldTitleStyle = nil
                                 viewModel.isDraggingTitle = false
-                                dragTitleLocked = false
-                                titleResizeEdge = .none
-                                dragTitleOffset = .zero
+                                gestureCoordinator.dragTitleLocked = false
+                                gestureCoordinator.titleResizeEdge = .none
+                                gestureCoordinator.dragTitleOffset = .zero
                                 viewModel.finishTitleDrag()
                             }
                         }
@@ -310,7 +301,7 @@ struct CollageEditorView: View {
                         .onChanged { value in
                             guard !viewModel.isDraggingTitle else { return }
 
-                            if dragSourcePanelId == nil {
+                            if gestureCoordinator.dragSourcePanelId == nil {
                                 if let tc = titleCanvasFrame {
                                     let titleFrame = canvasToPreviewFrame(tc, in: geometry.size)
                                     let handleThreshold = resizeHandleWidth + 2
@@ -327,57 +318,57 @@ struct CollageEditorView: View {
                                     }
                                 }
                                 if let id = panelAt(location: value.startLocation, in: geometry.size) {
-                                    dragSourcePanelId = id
+                                    gestureCoordinator.dragSourcePanelId = id
                                     if let imgIdx = viewModel.getEffectiveImageIndex(for: id) {
-                                        dragSourceImageIndex = imgIdx
+                                        gestureCoordinator.dragSourceImageIndex = imgIdx
                                     }
                                 }
                             }
-                            if dragSourcePanelId != nil {
-                                dragTargetPanelId = panelAt(location: value.location, in: geometry.size)
-                                dragCursorLocation = value.location
+                            if gestureCoordinator.dragSourcePanelId != nil {
+                                gestureCoordinator.dragTargetPanelId = panelAt(location: value.location, in: geometry.size)
+                                gestureCoordinator.dragCursorLocation = value.location
                             }
                         }
                         .onEnded { value in
                             guard !viewModel.isDraggingTitle else {
-                                dragSourcePanelId = nil
-                                dragTargetPanelId = nil
-                                dragCursorLocation = nil
+                                gestureCoordinator.dragSourcePanelId = nil
+                                gestureCoordinator.dragTargetPanelId = nil
+                                gestureCoordinator.dragCursorLocation = nil
                                 return
                             }
-                            if let sourceId = dragSourcePanelId,
+                            if let sourceId = gestureCoordinator.dragSourcePanelId,
                                let targetId = panelAt(location: value.location, in: geometry.size),
                                sourceId != targetId {
                                 viewModel.swapPanelImages(sourceId: sourceId, targetId: targetId)
                             }
-                            dragSourcePanelId = nil
-                            dragTargetPanelId = nil
-                            dragCursorLocation = nil
+                            gestureCoordinator.dragSourcePanelId = nil
+                            gestureCoordinator.dragTargetPanelId = nil
+                            gestureCoordinator.dragCursorLocation = nil
                         }
                 )
                 .simultaneousGesture(
                     MagnificationGesture()
                         .onChanged { value in
-                            if pinchPanelId == nil, let id = viewModel.selectedPanelId {
-                                pinchPanelId = id
+                            if gestureCoordinator.pinchPanelId == nil, let id = viewModel.selectedPanelId {
+                                gestureCoordinator.pinchPanelId = id
                                 viewModel.beginPinch(panelId: id)
                                 viewModel.undoManager.beginUndoGrouping()
                                 viewModel.isLiveGesturing = true
                             }
-                            if pinchPanelId != nil {
+                            if gestureCoordinator.pinchPanelId != nil {
                                 viewModel.pinch(magnification: value)
                                 viewModel.applyPinchLive()
                             }
                         }
                         .onEnded { _ in
                             viewModel.isLiveGesturing = false
-                            if let id = pinchPanelId {
+                            if let id = gestureCoordinator.pinchPanelId {
                                 viewModel.applyPinch(panelId: id)
                                 viewModel.undoManager.setActionName("Adjust Crop")
                                 viewModel.undoManager.endUndoGrouping()
                             }
                             viewModel.updateAllPanelPreviews()
-                            pinchPanelId = nil
+                            gestureCoordinator.pinchPanelId = nil
                         }
                 )
                 .onTapGesture { location in
