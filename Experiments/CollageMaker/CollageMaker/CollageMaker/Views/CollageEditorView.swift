@@ -310,6 +310,7 @@ struct CollageEditorView: View {
                                 dragTitleLocked = false
                                 titleResizeEdge = .none
                                 dragTitleOffset = .zero
+                                viewModel.finishTitleDrag()
                             }
                         }
                 )

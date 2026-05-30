@@ -51,7 +51,7 @@ struct LayoutGenerator {
             let x = CGFloat(col) * (cellW + gutter)
             let y = CGFloat(row) * (cellH + gutter)
             let frame = CGRect(x: x, y: y, width: cellW, height: cellH)
-            let imgIdx = imageOrder != nil ? imageOrder![i] : i % numImages
+            let imgIdx = imageOrder?[i] ?? i % numImages
             panels.append(ImagePanel(imageIndex: imgIdx, frame: frame))
         }
 
@@ -86,7 +86,7 @@ struct LayoutGenerator {
         let cellH = (sideAreaH - sideGutterY) / CGFloat(sideRows)
 
         var panels: [ImagePanel] = []
-        let heroImgIdx = imageOrder != nil ? imageOrder![0] : 0
+        let heroImgIdx = imageOrder?[0] ?? 0
         panels.append(ImagePanel(imageIndex: heroImgIdx, frame: heroFrame))
 
         for i in 0..<remaining {
@@ -96,7 +96,7 @@ struct LayoutGenerator {
             let y = CGFloat(row) * (cellH + gutter)
             let cellW = sideW / CGFloat(sideCols)
             let frame = CGRect(x: x, y: y, width: cellW, height: cellH)
-            let imgIdx = imageOrder != nil ? imageOrder![i + 1] : i + 1
+            let imgIdx = imageOrder?[i + 1] ?? i + 1
             panels.append(ImagePanel(imageIndex: imgIdx, frame: frame))
         }
 
@@ -113,7 +113,7 @@ struct LayoutGenerator {
         guard numImages > 0 else { return [] }
 
         if numImages == 1 {
-            let imgIdx = imageOrder != nil ? imageOrder![0] : 0
+            let imgIdx = imageOrder?[0] ?? 0
             return [ImagePanel(imageIndex: imgIdx, frame: CGRect(origin: .zero, size: canvasSize))]
         }
 
@@ -131,7 +131,7 @@ struct LayoutGenerator {
             let h = remaining.height
 
             if imageIdx == numImages - 1 {
-                let imgIdx = imageOrder != nil ? imageOrder![imageIdx] : imageIdx
+                let imgIdx = imageOrder?[imageIdx] ?? imageIdx
                 panels.append(ImagePanel(imageIndex: imgIdx, frame: remaining))
                 break
             }
@@ -159,7 +159,7 @@ struct LayoutGenerator {
             if isWide {
                 let splitW = w * splitRatio
                 let panelFrame = CGRect(x: remaining.origin.x, y: remaining.origin.y, width: splitW, height: h)
-                let imgIdx = imageOrder != nil ? imageOrder![imageIdx] : imageIdx
+                let imgIdx = imageOrder?[imageIdx] ?? imageIdx
                 panels.append(ImagePanel(imageIndex: imgIdx, frame: panelFrame))
                 remaining = CGRect(
                     x: remaining.origin.x + splitW + gutter,
@@ -170,7 +170,7 @@ struct LayoutGenerator {
             } else {
                 let splitH = h * splitRatio
                 let panelFrame = CGRect(x: remaining.origin.x, y: remaining.origin.y, width: w, height: splitH)
-                let imgIdx = imageOrder != nil ? imageOrder![imageIdx] : imageIdx
+                let imgIdx = imageOrder?[imageIdx] ?? imageIdx
                 panels.append(ImagePanel(imageIndex: imgIdx, frame: panelFrame))
                 remaining = CGRect(
                     x: remaining.origin.x,

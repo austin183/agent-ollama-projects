@@ -67,6 +67,24 @@ import Testing
         #expect(fitted.height <= container.height)
     }
 
+    @Test func fitZeroSourceHeight() {
+        let (fitted, offset) = FitMath.fit(CGSize(width: 100, height: 0), into: CGSize(width: 400, height: 400))
+        #expect(fitted == .zero)
+        #expect(offset == .zero)
+    }
+
+    @Test func fitZeroContainerHeight() {
+        let (fitted, offset) = FitMath.fit(CGSize(width: 400, height: 400), into: CGSize(width: 400, height: 0))
+        #expect(fitted == .zero)
+        #expect(offset == .zero)
+    }
+
+    @Test func fitZeroBothHeights() {
+        let (fitted, offset) = FitMath.fit(CGSize(width: 100, height: 0), into: CGSize(width: 100, height: 0))
+        #expect(fitted == .zero)
+        #expect(offset == .zero)
+    }
+
     // MARK: - sourceRect()
 
     @Test func sourceRectSquareImageSquarePanel() {
@@ -116,5 +134,20 @@ import Testing
         #expect(rect.height == 800)
         #expect(rect.origin.x == 100)  // (1000 - 800) / 2
         #expect(rect.origin.y == 0)    // (800 - 800) / 2
+    }
+
+    @Test func sourceRectZeroImageHeight() {
+        let rect = FitMath.sourceRect(imageSize: CGSize(width: 100, height: 0), panelSize: CGSize(width: 400, height: 400))
+        #expect(rect == .zero)
+    }
+
+    @Test func sourceRectZeroPanelHeight() {
+        let rect = FitMath.sourceRect(imageSize: CGSize(width: 1000, height: 800), panelSize: CGSize(width: 400, height: 0))
+        #expect(rect == .zero)
+    }
+
+    @Test func sourceRectZeroBothHeights() {
+        let rect = FitMath.sourceRect(imageSize: .zero, panelSize: .zero)
+        #expect(rect == .zero)
     }
 }

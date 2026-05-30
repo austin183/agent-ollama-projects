@@ -23,9 +23,7 @@ struct UserDefaultsColorView: NSViewRepresentable {
     }
 
     func updateNSView(_ well: NSColorWell, context: Context) {
-        if well.color != color {
-            well.color = color
-        }
+        well.color = color
     }
 
     func makeCoordinator() -> Coordinator {

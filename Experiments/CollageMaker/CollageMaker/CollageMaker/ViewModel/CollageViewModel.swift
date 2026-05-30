@@ -29,15 +29,25 @@ final class CollageViewModel {
     private var saliencyResults: [Int: SaliencyResult] = [:]
     private var exportTask: Task<Void, Error>?
     private var saveDebounceTask: Task<Void, Never>?
+    private var cropMapVersion = 0
 
     var images: [ImageItem] = []
     var panels: [ImagePanel] = []
     var selectedPanelId: UUID?
 
     /// Single source of truth for crop state — delegated to CropManager.
+    /// The version counter establishes @Observable dependency so in-place
+    /// cropMap mutations fire change signals to views.
     var cropMap: [UUID: CropInfo] {
-        get { cropManager.cropMap }
+        get {
+            let _ = cropMapVersion
+            return cropManager.cropMap
+        }
         set { cropManager.cropMap = newValue }
+    }
+
+    private func notifyCropMapChanged() {
+        cropMapVersion += 1
     }
 
     var layoutStyle: LayoutStyle = .hero {
@@ -77,9 +87,11 @@ final class CollageViewModel {
                     target.titleStyle = oldValue
                 }
                 undoManager.setActionName("Change Title Style")
+                updatePreview()
+            } else {
+                updateTitleImageLive()
             }
             debouncedSave()
-            updatePreview()
         }
     }
 
@@ -414,7 +426,6 @@ final class CollageViewModel {
         let first = from.first
         let last = from.last
         let count = images.count
-        _ = images.map { $0.id }
         let oldCustomOrder = customImageOrder
 
         if let first, let last, !customImageOrder.isEmpty {
@@ -637,6 +648,7 @@ final class CollageViewModel {
         defer { perfLogger.debug("Pan Application completed in \(ContinuousClock.now - panStart)") }
 
         cropManager.applyPan(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
+        notifyCropMapChanged()
 
         previewDebounceTask?.cancel()
         previewDebounceTask = Task { [weak self] in
@@ -662,6 +674,7 @@ final class CollageViewModel {
 
     func applyPinchLive() {
         cropManager.applyPinch(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
+        notifyCropMapChanged()
 
         panelPreviewTask?.cancel()
         panelPreviewTask = Task { [weak self] in
@@ -702,7 +715,7 @@ final class CollageViewModel {
         undoManager.endUndoGrouping()
     }
 
-    func applyOverlayCrop(panelId: UUID, sourceRect: CGRect) {
+    func applyOverlayCropLive(panelId: UUID, sourceRect: CGRect) {
         guard let crop = cropMap[panelId] else { return }
         let newCrop = CropInfo(
             panelId: panelId,
@@ -710,8 +723,24 @@ final class CollageViewModel {
             destinationRect: crop.destinationRect
         )
         cropManager.cropMap[panelId] = newCrop
+        notifyCropMapChanged()
+
+        panelPreviewTask?.cancel()
+        panelPreviewTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            self?.updatePanelPreview(panelId: panelId)
+        }
+    }
+
+    func finishOverlayCrop(panelId: UUID) {
+        panelPreviewTask?.cancel()
         updatePreview()
         updatePanelPreview(panelId: panelId)
+    }
+
+    func applyOverlayCrop(panelId: UUID, sourceRect: CGRect) {
+        applyOverlayCropLive(panelId: panelId, sourceRect: sourceRect)
+        finishOverlayCrop(panelId: panelId)
     }
 
     // MARK: - Scroll Pan (delegated to ScrollPanManager)
@@ -791,6 +820,8 @@ final class CollageViewModel {
 
     private var previewDebounceTask: Task<Void, Never>?
     private var panelPreviewTask: Task<Void, Never>?
+    private var titleDebounceTask: Task<Void, Never>?
+    private var fontSizeDebounceTask: Task<Void, Never>?
 
     func updatePanelPreview(panelId: UUID) {
         guard let panel = panels.first(where: { $0.id == panelId }),
@@ -865,6 +896,47 @@ final class CollageViewModel {
             titleStyle: titleStyle,
             canvasSize: CanvasConfig.defaultCanvasSize
         )
+    }
+
+    func updateTitleImageLive() {
+        titleDebounceTask?.cancel()
+        titleDebounceTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            self?.updateTitleImage()
+        }
+    }
+
+    func finishTitleDrag() {
+        titleDebounceTask?.cancel()
+        updatePreview()
+    }
+
+    func setTitleFontFamily(_ family: String) {
+        guard !isInitializing else { return }
+        let oldValue = titleStyle.fontFamily
+        titleStyle.fontFamily = family
+        undoManager.registerUndo(withTarget: self) { target in
+            target.setTitleFontFamily(oldValue)
+        }
+        undoManager.setActionName("Change Font Family")
+        updateTitleImageLive()
+        debouncedSave()
+    }
+
+    func setTitleFontSize(_ size: CGFloat) {
+        guard !isInitializing else { return }
+        let oldValue = titleStyle.fontSize
+        titleStyle.fontSize = size
+        undoManager.registerUndo(withTarget: self) { target in
+            target.setTitleFontSize(oldValue)
+        }
+        undoManager.setActionName("Change Font Size")
+        fontSizeDebounceTask?.cancel()
+        fontSizeDebounceTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            self?.updateTitleImage()
+        }
+        debouncedSave()
     }
 
     func exportCollage() async -> URL? {

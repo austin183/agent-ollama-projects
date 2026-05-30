@@ -330,6 +330,7 @@ If you skip trait merging, the bounding box will be measured with the unbolded f
 - **`boundingRect()` returns tight bounds, not position** — `origin.x` is always ~0 (left edge of text), regardless of paragraph alignment. Cannot use it to compute where aligned text appears within a wider draw rect. Either span the background to full draw width, or compute text offset manually from alignment.
 - **`draw(at:)` and `draw(in:)` both treat Y as baseline** — `draw(in:rect)` does NOT treat `rect.y` as the text top. Switching from `draw(at:)` to `draw(in:)` without adjusting Y shifts text upward. For title rendering with tight background, prefer `draw(at:)` with manual offset.
 - **Alignment should move text within a fixed box** — When alignment changes, the background box should stay put and only the text inside should reposition. Do NOT shift the entire box based on alignment.
+- **SwiftUI Text cannot match NSAttributedString.draw metrics** — SwiftUI and CoreGraphics use different font rendering engines with different metrics (ascent, descent, leading, em-square). `Text(...).font(.custom(family, size: size))` will render at a different size than `NSAttributedString.draw(at:)` with the same `NSFont`. Never use a SwiftUI `Text` overlay as a live gesture preview for CG-rendered text. Use a debounced CG render of the layer instead (~150ms).
 
 ## Title Overlay with Background
 

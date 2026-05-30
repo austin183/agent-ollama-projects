@@ -115,7 +115,7 @@ struct ExportPanel: View {
                 FontPickerPopover(selectedFamily: Binding(
                     get: { displayFamily },
                     set: {
-                        viewModel.titleStyle.fontFamily = $0 == "(System Default)" ? "" : $0
+                        viewModel.setTitleFontFamily($0 == "(System Default)" ? "" : $0)
                     }
                 ))
                 .accessibilityLabel("Title font family")
@@ -124,7 +124,10 @@ struct ExportPanel: View {
                     Text("Size")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Slider(value: $viewModel.titleStyle.fontSize, in: 12...120)
+                    Slider(value: Binding(
+                        get: { viewModel.titleStyle.fontSize },
+                        set: { viewModel.setTitleFontSize($0) }
+                    ), in: 12...120)
                         .accessibilityLabel("Title font size")
                         .accessibilityValue("\(Int(viewModel.titleStyle.fontSize)) points")
                     Text("\(Int(viewModel.titleStyle.fontSize))pt")

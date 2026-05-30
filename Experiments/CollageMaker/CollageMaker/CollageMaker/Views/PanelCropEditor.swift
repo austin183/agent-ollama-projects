@@ -16,7 +16,7 @@ struct PanelCropEditor: View {
     }
 
     private var currentCrop: CropInfo? {
-        viewModel.cropManager.cropMap[panel.id]
+        viewModel.cropMap[panel.id]
     }
 
     var body: some View {
@@ -32,7 +32,7 @@ struct PanelCropEditor: View {
                             CropPreviewView(
                                 nsImage: image.nsImage,
                                 imageSize: image.size,
-                                crop: viewModel.cropManager.cropMap[panel.id],
+                                crop: viewModel.cropMap[panel.id],
                                 containerSize: geo.size
                             )
                             .accessibilityLabel("Crop preview")
@@ -74,6 +74,7 @@ struct PanelCropEditor: View {
                                 .onEnded { _ in
                                 if overlayDragMode != .none {
                                     viewModel.isLiveGesturing = false
+                                    viewModel.finishOverlayCrop(panelId: panel.id)
                                     viewModel.endOverlayCropUndo()
                                 }
                                     overlayDragMode = .none
@@ -152,7 +153,7 @@ struct PanelCropEditor: View {
             let newOX = max(0, min(dragBaseSourceRect.origin.x + transX, maxOX))
             let newOY = max(0, min(dragBaseSourceRect.origin.y + transY, maxOY))
 
-            viewModel.applyOverlayCrop(
+            viewModel.applyOverlayCropLive(
                 panelId: panel.id,
                 sourceRect: CGRect(x: newOX, y: newOY, width: crop.sourceRect.width, height: crop.sourceRect.height)
             )
@@ -274,7 +275,7 @@ struct PanelCropEditor: View {
         let clampedOriginX = Swift.max(0, Swift.min(sourceOrigin.x, max(0, image.size.width - sourceSize.width)))
         let clampedOriginY = Swift.max(0, Swift.min(sourceOrigin.y, max(0, image.size.height - sourceSize.height)))
 
-        viewModel.applyOverlayCrop(
+        viewModel.applyOverlayCropLive(
             panelId: panel.id,
             sourceRect: CGRect(x: clampedOriginX, y: clampedOriginY, width: sourceSize.width, height: sourceSize.height)
         )

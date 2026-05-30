@@ -237,6 +237,7 @@ See [references/gestures/swiftui-gestures.md](references/gestures/swiftui-gestur
 - **Live preview:** Use `finish: Bool` parameter + cancel stale `Task.detached` with `previewTask?.cancel()`
 - **Canvas is NOT suitable** for interactive elements
 - **Corner resize aspect ratio:** Use dominant-dimension pattern — compare `rawW / rawH` to target aspect ratio, derive the other dimension. Use `min`/`abs` for uniform bounding box across all four corners
+- **CG-rendered gesture preview:** Never use SwiftUI `Text` as a live overlay for `NSAttributedString.draw` content — different font engines produce different metrics. Debounce the CG render at ~150ms on the specific layer instead.
 
 ## Scroll Views
 
@@ -359,6 +360,7 @@ When GUI behavior is unclear (agent cannot observe running app):
      d. Check thread affinity -- AppKit methods (`NSImage.cgImage`, `NSColor.cgColor`) called on background threads may silently return `nil`
 12. **NSColorWell color stale** -- `NSColor ==` compares `CGColor` values, which differ across color spaces. Never guard `updateNSView` with `!=`. Always assign `well.color = color` unconditionally. See [references/appkit/nscolorwell.md](references/appkit/nscolorwell.md)
 13. **NSTextView re-entrancy loop** -- If `textDidChange` normalizes text into a binding, the SwiftUI re-render may call `updateNSView`, which mutates `typingAttributes`, firing another `textDidChange`. Fix with coordinator guard flag + early return in `updateNSView`. See [references/appkit/nstextview-binding.md](references/appkit/nstextview-binding.md)
+14. **Text overlay size doesn't match rendered text** -- SwiftUI `Text` and `NSAttributedString.draw` use different font engines. Even with the same font family and point size, the rendered size will differ. If a gesture overlay appears misaligned or wrong-sized compared to CG-rendered text, the fix is not to tweak the SwiftUI font — it's to use a debounced CG render of the same layer. See [references/gestures/swiftui-gestures.md](references/gestures/swiftui-gestures.md)
 
 ## Logging Quality
 

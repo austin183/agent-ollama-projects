@@ -9,7 +9,7 @@ private let logger = Logger(
 )
 
 private let perfLogger = Logger(
-    subsystem: Bundle.main.bundleIdentifier!,
+    subsystem: "austin183.indie.CollageMaker",
     category: "performance"
 )
 
