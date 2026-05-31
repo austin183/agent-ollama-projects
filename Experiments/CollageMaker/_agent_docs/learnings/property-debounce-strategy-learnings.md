@@ -49,6 +49,33 @@ func regenerateLayout() {
 
 This is a one-line addition but prevents a category of wasted renders that only manifests during rapid interaction (slider drag followed immediately by layout change).
 
+### Defer undo registration to debounce commit
+
+For a continuous control that debounces its side effects, undo registration and persistence should happen in the debounced callback, not in `didSet`. Otherwise each slider tick (~30-60/sec) creates a spurious undo entry:
+
+```swift
+var gutter: CGFloat = 0 {
+    didSet {
+        guard !isInitializing else { return }
+        gutterDidChange(oldValue: oldValue)  // no undo here
+    }
+}
+
+private func gutterDidChange(oldValue: CGFloat) {
+    gutterDebounceTask?.cancel()
+    gutterDebounceTask = Task { [weak self] in
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        guard let self else { return }
+        undoManager.registerUndo(withTarget: self) { $0.gutter = oldValue }
+        undoManager.setActionName("Change Gutter")
+        debouncedSave()
+        regenerateLayout(preserveCrops: true)
+    }
+}
+```
+
+This produces one undo entry per drag gesture instead of 30-60. See `slot-index-state-preservation-learnings.md` for the full pattern.
+
 ## Skill Improvements
 
 ### `building-macos-apps/SKILL.md` — Gesture Patterns / Live Preview

@@ -242,16 +242,20 @@ final class TrackingAssembler: CollageAssembly {
         }
     }
 
-    @Test func gutterChangeRegeneratesLayout() {
+    @Test func gutterChangeRegeneratesLayout() async {
         let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
 
         let images = (0..<4).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
         vm.gutter = 0
 
+        try? await Task.sleep(nanoseconds: 200_000_000)
+
         let panelsNoGutter = vm.panels.map { $0.frame }
 
         vm.gutter = 20
+
+        try? await Task.sleep(nanoseconds: 200_000_000)
 
         let panelsWithGutter = vm.panels.map { $0.frame }
 

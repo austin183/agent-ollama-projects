@@ -1,0 +1,2 @@
+# Bug in changing Gutter size
+When changing the Gutter size with the slider, all the panels disappear until the end of the drag, and the images in the panels reset to where they were even if I made changes to them.

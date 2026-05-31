@@ -104,6 +104,25 @@ final class CropManager {
         }
     }
 
+    /// Extracts sourceRect values by slot index for crop preservation across layout changes.
+    func cropsBySlot(_ panels: [ImagePanel]) -> [CGRect] {
+        panels.map { cropMap[$0.id]?.sourceRect ?? CGRect(origin: .zero, size: $0.frame.size) }
+    }
+
+    /// Applies previously extracted sourceRect values to new panels by slot index.
+    func applyCropsBySlot(_ sourceRects: [CGRect], panels: [ImagePanel]) {
+        cropMap.removeAll()
+        for (index, panel) in panels.enumerated() {
+            let sourceRect = index < sourceRects.count ? sourceRects[index] :
+                CGRect(origin: .zero, size: panel.frame.size)
+            cropMap[panel.id] = CropInfo(
+                panelId: panel.id,
+                sourceRect: sourceRect,
+                destinationRect: panel.frame
+            )
+        }
+    }
+
     func beginPan(panelId: UUID) {
         guard let crop = cropMap[panelId] else { return }
         gestureActivePanelId = panelId

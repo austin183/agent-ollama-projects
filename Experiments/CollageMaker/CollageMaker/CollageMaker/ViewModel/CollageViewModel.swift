@@ -110,12 +110,21 @@ final class CollageViewModel {
     var gutter: CGFloat = 0 {
         didSet {
             guard !isInitializing else { return }
+            gutterDidChange(oldValue: oldValue)
+        }
+    }
+
+    private func gutterDidChange(oldValue: CGFloat) {
+        gutterDebounceTask?.cancel()
+        gutterDebounceTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            guard let self else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.gutter = oldValue
             }
             undoManager.setActionName("Change Gutter")
             debouncedSave()
-            regenerateLayout()
+            regenerateLayout(preserveCrops: true)
         }
     }
 
@@ -405,7 +414,7 @@ final class CollageViewModel {
 
     // MARK: - Layout
 
-    func regenerateLayout() {
+    func regenerateLayout(preserveCrops: Bool = false) {
         previewRenderDebounceTask?.cancel()
         guard !images.isEmpty else { return }
 
@@ -416,6 +425,8 @@ final class CollageViewModel {
             customImageOrder = Array(0..<images.count)
         }
 
+        let oldCropsBySlot = preserveCrops ? cropManager.cropsBySlot(panels) : nil
+        let oldRenderedBySlot = preserveCrops ? previewManager.panelRenderedImagesBySlot(panels) : nil
         let oldSelectedId = selectedPanelId
         panels = LayoutGenerator.generate(
             numImages: images.count,
@@ -435,18 +446,23 @@ final class CollageViewModel {
             panelAssignments[panel.id] = customImageOrder[i]
         }
 
-        if saliencyResults.isEmpty {
-            cropManager.computeInitialCrops(panels: panels, images: images)
+        if preserveCrops, let oldCropsBySlot, let oldRenderedBySlot {
+            cropManager.applyCropsBySlot(oldCropsBySlot, panels: panels)
+            previewManager.applyRenderedBySlot(oldRenderedBySlot, panels: panels)
         } else {
-            cropManager.computeCropsFromSaliency(
-                panels: panels,
-                images: images,
-                results: saliencyResults
-            )
+            previewManager.panelRenderedImages.removeAll()
+            if saliencyResults.isEmpty {
+                cropManager.computeInitialCrops(panels: panels, images: images)
+            } else {
+                cropManager.computeCropsFromSaliency(
+                    panels: panels,
+                    images: images,
+                    results: saliencyResults
+                )
+            }
         }
 
         isLayeredMode = false
-        previewManager.panelRenderedImages.removeAll()
         updatePreview()
         updateAllPanelPreviews()
     }
@@ -729,6 +745,7 @@ final class CollageViewModel {
     private var panelPreviewTask: Task<Void, Never>?
     private var titleDebounceTask: Task<Void, Never>?
     private var fontSizeDebounceTask: Task<Void, Never>?
+    private var gutterDebounceTask: Task<Void, Never>?
 
     func updatePanelPreview(panelId: UUID) {
         guard let panel = panels.first(where: { $0.id == panelId }),

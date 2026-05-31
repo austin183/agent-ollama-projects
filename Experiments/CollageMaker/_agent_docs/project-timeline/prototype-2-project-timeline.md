@@ -81,3 +81,4 @@
 | 70 | 2026-05-31 | Preview lag fixes Phase 1 — debounced background/title property changes (gradient, color, opacity), cross-boundary debounce cancellation in regenerateLayout/saliency, diff-review caught discrete picker regression ([details](sessions/session-070.md)) |
 | 71 | 2026-05-31 | Preview lag fixes Phase 2 — `renderPreviewIntoContext` renders preview bitmap at preview size (960x540) with `context.scaleBy` CTM transform, 4x reduction in per-render pixel count ([details](sessions/session-071.md)) |
 | 72 | 2026-05-31 | Preview lag fixes Phase 3 — per-panel task dictionary (`panelPreviewTasks[UUID: Task]`) enables concurrent panel rendering instead of sequential ([details](sessions/session-072.md)) |
+| 73 | 2026-05-31 | Round 20 CR: gutter slider fix — 150ms debounce, slot-index crop/image preservation across UUID regeneration, deferred undo registration ([details](sessions/session-073.md)) |

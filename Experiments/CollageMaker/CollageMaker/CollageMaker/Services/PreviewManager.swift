@@ -145,6 +145,21 @@ final class PreviewManager {
         }
     }
 
+    /// Extracts rendered images by slot index for preservation across layout changes.
+    func panelRenderedImagesBySlot(_ panels: [ImagePanel]) -> [NSImage?] {
+        panels.map { panelRenderedImages[$0.id] }
+    }
+
+    /// Applies previously extracted rendered images to new panels by slot index.
+    func applyRenderedBySlot(_ images: [NSImage?], panels: [ImagePanel]) {
+        panelRenderedImages.removeAll()
+        for (index, panel) in panels.enumerated() {
+            if index < images.count, let image = images[index] {
+                panelRenderedImages[panel.id] = image
+            }
+        }
+    }
+
     func clearAll() {
         previewTask?.cancel()
         previewDebounceTask?.cancel()
