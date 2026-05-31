@@ -107,10 +107,11 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         previewSize: CGSize
     ) async -> NSImage? {
         await scheduler.render {
-            guard let bitmapRep = self.renderIntoContext(
+            guard let bitmapRep = self.renderPreviewIntoContext(
                 config: config,
                 cgImages: cgImages,
-                backgroundImage: backgroundImage
+                backgroundImage: backgroundImage,
+                previewSize: previewSize
             ) else {
                 return nil
             }
@@ -139,6 +140,80 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         defer { NSGraphicsContext.restoreGraphicsState() }
 
         context.interpolationQuality = .high
+
+        drawPanels(
+            into: context,
+            panels: config.layout.panels,
+            cgImages: cgImages,
+            crops: config.layout.crops,
+            panelAssignments: config.layout.panelAssignments
+        )
+
+        if !config.title.attrString.string.isEmpty {
+            drawTitle(
+                into: context,
+                titleAttrString: config.title.attrString,
+                titleStyle: config.title.style,
+                canvasWidth: config.canvasSize.width,
+                canvasHeight: config.canvasSize.height
+            )
+        }
+
+        return bitmapRep
+    }
+
+    private func renderPreviewIntoContext(
+        config: AssemblyConfig,
+        cgImages: [CGImage?],
+        backgroundImage: CGImage?,
+        previewSize: CGSize
+    ) -> NSBitmapImageRep? {
+        let scale = previewSize.width / config.canvasSize.width
+
+        let bitmapRep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(previewSize.width),
+            pixelsHigh: Int(previewSize.height),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 32
+        )
+        guard let bitmapRep else { return nil }
+        bitmapRep.size = previewSize
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
+        guard var context = NSGraphicsContext.current?.cgContext else { return nil }
+        context.interpolationQuality = .high
+        context.scaleBy(x: scale, y: scale)
+
+        switch config.background.style {
+        case .solid:
+            context.setFillColor(config.background.color.cgColor)
+            context.fill(CGRect(x: 0, y: 0, width: config.canvasSize.width, height: config.canvasSize.height))
+
+        case .gradient:
+            drawGradient(
+                into: context,
+                size: config.canvasSize,
+                startColor: config.background.gradientStartColor,
+                endColor: config.background.gradientEndColor,
+                angle: config.background.gradientAngle
+            )
+
+        case .image:
+            drawImageBackground(
+                into: context,
+                size: config.canvasSize,
+                backgroundColor: config.background.color,
+                backgroundImage: backgroundImage,
+                opacity: config.background.opacity
+            )
+        }
 
         drawPanels(
             into: context,
