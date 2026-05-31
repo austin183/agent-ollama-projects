@@ -215,6 +215,68 @@ final class TestPreviewAssembler: CollageAssembly {
         #expect(mgr.titleImage == nil)
     }
 
+    // MARK: - Concurrent panel rendering
+
+    @Test func multiplePanelsRenderConcurrently() async {
+        let mgr = manager
+        let panelIds = [UUID(), UUID(), UUID()]
+        let cgImage = createTestCGImage(color: .systemGreen, size: CGSize(width: 200, height: 200))
+
+        for panelId in panelIds {
+            let crop = CropInfo(
+                panelId: panelId,
+                sourceRect: CGRect(x: 0, y: 0, width: 200, height: 200),
+                destinationRect: CGRect(x: 0, y: 0, width: 100, height: 100)
+            )
+            mgr.updatePanelPreview(
+                crop: crop,
+                cgImage: cgImage,
+                panelSize: CGSize(width: 100, height: 100),
+                panelId: panelId
+            )
+        }
+
+        try? await Task.sleep(for: .milliseconds(300))
+        #expect(mgr.panelRenderedImages[panelIds[0]] != nil)
+        #expect(mgr.panelRenderedImages[panelIds[1]] != nil)
+        #expect(mgr.panelRenderedImages[panelIds[2]] != nil)
+    }
+
+    @Test func updateAllPanelPreviewsRendersAllConcurrently() async {
+        let mgr = manager
+        let images = (0..<3).map { _ in
+            createTestImageItem(color: .systemBlue, size: CGSize(width: 200, height: 200))
+        }
+        let panels = LayoutGenerator.generate(numImages: 3, style: .uniform)
+        let crops: [UUID: CropInfo] = Dictionary(
+            panels.map {
+                ($0.id, CropInfo(
+                    panelId: $0.id,
+                    sourceRect: CGRect(origin: .zero, size: CGSize(width: 200, height: 200)),
+                    destinationRect: $0.frame
+                ))
+            },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let assignments: [UUID: Int] = Dictionary(
+            panels.enumerated().map { ($0.element.id, $0.offset) },
+            uniquingKeysWith: { first, _ in first }
+        )
+
+        mgr.updateAllPanelPreviews(
+            panels: panels,
+            crops: crops,
+            images: images,
+            panelAssignments: assignments
+        )
+
+        try? await Task.sleep(for: .milliseconds(300))
+        for panel in panels {
+            #expect(mgr.panelRenderedImages[panel.id] != nil,
+                    "Panel \(panel.id) should have a rendered preview")
+        }
+    }
+
     // MARK: - Generation-based stale discard
 
     @Test func stalePreviewRenderIsDiscarded() async {

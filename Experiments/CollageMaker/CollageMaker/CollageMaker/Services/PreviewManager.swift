@@ -17,7 +17,7 @@ final class PreviewManager {
 
     private var previewTask: Task<Void, Never>?
     private var previewDebounceTask: Task<Void, Never>?
-    private var panelPreviewTask: Task<Void, Never>?
+    private var panelPreviewTasks: [UUID: Task<Void, Never>] = [:]
     private var backgroundTask: Task<Void, Never>?
     private var titleTask: Task<Void, Never>?
 
@@ -90,8 +90,8 @@ final class PreviewManager {
         let gen = panelGenerations[panelId]!
         let assembler = self.assembler
 
-        panelPreviewTask?.cancel()
-        panelPreviewTask = Task { [weak self, assembler, crop, cgImage, panelSize, panelId, gen] in
+        panelPreviewTasks[panelId]?.cancel()
+        panelPreviewTasks[panelId] = Task { [weak self, assembler, crop, cgImage, panelSize, panelId, gen] in
             guard let self, gen == self.panelGenerations[panelId] else { return }
             let result = await assembler.renderPanel(
                 crop: crop,
@@ -148,12 +148,12 @@ final class PreviewManager {
     func clearAll() {
         previewTask?.cancel()
         previewDebounceTask?.cancel()
-        panelPreviewTask?.cancel()
+        panelPreviewTasks.values.forEach { $0.cancel() }
         backgroundTask?.cancel()
         titleTask?.cancel()
         previewTask = nil
         previewDebounceTask = nil
-        panelPreviewTask = nil
+        panelPreviewTasks.removeAll()
         backgroundTask = nil
         titleTask = nil
         previewImage = nil
@@ -169,12 +169,12 @@ final class PreviewManager {
     func cancelAll() {
         previewTask?.cancel()
         previewDebounceTask?.cancel()
-        panelPreviewTask?.cancel()
+        panelPreviewTasks.values.forEach { $0.cancel() }
         backgroundTask?.cancel()
         titleTask?.cancel()
         previewTask = nil
         previewDebounceTask = nil
-        panelPreviewTask = nil
+        panelPreviewTasks.removeAll()
         backgroundTask = nil
         titleTask = nil
     }
