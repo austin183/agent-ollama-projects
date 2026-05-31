@@ -130,7 +130,7 @@ final class CollageViewModel {
             }
             undoManager.setActionName("Change Background Color")
             debouncedSave()
-            updatePreview()
+            updatePreviewDebounced()
         }
     }
 
@@ -165,7 +165,7 @@ final class CollageViewModel {
             }
             undoManager.setActionName("Change Gradient Start Color")
             debouncedSave()
-            updatePreview()
+            updatePreviewDebounced()
         }
     }
 
@@ -177,7 +177,7 @@ final class CollageViewModel {
             }
             undoManager.setActionName("Change Gradient End Color")
             debouncedSave()
-            updatePreview()
+            updatePreviewDebounced()
         }
     }
 
@@ -189,7 +189,7 @@ final class CollageViewModel {
             }
             undoManager.setActionName("Change Gradient Angle")
             debouncedSave()
-            updatePreview()
+            updatePreviewDebounced()
         }
     }
 
@@ -216,7 +216,7 @@ final class CollageViewModel {
             }
             undoManager.setActionName("Change Background Opacity")
             debouncedSave()
-            updatePreview()
+            updatePreviewDebounced()
         }
     }
 
@@ -406,6 +406,7 @@ final class CollageViewModel {
     // MARK: - Layout
 
     func regenerateLayout() {
+        previewRenderDebounceTask?.cancel()
         guard !images.isEmpty else { return }
 
         let layoutStart = ContinuousClock.now
@@ -527,6 +528,7 @@ final class CollageViewModel {
                 images: images,
                 results: indexed
             )
+            previewRenderDebounceTask?.cancel()
             updatePreview()
             updateAllPanelPreviews()
         } catch {
@@ -723,6 +725,7 @@ final class CollageViewModel {
     // MARK: - Preview & Export
 
     private var previewDebounceTask: Task<Void, Never>?
+    private var previewRenderDebounceTask: Task<Void, Never>?
     private var panelPreviewTask: Task<Void, Never>?
     private var titleDebounceTask: Task<Void, Never>?
     private var fontSizeDebounceTask: Task<Void, Never>?
@@ -762,6 +765,14 @@ final class CollageViewModel {
             backgroundImage: backgroundImageCG,
             previewSize: CanvasConfig.defaultPreviewSize
         )
+    }
+
+    func updatePreviewDebounced() {
+        previewRenderDebounceTask?.cancel()
+        previewRenderDebounceTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            self?.updatePreview()
+        }
     }
 
     func updatePreview() {

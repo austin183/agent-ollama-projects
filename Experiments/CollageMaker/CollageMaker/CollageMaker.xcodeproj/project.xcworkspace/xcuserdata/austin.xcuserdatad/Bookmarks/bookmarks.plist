@@ -36,13 +36,13 @@
 				<key>focused</key>
 				<string></string>
 				<key>leading</key>
-				<string>
-    func updatePreview() {
+				<string>        )
+    }
 </string>
 				<key>trailing</key>
-				<string>        guard !panels.isEmpty else { return }
-
-        let previewStart = ContinuousClock.now
+				<string>
+    func updatePreview() {
+        guard !panels.isEmpty else { return }
 </string>
 			</dict>
 			<key>type</key>

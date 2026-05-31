@@ -409,6 +409,34 @@ The pre-check is an optimization (saves wasted CPU on the render queue). The pos
 
 **Note:** Generation counters discard stale results at the caller level, but the rendering work still executes on the serial queue. For queue-level cancellation, check `Task.isCancelled` inside the render closure and return early — but this adds complexity inside rendering methods that should be focused on CoreGraphics work.
 
+### Cross-Boundary Debounce Cancellation
+
+When a method bypasses a debounced path to render immediately (e.g., `regenerateLayout()` calling `updatePreview()` directly), it must cancel the pending debounce task first. A sleeping debounced task will otherwise wake and re-render over the fresh state — a wasted render that reads current config but still costs CPU.
+
+```swift
+func regenerateLayout() {
+    previewRenderDebounceTask?.cancel()  // cancel pending debounced render
+    // ... layout computation ...
+    updatePreview()  // render immediately with fresh state
+}
+```
+
+This is a one-line addition but prevents a category of wasted renders that only manifests during rapid interaction (slider drag followed immediately by layout change).
+
+### Property Debounce Classification
+
+Not all `didSet` observers need debouncing. The decision is based on event frequency during normal use:
+
+| Control type | Event rate | Debounce? | Rationale |
+|---|---|---|---|
+| Slider drag | 30-60/sec | Yes (150ms) | Continuous, user sees final value |
+| Color picker drag | 30-60/sec | Yes (150ms) | Continuous, user sees final color |
+| Typing | ~5/sec | No | Each keystroke should appear |
+| Enum picker | ~5-10/sec | No | Discrete, 150ms delay feels sluggish |
+| Image selection | ~1/sec | No | Discrete, expensive load warrants immediate feedback |
+
+**Rule of thumb:** If the control produces more than ~10 events per second during normal interaction, debounce it. If the user expects to see each individual change (typing, selection), render immediately.
+
 ## `withCheckedContinuation` — Bridging Serial DispatchQueue to Async
 
 When a serial `DispatchQueue` is required for thread safety (e.g., `NSGraphicsContext.current`), use `withCheckedContinuation` to expose async methods instead of blocking with `queue.sync`:
@@ -513,6 +541,8 @@ extension BackgroundConfig: @unchecked Sendable {}
 12. **Use generation counters to discard stale async results** — When a serial queue processes cancelled tasks FIFO, an older render can overwrite newer state. Increment a counter before each `update*` call, capture it in the task, and guard `gen == currentGeneration` after `await` before applying results
 13. **Use per-item generation counters for batch operations** — When updating multiple items in a loop, use `[ID: Int]` instead of a single counter so each item's render can match its own generation
 14. **Use an actor wrapper for shared DispatchQueue boilerplate** — When 3+ methods share the same serial queue, consolidate `withCheckedContinuation` into an actor's `render(_ work: @escaping @Sendable () -> T) async -> T` method
+15. **Cancel debounce tasks at higher-priority entry points** — When a method bypasses a debounced path to render immediately (e.g., `regenerateLayout()` calling `updatePreview()`), cancel the pending debounce task first to prevent a stale debounced render from overwriting fresh state
+16. **Debounce only continuous controls** — Slider and color picker `didSet` observers fire 30-60x/sec during drag and need 150ms debounced render. Discrete controls (typing, enum picker, image selection) render immediately. Rule of thumb: >10 events/sec = debounce
 
 ## Pitfalls
 
