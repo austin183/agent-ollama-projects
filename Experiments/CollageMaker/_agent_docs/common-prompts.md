@@ -13,7 +13,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan for Phase 1 in @_agent_docs/plans/2026-05-30-preview-update-performance.md using our macos skills for guidance.
+Please implement the plan for Phase 3 in @_agent_docs/plans/2026-05-30-preview-update-performance.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
@@ -45,12 +45,12 @@ Please update our project timeline in @_agent_docs/project-timeline/prototype-2-
 
 ## Learing from Session
 ```
-Please use the /capturing-learnings and add any new learnings to a new document in @_agent_docs/learnings . Please use your best judgement on what was relevant to learn compared to what we already know from our existing skills.  If nothing stood out as relevant, or we already have it covered, making no updates is an acceptable outcome of this exercise.
+Please use the /capturing-learnings and add any new learnings to a new document in @_agent_docs/learnings . Please use your best judgement on what was relevant to learn compared to what we already know from our existing skills.  Please do not ask me what was important.  I wasn't paying attention.  If nothing stood out as relevant, or we already have it covered, making no updates is an acceptable outcome of this exercise.
 ```
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/swift-extension-declaration-ordering-learnings.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/async-protocol-bridge-learnings.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Apply Research to Skills

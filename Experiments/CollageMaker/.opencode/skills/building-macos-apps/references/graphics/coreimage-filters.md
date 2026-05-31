@@ -180,6 +180,41 @@ func renderPreview() -> NSImage? {
 
 A serial `DispatchQueue` is simpler than an actor (no async overhead) and sufficient since rendering is already off-main-actor via `Task.detached`.
 
+### Async Protocol Methods with Serial Queue
+
+When exposing rendering methods through a protocol for testability, the recommended pattern is `async` methods backed by `withCheckedContinuation` + `queue.async`. This gives callers clean `await` syntax while preserving serial queue thread safety:
+
+```swift
+protocol CollageAssembly {
+    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage?
+    func renderPreview(panels: [ImagePanel], background: BackgroundConfig) async -> NSImage?
+}
+
+class CollageAssembler: CollageAssembly {
+    private let renderQueue = DispatchQueue(label: "austin183.indie.CollageMaker.render")
+
+    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage? {
+        await withCheckedContinuation { cont in
+            renderQueue.async {
+                let result = self.doRenderPanel(crop, cgImage, panelSize)
+                cont.resume(returning: result)
+            }
+        }
+    }
+}
+```
+
+**Benefits over `queue.sync` + `Task.detached`:** Non-blocking queue entry, simpler call sites (`await` instead of `Task.detached { ... }.value`), preserved serial queue safety. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md) for the full decision tree.
+
+**Mocking in tests:** Mock implementations can be synchronous (no queue needed):
+```swift
+class MockAssembler: CollageAssembly {
+    func renderPanel(...) async -> NSImage? {
+        return mockImage  // No queue, just return directly
+    }
+}
+```
+
 ## Pitfalls
 
 - **CGContext `[.byteOrder32Big]` test failures** — `makeImage()` returns `nil` in test environment; use `NSBitmapImageRep` with RGBA

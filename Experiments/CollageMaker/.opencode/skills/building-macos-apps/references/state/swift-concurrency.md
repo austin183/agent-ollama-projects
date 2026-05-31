@@ -344,6 +344,59 @@ When updating an `@Observable` `@MainActor` class from heavy background work, pr
 
 **Contrast with nested pattern:** `Task.detached { [weak self] in ... Task { @MainActor in self?.previewImage = result } }` works but requires manual actor hopping and doesn't propagate cancellation to the inner work.
 
+## `withCheckedContinuation` — Bridging Serial DispatchQueue to Async
+
+When a serial `DispatchQueue` is required for thread safety (e.g., `NSGraphicsContext.current`), use `withCheckedContinuation` to expose async methods instead of blocking with `queue.sync`:
+
+```swift
+func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage? {
+    await withCheckedContinuation { cont in
+        renderQueue.async {
+            let result = self.doRendering(crop, cgImage, panelSize)
+            cont.resume(returning: result)
+        }
+    }
+}
+```
+
+**Why over `Task.detached { ... }.value`:**
+- **Non-blocking queue entry** — `queue.async` returns immediately, freeing the calling thread. `queue.sync` blocks until the serial queue processes the work.
+- **Caller simplification** — `await assembler.renderPanel(...)` instead of wrapping sync work in `Task.detached { ... }.value`
+- **Serial queue retained** — `NSGraphicsContext.current` thread safety is preserved
+- **Cancellation** — If the calling `Task` is cancelled, the continuation suspends indefinitely and the result is discarded (work may still complete on the queue thread)
+
+**When to use:** Any time you have a serial `DispatchQueue` protecting a non-thread-safe resource (like `NSGraphicsContext.current`) and want callers to use `async/await`.
+
+### Async Bridge Decision Tree
+
+| Requirement | Pattern |
+|---|---|
+| Off-main-actor work, no shared mutable state | `Task.detached { ... }.value` |
+| Off-main-actor work, serial queue for thread safety | `withCheckedContinuation` + `queue.async` |
+| Off-main-actor work, needs cancellation to stop execution | `Task.detached` with `try Task.checkCancellation()` |
+| Main-actor state update after background work | `Task { [weak self] ... self.property = result }` |
+
+### `@unchecked Sendable` for Model Types with AppKit Values
+
+Swift's Sendable checker rejects structs containing `NSColor`, `NSAttributedString`, or other non-Sendable AppKit types. When these are only ever accessed on a known thread (e.g., the serial render queue), `@unchecked Sendable` is safe:
+
+```swift
+struct BackgroundConfig {
+    let color: NSColor
+    let gradientStartColor: NSColor
+}
+
+extension BackgroundConfig: @unchecked Sendable {}
+```
+
+**Safety checklist:**
+1. Verify all non-Sendable properties are only accessed on a known thread
+2. Document the safety justification in a code comment
+3. Prefer `extension TypeName: @unchecked Sendable {}` over inline declaration
+4. For imported types (e.g., `NSAttributedString`), put the extension in the file that uses it
+
+**Note on `NSAttributedString`:** Apple doesn't mark it `Sendable`. Add `extension NSAttributedString: @unchecked Sendable {}` in the file that uses it. This produces a harmless compiler warning about conforming an imported type to an imported protocol.
+
 ## Summary Rules
 
 1. **Mark ViewModel as `@MainActor`** — all `@Published` properties are main-thread-safe
@@ -355,6 +408,8 @@ When updating an `@Observable` `@MainActor` class from heavy background work, pr
 7. **Use `defer { isProcessing = false }`** to ensure processing state is always reset
 8. **Extract CoreGraphics types on main thread before `Task.detached`** — Convert `NSImage` → `CGImage` and `NSColor` → `CGColor` on the main thread. Never call AppKit methods from a detached task.
 9. **Avoid clearing shared state before async replacement** — Multiple `Task.detached` tasks racing to update related `@Observable` properties create inconsistent intermediate states. Don't clear old state until new state is ready, or batch updates in a single `@MainActor` block.
+10. **Use `withCheckedContinuation` + serial queue** for async rendering methods that need `NSGraphicsContext.current` thread safety — non-blocking, cleaner than `queue.sync` wrapped in `Task.detached`
+11. **Use `@unchecked Sendable` for model types with AppKit values** when non-Sendable properties are only accessed on a known thread — document the safety justification
 
 ## Pitfalls
 

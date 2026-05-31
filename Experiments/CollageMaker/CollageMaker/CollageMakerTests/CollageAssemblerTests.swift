@@ -8,7 +8,7 @@ import Testing
 
     private let assembler = CollageAssembler()
 
-    @Test func assemblePreviewWithCGImagesReturnsImage() {
+    @Test func assemblePreviewWithCGImagesReturnsImage() async {
         let cgImage = createTestCGImage(color: .systemBlue, size: CGSize(width: 200, height: 200))
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
         let crops: [UUID: CropInfo] = [panels[0].id: CropInfo(
@@ -32,7 +32,7 @@ import Testing
             canvasSize: CanvasConfig.defaultCanvasSize
         )
 
-        let preview = assembler.assemblePreviewWithCGImages(
+        let preview = await assembler.assemblePreviewWithCGImages(
             config: config,
             cgImages: [cgImage],
             backgroundImage: nil,
@@ -42,7 +42,7 @@ import Testing
         #expect(preview != nil)
     }
 
-    @Test func assembleWithCGImagesReturnsData() {
+    @Test func assembleWithCGImagesReturnsData() async {
         let cgImage = createTestCGImage(color: .systemBlue, size: CGSize(width: 200, height: 200))
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
         let crops: [UUID: CropInfo] = [panels[0].id: CropInfo(
@@ -66,7 +66,7 @@ import Testing
             canvasSize: CanvasConfig.defaultCanvasSize
         )
 
-        let data = assembler.assembleWithCGImages(
+        let data = await assembler.assembleWithCGImages(
             config: config,
             cgImages: [cgImage],
             backgroundImage: nil,
@@ -77,7 +77,7 @@ import Testing
         #expect(data!.count > 0)
     }
 
-    @Test func assembleWithTitleReturnsData() {
+    @Test func assembleWithTitleReturnsData() async {
         let cgImage = createTestCGImage(color: .systemBlue, size: CGSize(width: 200, height: 200))
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
         let crops: [UUID: CropInfo] = [panels[0].id: CropInfo(
@@ -101,7 +101,7 @@ import Testing
             canvasSize: CanvasConfig.defaultCanvasSize
         )
 
-        let data = assembler.assembleWithCGImages(
+        let data = await assembler.assembleWithCGImages(
             config: config,
             cgImages: [cgImage],
             backgroundImage: nil,
@@ -111,7 +111,7 @@ import Testing
         #expect(data != nil)
     }
 
-    @Test func assembleMultiplePanels() {
+    @Test func assembleMultiplePanels() async {
         let img1 = createTestCGImage(color: .systemBlue, size: CGSize(width: 200, height: 200))
         let img2 = createTestCGImage(color: .systemGreen, size: CGSize(width: 200, height: 200))
         let img3 = createTestCGImage(color: .systemRed, size: CGSize(width: 200, height: 200))
@@ -141,7 +141,7 @@ import Testing
             canvasSize: CanvasConfig.defaultCanvasSize
         )
 
-        let data = assembler.assembleWithCGImages(
+        let data = await assembler.assembleWithCGImages(
             config: config,
             cgImages: [img1, img2, img3],
             backgroundImage: nil,
@@ -151,7 +151,7 @@ import Testing
         #expect(data != nil)
     }
 
-    @Test func assembleWithMissingCropsSkipsPanel() {
+    @Test func assembleWithMissingCropsSkipsPanel() async {
         let cgImage = createTestCGImage(color: .systemBlue, size: CGSize(width: 200, height: 200))
         let panels = LayoutGenerator.generate(numImages: 2, style: .uniform)
         var crops: [UUID: CropInfo] = [:]
@@ -176,7 +176,7 @@ import Testing
             canvasSize: CanvasConfig.defaultCanvasSize
         )
 
-        let data = assembler.assembleWithCGImages(
+        let data = await assembler.assembleWithCGImages(
             config: config,
             cgImages: [cgImage, cgImage],
             backgroundImage: nil,
@@ -186,7 +186,7 @@ import Testing
         #expect(data != nil)
     }
 
-    @Test func assembleEmptyCanvasReturnsData() {
+    @Test func assembleEmptyCanvasReturnsData() async {
         let config = AssemblyConfig(
             panels: [],
             crops: [:],
@@ -202,7 +202,7 @@ import Testing
             canvasSize: CanvasConfig.defaultCanvasSize
         )
 
-        let data = assembler.assembleWithCGImages(
+        let data = await assembler.assembleWithCGImages(
             config: config,
             cgImages: [],
             backgroundImage: nil,
@@ -212,7 +212,7 @@ import Testing
         #expect(data != nil)
     }
 
-    @Test func assemblePreviewSize() {
+    @Test func assemblePreviewSize() async {
         let cgImage = createTestCGImage(color: .systemBlue, size: CGSize(width: 200, height: 200))
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
         let crops: [UUID: CropInfo] = [panels[0].id: CropInfo(
@@ -236,7 +236,7 @@ import Testing
             canvasSize: CanvasConfig.defaultCanvasSize
         )
 
-        let preview = assembler.assemblePreviewWithCGImages(
+        let preview = await assembler.assemblePreviewWithCGImages(
             config: config,
             cgImages: [cgImage],
             backgroundImage: nil,
@@ -247,7 +247,7 @@ import Testing
         #expect(preview?.size == CanvasConfig.defaultPreviewSize)
     }
 
-    @Test func assembleWithGradientBackground() {
+    @Test func assembleWithGradientBackground() async {
         let cgImage = createTestCGImage(color: .systemBlue, size: CGSize(width: 200, height: 200))
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
         let crops: [UUID: CropInfo] = [panels[0].id: CropInfo(
@@ -271,7 +271,7 @@ import Testing
             canvasSize: CanvasConfig.defaultCanvasSize
         )
 
-        let data = assembler.assembleWithCGImages(
+        let data = await assembler.assembleWithCGImages(
             config: config,
             cgImages: [cgImage],
             backgroundImage: nil,
@@ -282,7 +282,7 @@ import Testing
         #expect(data!.count > 0)
     }
 
-    @Test func assembleWithPanelAssignment() {
+    @Test func assembleWithPanelAssignment() async {
         let img1 = createTestCGImage(color: .systemBlue, size: CGSize(width: 200, height: 200))
         let img2 = createTestCGImage(color: .systemGreen, size: CGSize(width: 200, height: 200))
         let panels = LayoutGenerator.generate(numImages: 2, style: .uniform)
@@ -313,7 +313,7 @@ import Testing
             canvasSize: CanvasConfig.defaultCanvasSize
         )
 
-        let data = assembler.assembleWithCGImages(
+        let data = await assembler.assembleWithCGImages(
             config: config,
             cgImages: [img1, img2],
             backgroundImage: nil,
@@ -419,7 +419,7 @@ import Testing
 
         let tasks = (0..<10).map { _ in
             Task.detached {
-                self.assembler.renderBackground(
+                await self.assembler.renderBackground(
                     config: config,
                     canvasSize: CanvasConfig.defaultCanvasSize,
                     backgroundImage: nil,

@@ -242,6 +242,7 @@ final class CollageViewModel {
         get { previewManager.titleImage }
         set { previewManager.titleImage = newValue }
     }
+    var isLayeredMode: Bool = false
     var isLiveGesturing: Bool = false
     var isProcessing: Bool = false
     var isExporting: Bool { exportManager.isExporting }
@@ -443,6 +444,7 @@ final class CollageViewModel {
             )
         }
 
+        isLayeredMode = false
         previewManager.panelRenderedImages.removeAll()
         updatePreview()
         updateAllPanelPreviews()
@@ -779,17 +781,22 @@ final class CollageViewModel {
             previewSize: CanvasConfig.defaultPreviewSize
         )
 
-        updateBackground()
-        updateTitleImage()
+        if isLayeredMode {
+            updateBackground()
+            updateTitleImage()
+        }
     }
 
     func updateAllPanelPreviews() {
+        isLayeredMode = true
         previewManager.updateAllPanelPreviews(
             panels: panels,
             crops: cropMap,
             images: images,
             panelAssignments: panelAssignments
         )
+        updateBackground()
+        updateTitleImage()
     }
 
     func updateTitleImage() {

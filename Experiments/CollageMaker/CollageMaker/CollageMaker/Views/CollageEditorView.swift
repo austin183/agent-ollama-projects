@@ -52,7 +52,7 @@ struct CollageEditorView: View {
     }
 
     var body: some View {
-        if let previewImage = viewModel.previewImage {
+        if viewModel.isLayeredMode || viewModel.previewImage != nil {
             GeometryReader { geometry in
                 let panelFrames = viewModel.panels.reduce(into: [UUID: CGRect]()) { dict, panel in
                     dict[panel.id] = canvasToPreviewFrame(panel.frame, in: geometry.size)
@@ -60,13 +60,7 @@ struct CollageEditorView: View {
                 let titleFrame = titleCanvasFrame.map { canvasToPreviewFrame($0, in: geometry.size) }
 
                 ZStack {
-                    if viewModel.panelRenderedImages.isEmpty {
-                        Image(nsImage: previewImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: geometry.size.width, height: geometry.size.height)
-                            .id("preview")
-                    } else {
+                    if viewModel.isLayeredMode {
                         if let bg = viewModel.previewBackgroundImage {
                             Image(nsImage: bg)
                                 .resizable()
@@ -91,6 +85,12 @@ struct CollageEditorView: View {
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                         }
+                    } else if let previewImage = viewModel.previewImage {
+                        Image(nsImage: previewImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .id("preview")
                     }
 
                     ForEach(viewModel.panels) { panel in

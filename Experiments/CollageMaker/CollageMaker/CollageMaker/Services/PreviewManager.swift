@@ -38,14 +38,12 @@ final class PreviewManager {
         previewTask?.cancel()
         previewTask = Task { [weak self, assembler, config, cgImages, backgroundImage, previewSize] in
             guard let self else { return }
-            let result = await Task.detached {
-                assembler.assemblePreviewWithCGImages(
-                    config: config,
-                    cgImages: cgImages,
-                    backgroundImage: backgroundImage,
-                    previewSize: previewSize
-                )
-            }.value
+            let result = await assembler.assemblePreviewWithCGImages(
+                config: config,
+                cgImages: cgImages,
+                backgroundImage: backgroundImage,
+                previewSize: previewSize
+            )
             self.previewImage = result
         }
     }
@@ -61,14 +59,12 @@ final class PreviewManager {
         backgroundTask?.cancel()
         backgroundTask = Task { [weak self, assembler, config, canvasSize, backgroundImage, previewSize] in
             guard let self else { return }
-            let result = await Task.detached {
-                assembler.renderBackground(
-                    config: config,
-                    canvasSize: canvasSize,
-                    backgroundImage: backgroundImage,
-                    previewSize: previewSize
-                )
-            }.value
+            let result = await assembler.renderBackground(
+                config: config,
+                canvasSize: canvasSize,
+                backgroundImage: backgroundImage,
+                previewSize: previewSize
+            )
             self.previewBackgroundImage = result
         }
     }
@@ -84,13 +80,11 @@ final class PreviewManager {
         panelPreviewTask?.cancel()
         panelPreviewTask = Task { [weak self, assembler, crop, cgImage, panelSize, panelId] in
             guard let self else { return }
-            let result = await Task.detached {
-                assembler.renderPanel(
-                    crop: crop,
-                    cgImage: cgImage,
-                    panelSize: panelSize
-                )
-            }.value
+            let result = await assembler.renderPanel(
+                crop: crop,
+                cgImage: cgImage,
+                panelSize: panelSize
+            )
             self.panelRenderedImages[panelId] = result
         }
     }
@@ -125,13 +119,11 @@ final class PreviewManager {
         titleTask?.cancel()
         titleTask = Task { [weak self, assembler, titleAttrString, titleStyle, canvasSize] in
             guard let self else { return }
-            let result = await Task.detached {
-                assembler.renderTitle(
-                    titleAttrString: titleAttrString,
-                    titleStyle: titleStyle,
-                    canvasSize: canvasSize
-                )
-            }.value
+            let result = await assembler.renderTitle(
+                titleAttrString: titleAttrString,
+                titleStyle: titleStyle,
+                canvasSize: canvasSize
+            )
             self.titleImage = result
         }
     }

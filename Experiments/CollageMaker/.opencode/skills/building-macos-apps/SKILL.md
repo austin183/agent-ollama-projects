@@ -172,11 +172,13 @@ See [references/state/swift-concurrency.md](references/state/swift-concurrency.m
 - `Task { [weak self] }` -- inherits MainActor, use for ViewModel updates
 - `Task.detached` -- off MainActor, use for heavy computation
 - **`Task { [weak self] in let result = await Task.detached { ... }.value; self.prop = result }`** -- preferred pattern for @Observable state updates from background work. Cancellation propagates, no manual actor hop needed. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
+- **`withCheckedContinuation` + `queue.async`** -- when a serial `DispatchQueue` is needed for thread safety (e.g., `NSGraphicsContext.current`), expose `async` protocol methods that bridge the queue. Non-blocking, simpler callers. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
 - `defer { isProcessing = false }` -- always reset processing state
 - Cancel previous `Task` before starting new one
 - **Extract `CGImage`/`CGColor` on main thread before `Task.detached`** -- AppKit types are not thread-safe
 - **Capture `NSAttributedString` as `let` before `Task.detached`** -- not `Sendable`, same pattern as `NSColor`
 - **`NSGraphicsContext.current` is NOT thread-safe** -- concurrent `Task.detached` rendering tasks can clobber each other's context. Mitigate with a serial `DispatchQueue`. See [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md)
+- **`@unchecked Sendable` on model types** -- safe when non-Sendable AppKit properties (NSColor, NSAttributedString) are only accessed on a known thread. Document the justification. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
 
 ## Swift Compilation Gotchas
 

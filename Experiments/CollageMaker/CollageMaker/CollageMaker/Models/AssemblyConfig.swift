@@ -7,10 +7,14 @@ struct LayoutConfig {
     let panelAssignments: [UUID: Int]
 }
 
+extension LayoutConfig: @unchecked Sendable {}
+
 struct TitleConfig {
     let attrString: NSAttributedString
     let style: TitleStyle
 }
+
+extension TitleConfig: @unchecked Sendable {}
 
 struct BackgroundConfig {
     let style: BackgroundStyle
@@ -20,6 +24,8 @@ struct BackgroundConfig {
     let gradientAngle: Double
     let opacity: Double
 }
+
+extension BackgroundConfig: @unchecked Sendable {}
 
 struct AssemblyConfig {
     let layout: LayoutConfig
@@ -61,3 +67,5 @@ struct AssemblyConfig {
         self.canvasSize = canvasSize
     }
 }
+
+extension AssemblyConfig: @unchecked Sendable {}

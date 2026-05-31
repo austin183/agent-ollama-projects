@@ -23,7 +23,7 @@ final class TrackingAssembler: CollageAssembly {
     var lastPreviewPanels: [ImagePanel] = []
     var lastPreviewTitle: String = ""
 
-    func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) -> Data? {
+    func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) async -> Data? {
         assembleCalls += 1
         lastAssemblePanels = config.layout.panels
         lastAssembleCgImages = cgImages
@@ -36,7 +36,7 @@ final class TrackingAssembler: CollageAssembly {
         return Data([0xFF, 0xD8, 0xFF, 0xE0])
     }
 
-    func assemblePreviewWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, previewSize: CGSize) -> NSImage? {
+    func assemblePreviewWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
         previewCalls += 1
         lastPreviewCanvasSize = config.canvasSize
         lastPreviewPreviewSize = previewSize
@@ -45,17 +45,17 @@ final class TrackingAssembler: CollageAssembly {
         return NSImage(size: previewSize)
     }
 
-    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) -> NSImage? {
+    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage? {
         renderPanelCalls += 1
         return NSImage(size: panelSize)
     }
 
-    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) -> NSImage? {
+    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
         renderBackgroundCalls += 1
         return NSImage(size: previewSize)
     }
 
-    func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) -> NSImage? {
+    func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) async -> NSImage? {
         return nil
     }
 }

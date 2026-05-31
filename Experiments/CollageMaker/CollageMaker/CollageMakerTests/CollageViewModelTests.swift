@@ -30,23 +30,23 @@ final class MockAssembler: CollageAssembly {
     var assembleData: Data? = Data()
     var assemblePreviewImage: NSImage? = NSImage(size: CanvasConfig.defaultPreviewSize)
 
-    func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) -> Data? {
+    func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) async -> Data? {
         assembleData
     }
 
-    func assemblePreviewWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, previewSize: CGSize) -> NSImage? {
+    func assemblePreviewWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
         assemblePreviewImage
     }
 
-    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) -> NSImage? {
+    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage? {
         return NSImage(size: panelSize)
     }
 
-    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) -> NSImage? {
+    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
         return NSImage(size: previewSize)
     }
 
-    func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) -> NSImage? {
+    func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) async -> NSImage? {
         return nil
     }
 }

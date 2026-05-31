@@ -55,7 +55,7 @@ final class ExportManager {
         let assembler = self.assembler
 
         exportTask = Task.detached { [assembler, config, cgImages, backgroundImageCG, quality, url] in
-            let data = assembler.assembleWithCGImages(
+            let data = await assembler.assembleWithCGImages(
                 config: config,
                 cgImages: cgImages,
                 backgroundImage: backgroundImageCG,

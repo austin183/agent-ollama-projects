@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-struct TitleStyle: Codable, Equatable {
+struct TitleStyle: Codable, Equatable, @unchecked Sendable {
     var fontFamily: String
     var fontSize: CGFloat
     var fontColor: NSColor
