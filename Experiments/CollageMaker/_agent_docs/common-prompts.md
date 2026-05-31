@@ -50,7 +50,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/async-protocol-bridge-learnings.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/generation-counter-stale-render-learnings.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Apply Research to Skills

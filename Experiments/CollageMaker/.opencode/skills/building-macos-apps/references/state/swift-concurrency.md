@@ -344,6 +344,71 @@ When updating an `@Observable` `@MainActor` class from heavy background work, pr
 
 **Contrast with nested pattern:** `Task.detached { [weak self] in ... Task { @MainActor in self?.previewImage = result } }` works but requires manual actor hopping and doesn't propagate cancellation to the inner work.
 
+## Generation Counters — Discarding Stale Async Results
+
+Task cancellation (`task?.cancel()`) alone is insufficient when rendering work runs on a serial `DispatchQueue`. A cancelled task's work is still submitted to the queue and runs to completion — the continuation just never resumes. But with multiple `update*` calls racing, each creates its own task, and the serial queue processes them FIFO. An older render can complete after a newer one, producing a stale frame that overwrites fresh UI state.
+
+**Fix:** A monotonically increasing generation counter at the caller level. Each `update*` call increments its counter before starting work. After `await`, the result is only applied if the captured generation still matches:
+
+```swift
+func updatePreview(...) {
+    previewGeneration += 1
+    let gen = previewGeneration
+    previewTask?.cancel()
+    previewTask = Task { [weak self, gen, ...] in
+        guard let self else { return }
+        let result = await assembler.assemblePreviewWithCGImages(...)
+        guard gen == self.previewGeneration else { return } // stale, discard
+        self.previewImage = result
+    }
+}
+```
+
+**Why this works:** The counter is only ever incremented (never decremented), so a captured `gen` value can only become stale if a newer `update*` call has already incremented past it. The guard is O(1) and runs on the main actor where `previewGeneration` lives.
+
+### Per-Item Generation Tracking for Batch Operations
+
+When `updateAllPanelPreviews` calls `updatePanelPreview` in a loop, a single `panelGeneration: Int` counter would only match the last panel's render — every earlier panel's render would see a mismatched generation and be discarded.
+
+**Fix:** `panelGenerations: [UUID: Int]` — one counter per panel ID:
+
+```swift
+func updatePanelPreview(..., panelId: UUID) {
+    panelGenerations[panelId, default: 0] += 1
+    let gen = panelGenerations[panelId]!
+    panelPreviewTask?.cancel()
+    panelPreviewTask = Task { [weak self, gen, panelId, ...] in
+        guard let self, gen == self.panelGenerations[panelId] else { return }
+        let result = await assembler.renderPanel(...)
+        guard gen == self.panelGenerations[panelId] else { return }
+        self.panelRenderedImages[panelId] = result
+    }
+}
+```
+
+Each panel has independent generation tracking. `updateAllPanelPreviews` increments each panel's counter independently, and all renders match their respective generations.
+
+### Dual Generation Check (Pre-await and Post-await)
+
+For panel previews, the generation is checked both before and after the `await`:
+
+- **Pre-check** (`guard gen == self.panelGenerations[panelId]` before `await`) — Guards against starting work that's already superseded. If a newer `updatePanelPreview` call for the same panel ran between task creation and task execution, the generation will have advanced and we skip the render entirely.
+- **Post-check** (same guard after `await`) — Guards against the result being stale when it completes.
+
+The pre-check is an optimization (saves wasted CPU on the render queue). The post-check is correctness (ensures stale results don't update UI state). For simpler render types (preview, background, title) where only one task exists at a time, the post-check alone is sufficient.
+
+### When to Use Generation Counters
+
+| Scenario | Solution |
+|---|---|
+| Single in-flight async task, cancel before new call | `task?.cancel()` + new task |
+| Serial queue, cancelled work still runs FIFO | Generation counter at caller level |
+| Batch operations (per-item updates) | Per-item generation: `[ID: Int]` |
+| Need to skip starting superseded work | Pre-await generation check |
+| Need to skip applying stale results | Post-await generation check |
+
+**Note:** Generation counters discard stale results at the caller level, but the rendering work still executes on the serial queue. For queue-level cancellation, check `Task.isCancelled` inside the render closure and return early — but this adds complexity inside rendering methods that should be focused on CoreGraphics work.
+
 ## `withCheckedContinuation` — Bridging Serial DispatchQueue to Async
 
 When a serial `DispatchQueue` is required for thread safety (e.g., `NSGraphicsContext.current`), use `withCheckedContinuation` to expose async methods instead of blocking with `queue.sync`:
@@ -367,13 +432,48 @@ func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> N
 
 **When to use:** Any time you have a serial `DispatchQueue` protecting a non-thread-safe resource (like `NSGraphicsContext.current`) and want callers to use `async/await`.
 
+### Actor as DispatchQueue Wrapper
+
+When 3+ methods share the same serial queue, the `withCheckedContinuation` + `queue.async` pattern requires the same 4-line boilerplate in each method. Consolidate into an actor:
+
+```swift
+actor RenderScheduler {
+    private let queue = DispatchQueue(label: "...render")
+
+    func render<T: Sendable>(_ work: @escaping @Sendable () -> T) async -> T {
+        await withCheckedContinuation { cont in
+            queue.async {
+                let result = work()
+                cont.resume(returning: result)
+            }
+        }
+    }
+}
+```
+
+Callers become:
+```swift
+await scheduler.render {
+    // ... method-specific rendering ...
+    return result
+}
+```
+
+**Benefits:**
+- Continuation boilerplate lives in one place
+- Each rendering method reads like a synchronous function with `return` instead of `cont.resume(returning:)`
+- The actor boundary provides structured concurrency integration (cancellation propagation, task grouping)
+- `@escaping` on the closure parameter is required because `withCheckedContinuation` stores the closure for later execution on the queue thread
+
 ### Async Bridge Decision Tree
 
 | Requirement | Pattern |
 |---|---|
 | Off-main-actor work, no shared mutable state | `Task.detached { ... }.value` |
 | Off-main-actor work, serial queue for thread safety | `withCheckedContinuation` + `queue.async` |
+| 3+ methods share the same serial queue | `RenderScheduler` actor wrapper |
 | Off-main-actor work, needs cancellation to stop execution | `Task.detached` with `try Task.checkCancellation()` |
+| Serial queue, cancelled work still runs FIFO | Generation counter at caller level |
 | Main-actor state update after background work | `Task { [weak self] ... self.property = result }` |
 
 ### `@unchecked Sendable` for Model Types with AppKit Values
@@ -410,6 +510,9 @@ extension BackgroundConfig: @unchecked Sendable {}
 9. **Avoid clearing shared state before async replacement** — Multiple `Task.detached` tasks racing to update related `@Observable` properties create inconsistent intermediate states. Don't clear old state until new state is ready, or batch updates in a single `@MainActor` block.
 10. **Use `withCheckedContinuation` + serial queue** for async rendering methods that need `NSGraphicsContext.current` thread safety — non-blocking, cleaner than `queue.sync` wrapped in `Task.detached`
 11. **Use `@unchecked Sendable` for model types with AppKit values** when non-Sendable properties are only accessed on a known thread — document the safety justification
+12. **Use generation counters to discard stale async results** — When a serial queue processes cancelled tasks FIFO, an older render can overwrite newer state. Increment a counter before each `update*` call, capture it in the task, and guard `gen == currentGeneration` after `await` before applying results
+13. **Use per-item generation counters for batch operations** — When updating multiple items in a loop, use `[ID: Int]` instead of a single counter so each item's render can match its own generation
+14. **Use an actor wrapper for shared DispatchQueue boilerplate** — When 3+ methods share the same serial queue, consolidate `withCheckedContinuation` into an actor's `render(_ work: @escaping @Sendable () -> T) async -> T` method
 
 ## Pitfalls
 

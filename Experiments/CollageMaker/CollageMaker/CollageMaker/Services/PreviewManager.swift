@@ -21,6 +21,11 @@ final class PreviewManager {
     private var backgroundTask: Task<Void, Never>?
     private var titleTask: Task<Void, Never>?
 
+    private var previewGeneration: Int = 0
+    private var backgroundGeneration: Int = 0
+    private var panelGenerations: [UUID: Int] = [:]
+    private var titleGeneration: Int = 0
+
     private let assembler: CollageAssembly
 
     init(assembler: CollageAssembly) {
@@ -33,6 +38,8 @@ final class PreviewManager {
         backgroundImage: CGImage?,
         previewSize: CGSize
     ) {
+        previewGeneration += 1
+        let gen = previewGeneration
         let assembler = self.assembler
 
         previewTask?.cancel()
@@ -44,6 +51,7 @@ final class PreviewManager {
                 backgroundImage: backgroundImage,
                 previewSize: previewSize
             )
+            guard gen == self.previewGeneration else { return }
             self.previewImage = result
         }
     }
@@ -54,6 +62,8 @@ final class PreviewManager {
         backgroundImage: CGImage?,
         previewSize: CGSize
     ) {
+        backgroundGeneration += 1
+        let gen = backgroundGeneration
         let assembler = self.assembler
 
         backgroundTask?.cancel()
@@ -65,6 +75,7 @@ final class PreviewManager {
                 backgroundImage: backgroundImage,
                 previewSize: previewSize
             )
+            guard gen == self.backgroundGeneration else { return }
             self.previewBackgroundImage = result
         }
     }
@@ -75,16 +86,19 @@ final class PreviewManager {
         panelSize: CGSize,
         panelId: UUID
     ) {
+        panelGenerations[panelId, default: 0] += 1
+        let gen = panelGenerations[panelId]!
         let assembler = self.assembler
 
         panelPreviewTask?.cancel()
-        panelPreviewTask = Task { [weak self, assembler, crop, cgImage, panelSize, panelId] in
-            guard let self else { return }
+        panelPreviewTask = Task { [weak self, assembler, crop, cgImage, panelSize, panelId, gen] in
+            guard let self, gen == self.panelGenerations[panelId] else { return }
             let result = await assembler.renderPanel(
                 crop: crop,
                 cgImage: cgImage,
                 panelSize: panelSize
             )
+            guard gen == self.panelGenerations[panelId] else { return }
             self.panelRenderedImages[panelId] = result
         }
     }
@@ -114,6 +128,8 @@ final class PreviewManager {
         titleStyle: TitleStyle,
         canvasSize: CGSize
     ) {
+        titleGeneration += 1
+        let gen = titleGeneration
         let assembler = self.assembler
 
         titleTask?.cancel()
@@ -124,6 +140,7 @@ final class PreviewManager {
                 titleStyle: titleStyle,
                 canvasSize: canvasSize
             )
+            guard gen == self.titleGeneration else { return }
             self.titleImage = result
         }
     }
@@ -143,6 +160,10 @@ final class PreviewManager {
         previewBackgroundImage = nil
         panelRenderedImages.removeAll()
         titleImage = nil
+        previewGeneration = 0
+        backgroundGeneration = 0
+        panelGenerations.removeAll()
+        titleGeneration = 0
     }
 
     func cancelAll() {

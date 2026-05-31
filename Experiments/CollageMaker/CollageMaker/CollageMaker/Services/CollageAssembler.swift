@@ -75,7 +75,7 @@ extension CollageAssembly {
 }
 
 final class CollageAssembler: CollageAssembly, @unchecked Sendable {
-    private let renderQueue = DispatchQueue(label: "austin183.indie.CollageMaker.render")
+    private let scheduler = RenderScheduler()
 
     func assembleWithCGImages(
         config: AssemblyConfig,
@@ -83,25 +83,20 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         backgroundImage: CGImage?,
         quality: Double
     ) async -> Data? {
-        await withCheckedContinuation { cont in
-            renderQueue.async {
-                guard let bitmapRep = self.renderIntoContext(
-                    config: config,
-                    cgImages: cgImages,
-                    backgroundImage: backgroundImage
-                ) else {
-                    cont.resume(returning: nil)
-                    return
-                }
-                guard let finalImage = bitmapRep.cgImage else {
-                    logger.error("Failed to extract CGImage from bitmap rep")
-                    cont.resume(returning: nil)
-                    return
-                }
-                let outRep = NSBitmapImageRep(cgImage: finalImage)
-                let result = outRep.representation(using: .jpeg, properties: [.compressionFactor: quality])
-                cont.resume(returning: result)
+        await scheduler.render {
+            guard let bitmapRep = self.renderIntoContext(
+                config: config,
+                cgImages: cgImages,
+                backgroundImage: backgroundImage
+            ) else {
+                return nil
             }
+            guard let finalImage = bitmapRep.cgImage else {
+                logger.error("Failed to extract CGImage from bitmap rep")
+                return nil
+            }
+            let outRep = NSBitmapImageRep(cgImage: finalImage)
+            return outRep.representation(using: .jpeg, properties: [.compressionFactor: quality])
         }
     }
 
@@ -111,24 +106,19 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         backgroundImage: CGImage?,
         previewSize: CGSize
     ) async -> NSImage? {
-        await withCheckedContinuation { cont in
-            renderQueue.async {
-                guard let bitmapRep = self.renderIntoContext(
-                    config: config,
-                    cgImages: cgImages,
-                    backgroundImage: backgroundImage
-                ) else {
-                    cont.resume(returning: nil)
-                    return
-                }
-                guard let finalImage = bitmapRep.cgImage else {
-                    logger.error("Failed to extract CGImage from bitmap rep for preview")
-                    cont.resume(returning: nil)
-                    return
-                }
-                let result = NSImage(cgImage: finalImage, size: previewSize)
-                cont.resume(returning: result)
+        await scheduler.render {
+            guard let bitmapRep = self.renderIntoContext(
+                config: config,
+                cgImages: cgImages,
+                backgroundImage: backgroundImage
+            ) else {
+                return nil
             }
+            guard let finalImage = bitmapRep.cgImage else {
+                logger.error("Failed to extract CGImage from bitmap rep for preview")
+                return nil
+            }
+            return NSImage(cgImage: finalImage, size: previewSize)
         }
     }
 
@@ -346,54 +336,43 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         cgImage: CGImage,
         panelSize: CGSize
     ) async -> NSImage? {
-        await withCheckedContinuation { cont in
-            renderQueue.async {
-                let bitmapRep = NSBitmapImageRep(
-                    bitmapDataPlanes: nil,
-                    pixelsWide: Int(panelSize.width),
-                    pixelsHigh: Int(panelSize.height),
-                    bitsPerSample: 8,
-                    samplesPerPixel: 4,
-                    hasAlpha: true,
-                    isPlanar: false,
-                    colorSpaceName: .deviceRGB,
-                    bytesPerRow: 0,
-                    bitsPerPixel: 32
-                )
-                guard let bitmapRep else {
-                    cont.resume(returning: nil)
-                    return
-                }
-                bitmapRep.size = panelSize
-                NSGraphicsContext.saveGraphicsState()
-                defer { NSGraphicsContext.restoreGraphicsState() }
-                NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
-                guard let context = NSGraphicsContext.current?.cgContext else {
-                    cont.resume(returning: nil)
-                    return
-                }
-                context.interpolationQuality = .high
+        await scheduler.render {
+            let bitmapRep = NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: Int(panelSize.width),
+                pixelsHigh: Int(panelSize.height),
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bytesPerRow: 0,
+                bitsPerPixel: 32
+            )
+            guard let bitmapRep else { return nil }
+            bitmapRep.size = panelSize
+            NSGraphicsContext.saveGraphicsState()
+            defer { NSGraphicsContext.restoreGraphicsState() }
+            NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
+            guard let context = NSGraphicsContext.current?.cgContext else { return nil }
+            context.interpolationQuality = .high
 
-                let sourceRect = crop.sourceRect
-                let destRect = CGRect(origin: .zero, size: panelSize)
+            let sourceRect = crop.sourceRect
+            let destRect = CGRect(origin: .zero, size: panelSize)
 
-                context.saveGState()
-                context.clip(to: destRect)
+            context.saveGState()
+            context.clip(to: destRect)
 
-                if let cropped = cgImage.cropping(to: sourceRect) {
-                    context.draw(cropped, in: destRect)
-                } else {
-                    context.draw(cgImage, in: destRect)
-                }
-
-                context.restoreGState()
-
-                guard let finalImage = bitmapRep.cgImage else {
-                    cont.resume(returning: nil)
-                    return
-                }
-                cont.resume(returning: NSImage(cgImage: finalImage, size: panelSize))
+            if let cropped = cgImage.cropping(to: sourceRect) {
+                context.draw(cropped, in: destRect)
+            } else {
+                context.draw(cgImage, in: destRect)
             }
+
+            context.restoreGState()
+
+            guard let finalImage = bitmapRep.cgImage else { return nil }
+            return NSImage(cgImage: finalImage, size: panelSize)
         }
     }
 
@@ -403,63 +382,52 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         backgroundImage: CGImage?,
         previewSize: CGSize
     ) async -> NSImage? {
-        await withCheckedContinuation { cont in
-            renderQueue.async {
-                let bitmapRep = NSBitmapImageRep(
-                    bitmapDataPlanes: nil,
-                    pixelsWide: Int(canvasSize.width),
-                    pixelsHigh: Int(canvasSize.height),
-                    bitsPerSample: 8,
-                    samplesPerPixel: 4,
-                    hasAlpha: true,
-                    isPlanar: false,
-                    colorSpaceName: .deviceRGB,
-                    bytesPerRow: 0,
-                    bitsPerPixel: 32
+        await scheduler.render {
+            let bitmapRep = NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: Int(canvasSize.width),
+                pixelsHigh: Int(canvasSize.height),
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bytesPerRow: 0,
+                bitsPerPixel: 32
+            )
+            guard let bitmapRep else { return nil }
+            bitmapRep.size = canvasSize
+            NSGraphicsContext.saveGraphicsState()
+            defer { NSGraphicsContext.restoreGraphicsState() }
+            NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
+            guard let context = NSGraphicsContext.current?.cgContext else { return nil }
+
+            switch config.style {
+            case .solid:
+                context.setFillColor(config.color.cgColor)
+                context.fill(CGRect(x: 0, y: 0, width: canvasSize.width, height: canvasSize.height))
+
+            case .gradient:
+                self.drawGradient(
+                    into: context,
+                    size: canvasSize,
+                    startColor: config.gradientStartColor,
+                    endColor: config.gradientEndColor,
+                    angle: config.gradientAngle
                 )
-                guard let bitmapRep else {
-                    cont.resume(returning: nil)
-                    return
-                }
-                bitmapRep.size = canvasSize
-                NSGraphicsContext.saveGraphicsState()
-                defer { NSGraphicsContext.restoreGraphicsState() }
-                NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
-                guard let context = NSGraphicsContext.current?.cgContext else {
-                    cont.resume(returning: nil)
-                    return
-                }
 
-                switch config.style {
-                case .solid:
-                    context.setFillColor(config.color.cgColor)
-                    context.fill(CGRect(x: 0, y: 0, width: canvasSize.width, height: canvasSize.height))
-
-                case .gradient:
-                    self.drawGradient(
-                        into: context,
-                        size: canvasSize,
-                        startColor: config.gradientStartColor,
-                        endColor: config.gradientEndColor,
-                        angle: config.gradientAngle
-                    )
-
-                case .image:
-                    self.drawImageBackground(
-                        into: context,
-                        size: canvasSize,
-                        backgroundColor: config.color,
-                        backgroundImage: backgroundImage,
-                        opacity: config.opacity
-                    )
-                }
-
-                guard let finalImage = bitmapRep.cgImage else {
-                    cont.resume(returning: nil)
-                    return
-                }
-                cont.resume(returning: NSImage(cgImage: finalImage, size: previewSize))
+            case .image:
+                self.drawImageBackground(
+                    into: context,
+                    size: canvasSize,
+                    backgroundColor: config.color,
+                    backgroundImage: backgroundImage,
+                    opacity: config.opacity
+                )
             }
+
+            guard let finalImage = bitmapRep.cgImage else { return nil }
+            return NSImage(cgImage: finalImage, size: previewSize)
         }
     }
 
@@ -470,47 +438,36 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
     ) async -> NSImage? {
         guard !titleAttrString.string.isEmpty else { return nil }
 
-        return await withCheckedContinuation { cont in
-            renderQueue.async {
-                let bitmapRep = NSBitmapImageRep(
-                    bitmapDataPlanes: nil,
-                    pixelsWide: Int(canvasSize.width),
-                    pixelsHigh: Int(canvasSize.height),
-                    bitsPerSample: 8,
-                    samplesPerPixel: 4,
-                    hasAlpha: true,
-                    isPlanar: false,
-                    colorSpaceName: .deviceRGB,
-                    bytesPerRow: 0,
-                    bitsPerPixel: 32
-                )
-                guard let bitmapRep else {
-                    cont.resume(returning: nil)
-                    return
-                }
-                bitmapRep.size = canvasSize
-                NSGraphicsContext.saveGraphicsState()
-                defer { NSGraphicsContext.restoreGraphicsState() }
-                NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
-                guard let context = NSGraphicsContext.current?.cgContext else {
-                    cont.resume(returning: nil)
-                    return
-                }
+        return await scheduler.render {
+            let bitmapRep = NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: Int(canvasSize.width),
+                pixelsHigh: Int(canvasSize.height),
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bytesPerRow: 0,
+                bitsPerPixel: 32
+            )
+            guard let bitmapRep else { return nil }
+            bitmapRep.size = canvasSize
+            NSGraphicsContext.saveGraphicsState()
+            defer { NSGraphicsContext.restoreGraphicsState() }
+            NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
+            guard let context = NSGraphicsContext.current?.cgContext else { return nil }
 
-                self.drawTitle(
-                    into: context,
-                    titleAttrString: titleAttrString,
-                    titleStyle: titleStyle,
-                    canvasWidth: canvasSize.width,
-                    canvasHeight: canvasSize.height
-                )
+            self.drawTitle(
+                into: context,
+                titleAttrString: titleAttrString,
+                titleStyle: titleStyle,
+                canvasWidth: canvasSize.width,
+                canvasHeight: canvasSize.height
+            )
 
-                guard let finalImage = bitmapRep.cgImage else {
-                    cont.resume(returning: nil)
-                    return
-                }
-                cont.resume(returning: NSImage(cgImage: finalImage, size: canvasSize))
-            }
+            guard let finalImage = bitmapRep.cgImage else { return nil }
+            return NSImage(cgImage: finalImage, size: canvasSize)
         }
     }
 }
