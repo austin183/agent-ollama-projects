@@ -29,7 +29,7 @@ final class CollageViewModel {
     private var saliencyResults: [Int: SaliencyResult] = [:]
     private var saveDebounceTask: Task<Void, Never>?
     private var cropMapVersion = 0
-    private var cachedTitleMetrics: TitleMetrics?
+    private var cachedTitleMetrics: (metrics: TitleMetrics, layoutKey: TitleStyle.LayoutKey, titleHash: Int)?
 
     var exportManager: ExportManager = ExportManager(assembler: CollageAssembler())
 
@@ -75,6 +75,7 @@ final class CollageViewModel {
 
     var titleAttrString: NSAttributedString = NSAttributedString(string: "") {
         didSet {
+            guard !oldValue.isEqual(titleAttrString) else { return }
             cachedTitleMetrics = nil
             guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
@@ -92,17 +93,20 @@ final class CollageViewModel {
 
     var titleStyle: TitleStyle = .default {
         didSet {
-            cachedTitleMetrics = nil
-            guard !isInitializing else { return }
-            if !isDraggingTitle {
-                undoManager.registerUndo(withTarget: self) { target in
-                    target.titleStyle = oldValue
-                }
-                undoManager.setActionName("Change Title Style")
-                updatePreview()
-            } else {
-                updateTitleImageLive()
+            let layoutKeyChanged = oldValue.layoutKey != titleStyle.layoutKey
+            if layoutKeyChanged {
+                cachedTitleMetrics = nil
             }
+            guard !isInitializing else { return }
+            if isDraggingTitle {
+                updateTitleImageLive()
+                return
+            }
+            undoManager.registerUndo(withTarget: self) { target in
+                target.titleStyle = oldValue
+            }
+            undoManager.setActionName("Change Title Style")
+            updatePreview()
             debouncedSave()
         }
     }
@@ -261,13 +265,20 @@ final class CollageViewModel {
 
     var titleMetrics: TitleMetrics? {
         guard !titleAttrString.string.isEmpty else { return nil }
-        if cachedTitleMetrics == nil {
-            cachedTitleMetrics = TitleMetrics(
+        let layoutKey = titleStyle.layoutKey
+        let titleHash = titleAttrString.string.hashValue
+        if let cache = cachedTitleMetrics, cache.layoutKey == layoutKey, cache.titleHash == titleHash {
+            return cache.metrics
+        }
+        cachedTitleMetrics = (
+            metrics: TitleMetrics(
                 preparedString: TitleMetrics.prepare(titleAttrString, style: titleStyle),
                 style: titleStyle
-            )
-        }
-        return cachedTitleMetrics
+            ),
+            layoutKey: layoutKey,
+            titleHash: titleHash
+        )
+        return cachedTitleMetrics!.metrics
     }
 
     func dismissExportSuccess() {
@@ -846,6 +857,7 @@ final class CollageViewModel {
     func finishTitleDrag() {
         titleDebounceTask?.cancel()
         updateTitleImage()
+        debouncedSave()
     }
 
     func setTitleFontFamily(_ family: String) {

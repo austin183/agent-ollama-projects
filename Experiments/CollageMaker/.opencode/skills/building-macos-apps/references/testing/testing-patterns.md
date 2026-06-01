@@ -483,3 +483,23 @@ class TestPersistence {
 - **Aspect ratio assumption** — When testing coordinate math, never assume which axis constrains. Compute fitted dimensions first, then offset, then mapped rect
 - **`sed` for bulk test fixes** — When Swift Testing version doesn't support `tolerance:`, `find -exec sed -i '' 's/, tolerance: 0\.01//g' {} +'` across the test directory is the fastest way to fix many occurrences
 - **UserDefaults test suite instability** — A computed property that creates `UserDefaults(suiteName: UUID())` each access generates a different suite per read, so save/load go to different suites. Store as a stable instance property initialized in `init`.
+
+## Identity-Based Cache Testing
+
+Use `===` on cached reference-type objects to distinguish cache hits from misses. Each recomputation produces a new instance, so identity comparison is a reliable signal:
+
+```swift
+@Test func positionChangeDoesNotInvalidateMetrics() {
+    let first = vm.titleMetrics?.preparedString
+    vm.titleStyle.positionX = 0.25  // shouldn't invalidate layout cache
+    let second = vm.titleMetrics?.preparedString
+    #expect(first === second)  // same instance = cache hit
+}
+
+@Test func fontChangeInvalidatesMetrics() {
+    let first = vm.titleMetrics?.preparedString
+    vm.titleStyle.fontFamily = "Helvetica"  // should invalidate
+    let second = vm.titleMetrics?.preparedString
+    #expect(first !== second)  // different instance = cache miss + recompute
+}
+```

@@ -43,3 +43,60 @@ func createTestImageItem(color: NSColor = .systemBlue, size: CGSize = CGSize(wid
     let thumbnail = NSImage(cgImage: cgImage, size: CGSize(width: 64, height: 64))
     return ImageItem(id: id, nsImage: nsImage, cgImage: cgImage, thumbnail: thumbnail, filename: filename, size: size)
 }
+
+// MARK: - Tracking Assembler
+
+final class TrackingAssembler: CollageAssembly {
+    var assembleCalls = 0
+    var previewCalls = 0
+    var renderPanelCalls = 0
+    var renderBackgroundCalls = 0
+    var lastAssemblePanels: [ImagePanel] = []
+    var lastAssembleCgImages: [CGImage?] = []
+    var lastAssembleCrops: [UUID: CropInfo] = [:]
+    var lastAssembleAssignments: [UUID: Int] = [:]
+    var lastAssembleTitle: String = ""
+    var lastAssembleTitleStyle: TitleStyle = .default
+    var lastAssembleCanvasSize: CGSize = .zero
+    var lastAssembleQuality: Double = 0
+    var lastPreviewCanvasSize: CGSize = .zero
+    var lastPreviewPreviewSize: CGSize = .zero
+    var lastPreviewPanels: [ImagePanel] = []
+    var lastPreviewTitle: String = ""
+
+    func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) async -> Data? {
+        assembleCalls += 1
+        lastAssemblePanels = config.layout.panels
+        lastAssembleCgImages = cgImages
+        lastAssembleCrops = config.layout.crops
+        lastAssembleAssignments = config.layout.panelAssignments
+        lastAssembleTitle = config.title.attrString.string
+        lastAssembleTitleStyle = config.title.style
+        lastAssembleCanvasSize = config.canvasSize
+        lastAssembleQuality = quality
+        return Data([0xFF, 0xD8, 0xFF, 0xE0])
+    }
+
+    func assemblePreviewWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
+        previewCalls += 1
+        lastPreviewCanvasSize = config.canvasSize
+        lastPreviewPreviewSize = previewSize
+        lastPreviewPanels = config.layout.panels
+        lastPreviewTitle = config.title.attrString.string
+        return NSImage(size: previewSize)
+    }
+
+    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage? {
+        renderPanelCalls += 1
+        return NSImage(size: panelSize)
+    }
+
+    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
+        renderBackgroundCalls += 1
+        return NSImage(size: previewSize)
+    }
+
+    func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) async -> NSImage? {
+        return nil
+    }
+}

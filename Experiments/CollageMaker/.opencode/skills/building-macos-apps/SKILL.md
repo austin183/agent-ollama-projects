@@ -141,6 +141,32 @@ See [references/state/observable-bindable.md](references/state/observable-bindab
 - **`@Observable` cannot track computed properties** -- all properties driving UI must be stored. Use `didSet` for `UserDefaults` persistence
 - **Views must use `@Bindable var`** -- `let viewModel: MyViewModel` renders once and never updates
 - Side effects (e.g., `updatePreview()`) must be called in `didSet`, not computed setters
+- **Three-way didSet decomposition** — When a `didSet` has cache invalidation, undo registration, and preview rendering, decompose into independent concerns with separate guards. A single `guard ... else { return }` that skips all side effects for "non-important" changes will silently break color/background/attribute updates:
+
+```swift
+var titleStyle: TitleStyle = .default {
+    didSet {
+        // 1) Cache invalidation — only for layout-affecting changes
+        if oldValue.layoutKey != titleStyle.layoutKey {
+            cachedTitleMetrics = nil
+        }
+
+        // 2) Fast path — interaction-specific, returns early
+        if isDraggingTitle {
+            updateTitleImageLive()
+            return
+        }
+
+        // 3) Full side effects — all non-drag changes
+        undoManager.registerUndo(...)
+        updatePreview()
+        debouncedSave()
+    }
+}
+```
+
+- **Cache key struct** — Use a dedicated `Hashable` struct for cache invalidation instead of manual tuple/hash comparison. Synthesizes conformance from `let` properties and documents which properties affect the cache. Compare with `oldValue.key != newValue.key` in `didSet`
+- **`NSAttributedString.isEqual(_:)`** — When caching on attributed string content, use `isEqual(_:)` instead of comparing `.string`. The latter misses attribute changes (bold, italic, font swap)
 
 ### @ObservableObject (legacy, still valid)
 

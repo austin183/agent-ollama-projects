@@ -213,4 +213,72 @@ final class MockAssembler: CollageAssembly {
         vm.moveImages(from: IndexSet(integer: 0), to: 2)
         #expect(vm.imageLibrary.images.count == 3)
     }
+
+    // MARK: - Title attribute changes
+
+    @Test func titleAttrStringAttributeChangeInvalidatesMetrics() {
+        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: MockAssembler())
+        let regularFont = NSFont.systemFont(ofSize: 48)
+        let boldFont = NSFont.boldSystemFont(ofSize: 48)
+
+        vm.titleAttrString = NSAttributedString(string: "Hello", attributes: [.font: regularFont])
+        _ = vm.titleMetrics
+        let firstPrepared = vm.titleMetrics?.preparedString
+
+        vm.titleAttrString = NSAttributedString(string: "Hello", attributes: [.font: boldFont])
+        let secondPrepared = vm.titleMetrics?.preparedString
+
+        #expect(firstPrepared != secondPrepared)
+    }
+
+    @Test func titleColorChangeUpdatesPreview() async {
+        let trackingAssembler = TrackingAssembler()
+        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
+
+        let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
+        vm.imageLibrary.images = images
+        vm.regenerateLayout()
+
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        let callsBefore = trackingAssembler.previewCalls
+
+        vm.titleStyle.fontColor = .red
+
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        #expect(trackingAssembler.previewCalls > callsBefore)
+    }
+
+    @Test func titleBackgroundColorChangeUpdatesPreview() async {
+        let trackingAssembler = TrackingAssembler()
+        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
+
+        let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
+        vm.imageLibrary.images = images
+        vm.regenerateLayout()
+
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        let callsBefore = trackingAssembler.previewCalls
+
+        vm.titleStyle.backgroundColor = .white
+
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        #expect(trackingAssembler.previewCalls > callsBefore)
+    }
+
+    @Test func titleShowBackgroundChangeUpdatesPreview() async {
+        let trackingAssembler = TrackingAssembler()
+        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
+
+        let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
+        vm.imageLibrary.images = images
+        vm.regenerateLayout()
+
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        let callsBefore = trackingAssembler.previewCalls
+
+        vm.titleStyle.showBackground = false
+
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        #expect(trackingAssembler.previewCalls > callsBefore)
+    }
 }
