@@ -46,7 +46,7 @@ final class MockAssembler: CollageAssembly {
         return NSImage(size: previewSize)
     }
 
-    func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) async -> NSImage? {
+    func renderTitle(titleConfig: TitleConfig, canvasSize: CGSize) async -> NSImage? {
         return nil
     }
 }

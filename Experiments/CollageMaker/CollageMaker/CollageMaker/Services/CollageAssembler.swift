@@ -8,11 +8,6 @@ private let logger = Logger(
     category: "Export"
 )
 
-// MARK: - Sendable conformance for NSAttributedString
-// Safe because attributed strings are only accessed on the serial render queue
-// after being captured by value in async method parameters.
-extension NSAttributedString: @unchecked Sendable {}
-
 protocol CollageRenderer {
     func assembleWithCGImages(
         config: AssemblyConfig,
@@ -48,8 +43,7 @@ protocol BackgroundRenderer {
 
 protocol TitleRenderer {
     func renderTitle(
-        titleAttrString: NSAttributedString,
-        titleStyle: TitleStyle,
+        titleConfig: TitleConfig,
         canvasSize: CGSize
     ) async -> NSImage?
 }
@@ -149,11 +143,10 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
             panelAssignments: config.layout.panelAssignments
         )
 
-        if !config.title.attrString.string.isEmpty {
+        if !config.title.textData.text.isEmpty {
             drawTitle(
                 into: context,
-                titleAttrString: config.title.attrString,
-                titleStyle: config.title.style,
+                titleConfig: config.title,
                 canvasWidth: config.canvasSize.width,
                 canvasHeight: config.canvasSize.height
             )
@@ -187,7 +180,7 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         NSGraphicsContext.saveGraphicsState()
         defer { NSGraphicsContext.restoreGraphicsState() }
         NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
-        guard var context = NSGraphicsContext.current?.cgContext else { return nil }
+        guard let context = NSGraphicsContext.current?.cgContext else { return nil }
         context.interpolationQuality = .high
         context.scaleBy(x: scale, y: scale)
 
@@ -223,11 +216,10 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
             panelAssignments: config.layout.panelAssignments
         )
 
-        if !config.title.attrString.string.isEmpty {
+        if !config.title.textData.text.isEmpty {
             drawTitle(
                 into: context,
-                titleAttrString: config.title.attrString,
-                titleStyle: config.title.style,
+                titleConfig: config.title,
                 canvasWidth: config.canvasSize.width,
                 canvasHeight: config.canvasSize.height
             )
@@ -362,46 +354,14 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         }
     }
 
-    private func drawTitle(into context: CGContext, titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasWidth: CGFloat, canvasHeight: CGFloat) {
-        let metrics = TitleMetrics(
-            preparedString: TitleMetrics.prepare(titleAttrString, style: titleStyle),
-            style: titleStyle
+    private func drawTitle(into context: CGContext, titleConfig: TitleConfig, canvasWidth: CGFloat, canvasHeight: CGFloat) {
+        let metrics = TitleMetricsCT.prepare(
+            textData: titleConfig.textData,
+            style: titleConfig.style,
+            fontColor: titleConfig.fontColor,
+            backgroundColor: titleConfig.backgroundColor
         )
-
-        let mutable = NSMutableAttributedString(attributedString: metrics.preparedString)
-        mutable.addAttribute(.foregroundColor, value: titleStyle.fontColor, range: NSRange(location: 0, length: mutable.length))
-        let attributedString = mutable
-
-        let drawWidth = titleStyle.effectiveWidth(canvasWidth: canvasWidth)
-        let boundingBox = metrics.boundingBox
-
-        let anchorX = titleStyle.positionX * canvasWidth
-        let anchorYcg = canvasHeight - titleStyle.positionY * canvasHeight
-
-        let drawX = anchorX - drawWidth / 2
-        let baselineY = anchorYcg - boundingBox.height
-
-        if titleStyle.showBackground {
-            context.saveGState()
-            context.setFillColor(titleStyle.backgroundColor.cgColor)
-            let textTop = baselineY + boundingBox.origin.y
-            let bgPath = CGPath(
-                roundedRect: CGRect(
-                    x: drawX,
-                    y: textTop - 12,
-                    width: drawWidth,
-                    height: boundingBox.height + 24
-                ),
-                cornerWidth: 8,
-                cornerHeight: 8,
-                transform: nil
-            )
-            context.addPath(bgPath)
-            context.fillPath()
-            context.restoreGState()
-        }
-
-        attributedString.draw(in: CGRect(x: drawX, y: baselineY, width: drawWidth, height: boundingBox.height))
+        metrics.drawTitle(into: context, canvasWidth: canvasWidth, canvasHeight: canvasHeight)
     }
 
     // MARK: - Per-Panel Rendering
@@ -507,11 +467,10 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
     }
 
     func renderTitle(
-        titleAttrString: NSAttributedString,
-        titleStyle: TitleStyle,
+        titleConfig: TitleConfig,
         canvasSize: CGSize
     ) async -> NSImage? {
-        guard !titleAttrString.string.isEmpty else { return nil }
+        guard !titleConfig.textData.text.isEmpty else { return nil }
 
         return await scheduler.render {
             let bitmapRep = NSBitmapImageRep(
@@ -535,8 +494,7 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
 
             self.drawTitle(
                 into: context,
-                titleAttrString: titleAttrString,
-                titleStyle: titleStyle,
+                titleConfig: titleConfig,
                 canvasWidth: canvasSize.width,
                 canvasHeight: canvasSize.height
             )

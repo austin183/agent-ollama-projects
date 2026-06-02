@@ -17,20 +17,7 @@ import Testing
             destinationRect: panels[0].frame
         )]
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: .default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig(panels: panels, crops: crops)
 
         let preview = await assembler.assemblePreviewWithCGImages(
             config: config,
@@ -51,20 +38,7 @@ import Testing
             destinationRect: panels[0].frame
         )]
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: .default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig(panels: panels, crops: crops)
 
         let data = await assembler.assembleWithCGImages(
             config: config,
@@ -86,20 +60,7 @@ import Testing
             destinationRect: panels[0].frame
         )]
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: "Test Collage"),
-            titleStyle: .default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig(panels: panels, crops: crops, titleText: "Test Collage")
 
         let data = await assembler.assembleWithCGImages(
             config: config,
@@ -126,20 +87,7 @@ import Testing
             )
         }
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: .default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig(panels: panels, crops: crops)
 
         let data = await assembler.assembleWithCGImages(
             config: config,
@@ -161,20 +109,7 @@ import Testing
             destinationRect: panels[0].frame
         )
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: .default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig(panels: panels, crops: crops)
 
         let data = await assembler.assembleWithCGImages(
             config: config,
@@ -187,20 +122,7 @@ import Testing
     }
 
     @Test func assembleEmptyCanvasReturnsData() async {
-        let config = AssemblyConfig(
-            panels: [],
-            crops: [:],
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: .default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig()
 
         let data = await assembler.assembleWithCGImages(
             config: config,
@@ -221,20 +143,7 @@ import Testing
             destinationRect: panels[0].frame
         )]
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: .default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig(panels: panels, crops: crops)
 
         let preview = await assembler.assemblePreviewWithCGImages(
             config: config,
@@ -256,19 +165,13 @@ import Testing
             destinationRect: panels[0].frame
         )]
 
-        let config = AssemblyConfig(
+        let config = makeAssemblyConfig(
             panels: panels,
             crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: .default,
-            backgroundColor: .black,
             backgroundStyle: .gradient,
             gradientStartColor: .systemBlue,
             gradientEndColor: .systemPurple,
-            gradientAngle: 45,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
+            gradientAngle: 45
         )
 
         let data = await assembler.assembleWithCGImages(
@@ -298,20 +201,7 @@ import Testing
 
         let assignments: [UUID: Int] = [panels[0].id: 1, panels[1].id: 0]
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: assignments,
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: .default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig(panels: panels, crops: crops, panelAssignments: assignments)
 
         let data = await assembler.assembleWithCGImages(
             config: config,
@@ -334,20 +224,7 @@ import Testing
             destinationRect: panels[0].frame
         )]
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: .default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig(panels: panels, crops: crops)
 
         let tasks = (0..<10).map { _ in
             Task.detached {

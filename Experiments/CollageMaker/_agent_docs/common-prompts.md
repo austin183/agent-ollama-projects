@@ -18,7 +18,7 @@ Please implement the plan for Phase 2 in @_agent_docs/plans/2026-05-31-editor-pe
 
 # Small Change Requests
 ```
-Please work on the change request in @_agent_docs/change-requests/round-20.md using our macos skills for guidance. 
+Please work on the change request in @_agent_docs/change-requests/round-21.md using our macos skills for guidance. 
 ```
 
 # Review
@@ -45,7 +45,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/throttled-observable-invalidation-learnings.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/macOS-26-coretext-api-changes.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Researching

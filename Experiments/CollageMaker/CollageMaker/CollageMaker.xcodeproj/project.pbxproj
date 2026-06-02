@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CT000002000000000000 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CT000001000000000000 /* CoreText.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D941DEA52FB0ED2B00B1C1C2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CT000001000000000000 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		D941DE972FB0ED2A00B1C1C2 /* CollageMaker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CollageMaker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D941DEA42FB0ED2B00B1C1C2 /* CollageMakerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CollageMakerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D941DEAE2FB0ED2B00B1C1C2 /* CollageMakerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CollageMakerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -52,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CT000002000000000000 /* CoreText.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,6 +85,7 @@
 				D941DEA72FB0ED2B00B1C1C2 /* CollageMakerTests */,
 				D941DEB12FB0ED2B00B1C1C2 /* CollageMakerUITests */,
 				D941DE982FB0ED2A00B1C1C2 /* Products */,
+				D950F38C2FCF4F6100AA882F /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -90,6 +97,14 @@
 				D941DEAE2FB0ED2B00B1C1C2 /* CollageMakerUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D950F38C2FCF4F6100AA882F /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				CT000001000000000000 /* CoreText.framework */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -467,7 +482,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CollageMaker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CollageMaker";
 			};
 			name = Debug;
@@ -488,7 +503,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CollageMaker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CollageMaker";
 			};
 			name = Release;

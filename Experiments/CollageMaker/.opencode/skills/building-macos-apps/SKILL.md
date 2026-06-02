@@ -56,6 +56,7 @@ Guidance for building macOS SwiftUI desktop applications with image processing, 
 | **CoreImage, CoreGraphics, Compositing** | [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md) |
 | **Vision API Details** | [references/graphics/vision-api-details.md](references/graphics/vision-api-details.md) |
 | **vImage Processing** | [references/graphics/vimage-processing.md](references/graphics/vimage-processing.md) |
+| **CoreText Background Rendering** | [references/graphics/coretext-background-rendering.md](references/graphics/coretext-background-rendering.md) |
 
 ### Testing
 
@@ -205,6 +206,7 @@ See [references/state/swift-concurrency.md](references/state/swift-concurrency.m
 - **Extract `CGImage`/`CGColor` on main thread before `Task.detached`** -- AppKit types are not thread-safe
 - **Capture `NSAttributedString` as `let` before `Task.detached`** -- not `Sendable`, same pattern as `NSColor`
 - **`NSGraphicsContext.current` is NOT thread-safe** -- concurrent `Task.detached` rendering tasks can clobber each other's context. Mitigate with a serial `DispatchQueue`. See [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md)
+- **Background thread text rendering** — `NSAttributedString`/`NSMutableAttributedString` require AppKit and are not thread-safe. For `CTFrameDraw` on a background thread, use CoreFoundation C API (`CFAttributedStringCreateMutable`, `CFAttributedStringSetAttribute` with `kCTFontAttributeName`, etc.). See [references/graphics/coretext-background-rendering.md](references/graphics/coretext-background-rendering.md)
 - **`@unchecked Sendable` on model types** -- safe when non-Sendable AppKit properties (NSColor, NSAttributedString) are only accessed on a known thread. Document the justification. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
 
 ## Swift Compilation Gotchas

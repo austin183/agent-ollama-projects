@@ -21,8 +21,8 @@ final class TestPreviewAssembler: CollageAssembly {
         NSImage(size: previewSize)
     }
 
-    func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) async -> NSImage? {
-        guard !titleAttrString.string.isEmpty else { return nil }
+    func renderTitle(titleConfig: TitleConfig, canvasSize: CGSize) async -> NSImage? {
+        guard !titleConfig.textData.text.isEmpty else { return nil }
         return NSImage(size: canvasSize)
     }
 }
@@ -56,20 +56,7 @@ final class TestPreviewAssembler: CollageAssembly {
             destinationRect: panels[0].frame
         )]
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: TitleStyle.default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig(panels: panels, crops: crops)
 
         mgr.updatePreview(
             config: config,
@@ -169,20 +156,7 @@ final class TestPreviewAssembler: CollageAssembly {
             destinationRect: panels[0].frame
         )]
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: TitleStyle.default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig(panels: panels, crops: crops)
 
         // Fire multiple rapid updates
         for _ in 0..<5 {
@@ -291,20 +265,7 @@ final class TestPreviewAssembler: CollageAssembly {
             destinationRect: panels[0].frame
         )]
 
-        let config = AssemblyConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: [:],
-            titleAttrString: NSAttributedString(string: ""),
-            titleStyle: TitleStyle.default,
-            backgroundColor: .black,
-            backgroundStyle: .solid,
-            gradientStartColor: .black,
-            gradientEndColor: .darkGray,
-            gradientAngle: 135,
-            backgroundOpacity: 1.0,
-            canvasSize: CanvasConfig.defaultCanvasSize
-        )
+        let config = makeAssemblyConfig(panels: panels, crops: crops)
 
         // First update – will be slow (100ms)
         slowAssembler.delayMs = 100
@@ -356,7 +317,7 @@ final class GenerationControlledAssembler: CollageAssembly {
         NSImage(size: previewSize)
     }
 
-    func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) async -> NSImage? {
+    func renderTitle(titleConfig: TitleConfig, canvasSize: CGSize) async -> NSImage? {
         nil
     }
 }

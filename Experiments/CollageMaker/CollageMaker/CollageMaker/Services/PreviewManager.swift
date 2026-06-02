@@ -128,16 +128,25 @@ final class PreviewManager {
         titleStyle: TitleStyle,
         canvasSize: CGSize
     ) {
+        let textData = TitleTextData.extract(from: titleAttrString)
+        let fontColor = titleStyle.fontColor.cgColor
+        let backgroundColor = titleStyle.backgroundColor.cgColor
+        let titleConfig = TitleConfig(
+            textData: textData,
+            style: titleStyle,
+            fontColor: fontColor,
+            backgroundColor: backgroundColor
+        )
+
         titleGeneration += 1
         let gen = titleGeneration
         let assembler = self.assembler
 
         titleTask?.cancel()
-        titleTask = Task { [weak self, assembler, titleAttrString, titleStyle, canvasSize] in
+        titleTask = Task { [weak self, assembler, titleConfig, canvasSize] in
             guard let self else { return }
             let result = await assembler.renderTitle(
-                titleAttrString: titleAttrString,
-                titleStyle: titleStyle,
+                titleConfig: titleConfig,
                 canvasSize: canvasSize
             )
             guard gen == self.titleGeneration else { return }

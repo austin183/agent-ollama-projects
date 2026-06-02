@@ -71,7 +71,7 @@ final class TrackingAssembler: CollageAssembly {
         lastAssembleCgImages = cgImages
         lastAssembleCrops = config.layout.crops
         lastAssembleAssignments = config.layout.panelAssignments
-        lastAssembleTitle = config.title.attrString.string
+        lastAssembleTitle = config.title.textData.text
         lastAssembleTitleStyle = config.title.style
         lastAssembleCanvasSize = config.canvasSize
         lastAssembleQuality = quality
@@ -83,7 +83,7 @@ final class TrackingAssembler: CollageAssembly {
         lastPreviewCanvasSize = config.canvasSize
         lastPreviewPreviewSize = previewSize
         lastPreviewPanels = config.layout.panels
-        lastPreviewTitle = config.title.attrString.string
+        lastPreviewTitle = config.title.textData.text
         return NSImage(size: previewSize)
     }
 
@@ -97,8 +97,43 @@ final class TrackingAssembler: CollageAssembly {
         return NSImage(size: previewSize)
     }
 
-    func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) async -> NSImage? {
+    func renderTitle(titleConfig: TitleConfig, canvasSize: CGSize) async -> NSImage? {
         titleRenderCalls += 1
         return nil
     }
+}
+
+@MainActor
+func makeAssemblyConfig(
+    panels: [ImagePanel] = [],
+    crops: [UUID: CropInfo] = [:],
+    panelAssignments: [UUID: Int] = [:],
+    titleText: String = "",
+    titleStyle: TitleStyle = .default,
+    backgroundColor: NSColor = .black,
+    backgroundStyle: BackgroundStyle = .solid,
+    gradientStartColor: NSColor = .black,
+    gradientEndColor: NSColor = .darkGray,
+    gradientAngle: Double = 135,
+    backgroundOpacity: Double = 1.0,
+    canvasSize: CGSize = CanvasConfig.defaultCanvasSize
+) -> AssemblyConfig {
+    let attrString = NSAttributedString(string: titleText)
+    let textData = TitleTextData.extract(from: attrString)
+    return AssemblyConfig(
+        panels: panels,
+        crops: crops,
+        panelAssignments: panelAssignments,
+        titleTextData: textData,
+        titleStyle: titleStyle,
+        titleFontColor: titleStyle.fontColor.cgColor,
+        titleBackgroundColor: titleStyle.backgroundColor.cgColor,
+        backgroundColor: backgroundColor,
+        backgroundStyle: backgroundStyle,
+        gradientStartColor: gradientStartColor,
+        gradientEndColor: gradientEndColor,
+        gradientAngle: gradientAngle,
+        backgroundOpacity: backgroundOpacity,
+        canvasSize: canvasSize
+    )
 }

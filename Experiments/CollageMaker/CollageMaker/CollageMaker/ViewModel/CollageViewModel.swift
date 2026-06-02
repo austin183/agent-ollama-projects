@@ -760,12 +760,17 @@ final class CollageViewModel {
     // MARK: - Config
 
     func buildAssemblyConfig() -> AssemblyConfig {
-        AssemblyConfig(
+        let textData = TitleTextData.extract(from: titleAttrString)
+        let fontColor = titleStyle.fontColor.cgColor
+        let titleBgColor = titleStyle.backgroundColor.cgColor
+        return AssemblyConfig(
             panels: panels,
             crops: cropMap,
             panelAssignments: panelAssignments,
-            titleAttrString: titleAttrString,
+            titleTextData: textData,
             titleStyle: titleStyle,
+            titleFontColor: fontColor,
+            titleBackgroundColor: titleBgColor,
             backgroundColor: backgroundColor,
             backgroundStyle: backgroundStyle,
             gradientStartColor: gradientStartColor,

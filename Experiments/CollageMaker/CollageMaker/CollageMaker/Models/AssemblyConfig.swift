@@ -10,8 +10,10 @@ struct LayoutConfig {
 extension LayoutConfig: @unchecked Sendable {}
 
 struct TitleConfig {
-    let attrString: NSAttributedString
+    let textData: TitleTextData
     let style: TitleStyle
+    let fontColor: CGColor
+    let backgroundColor: CGColor
 }
 
 extension TitleConfig: @unchecked Sendable {}
@@ -37,8 +39,10 @@ struct AssemblyConfig {
         panels: [ImagePanel],
         crops: [UUID: CropInfo],
         panelAssignments: [UUID: Int],
-        titleAttrString: NSAttributedString,
+        titleTextData: TitleTextData,
         titleStyle: TitleStyle,
+        titleFontColor: CGColor,
+        titleBackgroundColor: CGColor,
         backgroundColor: NSColor,
         backgroundStyle: BackgroundStyle,
         gradientStartColor: NSColor,
@@ -53,8 +57,10 @@ struct AssemblyConfig {
             panelAssignments: panelAssignments
         )
         self.title = TitleConfig(
-            attrString: titleAttrString,
-            style: titleStyle
+            textData: titleTextData,
+            style: titleStyle,
+            fontColor: titleFontColor,
+            backgroundColor: titleBackgroundColor
         )
         self.background = BackgroundConfig(
             style: backgroundStyle,
