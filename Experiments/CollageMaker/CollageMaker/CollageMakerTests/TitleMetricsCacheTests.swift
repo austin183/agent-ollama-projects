@@ -6,7 +6,14 @@ import Testing
 @Suite(.serialized) struct TitleMetricsCacheTests {
 
     private func makeViewModel() -> CollageViewModel {
-        CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: MockAssembler())
+        let suiteName = "CollageMakerTests.\(UUID().uuidString)"
+        let testDefaults = UserDefaults(suiteName: suiteName)!
+        let persistence = UserDefaultsPersistence(defaults: testDefaults)
+        return CollageViewModel(
+            saliencyAnalyzer: MockSaliencyAnalyzer(),
+            assembler: MockAssembler(),
+            persistence: persistence
+        )
     }
 
     @Test func titleMetricsReturnsNilForEmptyString() {

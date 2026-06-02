@@ -38,11 +38,6 @@ Please update our project timeline in @_agent_docs/project-timeline/prototype-2-
 ```
 
 # Skill Building
-## Researching
-```
-/playwright-apple-docs Please review our current project and research topics in @_agent_docs/research/ and then research guidelines on https://developer.apple.com/design/human-interface-guidelines/ that would be relevant for our project and write new research documents for them.
-```
-
 ## Learing from Session
 ```
 Please use the /capturing-learnings and add any new learnings to a new document in @_agent_docs/learnings . Please use your best judgement on what was relevant to learn compared to what we already know from our existing skills.  Please do not ask me what was important.  I wasn't paying attention.  If nothing stood out as relevant, or we already have it covered, making no updates is an acceptable outcome of this exercise.
@@ -50,7 +45,12 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/cache-key-guard-separation-learnings.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/observable-version-counter-and-bindable-nested-mutations.md to refine our macos skills using /skills-best-practice for guidance.
+```
+
+## Researching
+```
+/playwright-apple-docs Please review our current project and research topics in @_agent_docs/research/ and then research guidelines on https://developer.apple.com/design/human-interface-guidelines/ that would be relevant for our project and write new research documents for them.
 ```
 
 ## Apply Research to Skills

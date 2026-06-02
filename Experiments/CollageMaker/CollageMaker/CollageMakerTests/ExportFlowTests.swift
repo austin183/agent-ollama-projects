@@ -6,11 +6,22 @@ import Testing
 @MainActor
 @Suite(.serialized) struct ExportFlowTests {
 
+    private func makeViewModel(assembler: CollageAssembly = TrackingAssembler()) -> CollageViewModel {
+        let suiteName = "CollageMakerTests.\(UUID().uuidString)"
+        let testDefaults = UserDefaults(suiteName: suiteName)!
+        let persistence = UserDefaultsPersistence(defaults: testDefaults)
+        return CollageViewModel(
+            saliencyAnalyzer: MockSaliencyAnalyzer(),
+            assembler: assembler,
+            persistence: persistence
+        )
+    }
+
     // MARK: - Preview Flow
 
     @Test func updatePreviewCallsAssembler() async {
         let trackingAssembler = TrackingAssembler()
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
+        let vm = makeViewModel(assembler: trackingAssembler)
 
         let images = (0..<2).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
@@ -22,7 +33,7 @@ import Testing
 
     @Test func updatePreviewUsesCorrectCanvasSize() async {
         let trackingAssembler = TrackingAssembler()
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
+        let vm = makeViewModel(assembler: trackingAssembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
@@ -34,7 +45,7 @@ import Testing
 
     @Test func updatePreviewUsesCorrectPreviewSize() async {
         let trackingAssembler = TrackingAssembler()
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
+        let vm = makeViewModel(assembler: trackingAssembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
@@ -46,7 +57,7 @@ import Testing
 
     @Test func updatePreviewPassesCorrectPanelCount() async {
         let trackingAssembler = TrackingAssembler()
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
+        let vm = makeViewModel(assembler: trackingAssembler)
 
         let images = (0..<4).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
@@ -58,11 +69,12 @@ import Testing
 
     @Test func updatePreviewPassesTitle() async {
         let trackingAssembler = TrackingAssembler()
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: trackingAssembler)
+        let vm = makeViewModel(assembler: trackingAssembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
         vm.regenerateLayout()
+        vm.isLayeredMode = false
         vm.titleAttrString = NSAttributedString(string: "My Collage")
 
         try? await Task.sleep(nanoseconds: 50_000_000)
@@ -72,7 +84,7 @@ import Testing
     // MARK: - Panel Assignment Flow
 
     @Test func swapPanelImagesUpdatesAssignments() {
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
+        let vm = makeViewModel()
 
         let images = (0..<3).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
@@ -95,7 +107,7 @@ import Testing
     }
 
     @Test func swapPanelImagesUpdatesCropMap() {
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
+        let vm = makeViewModel()
 
         let images = (0..<2).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
@@ -114,7 +126,7 @@ import Testing
     // MARK: - Crop Flow
 
     @Test func resetCropUpdatesCropMap() {
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
+        let vm = makeViewModel()
 
         let image = createTestImageItem(size: CGSize(width: 4000, height: 4000))
         vm.imageLibrary.images = [image]
@@ -136,7 +148,7 @@ import Testing
     }
 
     @Test func clearAllResetsExportState() {
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
+        let vm = makeViewModel()
 
         let images = (0..<2).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
@@ -154,7 +166,7 @@ import Testing
     // MARK: - Layout Regeneration
 
     @Test func regenerateLayoutUpdatesCrops() {
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
+        let vm = makeViewModel()
 
         let image = createTestImageItem(size: CGSize(width: 200, height: 200))
         vm.imageLibrary.images = [image]
@@ -170,7 +182,7 @@ import Testing
     }
 
     @Test func regenerateLayoutUpdatesPanelAssignments() {
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
+        let vm = makeViewModel()
 
         let images = (0..<3).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
@@ -184,7 +196,7 @@ import Testing
     }
 
     @Test func gutterChangeRegeneratesLayout() async {
-        let vm = CollageViewModel(saliencyAnalyzer: MockSaliencyAnalyzer(), assembler: TrackingAssembler())
+        let vm = makeViewModel()
 
         let images = (0..<4).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images

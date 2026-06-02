@@ -140,17 +140,30 @@ struct ExportPanel: View {
                     Text("Color")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    NSColorPickerView(color: $viewModel.titleStyle.fontColor)
-                        .accessibilityLabel("Title text color")
-                        .frame(width: 32, height: 24)
+                    NSColorPickerView(
+                        color: Binding(
+                            get: { viewModel.titleStyle.fontColor },
+                            set: { viewModel.setTitleFontColor($0) }
+                        )
+                    )
+                    .accessibilityLabel("Title text color")
+                    .frame(width: 32, height: 24)
                     Text("BG")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    NSColorPickerView(color: $viewModel.titleStyle.backgroundColor)
-                        .accessibilityLabel("Title background color")
-                        .frame(width: 32, height: 24)
+                    NSColorPickerView(
+                        color: Binding(
+                            get: { viewModel.titleStyle.backgroundColor },
+                            set: { viewModel.setTitleBackgroundColor($0) }
+                        )
+                    )
+                    .accessibilityLabel("Title background color")
+                    .frame(width: 32, height: 24)
                     Spacer()
-                    Picker("Align", selection: $viewModel.titleStyle.alignment) {
+                    Picker("Align", selection: Binding(
+                        get: { viewModel.titleStyle.alignment },
+                        set: { viewModel.setTitleAlignment($0) }
+                    )) {
                         Image(systemName: "text.alignleft").tag(NSTextAlignment.left)
                         Image(systemName: "text.aligncenter").tag(NSTextAlignment.center)
                         Image(systemName: "text.alignright").tag(NSTextAlignment.right)
@@ -159,7 +172,10 @@ struct ExportPanel: View {
                     .frame(width: 80)
                     .accessibilityLabel("Title alignment")
 
-                    Toggle("Title BG", isOn: $viewModel.titleStyle.showBackground)
+                    Toggle("Title BG", isOn: Binding(
+                        get: { viewModel.titleStyle.showBackground },
+                        set: { viewModel.setTitleShowBackground($0) }
+                    ))
                     .accessibilityLabel("Show title background")
                 }
             }
@@ -260,6 +276,8 @@ private struct NSColorPickerView: NSViewRepresentable {
 
     func updateNSView(_ well: NSColorWell, context: Context) {
         well.color = color
+        well.target = context.coordinator
+        well.action = #selector(Coordinator.colorChanged(_:))
     }
 
     func makeCoordinator() -> Coordinator {

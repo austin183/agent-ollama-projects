@@ -29,6 +29,7 @@ final class CollageViewModel {
     private var saliencyResults: [Int: SaliencyResult] = [:]
     private var saveDebounceTask: Task<Void, Never>?
     private var cropMapVersion = 0
+    private var titleImageVersion = 0
     private var cachedTitleMetrics: (metrics: TitleMetrics, layoutKey: TitleStyle.LayoutKey, titleHash: Int)?
 
     var exportManager: ExportManager = ExportManager(assembler: CollageAssembler())
@@ -83,7 +84,11 @@ final class CollageViewModel {
             }
             undoManager.setActionName("Edit Title")
             debouncedSave()
-            updatePreview()
+            if isLayeredMode {
+                updateTitleImage()
+            } else {
+                updatePreview()
+            }
         }
     }
 
@@ -106,7 +111,11 @@ final class CollageViewModel {
                 target.titleStyle = oldValue
             }
             undoManager.setActionName("Change Title Style")
-            updatePreview()
+            if isLayeredMode {
+                updateTitleImage()
+            } else {
+                updatePreview()
+            }
             debouncedSave()
         }
     }
@@ -252,7 +261,10 @@ final class CollageViewModel {
         set { previewManager.panelRenderedImages = newValue }
     }
     var titleImage: NSImage? {
-        get { previewManager.titleImage }
+        get {
+            let _ = titleImageVersion
+            return previewManager.titleImage
+        }
         set { previewManager.titleImage = newValue }
     }
     var isLayeredMode: Bool = false
@@ -839,6 +851,7 @@ final class CollageViewModel {
     }
 
     func updateTitleImage() {
+        titleImageVersion += 1
         previewManager.updateTitleImage(
             titleAttrString: titleAttrString,
             titleStyle: titleStyle,
@@ -888,8 +901,78 @@ final class CollageViewModel {
         debouncedSave()
     }
 
+    func setTitleBackgroundColor(_ color: NSColor) {
+        guard !isInitializing else { return }
+        let oldValue = titleStyle.backgroundColor
+        titleStyle.backgroundColor = color
+        undoManager.registerUndo(withTarget: self) { target in
+            target.setTitleBackgroundColor(oldValue)
+        }
+        undoManager.setActionName("Change Title BG Color")
+        if isLayeredMode {
+            updateTitleImage()
+        } else {
+            updatePreview()
+        }
+        debouncedSave()
+    }
+
+    func setTitleFontColor(_ color: NSColor) {
+        guard !isInitializing else { return }
+        let oldValue = titleStyle.fontColor
+        titleStyle.fontColor = color
+        undoManager.registerUndo(withTarget: self) { target in
+            target.setTitleFontColor(oldValue)
+        }
+        undoManager.setActionName("Change Title Color")
+        if isLayeredMode {
+            updateTitleImage()
+        } else {
+            updatePreview()
+        }
+        debouncedSave()
+    }
+
+    func setTitleAlignment(_ alignment: NSTextAlignment) {
+        guard !isInitializing else { return }
+        let oldValue = titleStyle.alignment
+        titleStyle.alignment = alignment
+        undoManager.registerUndo(withTarget: self) { target in
+            target.setTitleAlignment(oldValue)
+        }
+        undoManager.setActionName("Change Title Alignment")
+        if isLayeredMode {
+            updateTitleImage()
+        } else {
+            updatePreview()
+        }
+        debouncedSave()
+    }
+
+    func setTitleShowBackground(_ show: Bool) {
+        guard !isInitializing else { return }
+        let oldValue = titleStyle.showBackground
+        titleStyle.showBackground = show
+        undoManager.registerUndo(withTarget: self) { target in
+            target.setTitleShowBackground(oldValue)
+        }
+        undoManager.setActionName("Toggle Title BG")
+        if isLayeredMode {
+            updateTitleImage()
+        } else {
+            updatePreview()
+        }
+        debouncedSave()
+    }
+
     func exportCollage() async -> URL? {
         await exportManager.export(viewModel: self)
+    }
+
+    /// Yields to let pending async tasks complete.
+    /// Used by tests to synchronize with debounced rendering work.
+    func awaitPendingTasks() async {
+        await previewManager.awaitPendingTasks()
     }
 }
 

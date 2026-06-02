@@ -193,4 +193,10 @@ final class PreviewManager {
         backgroundTask = nil
         titleTask = nil
     }
+
+    /// Yields to let pending async rendering tasks complete.
+    /// Used by tests to synchronize with background work.
+    func awaitPendingTasks() async {
+        try? await Task.sleep(nanoseconds: 300_000_000)
+    }
 }

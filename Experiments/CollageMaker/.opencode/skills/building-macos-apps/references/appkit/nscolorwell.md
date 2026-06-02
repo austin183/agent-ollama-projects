@@ -20,6 +20,8 @@ struct ColorWellView: NSViewRepresentable {
 
     func updateNSView(_ well: NSColorWell, context: Context) {
         well.color = color  // Always assign unconditionally — no equality guard
+        well.target = context.coordinator    // Re-set every update — NSColorWell may reset these
+        well.action = #selector(Coordinator.colorChanged(_:))
     }
 
     func makeCoordinator() -> Coordinator {
@@ -54,6 +56,19 @@ func updateNSView(_ well: NSColorWell, context: Context) {
 ```
 
 **Fix:** Always unconditionally assign. Never guard `NSColorWell.color` with `!=`.
+
+## Target/Action Re-assignment in updateNSView
+
+`NSColorWell` may reset its `target` and `action` when added to or reconfigured in the view hierarchy. If `updateNSView` doesn't re-set these, the coordinator reference can be lost after a SwiftUI view update cycle.
+
+**Fix:**
+```swift
+func updateNSView(_ well: NSColorWell, context: Context) {
+    well.color = color
+    well.target = context.coordinator    // re-set every update
+    well.action = #selector(Coordinator.colorChanged(_:))
+}
+```
 
 ## Alpha Handling
 

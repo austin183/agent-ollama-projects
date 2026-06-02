@@ -170,6 +170,56 @@ final class CollageViewModel {
 }
 ```
 
+## @Bindable Nested Struct Mutations Bypass didSet
+
+When using `@Bindable` bindings to nested struct properties, SwiftUI's observation system may handle the mutation through `withMutation` without invoking the parent property's setter. This means `didSet` observers don't fire for all mutation paths.
+
+**Problem:**
+```swift
+@Observable class CollageViewModel {
+    var titleStyle: TitleStyle = .default {
+        didSet {
+            // May NOT fire when binding mutates a nested property
+            updatePreview()
+        }
+    }
+}
+
+struct ExportPanel: View {
+    @Bindable var viewModel: CollageViewModel
+    var body: some View {
+        NSColorPickerView(color: $viewModel.titleStyle.backgroundColor)  // bypasses didSet
+    }
+}
+```
+
+**Fix — Explicit setter methods:**
+```swift
+@Observable class CollageViewModel {
+    var titleStyle: TitleStyle = .default
+
+    func setTitleBackgroundColor(_ color: NSColor) {
+        titleStyle.backgroundColor = color
+        updatePreview()
+        debouncedSave()
+    }
+}
+
+struct ExportPanel: View {
+    @Bindable var viewModel: CollageViewModel
+    var body: some View {
+        NSColorPickerView(
+            color: Binding(
+                get: { viewModel.titleStyle.backgroundColor },
+                set: { viewModel.setTitleBackgroundColor($0) }
+            )
+        )
+    }
+}
+```
+
+**Diagnostic clue:** If a binding "works" (the value changes in the model) but side effects don't fire, check whether the binding targets a nested property of a struct and whether the side effects live in the parent property's `didSet`.
+
 ## Initialization Guard for didSet Side Effects
 
 When `@Observable` properties have `didSet` observers that register undo, persist to `UserDefaults`, or trigger side effects (like `updatePreview()`), assigning those properties during `init` fires the `didSet` — causing unwanted undo registrations, redundant persistence writes, and premature side effects before the object is fully constructed.
@@ -358,6 +408,37 @@ If a view updates for some state changes but not others after refactoring:
 3. Check if the view reads the delegate directly (not through the computed property)
 4. The symptom is typically partial: stored properties still update, delegated properties don't
 
+### Version Counter Alternative
+
+The direct delegate read fix works but exposes the delegate's internal structure to the view. When you want to preserve the delegation abstraction, use a **version counter**:
+
+```swift
+@Observable @MainActor final class CollageViewModel {
+    let previewManager = PreviewManager()  // @Observable
+    private var titleImageVersion = 0
+
+    var titleImage: NSImage? {
+        get {
+            let _ = titleImageVersion  // establishes observation dependency
+            return previewManager.titleImage
+        }
+        set { previewManager.titleImage = newValue }
+    }
+
+    func updateTitleImage() {
+        titleImageVersion += 1  // forces observation re-tracking
+        previewManager.updateTitleImage(...)
+    }
+}
+```
+
+The `let _ = titleImageVersion` read in the getter registers `titleImageVersion` as an observation dependency. Incrementing it triggers the observation system to re-evaluate any view that reads `viewModel.titleImage`.
+
+| Approach | Pros | Cons |
+|---|---|---|
+| Version counter | Preserves abstraction, view reads single property | Requires manual increment at every mutation site |
+| Direct delegate read | Automatic, no manual increment | Exposes delegate structure to view, tighter coupling |
+
 ### Eliminating Dual State — Verification Checklist
 
 When unifying dual state (e.g., removing a shadow copy from ViewModel):
@@ -395,7 +476,8 @@ When migrating from `ObservableObject` to `@Observable`:
 6. **Guard `didSet` during initialization** — use `isInitializing` flag to prevent undo registrations, redundant persistence, and premature side effects when loading saved state in `init`
 7. **No `@MainActor` default params in init** — use init overloads instead of `init(dep: MainActorDep = MainActorDep())`
 8. **`@State` UUID cache staleness** — When `@State` caches `[UUID: Value]` and the source collection regenerates with new UUIDs, the cache is stale for one render cycle. Compute on-the-fly in `GeometryReader` closure for correctness-critical paths (hit-testing, overlays). See "@State Cache Staleness with UUID Collections" above.
-9. **@Observable delegation chains** — Computed properties that delegate to sub-managers break SwiftUI observation. Fix: make the delegate `@Observable` AND have views read the delegate directly (e.g., `vm.cropManager.cropMap`, not `vm.cropMap`). Both parts are required.
+9. **@Observable delegation chains** — Computed properties that delegate to sub-managers break SwiftUI observation. Fix: make the delegate `@Observable` AND have views read the delegate directly (e.g., `vm.cropManager.cropMap`, not `vm.cropMap`). Both parts are required. Alternatively, use a **version counter** — a private stored `Int` read in the computed getter and incremented at mutation sites — to preserve the delegation abstraction.
+10. **@Bindable nested struct mutations bypass `didSet`** — Bindings to nested struct properties (e.g., `$viewModel.titleStyle.backgroundColor`) may use `withMutation` internally, skipping the parent property's `didSet`. Use explicit setter methods with manual `Binding(get:set:)` when side effects are required.
 
 ## Extracting Managers from @Observable ViewModels
 
@@ -481,4 +563,5 @@ GeometryReader { geometry in
 - **UserDefaults typed getters return zero for missing keys** — `UserDefaults.double(forKey:)`, `.integer(forKey:)`, and `.bool(forKey:)` return `0`, `0`, and `false` respectively when the key doesn't exist (unlike `.string(forKey:)` and `.data(forKey:)` which return `nil`). This causes silent wrong defaults. Safe pattern: check `object(forKey:)` first, then call the typed getter only if the key exists.
 - **`didSet` fires during `init`** — Assigning properties in `init` triggers `didSet`, causing spurious undo entries, redundant `UserDefaults` writes, and premature side effects. Use an `isInitializing` guard in each `didSet` to skip side effects during initialization.
 - **`@MainActor` default param in `init`** — `init(dep: SomeMainActorClass = SomeMainActorClass())` won't compile. Use `convenience init()` overloads instead.
-- **@Observable delegation chain** — A computed property on an `@Observable` class that delegates to a sub-manager (e.g., `var cropMap { cropManager.cropMap }`) breaks observation. SwiftUI only tracks stored properties on the observed instance. Fix requires BOTH: (a) make the delegate `@Observable`, (b) views read `vm.cropManager.cropMap` directly, not through the computed property.
+- **@Observable delegation chain** — A computed property on an `@Observable` class that delegates to a sub-manager (e.g., `var cropMap { cropManager.cropMap }`) breaks observation. SwiftUI only tracks stored properties on the observed instance. Fix requires BOTH: (a) make the delegate `@Observable`, (b) views read `vm.cropManager.cropMap` directly, not through the computed property. Alternative: use a **version counter** — private `Int` read in the computed getter, incremented at mutation sites — to preserve abstraction.
+- **@Bindable nested struct mutations bypass `didSet`** — Bindings like `$viewModel.titleStyle.backgroundColor` may use `withMutation` internally, skipping the parent property's `didSet`. Side effects (e.g., `updatePreview()`) won't fire. Fix: use explicit setter methods with `Binding(get:set:)`.

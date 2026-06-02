@@ -467,6 +467,22 @@ class TestPersistence {
 }
 ```
 
+## UserDefaults Test Isolation with UUID Suite Names
+
+When tests create ViewModel instances that load from `UserDefaults`, debounced saves from one test can pollute the next test's initial state. Each test needs an isolated `UserDefaults` suite.
+
+**Pattern:**
+```swift
+private func makeViewModel() -> CollageViewModel {
+    let suiteName = "Tests.\(UUID().uuidString)"
+    let testDefaults = UserDefaults(suiteName: suiteName)!
+    let persistence = UserDefaultsPersistence(defaults: testDefaults)
+    return CollageViewModel(saliencyAnalyzer: ..., assembler: ..., persistence: persistence)
+}
+```
+
+The UUID ensures each ViewModel gets a fresh, empty `UserDefaults` that no other test can access. No cleanup needed — the suite is abandoned after the test completes.
+
 ## Pitfalls
 
 - **`xcodebuild test` skips Swift Testing** — use `-only-testing:TargetName` flag

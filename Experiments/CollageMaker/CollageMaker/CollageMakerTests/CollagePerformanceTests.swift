@@ -6,10 +6,20 @@ import Testing
 @MainActor
 @Suite(.serialized) struct CollagePerformanceTests {
 
+    private func makeViewModel(assembler: CollageAssembly = TrackingAssembler()) -> CollageViewModel {
+        let suiteName = "CollageMakerTests.\(UUID().uuidString)"
+        let testDefaults = UserDefaults(suiteName: suiteName)!
+        let persistence = UserDefaultsPersistence(defaults: testDefaults)
+        return CollageViewModel(
+            saliencyAnalyzer: MockSaliencyAnalyzer(),
+            assembler: assembler,
+            persistence: persistence
+        )
+    }
+
     @Test func scrollPreviewUpdatesAssembler() async {
         let trackingAssembler = TrackingAssembler()
-        let mockSaliency = MockSaliencyAnalyzer()
-        let vm = CollageViewModel(saliencyAnalyzer: mockSaliency, assembler: trackingAssembler)
+        let vm = makeViewModel(assembler: trackingAssembler)
 
         let image = createTestImageItem(size: CGSize(width: 200, height: 200))
         vm.imageLibrary.images = [image]
@@ -28,8 +38,7 @@ import Testing
 
     @Test func scrollPanMultipleIterations() async {
         let trackingAssembler = TrackingAssembler()
-        let mockSaliency = MockSaliencyAnalyzer()
-        let vm = CollageViewModel(saliencyAnalyzer: mockSaliency, assembler: trackingAssembler)
+        let vm = makeViewModel(assembler: trackingAssembler)
 
         let images = (0..<5).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images

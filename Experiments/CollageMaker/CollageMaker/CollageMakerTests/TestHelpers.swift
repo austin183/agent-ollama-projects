@@ -51,6 +51,7 @@ final class TrackingAssembler: CollageAssembly {
     var previewCalls = 0
     var renderPanelCalls = 0
     var renderBackgroundCalls = 0
+    var titleRenderCalls = 0
     var lastAssemblePanels: [ImagePanel] = []
     var lastAssembleCgImages: [CGImage?] = []
     var lastAssembleCrops: [UUID: CropInfo] = [:]
@@ -97,6 +98,7 @@ final class TrackingAssembler: CollageAssembly {
     }
 
     func renderTitle(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize) async -> NSImage? {
+        titleRenderCalls += 1
         return nil
     }
 }
