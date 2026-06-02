@@ -4,7 +4,7 @@
 
 macOS SwiftUI desktop app that assembles photo collages with Vision-based saliency analysis. Single Xcode project, no SPM or CocoaPods.
 
-- **Xcode project**: `CollageMaker/CollageMaker.xcodeproj`
+- **Xcode project**: `CollageMaker/CollageMaker/CollageMaker.xcodeproj`
 - **Scheme**: `CollageMaker`
 - **Targets**: `CollageMaker` (app), `CollageMakerTests` (unit), `CollageMakerUITests` (XCUITest)
 - **Deployment target**: macOS 26.4, arm64

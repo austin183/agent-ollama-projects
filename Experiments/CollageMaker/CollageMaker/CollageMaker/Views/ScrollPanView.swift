@@ -1,6 +1,8 @@
 import AppKit
 import SwiftUI
 
+private let scrollThrottleInterval = Duration.milliseconds(16)
+
 struct ScrollPanView: NSViewRepresentable {
     let selectedPanelId: UUID?
     let onPanBegan: (UUID) -> Bool
@@ -27,6 +29,7 @@ struct ScrollPanView: NSViewRepresentable {
         var onPanChanged: (CGSize) -> Void = { _ in }
         var onPanEnded: () -> Void = {}
         private var activePanelId: UUID?
+        private var lastScrollTime: ContinuousClock.Instant = ContinuousClock.now
 
         override func scrollWheel(with event: NSEvent) {
             guard event.type == .scrollWheel else {
@@ -47,7 +50,11 @@ struct ScrollPanView: NSViewRepresentable {
                 }
             case .changed:
                 if activePanelId != nil {
-                    onPanChanged(CGSize(width: deltaX * baseMultiplier, height: deltaY * baseMultiplier))
+                    let now = ContinuousClock.now
+                    if now - lastScrollTime >= scrollThrottleInterval {
+                        lastScrollTime = now
+                        onPanChanged(CGSize(width: deltaX * baseMultiplier, height: deltaY * baseMultiplier))
+                    }
                 }
             case .ended, .cancelled:
                 if activePanelId != nil {

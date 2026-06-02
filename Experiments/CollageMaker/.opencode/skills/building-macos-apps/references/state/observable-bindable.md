@@ -439,6 +439,27 @@ The `let _ = titleImageVersion` read in the getter registers `titleImageVersion`
 | Version counter | Preserves abstraction, view reads single property | Requires manual increment at every mutation site |
 | Direct delegate read | Automatic, no manual increment | Exposes delegate structure to view, tighter coupling |
 
+### Throttling Version Counter Increments
+
+When a version counter drives view re-evaluation during high-rate input (gestures firing 60-120x/sec), throttle the increments to bound SwiftUI body re-evaluations. Use `ContinuousClock` + `Duration` — **never** `mach_absolute_time()` (returns ticks, not nanoseconds):
+
+```swift
+private var lastNotifyTime: ContinuousClock.Instant = .now
+private let notifyInterval: Duration = .milliseconds(30) // ~33fps
+
+private func throttledNotify() {
+    let now = ContinuousClock.now
+    if now - lastNotifyTime >= notifyInterval {
+        lastNotifyTime = now
+        titleImageVersion += 1
+    }
+}
+```
+
+Throttle (not debounce) is the right choice here — throttle fires immediately on the first event and skips until the interval elapses, giving live feedback during active gestures. Debounce defers until after a quiet period, leaving the view stale during the gesture.
+
+**Gesture-end notification gap:** When per-frame notification is deferred to a debounce task, gesture-end paths (`onEnded`, `finish*`) that cancel the debounce task will never fire the notification. Always add explicit notification in gesture-end methods.
+
 ### Eliminating Dual State — Verification Checklist
 
 When unifying dual state (e.g., removing a shadow copy from ViewModel):

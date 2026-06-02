@@ -61,6 +61,19 @@ final class CollageViewModel {
         cropMapVersion += 1
     }
 
+    /// Throttled notification — fires at most every ~30ms (~33fps) so the view
+    /// updates during active gestures without re-evaluating on every frame.
+    private var lastCropNotifyTime: ContinuousClock.Instant = ContinuousClock.now
+    private let cropNotifyInterval: Duration = .milliseconds(30)
+
+    private func throttledNotifyCropMapChanged() {
+        let now = ContinuousClock.now
+        if now - lastCropNotifyTime >= cropNotifyInterval {
+            lastCropNotifyTime = now
+            notifyCropMapChanged()
+        }
+    }
+
     var layoutStyle: LayoutStyle = .hero {
         didSet {
             guard !isInitializing else { return }
@@ -598,7 +611,7 @@ final class CollageViewModel {
         defer { perfLogger.debug("Pan Application completed in \(ContinuousClock.now - panStart)") }
 
         cropManager.applyPan(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
-        notifyCropMapChanged()
+        throttledNotifyCropMapChanged()
 
         previewDebounceTask?.cancel()
         previewDebounceTask = Task { [weak self] in
@@ -621,12 +634,13 @@ final class CollageViewModel {
         cropManager.applyPinch(panelId: panelId, panels: panels, images: images, panelAssignments: panelAssignments, finish: true)
         if let panelId {
             updatePanelPreview(panelId: panelId)
+            notifyCropMapChanged()
         }
     }
 
     func applyPinchLive() {
         cropManager.applyPinch(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
-        notifyCropMapChanged()
+        throttledNotifyCropMapChanged()
 
         panelPreviewTask?.cancel()
         panelPreviewTask = Task { [weak self] in
@@ -674,7 +688,7 @@ final class CollageViewModel {
             destinationRect: crop.destinationRect
         )
         cropManager.cropMap[panelId] = newCrop
-        notifyCropMapChanged()
+        throttledNotifyCropMapChanged()
 
         panelPreviewTask?.cancel()
         panelPreviewTask = Task { [weak self] in
@@ -686,6 +700,7 @@ final class CollageViewModel {
     func finishOverlayCrop(panelId: UUID) {
         panelPreviewTask?.cancel()
         updatePanelPreview(panelId: panelId)
+        notifyCropMapChanged()
     }
 
     func applyOverlayCrop(panelId: UUID, sourceRect: CGRect) {
@@ -707,7 +722,7 @@ final class CollageViewModel {
             panelAssignments: panelAssignments,
             finish: false
         )
-        notifyCropMapChanged()
+        throttledNotifyCropMapChanged()
 
         previewDebounceTask?.cancel()
         previewDebounceTask = Task { [weak self] in
@@ -731,7 +746,6 @@ final class CollageViewModel {
                 finish: true
             )
             self.cropManager.beginPan(panelId: id)
-            self.notifyCropMapChanged()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: scrollCommitTimer!)
     }
@@ -740,6 +754,7 @@ final class CollageViewModel {
         scrollCommitTimer?.cancel()
         scrollCommitTimer = nil
         cropManager.endScrollPan()
+        notifyCropMapChanged()
     }
 
     // MARK: - Config

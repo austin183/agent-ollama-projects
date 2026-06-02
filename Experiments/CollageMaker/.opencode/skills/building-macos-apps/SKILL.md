@@ -325,6 +325,22 @@ See [references/ui/swiftui-overlays.md](references/ui/swiftui-overlays.md) for e
 - **Multiple async rendering tasks race** -- When `updatePreview()`, `updateBackground()`, and `updatePanelPreview()` all run on separate `Task.detached` tasks, there's no ordering guarantee. If rendering mode depends on which task completed first, the mode can flip unpredictably during rapid interactions.
 - **Composite-to-layered rendering transition** -- When splitting a full composite into individual layers, every element baked into the composite needs its own rendering path. Elements without a dedicated layer become invisible in layered mode. Render each element (title, panels, effects) separately and compose in a ZStack.
 - **Property-level debounce for rapid controls** -- Slider and color picker `didSet` observers fire 30-60x/sec during drag. Use a debounced render method (cancel previous task, sleep 150ms, render) for continuous controls. Discrete controls (typing, enum picker, image selection) render immediately. Rule of thumb: >10 events/sec = debounce. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md) for cross-boundary cancellation pattern.
+- **Throttled `@Observable` invalidation** -- When a version counter triggers full view re-evaluation, throttle its increments during high-rate input (pan/zoom gestures). Throttle fires immediately on first event, then skips until interval elapses — preserving live feedback unlike debounce. Use `ContinuousClock` + `Duration`, never `mach_absolute_time()` (returns ticks, not nanoseconds):
+
+```swift
+private var lastNotifyTime: ContinuousClock.Instant = .now
+private let notifyInterval: Duration = .milliseconds(30) // ~33fps
+
+private func throttledNotify() {
+    let now = ContinuousClock.now
+    if now - lastNotifyTime >= notifyInterval {
+        lastNotifyTime = now
+        versionCounter += 1
+    }
+}
+```
+
+- **Gesture-end notification gap** -- When per-frame notification is deferred to a debounce callback, gesture-end paths (e.g., `onEnded`, `finish*`) that cancel the debounce task will never fire the notification. Add explicit notification calls in gesture-end methods to ensure final state is visible.
 
 ### Main Thread Timing Budgets
 
@@ -335,6 +351,8 @@ See [references/ui/swiftui-overlays.md](references/ui/swiftui-overlays.md) for e
 | Continuous at 120Hz | < 5ms per frame | Hitch (frame drop) |
 
 **Rule:** Main thread = UI work only. All computation, I/O, and networking goes to background. See [references/tooling/performance-debugging.md](references/tooling/performance-debugging.md) for Instruments templates, sanitizers, OSSignpost, and profiling workflows.
+
+**Timing API:** Use `ContinuousClock.now` + `Duration` for time-based logic. `ContinuousClock.Instant` survives sleep/wake and `Duration.milliseconds(30)` is self-documenting. `mach_absolute_time()` returns clock **ticks** (not nanoseconds) — the tick-to-nanos ratio varies on Apple Silicon. Comparing against hardcoded nanosecond thresholds produces incorrect throttling.
 
 ## CLI Build and Launch
 

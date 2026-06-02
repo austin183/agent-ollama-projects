@@ -117,7 +117,7 @@ In `titleStyle.didSet` when `!isDraggingTitle`:
 
 ---
 
-## Phase 3 — Tight Title Render
+## Phase 3 — Tight Title Render - Skipped
 
 **Problem addressed:** B
 
