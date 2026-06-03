@@ -169,6 +169,8 @@ var titleStyle: TitleStyle = .default {
 - **@Bindable nested struct mutations bypass `didSet`** — Bindings like `$viewModel.titleStyle.backgroundColor` may use `withMutation` internally, skipping the parent property's `didSet`. Use explicit setter methods with `Binding(get:set:)` when side effects are required. See [references/state/observable-bindable.md](references/state/observable-bindable.md)
 - **Cache key struct** — Use a dedicated `Hashable` struct for cache invalidation instead of manual tuple/hash comparison. Synthesizes conformance from `let` properties and documents which properties affect the cache. Compare with `oldValue.key != newValue.key` in `didSet`
 - **`NSAttributedString.isEqual(_:)`** — When caching on attributed string content, use `isEqual(_:)` instead of comparing `.string`. The latter misses attribute changes (bold, italic, font swap)
+- **Multi-field cache invalidation** — Every code path that clears a multi-field cache (result + key + input) must clear ALL fields. Leaving keys stale causes the cache to return stale `nil` on restore. Prefer defensive guard: `if let cachedResult = cachedResult, ...`. See [references/state/observable-bindable.md](references/state/observable-bindable.md)
+- **Gesture hot path caching** — `@Observable` has no path-based granularity for computed properties. Cache expensive computation (CoreText layout) in ViewModel method; keep cheap math (frame from position) in computed property. Position changes during drag reuse cached result. See [references/state/observable-bindable.md](references/state/observable-bindable.md)
 
 ### @ObservableObject (legacy, still valid)
 
@@ -417,6 +419,7 @@ When GUI behavior is unclear (agent cannot observe running app):
 14. **NSColorWell target/action lost** -- `NSColorWell` may reset `target`/`action` during view hierarchy reconfiguration. Re-set both in `updateNSView` every cycle. See [references/appkit/nscolorwell.md](references/appkit/nscolorwell.md)
 15. **NSTextView re-entrancy loop** -- If `textDidChange` normalizes text into a binding, the SwiftUI re-render may call `updateNSView`, which mutates `typingAttributes`, firing another `textDidChange`. Fix with coordinator guard flag + early return in `updateNSView`. See [references/appkit/nstextview-binding.md](references/appkit/nstextview-binding.md)
 16. **Text overlay size doesn't match rendered text** -- SwiftUI `Text` and `NSAttributedString.draw` use different font engines. Even with the same font family and point size, the rendered size will differ. If a gesture overlay appears misaligned or wrong-sized compared to CG-rendered text, the fix is not to tweak the SwiftUI font — it's to use a debounced CG render of the same layer. See [references/gestures/swiftui-gestures.md](references/gestures/swiftui-gestures.md)
+17. **Cached value is `nil` despite populated input** -- Multi-field cache (result + key + input) only cleared the result field, leaving keys stale. On restore, keys match and return stale `nil`. Fix: clear ALL fields, or use defensive guard (`if let cachedResult = cachedResult, ...`).
 
 ## Logging Quality
 

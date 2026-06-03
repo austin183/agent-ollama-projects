@@ -499,6 +499,7 @@ The UUID ensures each ViewModel gets a fresh, empty `UserDefaults` that no other
 - **Aspect ratio assumption** — When testing coordinate math, never assume which axis constrains. Compute fitted dimensions first, then offset, then mapped rect
 - **`sed` for bulk test fixes** — When Swift Testing version doesn't support `tolerance:`, `find -exec sed -i '' 's/, tolerance: 0\.01//g' {} +'` across the test directory is the fastest way to fix many occurrences
 - **UserDefaults test suite instability** — A computed property that creates `UserDefaults(suiteName: UUID())` each access generates a different suite per read, so save/load go to different suites. Store as a stable instance property initialized in `init`.
+- **Identity-based cache tests are fragile** — `===` on cached `@Observable` objects can fail due to macro re-creation or test ordering. Prefer behavioral tests: compare computed values (e.g., `minWidth`, `frame.origin.x`) to verify cache hit/miss outcomes.
 
 ## Identity-Based Cache Testing
 
@@ -519,3 +520,29 @@ Use `===` on cached reference-type objects to distinguish cache hits from misses
     #expect(first !== second)  // different instance = cache miss + recompute
 }
 ```
+
+**Caveat:** Identity comparison is fragile with `@Observable` — the macro may re-create underlying objects, and test ordering can affect identity. Prefer behavioral tests when possible.
+
+## Behavioral Cache Testing (Preferred)
+
+Test the *outcome* of caching (expensive computation skipped, cheap math still runs) rather than object identity. Behavioral tests are more resilient to `@Observable` internals and test ordering:
+
+```swift
+@Test func positionChangeReusesCachedBounds() {
+    let minWidthBefore = vm.cachedTitleMinWidth
+    let frameBefore = vm.cachedTitleCanvasFrame
+    vm.titleStyle.positionX = 0.75  // position-only change
+
+    #expect(vm.cachedTitleMinWidth == minWidthBefore)  // bounds unchanged = cache hit
+    #expect(vm.cachedTitleCanvasFrame?.origin.x != frameBefore?.origin.x)  // frame math updated
+}
+
+@Test func layoutChangeInvalidatesCache() {
+    let minWidthBefore = vm.cachedTitleMinWidth
+    vm.titleStyle.fontFamily = "Helvetica"  // layout-affecting change
+
+    #expect(vm.cachedTitleMinWidth != minWidthBefore)  // bounds changed = cache miss + recompute
+}
+```
+
+Behavioral tests verify that the expensive computation (bounds) is reused while cheap math (frame position) still runs — without depending on object identity.

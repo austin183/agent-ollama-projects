@@ -414,4 +414,127 @@ final class MockAssembler: CollageAssembly {
         try? await Task.sleep(nanoseconds: 200_000_000)
         #expect(trackingAssembler.titleRenderCalls > renderCallsBefore)
     }
+
+    // MARK: - Cached title layout (Phase 1)
+
+    @Test func cachedTitleCanvasFrameIsNullForEmptyTitle() {
+        let vm = makeViewModel()
+        #expect(vm.cachedTitleCanvasFrame == nil)
+    }
+
+    @Test func cachedTitleCanvasFramePopulatedAfterTitleSet() {
+        let vm = makeViewModel()
+        vm.titleAttrString = NSAttributedString(string: "Hello World")
+        #expect(vm.cachedTitleCanvasFrame != nil)
+    }
+
+    @Test func cachedTitleCanvasFrameUpdatesOnTitleChange() {
+        let vm = makeViewModel()
+        vm.titleStyle.width = 200
+        vm.titleAttrString = NSAttributedString(string: "Short")
+        let frame1 = vm.cachedTitleCanvasFrame
+        vm.titleAttrString = NSAttributedString(string: "This Is A Much Longer Title Text That Should Wrap")
+        let frame2 = vm.cachedTitleCanvasFrame
+        #expect(frame1 != nil)
+        #expect(frame2 != nil)
+        #expect(frame1?.height != frame2?.height)
+    }
+
+    @Test func cachedTitleCanvasFrameUpdatesOnFontSizeChange() {
+        let vm = makeViewModel()
+        vm.titleAttrString = NSAttributedString(string: "Font Size Test")
+        let frame1 = vm.cachedTitleCanvasFrame
+        vm.titleStyle.fontSize = 80
+        let frame2 = vm.cachedTitleCanvasFrame
+        #expect(frame1 != nil)
+        #expect(frame2 != nil)
+        #expect(frame2!.height > frame1!.height)
+    }
+
+    @Test func cachedTitleCanvasFrameUpdatesOnWidthChange() {
+        let vm = makeViewModel()
+        vm.titleAttrString = NSAttributedString(string: "Width Test")
+        vm.titleStyle.width = 400
+        let frame1 = vm.cachedTitleCanvasFrame
+        vm.titleStyle.width = 800
+        let frame2 = vm.cachedTitleCanvasFrame
+        #expect(frame1 != nil)
+        #expect(frame2 != nil)
+        #expect(frame1?.width != frame2?.width)
+    }
+
+    @Test func cachedTitleCanvasFrameUpdatesOnPositionChange() {
+        let vm = makeViewModel()
+        vm.titleAttrString = NSAttributedString(string: "Position Test")
+        let frame1 = vm.cachedTitleCanvasFrame
+        vm.titleStyle.positionX = 0.9
+        let frame2 = vm.cachedTitleCanvasFrame
+        #expect(frame1 != nil)
+        #expect(frame2 != nil)
+        #expect(frame1?.origin.x != frame2?.origin.x)
+    }
+
+    @Test func cachedTitleBoundsNotRecomputedForPositionChange() {
+        // Position changes should NOT invalidate the CoreText bounds cache.
+        // Verify behaviorally: minWidth (bounds-only) stays the same,
+        // while canvasFrame (bounds + position math) changes.
+        let vm = makeViewModel()
+        vm.titleAttrString = NSAttributedString(string: "Cache Test")
+        let minWidthBefore = vm.cachedTitleMinWidth
+        let frameBefore = vm.cachedTitleCanvasFrame
+        vm.titleStyle.positionX = 0.75
+        vm.titleStyle.positionY = 0.3
+        let minWidthAfter = vm.cachedTitleMinWidth
+        let frameAfter = vm.cachedTitleCanvasFrame
+        #expect(minWidthBefore == minWidthAfter, "minWidth should not change with position-only changes")
+        #expect(frameBefore?.origin.x != frameAfter?.origin.x, "canvasFrame position should change")
+    }
+
+    @Test func cachedTitleBoundsRecomputedOnFontSizeChange() {
+        // FontSize changes SHOULD invalidate the CoreText bounds cache.
+        // Verify behaviorally: both minWidth and canvasFrame should change.
+        let vm = makeViewModel()
+        vm.titleAttrString = NSAttributedString(string: "Recompute Test")
+        let minWidthBefore = vm.cachedTitleMinWidth
+        let frameBefore = vm.cachedTitleCanvasFrame
+        vm.titleStyle.fontSize = 80
+        let minWidthAfter = vm.cachedTitleMinWidth
+        let frameAfter = vm.cachedTitleCanvasFrame
+        #expect(minWidthAfter > minWidthBefore, "minWidth should increase with larger fontSize")
+        #expect(frameAfter?.height != frameBefore?.height, "canvasFrame height should change with fontSize")
+    }
+
+    @Test func cachedTitleMinWidthUpdatesOnTitleChange() {
+        let vm = makeViewModel()
+        vm.titleAttrString = NSAttributedString(string: "Short")
+        let width1 = vm.cachedTitleMinWidth
+        vm.titleAttrString = NSAttributedString(string: "This Is A Much Longer Title Text")
+        let width2 = vm.cachedTitleMinWidth
+        #expect(width2 > width1)
+    }
+
+    @Test func cachedTitleMinWidthUnchangedForPositionChange() {
+        let vm = makeViewModel()
+        vm.titleAttrString = NSAttributedString(string: "MinWidth Test")
+        let width1 = vm.cachedTitleMinWidth
+        vm.titleStyle.positionX = 0.9
+        vm.titleStyle.positionY = 0.1
+        let width2 = vm.cachedTitleMinWidth
+        #expect(width1 == width2)
+    }
+
+    @Test func cachedTitleCanvasFrameRecoversAfterClearRestore() {
+        let vm = makeViewModel()
+        vm.titleAttrString = NSAttributedString(string: "Hello")
+        let frame1 = vm.cachedTitleCanvasFrame
+        #expect(frame1 != nil)
+
+        vm.titleAttrString = NSAttributedString(string: "")
+        #expect(vm.cachedTitleCanvasFrame == nil)
+
+        vm.titleAttrString = NSAttributedString(string: "Hello")
+        let frame2 = vm.cachedTitleCanvasFrame
+        #expect(frame2 != nil)
+        #expect(frame2 == frame1)
+    }
 }

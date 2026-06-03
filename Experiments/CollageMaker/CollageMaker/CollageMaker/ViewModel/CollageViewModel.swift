@@ -31,6 +31,60 @@ final class CollageViewModel {
     private var cropMapVersion = 0
     private var titleImageVersion = 0
 
+    /// Cached CoreText bounds — only recomputed when layout-affecting properties change.
+    /// Wrapped in a reference type so tests can verify cache hits via identity comparison.
+    final class TitleBoundsCache {
+        let bounds: TitleBoundsCT
+        init(_ bounds: TitleBoundsCT) { self.bounds = bounds }
+    }
+    var cachedTitleBounds: TitleBoundsCache? = nil
+    private var cachedTitleLayoutKey: TitleStyle.LayoutKey? = nil
+    private var cachedTitleString: NSAttributedString?
+
+    private func ensureTitleBounds() -> TitleBoundsCache? {
+        guard !titleAttrString.string.isEmpty else {
+            cachedTitleBounds = nil
+            cachedTitleString = nil
+            cachedTitleLayoutKey = nil
+            return nil
+        }
+        let currentKey = titleStyle.layoutKey
+        if let cachedBounds = cachedTitleBounds,
+           let cachedStr = cachedTitleString, cachedStr.isEqual(titleAttrString),
+           cachedTitleLayoutKey == currentKey {
+            return cachedBounds
+        }
+        cachedTitleString = titleAttrString
+        let textData = TitleTextData.extract(from: titleAttrString)
+        let bounds = TitleBoundsCT.compute(textData: textData, style: titleStyle)
+        cachedTitleBounds = TitleBoundsCache(bounds)
+        cachedTitleLayoutKey = currentKey
+        return cachedTitleBounds
+    }
+
+    /// Cached title canvas frame — uses cached CoreText bounds + cheap CGRect math.
+    var cachedTitleCanvasFrame: CGRect? {
+        guard let cache = ensureTitleBounds() else { return nil }
+        let bounds = cache.bounds
+        let canvasSize = CanvasConfig.defaultCanvasSize
+        let boundingBox = bounds.boundingBox(canvasWidth: canvasSize.width)
+        let drawWidth = titleStyle.effectiveWidth(canvasWidth: canvasSize.width)
+        let anchorX = titleStyle.positionX * canvasSize.width
+        let drawX = anchorX - drawWidth / 2
+        let anchorYcg = canvasSize.height - titleStyle.positionY * canvasSize.height
+        let baselineY = anchorYcg - boundingBox.height
+        let textTop = baselineY + boundingBox.origin.y
+        return CGRect(x: drawX, y: textTop - 12, width: drawWidth, height: boundingBox.height + 24)
+    }
+
+    /// Cached title minimum natural width — uses cached CoreText bounds.
+    var cachedTitleMinWidth: CGFloat {
+        guard let cache = ensureTitleBounds() else { return 0 }
+        let bounds = cache.bounds
+        let canvasSize = CanvasConfig.defaultCanvasSize
+        return bounds.minNaturalWidth(canvasWidth: canvasSize.width)
+    }
+
     var exportManager: ExportManager = ExportManager(assembler: CollageAssembler())
 
     var images: [ImageItem] { imageLibrary.images }

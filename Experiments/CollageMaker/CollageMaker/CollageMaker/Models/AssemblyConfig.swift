@@ -25,9 +25,31 @@ struct BackgroundConfig {
     let gradientEndColor: NSColor
     let gradientAngle: Double
     let opacity: Double
+    let backgroundColor: CGColor
+    let gradientStartCGColor: CGColor
+    let gradientEndCGColor: CGColor
 }
 
-extension BackgroundConfig: @unchecked Sendable {}
+extension BackgroundConfig: @unchecked Sendable {
+    init(
+        style: BackgroundStyle,
+        color: NSColor,
+        gradientStartColor: NSColor,
+        gradientEndColor: NSColor,
+        gradientAngle: Double,
+        opacity: Double
+    ) {
+        self.style = style
+        self.color = color
+        self.gradientStartColor = gradientStartColor
+        self.gradientEndColor = gradientEndColor
+        self.gradientAngle = gradientAngle
+        self.opacity = opacity
+        self.backgroundColor = color.cgColor
+        self.gradientStartCGColor = gradientStartColor.cgColor
+        self.gradientEndCGColor = gradientEndColor.cgColor
+    }
+}
 
 struct AssemblyConfig {
     let layout: LayoutConfig

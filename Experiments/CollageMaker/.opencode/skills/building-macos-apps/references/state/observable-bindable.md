@@ -499,6 +499,8 @@ When migrating from `ObservableObject` to `@Observable`:
 8. **`@State` UUID cache staleness** — When `@State` caches `[UUID: Value]` and the source collection regenerates with new UUIDs, the cache is stale for one render cycle. Compute on-the-fly in `GeometryReader` closure for correctness-critical paths (hit-testing, overlays). See "@State Cache Staleness with UUID Collections" above.
 9. **@Observable delegation chains** — Computed properties that delegate to sub-managers break SwiftUI observation. Fix: make the delegate `@Observable` AND have views read the delegate directly (e.g., `vm.cropManager.cropMap`, not `vm.cropMap`). Both parts are required. Alternatively, use a **version counter** — a private stored `Int` read in the computed getter and incremented at mutation sites — to preserve the delegation abstraction.
 10. **@Bindable nested struct mutations bypass `didSet`** — Bindings to nested struct properties (e.g., `$viewModel.titleStyle.backgroundColor`) may use `withMutation` internally, skipping the parent property's `didSet`. Use explicit setter methods with manual `Binding(get:set:)` when side effects are required.
+11. **Multi-field cache invalidation** — Every code path that clears a multi-field cache (result + key + input) must clear ALL fields. Leaving key fields stale causes the cache to return stale `nil` on restore. Prefer the defensive guard pattern: `if let cachedResult = cachedResult, ...` — if the result is `nil`, the cache always misses.
+12. **Gesture hot path caching** — Move expensive computation (CoreText, image processing) to a cached ViewModel method. Keep cheap math in a computed property that reads the cache. Position changes during drag recompute the cheap math but reuse the cached expensive result.
 
 ## Extracting Managers from @Observable ViewModels
 
@@ -549,6 +551,86 @@ Pure accumulator: Manager only stores raw data, caller owns all logic
 
 **Why:** Inverting the dependency (manager knows nothing about domain) makes the manager testable in isolation and reusable across different ViewModels.
 
+## Multi-Field Cache Invalidation
+
+When a cache stores multiple fields (result + key + input), clearing only the result while leaving key fields stale causes the cache to return stale `nil` on restore.
+
+**Bug scenario:**
+```swift
+private var cachedBounds: TitleBoundsCache?
+private var cachedKey: LayoutKey?
+private var cachedString: NSAttributedString?
+
+private func ensureBounds() -> TitleBoundsCache? {
+    guard !titleAttrString.string.isEmpty else {
+        cachedBounds = nil  // BUG: leaves cachedKey + cachedString stale
+        return nil
+    }
+    if let cachedStr = cachedString, cachedStr.isEqual(titleAttrString),
+       cachedKey == currentKey {
+        return cachedBounds  // returns stale nil!
+    }
+    // ... compute and cache ...
+}
+```
+
+**Trace:** Title set → cache populated. Title cleared → only `cachedBounds = nil`. Title restored → key/string match → returns `nil`.
+
+**Fix — Clear all fields atomically:**
+```swift
+guard !titleAttrString.string.isEmpty else {
+    cachedBounds = nil
+    cachedString = nil
+    cachedKey = nil
+    return nil
+}
+```
+
+**Defensive alternative — Guard the cached result:**
+```swift
+if let cachedBounds = cachedBounds,
+   let cachedStr = cachedString, cachedStr.isEqual(titleAttrString),
+   cachedKey == currentKey {
+    return cachedBounds
+}
+```
+
+This catches stale `nil` regardless of whether all fields were cleared — if `cachedBounds` is `nil`, the cache always misses and recomputes. **Prefer this pattern.**
+
+## Computed Property Caching for Gesture Hot Paths
+
+`@Observable` has no path-based granularity for computed properties — any tracked property change triggers full view body re-evaluation. Move expensive computation (CoreText layout, image processing) to a cached ViewModel method, and keep cheap math in a computed property.
+
+**Pattern:**
+```swift
+// ViewModel — caches expensive computation
+private var cachedResult: ExpensiveType?
+private var cachedKey: CacheKey?
+
+func ensureResult() -> ExpensiveType? {
+    guard !inputString.string.isEmpty else {
+        cachedResult = nil
+        cachedKey = nil
+        return nil
+    }
+    if cachedKey == currentKey { return cachedResult }
+    cachedResult = computeExpensive(currentKey)
+    cachedKey = currentKey
+    return cachedResult
+}
+
+var cachedFrame: CGRect? {
+    guard let result = ensureResult() else { return nil }
+    // Cheap math using cached result + current position
+    return computeFrame(from: result, position: currentPosition)
+}
+
+// View — thin delegator
+private var titleFrame: CGRect? { viewModel.cachedFrame }
+```
+
+**Key insight:** Position changes during drag recompute the `CGRect` (cheap math) but reuse the cached expensive result. Layout/style changes invalidate the cache and trigger fresh computation.
+
 ## @State Cache Staleness with UUID Collections
 
 When a view caches derived data in `@State` keyed by UUIDs (e.g., `[UUID: CGRect]` for panel frames), and the source collection can be regenerated with **new UUIDs**, the cache becomes stale for one render cycle. The `.onChange` that updates the cache fires *after* the first re-render body evaluation.
@@ -586,3 +668,5 @@ GeometryReader { geometry in
 - **`@MainActor` default param in `init`** — `init(dep: SomeMainActorClass = SomeMainActorClass())` won't compile. Use `convenience init()` overloads instead.
 - **@Observable delegation chain** — A computed property on an `@Observable` class that delegates to a sub-manager (e.g., `var cropMap { cropManager.cropMap }`) breaks observation. SwiftUI only tracks stored properties on the observed instance. Fix requires BOTH: (a) make the delegate `@Observable`, (b) views read `vm.cropManager.cropMap` directly, not through the computed property. Alternative: use a **version counter** — private `Int` read in the computed getter, incremented at mutation sites — to preserve abstraction.
 - **@Bindable nested struct mutations bypass `didSet`** — Bindings like `$viewModel.titleStyle.backgroundColor` may use `withMutation` internally, skipping the parent property's `didSet`. Side effects (e.g., `updatePreview()`) won't fire. Fix: use explicit setter methods with `Binding(get:set:)`.
+- **Multi-field cache partial clear** — Clearing only the result field of a multi-field cache (result + key + input) leaves keys stale. On restore, the keys match and the cache returns stale `nil`. Fix: clear ALL fields, or use defensive guard (`if let cachedResult = cachedResult, ...`).
+- **Expensive computed in gesture hot path** — `@Observable` has no path-based granularity — any tracked property change triggers full body re-evaluation. During 33fps gesture loops, expensive computation in computed properties causes hitching. Fix: cache expensive work in a ViewModel method, expose cheap math via computed property.
