@@ -226,21 +226,6 @@ final class MockAssembler: CollageAssembly {
 
     // MARK: - Title attribute changes
 
-    @Test func titleAttrStringAttributeChangeInvalidatesMetrics() {
-        let vm = makeViewModel()
-        let regularFont = NSFont.systemFont(ofSize: 48)
-        let boldFont = NSFont.boldSystemFont(ofSize: 48)
-
-        vm.titleAttrString = NSAttributedString(string: "Hello", attributes: [.font: regularFont])
-        _ = vm.titleMetrics
-        let firstPrepared = vm.titleMetrics?.preparedString
-
-        vm.titleAttrString = NSAttributedString(string: "Hello", attributes: [.font: boldFont])
-        let secondPrepared = vm.titleMetrics?.preparedString
-
-        #expect(firstPrepared != secondPrepared)
-    }
-
     @Test func titleColorChangeUpdatesPreview() async {
         let trackingAssembler = TrackingAssembler()
         let vm = makeViewModel(assembler: trackingAssembler)

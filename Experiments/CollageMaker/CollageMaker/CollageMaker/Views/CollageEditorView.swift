@@ -22,13 +22,13 @@ struct CollageEditorView: View {
 
     private var titleCanvasFrame: CGRect? {
         guard !viewModel.titleAttrString.string.isEmpty else { return nil }
-        guard let metrics = viewModel.titleMetrics else { return nil }
         let style = viewModel.titleStyle
         let canvasSize = CanvasConfig.defaultCanvasSize
+        let textData = TitleTextData.extract(from: viewModel.titleAttrString)
+        let bounds = TitleBoundsCT.compute(textData: textData, style: style)
+        let boundingBox = bounds.boundingBox(canvasWidth: canvasSize.width)
 
         let drawWidth = style.effectiveWidth(canvasWidth: canvasSize.width)
-        let boundingBox = metrics.boundingBox
-
         let anchorX = style.positionX * canvasSize.width
         let drawX = anchorX - drawWidth / 2
         let anchorYcg = canvasSize.height - style.positionY * canvasSize.height
@@ -44,7 +44,12 @@ struct CollageEditorView: View {
     }
 
     private var titleMinWidth: CGFloat {
-        viewModel.titleMetrics?.minNaturalWidth ?? 0
+        guard !viewModel.titleAttrString.string.isEmpty else { return 0 }
+        let style = viewModel.titleStyle
+        let canvasSize = CanvasConfig.defaultCanvasSize
+        let textData = TitleTextData.extract(from: viewModel.titleAttrString)
+        let bounds = TitleBoundsCT.compute(textData: textData, style: style)
+        return bounds.minNaturalWidth(canvasWidth: canvasSize.width)
     }
 
     private var layoutTitleFrame: CGRect {

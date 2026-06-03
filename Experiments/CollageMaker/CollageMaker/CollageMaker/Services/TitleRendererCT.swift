@@ -41,6 +41,97 @@ struct TitleTextData: Sendable {
     }
 }
 
+// MARK: - TitleBoundsCT
+
+/// Lightweight CoreText-based title bounds calculator.
+/// Produces identical bounding boxes to TitleMetricsCT for pixel-perfect outline alignment.
+struct TitleBoundsCT {
+    private let framesetter: CTFramesetter
+    private let stringLength: CFIndex
+    private let fontDescent: CGFloat
+    private let styleWidth: CGFloat
+
+    static func compute(
+        textData: TitleTextData,
+        style: TitleStyle
+    ) -> TitleBoundsCT {
+        let paragraphStyle = makeParagraphStyle(alignment: style.alignment)
+
+        let cfAttrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0)!
+        CFAttributedStringReplaceString(cfAttrString, CFRange(), textData.text as CFString)
+        let stringLength = CFAttributedStringGetLength(cfAttrString)
+
+        CFAttributedStringSetAttribute(
+            cfAttrString,
+            CFRange(location: 0, length: stringLength),
+            kCTParagraphStyleAttributeName,
+            paragraphStyle
+        )
+
+        var primaryFont: CTFont?
+        for run in textData.runs {
+            let traits = CTFontSymbolicTraits(rawValue: run.symbolicTraitsRawValue)
+            let font = makeCTFont(
+                existingFamily: run.fontFamily,
+                existingTraits: traits,
+                baseFamily: style.fontFamily,
+                targetSize: style.fontSize
+            )
+            CFAttributedStringSetAttribute(
+                cfAttrString,
+                CFRange(location: run.range.location, length: run.range.length),
+                kCTFontAttributeName,
+                font
+            )
+            if primaryFont == nil {
+                primaryFont = font
+            }
+        }
+
+        let framesetter = CTFramesetterCreateWithAttributedString(cfAttrString)
+        let pFont = primaryFont ?? CTFontCreateUIFontForLanguage(.system, style.fontSize, nil)!
+
+        return TitleBoundsCT(
+            framesetter: framesetter,
+            stringLength: stringLength,
+            fontDescent: CTFontGetDescent(pFont),
+            styleWidth: style.width
+        )
+    }
+
+    func boundingBox(canvasWidth: CGFloat) -> CGRect {
+        let drawWidth = effectiveWidth(canvasWidth: canvasWidth)
+        var fitRange = CFRange()
+        let size = CTFramesetterSuggestFrameSizeWithConstraints(
+            framesetter,
+            CFRange(location: 0, length: stringLength),
+            nil,
+            CGSize(width: drawWidth, height: CGFloat.greatestFiniteMagnitude),
+            &fitRange
+        )
+        return CGRect(x: 0, y: -fontDescent, width: size.width, height: size.height)
+    }
+
+    func minNaturalWidth(canvasWidth: CGFloat) -> CGFloat {
+        var fitRange = CFRange()
+        let size = CTFramesetterSuggestFrameSizeWithConstraints(
+            framesetter,
+            CFRange(location: 0, length: stringLength),
+            nil,
+            CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude),
+            &fitRange
+        )
+        return size.width
+    }
+
+    private func effectiveWidth(canvasWidth: CGFloat) -> CGFloat {
+        if styleWidth > 0 {
+            return styleWidth
+        }
+        return canvasWidth - 40
+    }
+}
+
 // MARK: - TitleMetricsCT
 
 /// Pure CoreText title metrics and renderer. Thread-safe, no AppKit mutation.

@@ -30,7 +30,6 @@ final class CollageViewModel {
     private var saveDebounceTask: Task<Void, Never>?
     private var cropMapVersion = 0
     private var titleImageVersion = 0
-    private var cachedTitleMetrics: (metrics: TitleMetrics, layoutKey: TitleStyle.LayoutKey, titleHash: Int)?
 
     var exportManager: ExportManager = ExportManager(assembler: CollageAssembler())
 
@@ -90,7 +89,6 @@ final class CollageViewModel {
     var titleAttrString: NSAttributedString = NSAttributedString(string: "") {
         didSet {
             guard !oldValue.isEqual(titleAttrString) else { return }
-            cachedTitleMetrics = nil
             guard !isInitializing else { return }
             undoManager.registerUndo(withTarget: self) { target in
                 target.titleAttrString = oldValue
@@ -111,10 +109,6 @@ final class CollageViewModel {
 
     var titleStyle: TitleStyle = .default {
         didSet {
-            let layoutKeyChanged = oldValue.layoutKey != titleStyle.layoutKey
-            if layoutKeyChanged {
-                cachedTitleMetrics = nil
-            }
             guard !isInitializing else { return }
             if isDraggingTitle {
                 updateTitleImageLive()
@@ -287,24 +281,6 @@ final class CollageViewModel {
     var isDraggingTitle: Bool = false
     var errorMessage: String?
     var exportSuccessMessage: String? { exportManager.successMessage }
-
-    var titleMetrics: TitleMetrics? {
-        guard !titleAttrString.string.isEmpty else { return nil }
-        let layoutKey = titleStyle.layoutKey
-        let titleHash = titleAttrString.string.hashValue
-        if let cache = cachedTitleMetrics, cache.layoutKey == layoutKey, cache.titleHash == titleHash {
-            return cache.metrics
-        }
-        cachedTitleMetrics = (
-            metrics: TitleMetrics(
-                preparedString: TitleMetrics.prepare(titleAttrString, style: titleStyle),
-                style: titleStyle
-            ),
-            layoutKey: layoutKey,
-            titleHash: titleHash
-        )
-        return cachedTitleMetrics!.metrics
-    }
 
     func dismissExportSuccess() {
         exportManager.dismissSuccess()
