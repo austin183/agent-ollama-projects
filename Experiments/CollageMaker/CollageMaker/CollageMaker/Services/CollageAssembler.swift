@@ -155,7 +155,7 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         let scale = previewSize.width / config.canvasSize.width
 
         guard let context = createPureCGContext(size: previewSize) else { return nil }
-        context.interpolationQuality = .high
+        context.interpolationQuality = .medium
         context.scaleBy(x: scale, y: scale)
 
         switch config.background.style {
@@ -346,7 +346,7 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
     ) async -> NSImage? {
         await scheduler.render {
             guard let context = self.createPureCGContext(size: panelSize) else { return nil }
-            context.interpolationQuality = .high
+            context.interpolationQuality = .medium
 
             let sourceRect = crop.sourceRect
             let destRect = CGRect(origin: .zero, size: panelSize)

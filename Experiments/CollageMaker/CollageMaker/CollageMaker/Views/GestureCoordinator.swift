@@ -13,4 +13,16 @@ final class GestureCoordinator: ObservableObject {
     @Published var dragSourceImageIndex: Int = 0
     @Published var oldTitleStyle: TitleStyle?
     @Published var dragTitleOffset: CGPoint = .zero
+
+    private var lastPinchTime: ContinuousClock.Instant = .now
+    private let pinchThrottleInterval: Duration = .milliseconds(16)
+
+    func shouldProcessPinch() -> Bool {
+        let now = ContinuousClock.now
+        if now - lastPinchTime >= pinchThrottleInterval {
+            lastPinchTime = now
+            return true
+        }
+        return false
+    }
 }

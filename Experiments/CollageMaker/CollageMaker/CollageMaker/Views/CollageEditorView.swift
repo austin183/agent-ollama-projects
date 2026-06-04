@@ -50,14 +50,11 @@ struct CollageEditorView: View {
                         }
 
                         ForEach(viewModel.panels) { panel in
-                            if let renderedImage = viewModel.panelRenderedImages[panel.id],
-                               let scaledFrame = panelFrames[panel.id] {
-                                Image(nsImage: renderedImage)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: scaledFrame.width, height: scaledFrame.height)
-                                    .position(x: scaledFrame.midX, y: scaledFrame.midY)
-                            }
+                            PanelOverlay(
+                                panel: panel,
+                                scaledFrame: panelFrames[panel.id],
+                                viewModel: viewModel
+                            )
                         }
 
                         if let titleImg = viewModel.titleImage {
@@ -72,31 +69,6 @@ struct CollageEditorView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(width: geometry.size.width, height: geometry.size.height)
                             .id("preview")
-                    }
-
-                    ForEach(viewModel.panels) { panel in
-                        if let scaledFrame = panelFrames[panel.id] {
-                            let imageIndex = viewModel.getEffectiveImageIndex(for: panel.id)
-                            PanelHitArea(
-                                panel: panel,
-                                frame: scaledFrame,
-                                viewModel: viewModel,
-                                imageIndex: imageIndex
-                            )
-                            .accessibilityLabel("Image panel")
-                            .accessibilityAddTraits(viewModel.selectedPanelId == panel.id ? [.isSelected] : [])
-                            .contextMenu {
-                                Button("Reset Crop") {
-                                    viewModel.resetCrop(panelId: panel.id)
-                                }
-                                Divider()
-                                if let idx = imageIndex {
-                                    Button("Remove Image", role: .destructive) {
-                                        viewModel.removeImage(at: idx)
-                                    }
-                                }
-                            }
-                        }
                     }
 
                     if !viewModel.isLiveGesturing, let scaled = titleFrame, !viewModel.title.isEmpty {
@@ -149,25 +121,6 @@ struct CollageEditorView: View {
                             .frame(width: 48, height: 48)
                             .opacity(0.7)
                             .position(cursorLoc)
-                    }
-
-                    if let selectedId = viewModel.selectedPanelId,
-                        let selectedPanel = viewModel.panels.first(where: { $0.id == selectedId }),
-                        let scaledFrame = panelFrames[selectedId] {
-                        Rectangle()
-                            .fill(Color.clear)
-                            .stroke(Color.white, lineWidth: 2)
-                            .frame(width: scaledFrame.width, height: scaledFrame.height)
-                            .position(x: scaledFrame.midX, y: scaledFrame.midY)
-                            .onAppear {
-                                logger.debug("Highlight: panel \(DebugHelpers.rectStr(selectedPanel.frame)), scaled \(DebugHelpers.rectStr(scaledFrame)), preview \(DebugHelpers.sizeStr(geometry.size))")
-                            }
-                    } else if let selectedId = viewModel.selectedPanelId {
-                        Rectangle()
-                            .fill(Color.clear)
-                            .onAppear {
-                                logger.debug("Highlight: panel id \(selectedId.uuidString) NOT FOUND in panels (count \(viewModel.panels.count))")
-                            }
                     }
                 }
                 .overlay {
@@ -340,7 +293,9 @@ struct CollageEditorView: View {
                             }
                             if gestureCoordinator.pinchPanelId != nil {
                                 viewModel.pinch(magnification: value)
-                                viewModel.applyPinchLive()
+                                if gestureCoordinator.shouldProcessPinch() {
+                                    viewModel.applyPinchLive()
+                                }
                             }
                         }
                         .onEnded { _ in
@@ -407,5 +362,56 @@ private struct PanelHitArea: View {
             .fill(Color.clear)
             .frame(width: frame.width, height: frame.height)
             .position(x: frame.midX, y: frame.midY)
+    }
+}
+
+private struct PanelOverlay: View {
+    let panel: ImagePanel
+    let scaledFrame: CGRect?
+    let viewModel: CollageViewModel
+
+    var body: some View {
+        ZStack {
+            if viewModel.isLayeredMode,
+               let renderedImage = viewModel.panelRenderedImages[panel.id],
+               let frame = scaledFrame {
+                Image(nsImage: renderedImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: frame.width, height: frame.height)
+                    .position(x: frame.midX, y: frame.midY)
+            }
+
+            if let frame = scaledFrame {
+                let imageIndex = viewModel.getEffectiveImageIndex(for: panel.id)
+                PanelHitArea(
+                    panel: panel,
+                    frame: frame,
+                    viewModel: viewModel,
+                    imageIndex: imageIndex
+                )
+                .accessibilityLabel("Image panel")
+                .accessibilityAddTraits(viewModel.selectedPanelId == panel.id ? [.isSelected] : [])
+                .contextMenu {
+                    Button("Reset Crop") {
+                        viewModel.resetCrop(panelId: panel.id)
+                    }
+                    Divider()
+                    if let idx = imageIndex {
+                        Button("Remove Image", role: .destructive) {
+                            viewModel.removeImage(at: idx)
+                        }
+                    }
+                }
+            }
+
+            if viewModel.selectedPanelId == panel.id, let frame = scaledFrame {
+                Rectangle()
+                    .fill(Color.clear)
+                    .stroke(Color.white, lineWidth: 2)
+                    .frame(width: frame.width, height: frame.height)
+                    .position(x: frame.midX, y: frame.midY)
+            }
+        }
     }
 }

@@ -345,6 +345,8 @@ private func throttledNotify() {
 ```
 
 - **Gesture-end notification gap** -- When per-frame notification is deferred to a debounce callback, gesture-end paths (e.g., `onEnded`, `finish*`) that cancel the debounce task will never fire the notification. Add explicit notification calls in gesture-end methods to ensure final state is visible.
+- **Dual-responsibility timer/task cleanup** -- When removing a timer or background task for performance, audit what else it did beyond its primary purpose. A timer that both commits accumulated state AND calls `endGesture()` (clearing `gestureActivePanelId`, etc.) will leave stale gesture state if only the commit is replaced. Move cleanup to the explicit gesture-end path.
+- **Gesture-end task cancellation** -- When a gesture uses a background render task (e.g., `previewDebounceTask`), cancel it in `endGesture()`. A pending render can fire after gesture end and overwrite a subsequent gesture's result. Different gesture types use different task variables and won't cancel each other automatically.
 
 ### Main Thread Timing Budgets
 

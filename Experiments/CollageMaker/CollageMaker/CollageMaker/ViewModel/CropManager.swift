@@ -47,6 +47,7 @@ final class CropManager {
     func endScrollPan() {
         scrollPanPanelId = nil
         scrollPanAccumulator = .zero
+        endGesture()
     }
 
     var scrollPanHasActivePan: Bool {

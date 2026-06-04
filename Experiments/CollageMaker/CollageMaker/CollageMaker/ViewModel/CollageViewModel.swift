@@ -116,12 +116,16 @@ final class CollageViewModel {
 
     /// Throttled notification — fires at most every ~30ms (~33fps) so the view
     /// updates during active gestures without re-evaluating on every frame.
+    /// Scroll pan uses a slower 60ms interval since users are moving through
+    /// content rapidly and 16fps is visually indistinguishable.
     private var lastCropNotifyTime: ContinuousClock.Instant = ContinuousClock.now
     private let cropNotifyInterval: Duration = .milliseconds(30)
+    private let scrollCropNotifyInterval: Duration = .milliseconds(60)
 
-    private func throttledNotifyCropMapChanged() {
+    private func throttledNotifyCropMapChanged(forScrollPan: Bool = false) {
+        let interval = forScrollPan ? scrollCropNotifyInterval : cropNotifyInterval
         let now = ContinuousClock.now
-        if now - lastCropNotifyTime >= cropNotifyInterval {
+        if now - lastCropNotifyTime >= interval {
             lastCropNotifyTime = now
             notifyCropMapChanged()
         }
@@ -203,7 +207,6 @@ final class CollageViewModel {
     }
 
     var scrollSensitivity: CGFloat = 1.6
-    private var scrollCommitTimer: DispatchWorkItem?
 
     var backgroundColor: NSColor = .black {
         didSet {
@@ -673,10 +676,12 @@ final class CollageViewModel {
         throttledNotifyCropMapChanged()
 
         panelPreviewTask?.cancel()
-        panelPreviewTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 150_000_000)
-            if let panelId = self?.cropManager.activePanelId {
-                self?.updatePanelPreview(panelId: panelId)
+        if let panelId = cropManager.activePanelId {
+            panelPreviewTask = Task.detached { [weak self, panelId] in
+                guard let self else { return }
+                await MainActor.run {
+                    self.updatePanelPreview(panelId: panelId)
+                }
             }
         }
     }
@@ -710,6 +715,22 @@ final class CollageViewModel {
         undoManager.endUndoGrouping()
     }
 
+    private var lastOverlayRenderTime: ContinuousClock.Instant = ContinuousClock.now
+    private let overlayRenderInterval: Duration = .milliseconds(50)
+
+    private func throttledOverlayRender(panelId: UUID) {
+        let now = ContinuousClock.now
+        guard now - lastOverlayRenderTime >= overlayRenderInterval else { return }
+        lastOverlayRenderTime = now
+        panelPreviewTask?.cancel()
+        panelPreviewTask = Task.detached { [weak self, panelId] in
+            guard let self else { return }
+            await MainActor.run {
+                self.updatePanelPreview(panelId: panelId)
+            }
+        }
+    }
+
     func applyOverlayCropLive(panelId: UUID, sourceRect: CGRect) {
         guard let crop = cropMap[panelId] else { return }
         let newCrop = CropInfo(
@@ -719,12 +740,7 @@ final class CollageViewModel {
         )
         cropManager.cropMap[panelId] = newCrop
         throttledNotifyCropMapChanged()
-
-        panelPreviewTask?.cancel()
-        panelPreviewTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 150_000_000)
-            self?.updatePanelPreview(panelId: panelId)
-        }
+        throttledOverlayRender(panelId: panelId)
     }
 
     func finishOverlayCrop(panelId: UUID) {
@@ -744,6 +760,23 @@ final class CollageViewModel {
         cropManager.beginScrollPan(panelId: panelId)
     }
 
+    private var lastScrollRenderTime: ContinuousClock.Instant = ContinuousClock.now
+    private let scrollRenderInterval: Duration = .milliseconds(60)
+
+    private func throttledScrollPanRender() {
+        let now = ContinuousClock.now
+        guard now - lastScrollRenderTime >= scrollRenderInterval,
+              let panelId = cropManager.scrollPanActivePanelId else { return }
+        lastScrollRenderTime = now
+        previewDebounceTask?.cancel()
+        previewDebounceTask = Task.detached { [weak self, panelId] in
+            guard let self else { return }
+            await MainActor.run {
+                self.updatePanelPreview(panelId: panelId)
+            }
+        }
+    }
+
     func scrollPanDelta(_ delta: CGSize) {
         cropManager.scrollPanAccumulateDelta(delta, sensitivity: scrollSensitivity)
         cropManager.scrollPanApply(
@@ -752,37 +785,13 @@ final class CollageViewModel {
             panelAssignments: panelAssignments,
             finish: false
         )
-        throttledNotifyCropMapChanged()
-
-        previewDebounceTask?.cancel()
-        previewDebounceTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 150_000_000)
-            if let panelId = self?.cropManager.scrollPanActivePanelId {
-                self?.updatePanelPreview(panelId: panelId)
-            }
-        }
-
-        scheduleScrollPanCommit()
-    }
-
-    private func scheduleScrollPanCommit() {
-        scrollCommitTimer?.cancel()
-        scrollCommitTimer = DispatchWorkItem { [weak self] in
-            guard let self, let id = self.cropManager.scrollPanActivePanelId else { return }
-            self.cropManager.scrollPanApply(
-                panels: self.panels,
-                images: self.images,
-                panelAssignments: self.panelAssignments,
-                finish: true
-            )
-            self.cropManager.beginPan(panelId: id)
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: scrollCommitTimer!)
+        throttledNotifyCropMapChanged(forScrollPan: true)
+        throttledScrollPanRender()
     }
 
     func endScrollPan() {
-        scrollCommitTimer?.cancel()
-        scrollCommitTimer = nil
+        previewDebounceTask?.cancel()
+        previewDebounceTask = nil
         cropManager.endScrollPan()
         notifyCropMapChanged()
     }

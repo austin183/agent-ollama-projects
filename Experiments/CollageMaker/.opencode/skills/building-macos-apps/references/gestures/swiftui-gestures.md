@@ -207,6 +207,34 @@ class CropManager: ObservableObject {
 
 `previewTask?.cancel()` at the top of `updatePreview()` naturally drops stale work without debounce timers or frame-rate limiting.
 
+### Throttled Background Render for Live Feedback
+
+The cancel-previous-task pattern above works for low-frequency gestures. For high-frequency gestures (~60fps `DragGesture.onChanged`), every render gets cancelled because the next event arrives before the render completes. Throttle instead:
+
+```swift
+private var lastScrollRenderTime: ContinuousClock.Instant = .now
+private let scrollRenderInterval: Duration = .milliseconds(60)
+
+private func throttledScrollPanRender() {
+    let now = ContinuousClock.now
+    guard now - lastScrollRenderTime >= scrollRenderInterval else { return }
+    lastScrollRenderTime = now
+
+    previewDebounceTask?.cancel()
+    previewDebounceTask = Task.detached { [weak self] in
+        guard !Task.isCancelled else { return }
+        await MainActor.run { self?.updatePanelPreview() }
+    }
+}
+```
+
+**Debounce vs throttle choice:**
+- **Debounce** (sleep N ms, render after quiet period) — good for final-quality render after user stops interacting. Bad for live feedback.
+- **Throttle** (fire every N ms during active input) — gives responsive feedback during gesture. Use `Task.detached` + `await MainActor.run` for offloading rendering while safely mutating `@Observable` state.
+- For scroll pan (moving through content), ~16fps (60ms) throttle is sufficient. For pinch zoom (precise framing), render on every throttled gesture event.
+
+**Non-layered mode feedback:** In rendering modes where the preview is a static composite (not per-layer), crop changes don't affect pixel content. `cropMapVersion`-driven frame updates only affect overlays visible in layered mode. Throttled render of the full composite is required for live feedback in non-layered mode.
+
 ## Key Findings
 
 1. **`DragGesture.location` available in `onChanged`** — use for hit testing during drag
@@ -228,6 +256,7 @@ class CropManager: ObservableObject {
 - **Pan manager subtraction inverts direct drag** — A pan method that computes `baseOrigin - panDelta` implements indirect scroll semantics. Direct drag requires negated translation or bypassing the pan pipeline entirely.
 - **Hardcoded zoom limits don't scale** — `clamp(min: 0.5, max: 3.0)` assumes a fixed image/panel relationship. When the image is much larger than the panel, the max prevents zooming out enough to see the full image. Compute the zoom-out limit dynamically from actual dimensions.
 - **CG-rendered content needs CG live preview, not SwiftUI overlay** — SwiftUI `Text` uses a different font engine than `NSAttributedString.draw(in:)`. Font metrics (ascent, descent, leading, em-square) differ even with identical font descriptors. A SwiftUI overlay will never match CG output pixel-for-pixel. For live gesture feedback on CG-rendered content (titles, watermarks, annotations), debounce the CG render at ~150ms on the specific layer, not the full composite. Show the pre-rendered `NSImage` during the debounce gap for continuity. Cancel the debounce task and run a full composite on gesture end.
+- **High-frequency gesture cancels every render** — `DragGesture.onChanged` fires at ~60fps. The "cancel previous task + schedule new render" pattern will cancel every render because the next event arrives before the render completes. Throttle the render cadence at the ViewModel level (e.g., 50ms) instead of canceling on every event.
 
 ### Dynamic Zoom Bounds
 
