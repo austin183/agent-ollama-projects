@@ -514,7 +514,7 @@ for cleaner test code.
 
 ---
 
-## Phase 3: Medium-term — Architecture (3 items)
+## Phase 3: Medium-term — Architecture (3 items) — COMPLETED
 
 ### 3.1 S-1: Convert `GestureCoordinator` to `@Observable`
 

@@ -1,18 +1,19 @@
-import Combine
 import CoreGraphics
-import SwiftUI
+import Foundation
+import Observation
 
 @MainActor
-final class GestureCoordinator: ObservableObject {
-    @Published var pinchPanelId: UUID?
-    @Published var dragTitleLocked: Bool = false
-    @Published var titleResizeEdge: TitleResizeEdge = .none
-    @Published var dragSourcePanelId: UUID?
-    @Published var dragTargetPanelId: UUID?
-    @Published var dragCursorLocation: CGPoint?
-    @Published var dragSourceImageIndex: Int = 0
-    @Published var oldTitleStyle: TitleStyle?
-    @Published var dragTitleOffset: CGPoint = .zero
+@Observable
+final class GestureCoordinator {
+    var pinchPanelId: UUID?
+    var dragTitleLocked: Bool = false
+    var titleResizeEdge: TitleResizeEdge = .none
+    var dragSourcePanelId: UUID?
+    var dragTargetPanelId: UUID?
+    var dragCursorLocation: CGPoint?
+    var dragSourceImageIndex: Int = 0
+    var oldTitleStyle: TitleStyle?
+    var dragTitleOffset: CGPoint = .zero
 
     private var lastPinchTime: ContinuousClock.Instant = .now
     private let pinchThrottleInterval: Duration = .milliseconds(16)

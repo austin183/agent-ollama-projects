@@ -8,16 +8,14 @@ private let logger = Logger(
     category: "Editor"
 )
 
-enum TitleResizeEdge {
+enum TitleResizeEdge: Equatable {
     case none, left, right
 }
-
-private let resizeHandleWidth: CGFloat = 8
 
 struct CollageEditorView: View {
     @Bindable var viewModel: CollageViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @StateObject private var gestureCoordinator = GestureCoordinator()
+    @State private var gestureCoordinator = GestureCoordinator()
 
 
     private var titleCanvasFrame: CGRect? {
@@ -82,13 +80,13 @@ struct CollageEditorView: View {
 
                         Rectangle()
                             .fill(Color.orange.opacity(0.3))
-                            .frame(width: resizeHandleWidth, height: scaled.height)
+                            .frame(width: 8, height: scaled.height)
                             .position(x: scaled.minX, y: scaled.midY)
                             .help("Drag to resize title width")
 
                         Rectangle()
                             .fill(Color.orange.opacity(0.3))
-                            .frame(width: resizeHandleWidth, height: scaled.height)
+                            .frame(width: 8, height: scaled.height)
                             .position(x: scaled.maxX, y: scaled.midY)
                             .help("Drag to resize title width")
                     }
@@ -152,66 +150,64 @@ struct CollageEditorView: View {
                         .onChanged { value in
                             if !gestureCoordinator.dragTitleLocked {
                                 guard let titleCanvas = titleCanvasFrame else { return }
-                                let tf = canvasToPreviewFrame(titleCanvas, in: geometry.size)
-                                let handleThreshold = resizeHandleWidth + 2
-                                if tf.minX - handleThreshold <= value.startLocation.x,
-                                   value.startLocation.x <= tf.minX + handleThreshold,
-                                   tf.minY <= value.startLocation.y, value.startLocation.y <= tf.maxY {
-                                  gestureCoordinator.dragTitleLocked = true
-                                  gestureCoordinator.titleResizeEdge = .left
-                                  viewModel.isDraggingTitle = true
-                                  gestureCoordinator.oldTitleStyle = viewModel.titleStyle
-                                  return
-                                } else if tf.maxX - handleThreshold <= value.startLocation.x,
-                                           value.startLocation.x <= tf.maxX + handleThreshold,
-                                           tf.minY <= value.startLocation.y, value.startLocation.y <= tf.maxY {
-                                  gestureCoordinator.dragTitleLocked = true
-                                  gestureCoordinator.titleResizeEdge = .right
-                                  viewModel.isDraggingTitle = true
-                                  gestureCoordinator.oldTitleStyle = viewModel.titleStyle
-                                  return
-                                } else if tf.contains(value.startLocation) {
-                                      let startCanvas = CropManager.screenToCanvasPoint(value.startLocation, in: geometry.size)
-                                      if let tfCanvas = titleCanvasFrame {
-                                          let titleCenterCanvasY = tfCanvas.minY + tfCanvas.height / 2
-                                          gestureCoordinator.dragTitleOffset = CGPoint(
-                                              x: tfCanvas.midX - startCanvas.x,
-                                              y: titleCenterCanvasY - startCanvas.y
-                                          )
-                                      }
-                                      gestureCoordinator.dragTitleLocked = true
-                                      gestureCoordinator.titleResizeEdge = .none
-                                      viewModel.isDraggingTitle = true
-                                      gestureCoordinator.oldTitleStyle = viewModel.titleStyle
-                                    }
+                                let handler = TitleDragHandler(
+                                    titleCanvasFrame: titleCanvas,
+                                    previewSize: geometry.size
+                                )
+                                switch handler.hitTest(at: value.startLocation) {
+                                case .resize(let edge):
+                                    gestureCoordinator.dragTitleLocked = true
+                                    gestureCoordinator.titleResizeEdge = edge
+                                    viewModel.isDraggingTitle = true
+                                    gestureCoordinator.oldTitleStyle = viewModel.titleStyle
+                                    return
+                                case .drag:
+                                    gestureCoordinator.dragTitleOffset = handler.computeDragOffset(
+                                        startLocation: value.startLocation
+                                    )
+                                    gestureCoordinator.dragTitleLocked = true
+                                    gestureCoordinator.titleResizeEdge = .none
+                                    viewModel.isDraggingTitle = true
+                                    gestureCoordinator.oldTitleStyle = viewModel.titleStyle
+                                    return
+                                case .none:
+                                    break
+                                }
                                 return
                             }
 
                             let canvasSize = CanvasConfig.defaultCanvasSize
-                            let canvasPoint = CropManager.screenToCanvasPoint(value.location, in: geometry.size)
-
-                            if gestureCoordinator.titleResizeEdge != .none {
-                                let canvasX = canvasPoint.x
+                            if gestureCoordinator.titleResizeEdge != .none,
+                               let tf = titleCanvasFrame {
+                                let handler = TitleDragHandler(
+                                    titleCanvasFrame: tf,
+                                    previewSize: geometry.size
+                                )
+                                let (newWidth, posDelta) = handler.computeResizeWidth(
+                                    screenLocation: value.location,
+                                    edge: gestureCoordinator.titleResizeEdge,
+                                    currentFrame: tf,
+                                    minWidth: titleMinWidth,
+                                    canvasSize: canvasSize
+                                )
                                 var style = viewModel.titleStyle
-                                let minX = titleMinWidth
-                                if gestureCoordinator.titleResizeEdge == .right {
-                                    if let tf = titleCanvasFrame {
-                                        let newWidth = max(minX, canvasX - tf.minX)
-                                        style.width = newWidth
-                                    }
-                                } else {
-                                    if let tf = titleCanvasFrame {
-                                        let newWidth = max(minX, tf.maxX - canvasX)
-                                        let dx = (tf.width - newWidth) / 2
-                                        style.width = newWidth
-                                        style.positionX = style.positionX + dx / canvasSize.width
-                                    }
-                                }
+                                style.width = newWidth
+                                style.positionX = style.positionX + posDelta
                                 viewModel.titleStyle = style
                             } else {
+                                guard let tf = titleCanvasFrame else { return }
+                                let handler = TitleDragHandler(
+                                    titleCanvasFrame: tf,
+                                    previewSize: geometry.size
+                                )
+                                let (positionX, positionY) = handler.computeDragPosition(
+                                    screenLocation: value.location,
+                                    offset: gestureCoordinator.dragTitleOffset,
+                                    canvasSize: canvasSize
+                                )
                                 var style = viewModel.titleStyle
-                                style.positionX = (canvasPoint.x + gestureCoordinator.dragTitleOffset.x) / canvasSize.width
-                                style.positionY = 1.0 - (canvasPoint.y + gestureCoordinator.dragTitleOffset.y) / canvasSize.height
+                                style.positionX = positionX
+                                style.positionY = positionY
                                 viewModel.titleStyle = style
                             }
                         }
@@ -239,17 +235,11 @@ struct CollageEditorView: View {
 
                             if gestureCoordinator.dragSourcePanelId == nil {
                                 if let tc = titleCanvasFrame {
-                                    let titleFrame = canvasToPreviewFrame(tc, in: geometry.size)
-                                    let handleThreshold = resizeHandleWidth + 2
-                                    let inResizeHandle = (titleFrame.minX - handleThreshold <= value.startLocation.x &&
-                                        value.startLocation.x <= titleFrame.minX + handleThreshold &&
-                                        titleFrame.minY <= value.startLocation.y &&
-                                        value.startLocation.y <= titleFrame.maxY) ||
-                                        (titleFrame.maxX - handleThreshold <= value.startLocation.x &&
-                                        value.startLocation.x <= titleFrame.maxX + handleThreshold &&
-                                        titleFrame.minY <= value.startLocation.y &&
-                                        value.startLocation.y <= titleFrame.maxY)
-                                    if titleFrame.contains(value.startLocation) || inResizeHandle {
+                                    let handler = TitleDragHandler(
+                                        titleCanvasFrame: tc,
+                                        previewSize: geometry.size
+                                    )
+                                    if handler.hitTest(at: value.startLocation) != .none {
                                         return
                                     }
                                 }
