@@ -107,6 +107,42 @@ func updatePreview() {
 
 **Diagnostic clue:** If `NSImage.cgImage(forProposedRect:)` returns `nil` intermittently or only in background tasks, check that you're calling it on the main thread.
 
+### Computed Properties Evaluate on Destination Thread
+
+A common trap is using computed properties on structs that cross actor boundaries. The computed property evaluates lazily at *access time* on whatever thread reads it — not at construction time on the source thread.
+
+**The trap:**
+```swift
+struct BackgroundConfig: @unchecked Sendable {
+    let color: NSColor
+    var backgroundColor: CGColor { color.cgColor }  // EVALUATES ON ACCESS THREAD
+}
+
+// Struct constructed on MainActor, but accessed on background DispatchQueue:
+Task.detached {
+    let cg = config.backgroundColor  // .cgColor called off-main-thread — UB/crash
+}
+```
+
+The `@unchecked Sendable` conformance and main-thread construction create a false sense of safety. The `NSColor` stored value crosses the boundary when the struct is captured. The computed property then calls `.cgColor` on the background thread.
+
+**The fix — store the derived value at init time:**
+```swift
+struct BackgroundConfig: @unchecked Sendable {
+    let color: NSColor
+    let backgroundColor: CGColor  // captured at init on MainActor
+
+    init(color: NSColor) {
+        self.color = color
+        self.backgroundColor = color.cgColor  // .cgColor called on MainActor
+    }
+}
+```
+
+**General rule:** Never use computed properties to access MainActor-only types (`NSColor`, `NSAttributedString`, etc.) from non-main contexts. Store the thread-safe derived value at construction time.
+
+**Swift gotcha — memberwise init conflict:** When a struct has all `let` stored properties, Swift synthesizes a memberwise init. Adding a custom `init` in an extension with the same signature causes *"invalid redeclaration of synthesized memberwise init"*. Fix: move the init into the struct body, or use `var` on at least one stored property to suppress synthesis.
+
 ### NSAttributedString is Not Sendable
 
 `NSAttributedString` does not conform to `Sendable`. Capturing `self.titleAttrString` inside `Task.detached { [weak self] in ... }` produces a compile error. The fix mirrors the `NSColor`/`NSImage` pattern — capture as a local `let` on the main thread:
@@ -535,14 +571,15 @@ extension BackgroundConfig: @unchecked Sendable {}
 6. **Never store `@ObservedObject` in View structs** with `@MainActor` ViewModel — use `@EnvironmentObject`
 7. **Use `defer { isProcessing = false }`** to ensure processing state is always reset
 8. **Extract CoreGraphics types on main thread before `Task.detached`** — Convert `NSImage` → `CGImage` and `NSColor` → `CGColor` on the main thread. Never call AppKit methods from a detached task.
-9. **Avoid clearing shared state before async replacement** — Multiple `Task.detached` tasks racing to update related `@Observable` properties create inconsistent intermediate states. Don't clear old state until new state is ready, or batch updates in a single `@MainActor` block.
-10. **Use `withCheckedContinuation` + serial queue** for async rendering methods that need `NSGraphicsContext.current` thread safety — non-blocking, cleaner than `queue.sync` wrapped in `Task.detached`
-11. **Use `@unchecked Sendable` for model types with AppKit values** when non-Sendable properties are only accessed on a known thread — document the safety justification
-12. **Use generation counters to discard stale async results** — When a serial queue processes cancelled tasks FIFO, an older render can overwrite newer state. Increment a counter before each `update*` call, capture it in the task, and guard `gen == currentGeneration` after `await` before applying results
-13. **Use per-item generation counters for batch operations** — When updating multiple items in a loop, use `[ID: Int]` instead of a single counter so each item's render can match its own generation
-14. **Use an actor wrapper for shared DispatchQueue boilerplate** — When 3+ methods share the same serial queue, consolidate `withCheckedContinuation` into an actor's `render(_ work: @escaping @Sendable () -> T) async -> T` method
-15. **Cancel debounce tasks at higher-priority entry points** — When a method bypasses a debounced path to render immediately (e.g., `regenerateLayout()` calling `updatePreview()`), cancel the pending debounce task first to prevent a stale debounced render from overwriting fresh state
-16. **Debounce only continuous controls** — Slider and color picker `didSet` observers fire 30-60x/sec during drag and need 150ms debounced render. Discrete controls (typing, enum picker, image selection) render immediately. Rule of thumb: >10 events/sec = debounce
+9. **Computed properties on structs crossing actor boundaries are unsafe** — A computed `var cgColor: CGColor { nsColor.cgColor }` evaluates on the destination thread. Store derived values at init time on the source actor.
+10. **Avoid clearing shared state before async replacement** — Multiple `Task.detached` tasks racing to update related `@Observable` properties create inconsistent intermediate states. Don't clear old state until new state is ready, or batch updates in a single `@MainActor` block.
+11. **Use `withCheckedContinuation` + serial queue** for async rendering methods that need `NSGraphicsContext.current` thread safety — non-blocking, cleaner than `queue.sync` wrapped in `Task.detached`
+12. **Use `@unchecked Sendable` for model types with AppKit values** when non-Sendable properties are only accessed on a known thread — document the safety justification
+13. **Use generation counters to discard stale async results** — When a serial queue processes cancelled tasks FIFO, an older render can overwrite newer state. Increment a counter before each `update*` call, capture it in the task, and guard `gen == currentGeneration` after `await` before applying results
+14. **Use per-item generation counters for batch operations** — When updating multiple items in a loop, use `[ID: Int]` instead of a single counter so each item's render can match its own generation
+15. **Use an actor wrapper for shared DispatchQueue boilerplate** — When 3+ methods share the same serial queue, consolidate `withCheckedContinuation` into an actor's `render(_ work: @escaping @Sendable () -> T) async -> T` method
+16. **Cancel debounce tasks at higher-priority entry points** — When a method bypasses a debounced path to render immediately (e.g., `regenerateLayout()` calling `updatePreview()`), cancel the pending debounce task first to prevent a stale debounced render from overwriting fresh state
+17. **Debounce only continuous controls** — Slider and color picker `didSet` observers fire 30-60x/sec during drag and need 150ms debounced render. Discrete controls (typing, enum picker, image selection) render immediately. Rule of thumb: >10 events/sec = debounce
 
 ## Pitfalls
 
@@ -550,6 +587,7 @@ extension BackgroundConfig: @unchecked Sendable {}
 - **Stale `Task` references** — cancel previous `Task` before starting new one
 - **`@ObservedObject` + `@MainActor`** — `MainActor.assumeIsolated` crash. Use `@EnvironmentObject`
 - **`[weak self]` on struct produces compile error** — `self` in a SwiftUI `struct` view is a value type, not a reference. Either capture `self` by value (no weak needed — structs have value semantics) or move timer/state to a `@MainActor final class` (e.g., `CollageViewModel`).
+- **Computed properties on `@unchecked Sendable` structs** — A computed property that accesses a MainActor-only type (e.g., `var cgColor: CGColor { nsColor.cgColor }`) evaluates on the *destination* thread, not the construction thread. Store the derived value in `init` instead.
 
 ## Task vs Task.detached
 

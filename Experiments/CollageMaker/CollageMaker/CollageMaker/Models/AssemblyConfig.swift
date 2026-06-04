@@ -18,7 +18,10 @@ struct TitleConfig {
 
 extension TitleConfig: @unchecked Sendable {}
 
-struct BackgroundConfig {
+// Safety: NSColor is MainActor-only, but BackgroundConfig is only ever
+// constructed on the main actor. CGColor values are captured at init time
+// on the main actor and then accessed safely on background threads.
+struct BackgroundConfig: @unchecked Sendable {
     let style: BackgroundStyle
     let color: NSColor
     let gradientStartColor: NSColor
@@ -28,9 +31,7 @@ struct BackgroundConfig {
     let backgroundColor: CGColor
     let gradientStartCGColor: CGColor
     let gradientEndCGColor: CGColor
-}
 
-extension BackgroundConfig: @unchecked Sendable {
     init(
         style: BackgroundStyle,
         color: NSColor,
@@ -92,6 +93,20 @@ struct AssemblyConfig {
             gradientAngle: gradientAngle,
             opacity: backgroundOpacity
         )
+        self.canvasSize = canvasSize
+    }
+}
+
+extension AssemblyConfig {
+    init(
+        layout: LayoutConfig,
+        title: TitleConfig,
+        background: BackgroundConfig,
+        canvasSize: CGSize
+    ) {
+        self.layout = layout
+        self.title = title
+        self.background = background
         self.canvasSize = canvasSize
     }
 }

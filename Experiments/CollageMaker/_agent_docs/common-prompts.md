@@ -8,12 +8,12 @@ Can you please help me think through how we can address the change request in @_
 ## Review
 (In Plan Mode (Tab Key to change Modes))
 ```
-Please use our macos skills to help me address the review changes received in @_agent_docs/reviews/2026-05-29-full-architectural-review.md
+Please use our macos skills to help me address the review changes received in @_agent_docs/reviews/2026-06-04-full-architectural-review.md
 ```
 
 # Implement
 ```
-Please implement the plan for Phase 1 in @_agent_docs/plans/2026-06-03-gesture-rendering-performance.md using our macos skills for guidance.
+Please implement the plan for Phase 1 in @_agent_docs/plans/2026-06-04-architectural-review-fixes.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
@@ -45,7 +45,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/gesture-render-cancellation-learnings.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/computed-property-actor-boundary-learnings.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Researching

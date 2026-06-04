@@ -169,7 +169,7 @@ final class PreviewManager {
         }
     }
 
-    func clearAll() {
+    private func cancelAllTasks() {
         previewTask?.cancel()
         previewDebounceTask?.cancel()
         panelPreviewTasks.values.forEach { $0.cancel() }
@@ -180,6 +180,10 @@ final class PreviewManager {
         panelPreviewTasks.removeAll()
         backgroundTask = nil
         titleTask = nil
+    }
+
+    func clearAll() {
+        cancelAllTasks()
         previewImage = nil
         previewBackgroundImage = nil
         panelRenderedImages.removeAll()
@@ -191,16 +195,7 @@ final class PreviewManager {
     }
 
     func cancelAll() {
-        previewTask?.cancel()
-        previewDebounceTask?.cancel()
-        panelPreviewTasks.values.forEach { $0.cancel() }
-        backgroundTask?.cancel()
-        titleTask?.cancel()
-        previewTask = nil
-        previewDebounceTask = nil
-        panelPreviewTasks.removeAll()
-        backgroundTask = nil
-        titleTask = nil
+        cancelAllTasks()
     }
 
     /// Yields to let pending async rendering tasks complete.

@@ -41,20 +41,14 @@ struct TitleTextData: Sendable {
     }
 }
 
-// MARK: - TitleBoundsCT
+// MARK: - CTAttributedStringBuilder
 
-/// Lightweight CoreText-based title bounds calculator.
-/// Produces identical bounding boxes to TitleMetricsCT for pixel-perfect outline alignment.
-struct TitleBoundsCT {
-    private let framesetter: CTFramesetter
-    private let stringLength: CFIndex
-    private let fontDescent: CGFloat
-    private let styleWidth: CGFloat
-
-    static func compute(
+struct CTAttributedStringBuilder {
+    static func build(
         textData: TitleTextData,
-        style: TitleStyle
-    ) -> TitleBoundsCT {
+        style: TitleStyle,
+        foregroundColor: CGColor? = nil
+    ) -> (cfAttrString: CFAttributedString, stringLength: CFIndex, primaryFont: CTFont) {
         let paragraphStyle = makeParagraphStyle(alignment: style.alignment)
 
         let cfAttrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0)!
@@ -88,8 +82,40 @@ struct TitleBoundsCT {
             }
         }
 
-        let framesetter = CTFramesetterCreateWithAttributedString(cfAttrString)
+        if let fgColor = foregroundColor {
+            CFAttributedStringSetAttribute(
+                cfAttrString,
+                CFRange(location: 0, length: stringLength),
+                kCTForegroundColorAttributeName,
+                fgColor
+            )
+        }
+
         let pFont = primaryFont ?? CTFontCreateUIFontForLanguage(.system, style.fontSize, nil)!
+        return (cfAttrString, stringLength, pFont)
+    }
+}
+
+// MARK: - TitleBoundsCT
+
+/// Lightweight CoreText-based title bounds calculator.
+/// Produces identical bounding boxes to TitleMetricsCT for pixel-perfect outline alignment.
+struct TitleBoundsCT {
+    private let framesetter: CTFramesetter
+    private let stringLength: CFIndex
+    private let fontDescent: CGFloat
+    private let styleWidth: CGFloat
+
+    static func compute(
+        textData: TitleTextData,
+        style: TitleStyle
+    ) -> TitleBoundsCT {
+        let (cfAttrString, stringLength, pFont) = CTAttributedStringBuilder.build(
+            textData: textData,
+            style: style
+        )
+
+        let framesetter = CTFramesetterCreateWithAttributedString(cfAttrString)
 
         return TitleBoundsCT(
             framesetter: framesetter,
@@ -150,58 +176,13 @@ struct TitleMetricsCT {
         fontColor: CGColor,
         backgroundColor: CGColor
     ) -> TitleMetricsCT {
-        let paragraphStyle = makeParagraphStyle(alignment: style.alignment)
-
-        // Create mutable CFAttributedString using CoreFoundation C API
-        let cfAttrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0)!
-        CFAttributedStringReplaceString(cfAttrString, CFRange(), textData.text as CFString)
-        let stringLength = CFAttributedStringGetLength(cfAttrString)
-
-        // Apply paragraph style to entire string
-        CFAttributedStringSetAttribute(
-            cfAttrString,
-            CFRange(location: 0, length: stringLength),
-            kCTParagraphStyleAttributeName,
-            paragraphStyle
-        )
-
-        // Apply font per run
-        for run in textData.runs {
-            let traits = CTFontSymbolicTraits(rawValue: run.symbolicTraitsRawValue)
-            let font = makeCTFont(
-                existingFamily: run.fontFamily,
-                existingTraits: traits,
-                baseFamily: style.fontFamily,
-                targetSize: style.fontSize
-            )
-            CFAttributedStringSetAttribute(
-                cfAttrString,
-                CFRange(location: run.range.location, length: run.range.length),
-                kCTFontAttributeName,
-                font
-            )
-        }
-
-        // Apply foreground color to entire string
-        CFAttributedStringSetAttribute(
-            cfAttrString,
-            CFRange(location: 0, length: stringLength),
-            kCTForegroundColorAttributeName,
-            fontColor
+        let (cfAttrString, stringLength, primaryFont) = CTAttributedStringBuilder.build(
+            textData: textData,
+            style: style,
+            foregroundColor: fontColor
         )
 
         let framesetter = CTFramesetterCreateWithAttributedString(cfAttrString)
-
-        // Get metrics from primary font
-        let primaryTraits = textData.runs.first.map {
-            CTFontSymbolicTraits(rawValue: $0.symbolicTraitsRawValue)
-        } ?? []
-        let primaryFont = makeCTFont(
-            existingFamily: textData.runs.first?.fontFamily,
-            existingTraits: primaryTraits,
-            baseFamily: style.fontFamily,
-            targetSize: style.fontSize
-        )
 
         return TitleMetricsCT(
             framesetter: framesetter,
@@ -214,7 +195,7 @@ struct TitleMetricsCT {
         )
     }
 
-    /// Bounding box relative to baseline origin, matching TitleMetrics.boundingBox semantics.
+    /// Bounding box relative to baseline origin.
     func boundingBox(canvasWidth: CGFloat) -> CGRect {
         let drawWidth = style.effectiveWidth(canvasWidth: canvasWidth)
         var fitRange = CFRange()

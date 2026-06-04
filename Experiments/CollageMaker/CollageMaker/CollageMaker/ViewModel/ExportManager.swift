@@ -9,6 +9,12 @@ private let logger = Logger(
     category: "Export"
 )
 
+enum ExportResult {
+    case success(URL)
+    case cancelled
+    case failure(Error)
+}
+
 @MainActor
 @Observable
 final class ExportManager {
@@ -22,14 +28,18 @@ final class ExportManager {
         self.assembler = assembler
     }
 
-    func export(viewModel: CollageViewModel) async -> URL? {
-        guard !viewModel.panels.isEmpty else { return nil }
+    func export(
+        config: AssemblyConfig,
+        cgImages: [CGImage],
+        backgroundImage: CGImage?,
+        quality: Double
+    ) async -> ExportResult {
+        guard !config.layout.panels.isEmpty else { return .cancelled }
 
         exportTask?.cancel()
-        viewModel.isProcessing = true
         isExporting = true
         successMessage = nil
-        defer { viewModel.isProcessing = false; isExporting = false }
+        defer { isExporting = false }
 
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.jpeg]
@@ -43,22 +53,18 @@ final class ExportManager {
         }
 
         let response = NSApplication.shared.runModal(for: savePanel)
-        guard response == .OK, let url = savePanel.url else { return nil }
+        guard response == .OK, let url = savePanel.url else { return .cancelled }
         logger.info("Export to \(url.lastPathComponent, privacy: .public)")
 
         UserDefaults.standard.set(url.deletingLastPathComponent().path, forKey: UserDefaultsPersistence.Keys.defaultExportFolder)
 
-        let config = viewModel.buildAssemblyConfig()
-        let cgImages = viewModel.imageLibrary.images.map { $0.cgImage }
-        let backgroundImageCG = viewModel.backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
-        let quality = viewModel.exportQuality
         let assembler = self.assembler
 
-        exportTask = Task.detached { [assembler, config, cgImages, backgroundImageCG, quality, url] in
+        exportTask = Task.detached { [assembler, config, cgImages, backgroundImage, quality, url] in
             let data = await assembler.assembleWithCGImages(
                 config: config,
                 cgImages: cgImages,
-                backgroundImage: backgroundImageCG,
+                backgroundImage: backgroundImage,
                 quality: quality
             )
             if let data {
@@ -70,13 +76,12 @@ final class ExportManager {
         do {
             try await exportTask?.value
             successMessage = "Saved to \(url.lastPathComponent)"
-            return url
+            return .success(url)
         } catch {
             if !Task.isCancelled {
                 logger.error("Export failed: \(error.localizedDescription, privacy: .public)")
-                viewModel.errorMessage = error.localizedDescription
             }
-            return nil
+            return .failure(error)
         }
     }
 

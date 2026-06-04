@@ -16,7 +16,7 @@ struct ScrollPanView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {
-        let view = nsView as! ScrollCaptureView
+        guard let view = nsView as? ScrollCaptureView else { return }
         view.selectedPanelId = selectedPanelId
         view.onPanBegan = onPanBegan
         view.onPanChanged = onPanChanged

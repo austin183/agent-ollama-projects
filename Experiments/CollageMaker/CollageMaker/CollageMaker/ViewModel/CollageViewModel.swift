@@ -85,7 +85,7 @@ final class CollageViewModel {
         return bounds.minNaturalWidth(canvasWidth: canvasSize.width)
     }
 
-    var exportManager: ExportManager = ExportManager(assembler: CollageAssembler())
+    var exportManager: ExportManager!
 
     var images: [ImageItem] { imageLibrary.images }
     var customImageOrder: [Int] {
@@ -133,12 +133,7 @@ final class CollageViewModel {
 
     var layoutStyle: LayoutStyle = .hero {
         didSet {
-            guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.layoutStyle = oldValue
-            }
-            undoManager.setActionName("Change Layout")
-            debouncedSave()
+            registerUndo(oldValue: oldValue, actionName: "Change Layout") { $0.layoutStyle = oldValue }
             logger.info("Layout style changed to \(self.layoutStyle.rawValue, privacy: .public)")
             regenerateLayout()
         }
@@ -147,12 +142,7 @@ final class CollageViewModel {
     var titleAttrString: NSAttributedString = NSAttributedString(string: "") {
         didSet {
             guard !oldValue.isEqual(titleAttrString) else { return }
-            guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.titleAttrString = oldValue
-            }
-            undoManager.setActionName("Edit Title")
-            debouncedSave()
+            registerUndo(oldValue: oldValue, actionName: "Edit Title") { $0.titleAttrString = oldValue }
             if isLayeredMode {
                 updateTitleImage()
             } else {
@@ -172,16 +162,12 @@ final class CollageViewModel {
                 updateTitleImageLive()
                 return
             }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.titleStyle = oldValue
-            }
-            undoManager.setActionName("Change Title Style")
+            registerUndo(oldValue: oldValue, actionName: "Change Title Style") { $0.titleStyle = oldValue }
             if isLayeredMode {
                 updateTitleImage()
             } else {
                 updatePreview()
             }
-            debouncedSave()
         }
     }
 
@@ -210,98 +196,58 @@ final class CollageViewModel {
 
     var backgroundColor: NSColor = .black {
         didSet {
-            guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.backgroundColor = oldValue
-            }
-            undoManager.setActionName("Change Background Color")
-            debouncedSave()
+            registerUndo(oldValue: oldValue, actionName: "Change Background Color") { $0.backgroundColor = oldValue }
             updatePreviewDebounced()
         }
     }
 
     var exportQuality: Double = 0.92 {
         didSet {
-            guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.exportQuality = oldValue
-            }
-            undoManager.setActionName("Change Export Quality")
-            debouncedSave()
+            registerUndo(oldValue: oldValue, actionName: "Change Export Quality") { $0.exportQuality = oldValue }
         }
     }
 
     var backgroundStyle: BackgroundStyle = .solid {
         didSet {
-            guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.backgroundStyle = oldValue
-            }
-            undoManager.setActionName("Change Background Style")
-            debouncedSave()
+            registerUndo(oldValue: oldValue, actionName: "Change Background Style") { $0.backgroundStyle = oldValue }
             updatePreview()
         }
     }
 
     var gradientStartColor: NSColor = .black {
         didSet {
-            guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.gradientStartColor = oldValue
-            }
-            undoManager.setActionName("Change Gradient Start Color")
-            debouncedSave()
+            registerUndo(oldValue: oldValue, actionName: "Change Gradient Start Color") { $0.gradientStartColor = oldValue }
             updatePreviewDebounced()
         }
     }
 
     var gradientEndColor: NSColor = .darkGray {
         didSet {
-            guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.gradientEndColor = oldValue
-            }
-            undoManager.setActionName("Change Gradient End Color")
-            debouncedSave()
+            registerUndo(oldValue: oldValue, actionName: "Change Gradient End Color") { $0.gradientEndColor = oldValue }
             updatePreviewDebounced()
         }
     }
 
     var gradientAngle: Double = 0 {
         didSet {
-            guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.gradientAngle = oldValue
-            }
-            undoManager.setActionName("Change Gradient Angle")
-            debouncedSave()
+            registerUndo(oldValue: oldValue, actionName: "Change Gradient Angle") { $0.gradientAngle = oldValue }
             updatePreviewDebounced()
         }
     }
 
     var backgroundImage: NSImage? {
         didSet {
-            guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.backgroundImage = oldValue
-            }
-            undoManager.setActionName("Change Background Image")
+            registerUndo(oldValue: oldValue, actionName: "Change Background Image") { $0.backgroundImage = oldValue }
             if backgroundImage == nil {
                 backgroundImagePath = nil
             }
-            debouncedSave()
             updatePreview()
         }
     }
     var backgroundImagePath: String?
     var backgroundOpacity: Double = 1.0 {
         didSet {
-            guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.backgroundOpacity = oldValue
-            }
-            undoManager.setActionName("Change Background Opacity")
-            debouncedSave()
+            registerUndo(oldValue: oldValue, actionName: "Change Background Opacity") { $0.backgroundOpacity = oldValue }
             updatePreviewDebounced()
         }
     }
@@ -333,7 +279,11 @@ final class CollageViewModel {
     }
     var isLayeredMode: Bool = false
     var isLiveGesturing: Bool = false
-    var isProcessing: Bool = false
+    private var processingCount = 0
+    var isProcessing: Bool { processingCount > 0 }
+
+    func beginProcessing() { processingCount += 1 }
+    func endProcessing() { processingCount = max(0, processingCount - 1) }
     var isExporting: Bool { exportManager.isExporting }
     var isDraggingTitle: Bool = false
     var errorMessage: String?
@@ -351,6 +301,15 @@ final class CollageViewModel {
             guard let self else { return }
             persistence.save(self)
         }
+    }
+
+    private func registerUndo<Value>(oldValue: Value, actionName: String, restore: @escaping (CollageViewModel) -> Void) {
+        guard !isInitializing else { return }
+        undoManager.registerUndo(withTarget: self) { target in
+            restore(target)
+        }
+        undoManager.setActionName(actionName)
+        debouncedSave()
     }
 
     convenience init() {
@@ -475,7 +434,7 @@ final class CollageViewModel {
         saliencyResults.removeAll()
         selectedPanelId = nil
         previewManager.clearAll()
-        isProcessing = false
+        processingCount = 0
         errorMessage = nil
         panelAssignments.removeAll()
         backgroundImage = nil
@@ -595,8 +554,8 @@ final class CollageViewModel {
     func analyzeSaliency() async {
         guard !images.isEmpty else { return }
         logger.info("Saliency analysis started for \(self.images.count) image(s)")
-        isProcessing = true
-        defer { isProcessing = false }
+        beginProcessing()
+        defer { endProcessing() }
 
         do {
             let saliencyStart = ContinuousClock.now
@@ -932,100 +891,106 @@ final class CollageViewModel {
         debouncedSave()
     }
 
-    func setTitleFontFamily(_ family: String) {
+    private func applyTitleChange<Value>(
+        at keyPath: WritableKeyPath<TitleStyle, Value>,
+        oldValue: Value,
+        actionName: String,
+        sideEffect: @escaping @MainActor () -> Void
+    ) {
         guard !isInitializing else { return }
+        undoManager.registerUndo(withTarget: self) { target in
+            target.titleStyle[keyPath: keyPath] = oldValue
+        }
+        undoManager.setActionName(actionName)
+        debouncedSave()
+        sideEffect()
+    }
+
+    private func titleViewUpdate() {
+        if isLayeredMode {
+            updateTitleImage()
+        } else {
+            updatePreview()
+        }
+    }
+
+    func setTitleFontFamily(_ family: String) {
         let oldValue = titleStyle.fontFamily
         titleStyle.fontFamily = family
-        undoManager.registerUndo(withTarget: self) { target in
-            target.setTitleFontFamily(oldValue)
+        applyTitleChange(at: \.fontFamily, oldValue: oldValue, actionName: "Change Font Family") {
+            self.updateTitleImageLive()
         }
-        undoManager.setActionName("Change Font Family")
-        updateTitleImageLive()
-        debouncedSave()
     }
 
     func setTitleFontSize(_ size: CGFloat) {
-        guard !isInitializing else { return }
         let oldValue = titleStyle.fontSize
         titleStyle.fontSize = size
-        undoManager.registerUndo(withTarget: self) { target in
-            target.setTitleFontSize(oldValue)
+        applyTitleChange(at: \.fontSize, oldValue: oldValue, actionName: "Change Font Size") {
+            self.fontSizeDebounceTask?.cancel()
+            self.fontSizeDebounceTask = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: 150_000_000)
+                self?.updateTitleImage()
+            }
         }
-        undoManager.setActionName("Change Font Size")
-        fontSizeDebounceTask?.cancel()
-        fontSizeDebounceTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 150_000_000)
-            self?.updateTitleImage()
-        }
-        debouncedSave()
     }
 
     func setTitleBackgroundColor(_ color: NSColor) {
-        guard !isInitializing else { return }
         let oldValue = titleStyle.backgroundColor
         titleStyle.backgroundColor = color
-        undoManager.registerUndo(withTarget: self) { target in
-            target.setTitleBackgroundColor(oldValue)
+        applyTitleChange(at: \.backgroundColor, oldValue: oldValue, actionName: "Change Title BG Color") {
+            self.titleViewUpdate()
         }
-        undoManager.setActionName("Change Title BG Color")
-        if isLayeredMode {
-            updateTitleImage()
-        } else {
-            updatePreview()
-        }
-        debouncedSave()
     }
 
     func setTitleFontColor(_ color: NSColor) {
-        guard !isInitializing else { return }
         let oldValue = titleStyle.fontColor
         titleStyle.fontColor = color
-        undoManager.registerUndo(withTarget: self) { target in
-            target.setTitleFontColor(oldValue)
+        applyTitleChange(at: \.fontColor, oldValue: oldValue, actionName: "Change Title Color") {
+            self.titleViewUpdate()
         }
-        undoManager.setActionName("Change Title Color")
-        if isLayeredMode {
-            updateTitleImage()
-        } else {
-            updatePreview()
-        }
-        debouncedSave()
     }
 
     func setTitleAlignment(_ alignment: NSTextAlignment) {
-        guard !isInitializing else { return }
         let oldValue = titleStyle.alignment
         titleStyle.alignment = alignment
-        undoManager.registerUndo(withTarget: self) { target in
-            target.setTitleAlignment(oldValue)
+        applyTitleChange(at: \.alignment, oldValue: oldValue, actionName: "Change Title Alignment") {
+            self.titleViewUpdate()
         }
-        undoManager.setActionName("Change Title Alignment")
-        if isLayeredMode {
-            updateTitleImage()
-        } else {
-            updatePreview()
-        }
-        debouncedSave()
     }
 
     func setTitleShowBackground(_ show: Bool) {
-        guard !isInitializing else { return }
         let oldValue = titleStyle.showBackground
         titleStyle.showBackground = show
-        undoManager.registerUndo(withTarget: self) { target in
-            target.setTitleShowBackground(oldValue)
+        applyTitleChange(at: \.showBackground, oldValue: oldValue, actionName: "Toggle Title BG") {
+            self.titleViewUpdate()
         }
-        undoManager.setActionName("Toggle Title BG")
-        if isLayeredMode {
-            updateTitleImage()
-        } else {
-            updatePreview()
-        }
-        debouncedSave()
     }
 
     func exportCollage() async -> URL? {
-        await exportManager.export(viewModel: self)
+        beginProcessing()
+        defer { endProcessing() }
+        errorMessage = nil
+
+        guard !panels.isEmpty else { return nil }
+
+        let config = buildAssemblyConfig()
+        let cgImages = imageLibrary.images.map { $0.cgImage }
+        let bgCG = backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+
+        switch await exportManager.export(
+            config: config,
+            cgImages: cgImages,
+            backgroundImage: bgCG,
+            quality: exportQuality
+        ) {
+        case .success(let url):
+            return url
+        case .cancelled:
+            return nil
+        case .failure(let error):
+            errorMessage = error.localizedDescription
+            return nil
+        }
     }
 
     /// Yields to let pending async tasks complete.
