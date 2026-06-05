@@ -254,7 +254,7 @@ final class CropManager {
     // MARK: - Coordinate Conversion (Static)
 
     static func canvasToPreviewFrame(_ canvasRect: CGRect, in previewSize: CGSize) -> CGRect {
-        let canvasSize = CanvasConfig.defaultCanvasSize
+        let canvasSize = SizeConstants.defaultCanvasSize
         return CoordinateConverter.canvasToPreviewFrame(canvasRect, in: previewSize, canvasSize: canvasSize)
     }
 
@@ -276,7 +276,7 @@ final class CropManager {
     }
 
     static func screenToCanvasPoint(_ screenPoint: CGPoint, in previewSize: CGSize) -> CGPoint {
-        let canvasSize = CanvasConfig.defaultCanvasSize
+        let canvasSize = SizeConstants.defaultCanvasSize
         let (fittedSize, offset) = FitMath.fit(canvasSize, into: previewSize)
 
         let canvasX = (screenPoint.x - offset.x) / fittedSize.width * canvasSize.width

@@ -7,7 +7,8 @@ enum FitMath {
     /// Fits `sourceSize` inside `containerSize` while preserving aspect ratio.
     /// Returns the fitted size and the offset to center it within the container.
     static func fit(_ sourceSize: CGSize, into containerSize: CGSize) -> (fittedSize: CGSize, offset: CGPoint) {
-        guard sourceSize.height > 0, containerSize.height > 0 else {
+        guard sourceSize.height > 0, sourceSize.height.isFinite,
+              containerSize.height > 0, containerSize.height.isFinite else {
             return (.zero, .zero)
         }
         let sourceAspect = sourceSize.width / sourceSize.height
@@ -31,7 +32,8 @@ enum FitMath {
     /// Convenience: computes the centered source rectangle of `panelSize` aspect ratio
     /// that should be cropped from an image of `imageSize`.
     static func sourceRect(imageSize: CGSize, panelSize: CGSize) -> CGRect {
-        guard imageSize.height > 0, panelSize.height > 0 else {
+        guard imageSize.height > 0, imageSize.height.isFinite,
+              panelSize.height > 0, panelSize.height.isFinite else {
             return .zero
         }
         let imageAspect = imageSize.width / imageSize.height

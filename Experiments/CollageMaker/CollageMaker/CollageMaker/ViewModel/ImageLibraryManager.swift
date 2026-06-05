@@ -47,7 +47,7 @@ final class ImageLibraryManager {
                         }
                         return (nsImage, cgImage)
                     }
-                    guard let (nsImage, cgImage) = imagePair else { return nil }
+                    guard let (_, cgImage) = imagePair else { return nil }
 
                     let thumbSize: CGSize
                     if cgImage.width > cgImage.height {
@@ -63,7 +63,7 @@ final class ImageLibraryManager {
                         bitsPerComponent: 8,
                         bytesPerRow: 0,
                         space: CGColorSpaceCreateDeviceRGB(),
-                        bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue
+                        bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
                     ) else { return nil }
 
                     context.interpolationQuality = .high
@@ -73,7 +73,6 @@ final class ImageLibraryManager {
                     let thumbnail = NSImage(cgImage: drawnCG, size: thumbSize)
 
                     return ImageItem(
-                        nsImage: nsImage,
                         cgImage: cgImage,
                         thumbnail: thumbnail,
                         filename: url.lastPathComponent,

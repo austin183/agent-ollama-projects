@@ -66,7 +66,7 @@ final class CollageViewModel {
     var cachedTitleCanvasFrame: CGRect? {
         guard let cache = ensureTitleBounds() else { return nil }
         let bounds = cache.bounds
-        let canvasSize = CanvasConfig.defaultCanvasSize
+        let canvasSize = SizeConstants.defaultCanvasSize
         let boundingBox = bounds.boundingBox(canvasWidth: canvasSize.width)
         let drawWidth = titleStyle.effectiveWidth(canvasWidth: canvasSize.width)
         let anchorX = titleStyle.positionX * canvasSize.width
@@ -81,7 +81,7 @@ final class CollageViewModel {
     var cachedTitleMinWidth: CGFloat {
         guard let cache = ensureTitleBounds() else { return 0 }
         let bounds = cache.bounds
-        let canvasSize = CanvasConfig.defaultCanvasSize
+        let canvasSize = SizeConstants.defaultCanvasSize
         return bounds.minNaturalWidth(canvasWidth: canvasSize.width)
     }
 
@@ -372,6 +372,22 @@ final class CollageViewModel {
         backgroundImage = image
     }
 
+    // MARK: - Undo Helpers
+
+    func beginGestureUndo() {
+        undoManager.beginUndoGrouping()
+    }
+
+    func endGestureUndo(actionName: String) {
+        undoManager.setActionName(actionName)
+        undoManager.endUndoGrouping()
+    }
+
+    func registerTitleStyleUndo(oldStyle: TitleStyle) {
+        undoManager.registerUndo(withTarget: self) { $0.titleStyle = oldStyle }
+        undoManager.setActionName("Move Title")
+    }
+
     // MARK: - Image Loading
 
     func browseImages() {
@@ -458,7 +474,7 @@ final class CollageViewModel {
         let oldSelectedId = selectedPanelId
         panels = LayoutGenerator.generate(
             numImages: images.count,
-            canvasSize: CanvasConfig.defaultCanvasSize,
+            canvasSize: SizeConstants.defaultCanvasSize,
             gutter: gutter,
             style: layoutStyle,
             imageOrder: customImageOrder
@@ -775,7 +791,7 @@ final class CollageViewModel {
             gradientEndColor: gradientEndColor,
             gradientAngle: gradientAngle,
             backgroundOpacity: backgroundOpacity,
-            canvasSize: CanvasConfig.defaultCanvasSize
+            canvasSize: SizeConstants.defaultCanvasSize
         )
     }
 
@@ -819,9 +835,9 @@ final class CollageViewModel {
 
         previewManager.updateBackground(
             config: bgConfig,
-            canvasSize: CanvasConfig.defaultCanvasSize,
+            canvasSize: SizeConstants.defaultCanvasSize,
             backgroundImage: backgroundImageCG,
-            previewSize: CanvasConfig.defaultPreviewSize
+            previewSize: SizeConstants.defaultPreviewSize
         )
     }
 
@@ -847,7 +863,7 @@ final class CollageViewModel {
             config: config,
             cgImages: cgImages,
             backgroundImage: backgroundImageCG,
-            previewSize: CanvasConfig.defaultPreviewSize
+            previewSize: SizeConstants.defaultPreviewSize
         )
 
         if isLayeredMode {
@@ -873,7 +889,7 @@ final class CollageViewModel {
         previewManager.updateTitleImage(
             titleAttrString: titleAttrString,
             titleStyle: titleStyle,
-            canvasSize: CanvasConfig.defaultCanvasSize
+            canvasSize: SizeConstants.defaultCanvasSize
         )
     }
 

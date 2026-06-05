@@ -23,7 +23,7 @@ import Testing
             config: config,
             cgImages: [cgImage],
             backgroundImage: nil,
-            previewSize: CanvasConfig.defaultPreviewSize
+            previewSize: SizeConstants.defaultPreviewSize
         )
 
         #expect(preview != nil)
@@ -149,11 +149,11 @@ import Testing
             config: config,
             cgImages: [cgImage],
             backgroundImage: nil,
-            previewSize: CanvasConfig.defaultPreviewSize
+            previewSize: SizeConstants.defaultPreviewSize
         )
 
         #expect(preview != nil)
-        #expect(preview?.size == CanvasConfig.defaultPreviewSize)
+        #expect(preview?.size == SizeConstants.defaultPreviewSize)
     }
 
     @Test func assembleWithGradientBackground() async {
@@ -232,7 +232,7 @@ import Testing
                     config: config,
                     cgImages: [cgImage],
                     backgroundImage: nil,
-                    previewSize: CanvasConfig.defaultPreviewSize
+                    previewSize: SizeConstants.defaultPreviewSize
                 )
             }
         }
@@ -298,9 +298,9 @@ import Testing
             Task.detached {
                 await self.assembler.renderBackground(
                     config: config,
-                    canvasSize: CanvasConfig.defaultCanvasSize,
+                    canvasSize: SizeConstants.defaultCanvasSize,
                     backgroundImage: nil,
-                    previewSize: CanvasConfig.defaultPreviewSize
+                    previewSize: SizeConstants.defaultPreviewSize
                 )
             }
         }

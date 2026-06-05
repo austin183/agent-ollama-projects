@@ -233,7 +233,7 @@ import Testing
     // MARK: - Coordinate Conversion Tests
 
     @Test func canvasToPreviewFrameIdentityForMatchingSize() {
-        let canvasSize = CanvasConfig.defaultCanvasSize
+        let canvasSize = SizeConstants.defaultCanvasSize
         let previewSize = canvasSize
         let canvasRect = CGRect(x: 100, y: 200, width: 200, height: 150)
 
@@ -245,7 +245,7 @@ import Testing
     }
 
     @Test func canvasToPreviewFrameFlipsYAxis() {
-        let previewSize = CanvasConfig.defaultPreviewSize
+        let previewSize = SizeConstants.defaultPreviewSize
         let canvasRect = CGRect(x: 0, y: 0, width: 100, height: 100)
 
         let previewFrame = CropManager.canvasToPreviewFrame(canvasRect, in: previewSize)
@@ -254,7 +254,7 @@ import Testing
     }
 
     @Test func canvasToPreviewFrameScalesCorrectly() {
-        let previewSize = CanvasConfig.defaultPreviewSize
+        let previewSize = SizeConstants.defaultPreviewSize
         let canvasRect = CGRect(x: 0, y: 0, width: 1920, height: 1080)
 
         let previewFrame = CropManager.canvasToPreviewFrame(canvasRect, in: previewSize)
@@ -278,7 +278,7 @@ import Testing
     // MARK: - Screen to Canvas Tests
 
     @Test func screenToCanvasPointIdentityForMatchingSize() {
-        let canvasSize = CanvasConfig.defaultCanvasSize
+        let canvasSize = SizeConstants.defaultCanvasSize
         let screenPoint = CGPoint(x: 960, y: 540)
 
         let canvasPoint = CropManager.screenToCanvasPoint(screenPoint, in: canvasSize)
@@ -288,16 +288,16 @@ import Testing
     }
 
     @Test func screenToCanvasPointFlipsYAxis() {
-        let previewSize = CanvasConfig.defaultCanvasSize
+        let previewSize = SizeConstants.defaultCanvasSize
         let screenPoint = CGPoint(x: 960, y: 0)
 
         let canvasPoint = CropManager.screenToCanvasPoint(screenPoint, in: previewSize)
 
-        #expect(canvasPoint.y == CanvasConfig.defaultCanvasSize.height)
+        #expect(canvasPoint.y == SizeConstants.defaultCanvasSize.height)
     }
 
     @Test func screenToCanvasPointScalesDown() {
-        let previewSize = CanvasConfig.defaultPreviewSize
+        let previewSize = SizeConstants.defaultPreviewSize
         let screenPoint = CGPoint(x: 480, y: 270)
 
         let canvasPoint = CropManager.screenToCanvasPoint(screenPoint, in: previewSize)

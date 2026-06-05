@@ -546,3 +546,36 @@ Test the *outcome* of caching (expensive computation skipped, cheap math still r
 ```
 
 Behavioral tests verify that the expensive computation (bounds) is reused while cheap math (frame position) still runs — without depending on object identity.
+
+## Testing Synchronous DispatchQueue Closures
+
+When testing an actor that bridges async/await to synchronous `DispatchQueue` work (e.g., `RenderScheduler`), the closure is **synchronous** — `await` is illegal, and mutating captured `var` fails under Swift 6 strict concurrency.
+
+**Pattern — ThreadSafeArray:**
+```swift
+final class ThreadSafeArray<Element: Sendable>: @unchecked Sendable {
+    private var items: [Element] = []
+    private let lock = NSLock()
+
+    func append(_ item: Element) { lock.lock(); defer { lock.unlock() }; items.append(item) }
+    func getItems() -> [Element] { lock.lock(); defer { lock.unlock() }; items }
+}
+
+@Test func renderClosureExecutes() async throws {
+    let tracker = ThreadSafeArray<String>()
+    await scheduler.render {
+        tracker.append("enter")
+        Thread.sleep(forTimeInterval: 0.001)  // Sync sleep, not Task.sleep
+        tracker.append("exit")
+        return ()
+    }
+    #expect(tracker.getItems() == ["enter", "exit"])
+}
+```
+
+**Why not alternatives:**
+- `actor` + `await` — closure is synchronous, `await` is a compile error
+- `NSLock` on local `var` — Swift 6 forbids mutation of captured vars in concurrent code
+- `@MainActor` — queue runs on background thread
+
+See [references/state/swift-concurrency.md](../state/swift-concurrency.md) § "Synchronous Closures Inside withCheckedContinuation".

@@ -62,7 +62,7 @@ final class TestPreviewAssembler: CollageAssembly {
             config: config,
             cgImages: [image.cgImage],
             backgroundImage: nil,
-            previewSize: CanvasConfig.defaultPreviewSize
+            previewSize: SizeConstants.defaultPreviewSize
         )
 
         try? await Task.sleep(for: .milliseconds(200))
@@ -84,9 +84,9 @@ final class TestPreviewAssembler: CollageAssembly {
 
         mgr.updateBackground(
             config: config,
-            canvasSize: CanvasConfig.defaultCanvasSize,
+            canvasSize: SizeConstants.defaultCanvasSize,
             backgroundImage: nil,
-            previewSize: CanvasConfig.defaultPreviewSize
+            previewSize: SizeConstants.defaultPreviewSize
         )
 
         try? await Task.sleep(for: .milliseconds(200))
@@ -124,7 +124,7 @@ final class TestPreviewAssembler: CollageAssembly {
         mgr.updateTitleImage(
             titleAttrString: NSAttributedString(string: "Test Title"),
             titleStyle: TitleStyle.default,
-            canvasSize: CanvasConfig.defaultCanvasSize
+            canvasSize: SizeConstants.defaultCanvasSize
         )
 
         try? await Task.sleep(for: .milliseconds(200))
@@ -137,7 +137,7 @@ final class TestPreviewAssembler: CollageAssembly {
         mgr.updateTitleImage(
             titleAttrString: NSAttributedString(string: ""),
             titleStyle: TitleStyle.default,
-            canvasSize: CanvasConfig.defaultCanvasSize
+            canvasSize: SizeConstants.defaultCanvasSize
         )
 
         try? await Task.sleep(for: .milliseconds(200))
@@ -164,7 +164,7 @@ final class TestPreviewAssembler: CollageAssembly {
                 config: config,
                 cgImages: [image.cgImage],
                 backgroundImage: nil,
-                previewSize: CanvasConfig.defaultPreviewSize
+                previewSize: SizeConstants.defaultPreviewSize
             )
         }
 
@@ -273,7 +273,7 @@ final class TestPreviewAssembler: CollageAssembly {
             config: config,
             cgImages: [image.cgImage],
             backgroundImage: nil,
-            previewSize: CanvasConfig.defaultPreviewSize
+            previewSize: SizeConstants.defaultPreviewSize
         )
 
         // Second update – will be fast (10ms), should win
@@ -283,7 +283,7 @@ final class TestPreviewAssembler: CollageAssembly {
             config: config,
             cgImages: [image.cgImage],
             backgroundImage: nil,
-            previewSize: CanvasConfig.defaultPreviewSize
+            previewSize: SizeConstants.defaultPreviewSize
         )
 
         try? await Task.sleep(for: .milliseconds(200))

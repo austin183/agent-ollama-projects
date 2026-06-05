@@ -16,13 +16,7 @@ struct ContentView: View {
     @State     private var isDetailCollapsed = false
 
     private var filteredImages: [(index: Int, item: ImageItem)] {
-        if searchQuery.isEmpty {
-            return viewModel.imageLibrary.images.enumerated().map { ($0.offset, $0.element) }
-        } else {
-            return viewModel.imageLibrary.images.enumerated()
-                .filter { $0.element.filename.localizedCaseInsensitiveContains(searchQuery) }
-                .map { ($0.offset, $0.element) }
-        }
+        viewModel.imageLibrary.images.indexed(by: searchQuery)
     }
 
     var body: some View {

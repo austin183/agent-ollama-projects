@@ -28,7 +28,7 @@ final class MockSaliencyAnalyzer: SaliencyAnalysis {
 
 final class MockAssembler: CollageAssembly {
     var assembleData: Data? = Data()
-    var assemblePreviewImage: NSImage? = NSImage(size: CanvasConfig.defaultPreviewSize)
+    var assemblePreviewImage: NSImage? = NSImage(size: SizeConstants.defaultPreviewSize)
 
     func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) async -> Data? {
         assembleData

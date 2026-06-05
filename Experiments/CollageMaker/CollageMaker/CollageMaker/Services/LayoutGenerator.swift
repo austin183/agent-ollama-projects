@@ -8,7 +8,7 @@ protocol LayoutStrategy {
 struct LayoutGenerator {
     static func generate(
         numImages: Int,
-        canvasSize: CGSize = CanvasConfig.defaultCanvasSize,
+        canvasSize: CGSize = SizeConstants.defaultCanvasSize,
         gutter: CGFloat = 4,
         style: LayoutStyle = .hero,
         imageOrder: [Int]? = nil,
@@ -122,7 +122,7 @@ struct MosaicLayoutStrategy: LayoutStrategy {
         var remaining = CGRect(origin: .zero, size: canvasSize)
         var panels: [ImagePanel] = []
         var imageIdx = 0
-        var rng = mosaicSeed.map { SplitMix64(seed: $0) }
+        var rng = mosaicSeed.map { SeededPRNG(seed: $0) }
 
         let maxSplits = min(numImages, 20)
 
@@ -203,7 +203,8 @@ extension LayoutStyle {
 
 // MARK: - Seeded PRNG
 
-struct SplitMix64: RandomNumberGenerator {
+/// Deterministic PRNG for reproducible mosaic layouts.
+struct SeededPRNG {
     var state: UInt64
 
     init(seed: UInt64) {

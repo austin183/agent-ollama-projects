@@ -40,7 +40,7 @@ import Testing
         vm.regenerateLayout()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
-        #expect(trackingAssembler.lastPreviewCanvasSize == CanvasConfig.defaultCanvasSize)
+        #expect(trackingAssembler.lastPreviewCanvasSize == SizeConstants.defaultCanvasSize)
     }
 
     @Test func updatePreviewUsesCorrectPreviewSize() async {
@@ -52,7 +52,7 @@ import Testing
         vm.regenerateLayout()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
-        #expect(trackingAssembler.lastPreviewPreviewSize == CanvasConfig.defaultPreviewSize)
+        #expect(trackingAssembler.lastPreviewPreviewSize == SizeConstants.defaultPreviewSize)
     }
 
     @Test func updatePreviewPassesCorrectPanelCount() async {

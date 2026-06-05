@@ -125,7 +125,7 @@ struct CollageEditorView: View {
                     ScrollPanView(
                         selectedPanelId: viewModel.selectedPanelId,
                         onPanBegan: { id in
-                            self.viewModel.undoManager.beginUndoGrouping()
+                            self.viewModel.beginGestureUndo()
                             self.viewModel.isLiveGesturing = true
                             self.viewModel.beginScrollPan(panelId: id)
                             return true
@@ -135,8 +135,7 @@ struct CollageEditorView: View {
                         },
                         onPanEnded: {
                             self.viewModel.isLiveGesturing = false
-                            self.viewModel.undoManager.setActionName("Adjust Crop")
-                            self.viewModel.undoManager.endUndoGrouping()
+                            self.viewModel.endGestureUndo(actionName: "Adjust Crop")
                             let panelId = self.viewModel.cropManager.scrollPanActivePanelId
                             self.viewModel.endScrollPan()
                             if let panelId {
@@ -176,7 +175,7 @@ struct CollageEditorView: View {
                                 return
                             }
 
-                            let canvasSize = CanvasConfig.defaultCanvasSize
+                            let canvasSize = SizeConstants.defaultCanvasSize
                             if gestureCoordinator.titleResizeEdge != .none,
                                let tf = titleCanvasFrame {
                                 let handler = TitleDragHandler(
@@ -214,10 +213,7 @@ struct CollageEditorView: View {
                         .onEnded { _ in
                             if gestureCoordinator.dragTitleLocked {
                                 if let oldStyle = gestureCoordinator.oldTitleStyle {
-                                    viewModel.undoManager.registerUndo(withTarget: viewModel) { target in
-                                        target.titleStyle = oldStyle
-                                    }
-                                    viewModel.undoManager.setActionName("Move Title")
+                                    viewModel.registerTitleStyleUndo(oldStyle: oldStyle)
                                 }
                                 gestureCoordinator.oldTitleStyle = nil
                                 viewModel.isDraggingTitle = false
@@ -243,7 +239,7 @@ struct CollageEditorView: View {
                                         return
                                     }
                                 }
-                                if let id = panelAt(location: value.startLocation, in: geometry.size) {
+                                if let id = panelAt(location: value.startLocation, panelFrames: panelFrames) {
                                     gestureCoordinator.dragSourcePanelId = id
                                     if let imgIdx = viewModel.getEffectiveImageIndex(for: id) {
                                         gestureCoordinator.dragSourceImageIndex = imgIdx
@@ -251,7 +247,7 @@ struct CollageEditorView: View {
                                 }
                             }
                             if gestureCoordinator.dragSourcePanelId != nil {
-                                gestureCoordinator.dragTargetPanelId = panelAt(location: value.location, in: geometry.size)
+                                gestureCoordinator.dragTargetPanelId = panelAt(location: value.location, panelFrames: panelFrames)
                                 gestureCoordinator.dragCursorLocation = value.location
                             }
                         }
@@ -263,7 +259,7 @@ struct CollageEditorView: View {
                                 return
                             }
                             if let sourceId = gestureCoordinator.dragSourcePanelId,
-                               let targetId = panelAt(location: value.location, in: geometry.size),
+                               let targetId = panelAt(location: value.location, panelFrames: panelFrames),
                                sourceId != targetId {
                                 viewModel.swapPanelImages(sourceId: sourceId, targetId: targetId)
                             }
@@ -278,7 +274,7 @@ struct CollageEditorView: View {
                             if gestureCoordinator.pinchPanelId == nil, let id = viewModel.selectedPanelId {
                                 gestureCoordinator.pinchPanelId = id
                                 viewModel.beginPinch(panelId: id)
-                                viewModel.undoManager.beginUndoGrouping()
+                                viewModel.beginGestureUndo()
                                 viewModel.isLiveGesturing = true
                             }
                             if gestureCoordinator.pinchPanelId != nil {
@@ -292,8 +288,7 @@ struct CollageEditorView: View {
                             viewModel.isLiveGesturing = false
                             if let id = gestureCoordinator.pinchPanelId {
                                 viewModel.applyPinch(panelId: id)
-                                viewModel.undoManager.setActionName("Adjust Crop")
-                                viewModel.undoManager.endUndoGrouping()
+                                viewModel.endGestureUndo(actionName: "Adjust Crop")
                             }
                             gestureCoordinator.pinchPanelId = nil
                         }
@@ -302,11 +297,11 @@ struct CollageEditorView: View {
                     if let titleFrame, titleFrame.contains(location) {
                         return
                     }
-                    if let id = panelAt(location: location, in: geometry.size) {
+                    if let id = panelAt(location: location, panelFrames: panelFrames) {
                         viewModel.selectedPanelId = id
-                        if let panel = viewModel.panels.first(where: { $0.id == id }) {
-                            let freshFrame = canvasToPreviewFrame(panel.frame, in: geometry.size)
-                            logger.info("Selected panel idx=\(panel.imageIndex), canvas=\(DebugHelpers.rectStr(panel.frame)), scaled=\(DebugHelpers.rectStr(freshFrame)), tap=\(DebugHelpers.pointStr(location)), contains=\(freshFrame.contains(location))")
+                        if let panel = viewModel.panels.first(where: { $0.id == id }),
+                           let frame = panelFrames[id] {
+                            logger.info("Selected panel idx=\(panel.imageIndex), canvas=\(DebugHelpers.rectStr(panel.frame)), scaled=\(DebugHelpers.rectStr(frame)), tap=\(DebugHelpers.pointStr(location)), contains=\(frame.contains(location))")
                         }
                     } else {
                         viewModel.selectedPanelId = nil
@@ -323,13 +318,10 @@ struct CollageEditorView: View {
         }
     }
 
-    private func panelAt(location: CGPoint, in previewSize: CGSize) -> UUID? {
-        let freshFrames = viewModel.panels.reduce(into: [:]) { dict, panel in
-            dict[panel.id] = canvasToPreviewFrame(panel.frame, in: previewSize)
-        }
-        if let id = CropManager.hitTestPanel(at: location, panelFrames: freshFrames),
+    private func panelAt(location: CGPoint, panelFrames: [UUID: CGRect]) -> UUID? {
+        if let id = CropManager.hitTestPanel(at: location, panelFrames: panelFrames),
            let panel = viewModel.panels.first(where: { $0.id == id }),
-           let frame = freshFrames[id] {
+           let frame = panelFrames[id] {
             logger.debug("panelAt: idx=\(panel.imageIndex) frame=\(DebugHelpers.rectStr(frame)) tap=\(DebugHelpers.pointStr(location)) hits=true")
             return id
         }

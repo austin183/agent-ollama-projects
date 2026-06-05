@@ -157,3 +157,15 @@ images in a fixed-size container.
 ## Normalized Position Coordinates
 
 For resolution-independent element placement, store positions as normalized 0–1 values. The assembler multiplies by canvas dimensions at draw time. Use top-left origin internally (SwiftUI convention), convert to bottom-left (CoreGraphics) at the drawing boundary.
+
+## Verify Data Flow Before Adding Conversions
+
+When adding a coordinate conversion method, **trace the value to its producer first**. Plan descriptions and variable names can be wrong about what coordinate space a value lives in. The producer's arithmetic is the source of truth.
+
+**Verification steps:**
+1. Find where the struct/value is instantiated
+2. Check the arithmetic used to compute each coordinate field (e.g., `midX * width` = pixel space, not normalized)
+3. Verify against the consumer's expected coordinate space
+4. Only then write the conversion method
+
+**Failure mode:** If the producer already outputs pixel coordinates and the conversion multiplies by image size again, the result overflows and clamps to edges — crops appear anchored at corners instead of centered.

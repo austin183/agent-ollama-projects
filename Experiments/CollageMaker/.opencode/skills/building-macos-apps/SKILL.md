@@ -124,13 +124,15 @@ AppTarget/
 
 ## Coordinate System Traps
 
-Vision, CoreGraphics, and NSImage use different origins. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) for conversion functions, EXIF mismatch fixes, canvas-to-preview mapping, and normalized position storage.
+Vision, CoreGraphics, and NSImage use different origins. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) for conversion functions, EXIF mismatch fixes, canvas-to-preview mapping, normalized position storage, and the producer-tracing verification pattern.
 
 **Critical mismatches:**
 - Vision: bottom-left (0,0), normalized 0-1
 - CoreGraphics CGContext: bottom-left (0,0)
 - NSImage / SwiftUI: top-left (0,0)
 - EXIF orientation corrections shift CGImage coordinates -- strip EXIF with `NSImage(cgImage:cgImage, size: .zero)`
+
+**Before writing a coordinate conversion:** Trace the value to its producer. The producer's arithmetic is the source of truth — plan descriptions and variable names can be wrong about coordinate space. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) § "Verify Data Flow Before Adding Conversions".
 
 ## State Management
 
@@ -211,6 +213,7 @@ See [references/state/swift-concurrency.md](references/state/swift-concurrency.m
 - **`NSGraphicsContext.current` is NOT thread-safe** -- concurrent `Task.detached` rendering tasks can clobber each other's context. Mitigate with a serial `DispatchQueue`. See [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md)
 - **Background thread text rendering** — `NSAttributedString`/`NSMutableAttributedString` require AppKit and are not thread-safe. For `CTFrameDraw` on a background thread, use CoreFoundation C API (`CFAttributedStringCreateMutable`, `CFAttributedStringSetAttribute` with `kCTFontAttributeName`, etc.). See [references/graphics/coretext-background-rendering.md](references/graphics/coretext-background-rendering.md)
 - **`@unchecked Sendable` on model types** -- safe when non-Sendable AppKit properties (NSColor, NSAttributedString) are only accessed on a known thread. Document the justification. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
+- **Synchronous dispatch closures can't `await`** -- `RenderScheduler.render { }` takes a synchronous closure. `await` is a compile error. Mutating captured `var` fails Swift 6. Use `ThreadSafeArray` with `NSLock` + `@unchecked Sendable` for mutable state. Use `Thread.sleep(forTimeInterval:)` not `Task.sleep`. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
 
 ## Swift Compilation Gotchas
 

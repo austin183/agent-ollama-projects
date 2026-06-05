@@ -114,7 +114,7 @@ import Testing
 
     @Test func canvasToPreviewFrameCenteredPanel() {
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
-        let previewSize = CanvasConfig.defaultPreviewSize
+        let previewSize = SizeConstants.defaultPreviewSize
 
         let previewFrame = CropManager.canvasToPreviewFrame(panels[0].frame, in: previewSize)
 
@@ -124,7 +124,7 @@ import Testing
 
     @Test func canvasToPreviewFrameMultiplePanelsMaintainProportions() {
         let panels = LayoutGenerator.generate(numImages: 4, style: .uniform)
-        let previewSize = CanvasConfig.defaultPreviewSize
+        let previewSize = SizeConstants.defaultPreviewSize
 
         var previewFrames: [CGRect] = []
         for panel in panels {

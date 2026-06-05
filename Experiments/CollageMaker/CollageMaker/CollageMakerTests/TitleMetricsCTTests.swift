@@ -52,7 +52,7 @@ import Testing
             backgroundColor: NSColor.black.cgColor
         )
 
-        let canvasWidth = CanvasConfig.defaultCanvasSize.width
+        let canvasWidth = SizeConstants.defaultCanvasSize.width
         let bbox = metrics.boundingBox(canvasWidth: canvasWidth)
 
         #expect(bbox.width > 0)
@@ -77,7 +77,7 @@ import Testing
             backgroundColor: NSColor.black.cgColor
         )
 
-        let canvasWidth = CanvasConfig.defaultCanvasSize.width
+        let canvasWidth = SizeConstants.defaultCanvasSize.width
         let shortBbox = shortMetrics.boundingBox(canvasWidth: canvasWidth)
         let longBbox = longMetrics.boundingBox(canvasWidth: canvasWidth)
 
@@ -98,7 +98,7 @@ import Testing
             backgroundColor: NSColor.black.cgColor
         )
 
-        let canvasWidth = CanvasConfig.defaultCanvasSize.width
+        let canvasWidth = SizeConstants.defaultCanvasSize.width
         let bbox = metrics.boundingBox(canvasWidth: canvasWidth)
         let effectiveWidth = style.effectiveWidth(canvasWidth: canvasWidth)
 
@@ -117,7 +117,7 @@ import Testing
             backgroundColor: NSColor.black.cgColor
         )
 
-        let canvasWidth = CanvasConfig.defaultCanvasSize.width
+        let canvasWidth = SizeConstants.defaultCanvasSize.width
         let bbox = metrics.boundingBox(canvasWidth: canvasWidth)
 
         #expect(bbox.origin.y < 0)
@@ -137,7 +137,7 @@ import Testing
             backgroundColor: NSColor.black.cgColor
         )
 
-        let width = metrics.minNaturalWidth(canvasWidth: CanvasConfig.defaultCanvasSize.width)
+        let width = metrics.minNaturalWidth(canvasWidth: SizeConstants.defaultCanvasSize.width)
         #expect(width > 0)
     }
 
@@ -154,7 +154,7 @@ import Testing
             backgroundColor: NSColor.black.cgColor
         )
 
-        let canvasWidth = CanvasConfig.defaultCanvasSize.width
+        let canvasWidth = SizeConstants.defaultCanvasSize.width
         let naturalWidth = metrics.minNaturalWidth(canvasWidth: canvasWidth)
         let constrainedBbox = metrics.boundingBox(canvasWidth: canvasWidth)
 
@@ -445,7 +445,7 @@ import Testing
             backgroundColor: NSColor.black.cgColor
         )
 
-        let canvasWidth = CanvasConfig.defaultCanvasSize.width
+        let canvasWidth = SizeConstants.defaultCanvasSize.width
         let smallBbox = smallMetrics.boundingBox(canvasWidth: canvasWidth)
         let largeBbox = largeMetrics.boundingBox(canvasWidth: canvasWidth)
 
@@ -531,7 +531,7 @@ import Testing
             backgroundColor: NSColor.black.cgColor
         )
 
-        let canvasWidth = CanvasConfig.defaultCanvasSize.width
+        let canvasWidth = SizeConstants.defaultCanvasSize.width
         let bbox = metrics.boundingBox(canvasWidth: canvasWidth)
 
         #expect(bbox.width <= 200)
@@ -552,7 +552,7 @@ import Testing
             backgroundColor: NSColor.black.cgColor
         )
 
-        let canvasWidth = CanvasConfig.defaultCanvasSize.width
+        let canvasWidth = SizeConstants.defaultCanvasSize.width
         let bbox = metrics.boundingBox(canvasWidth: canvasWidth)
 
         #expect(bbox.height > style.fontSize)

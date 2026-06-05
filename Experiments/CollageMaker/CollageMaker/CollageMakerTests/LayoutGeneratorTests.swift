@@ -15,7 +15,7 @@ import Testing
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
         #expect(panels.count == 1)
         #expect(panels[0].imageIndex == 0)
-        #expect(panels[0].frame.size == CanvasConfig.defaultCanvasSize)
+        #expect(panels[0].frame.size == SizeConstants.defaultCanvasSize)
     }
 
     @Test func singleImageHero() {
@@ -26,7 +26,7 @@ import Testing
     @Test func singleImageMosaic() {
         let panels = LayoutGenerator.generate(numImages: 1, style: .mosaic)
         #expect(panels.count == 1)
-        #expect(panels[0].frame.size == CanvasConfig.defaultCanvasSize)
+        #expect(panels[0].frame.size == SizeConstants.defaultCanvasSize)
     }
 
     // MARK: - Uniform style
@@ -53,8 +53,8 @@ import Testing
         for panel in panels {
             #expect(panel.frame.origin.x >= 0)
             #expect(panel.frame.origin.y >= 0)
-            #expect(panel.frame.maxX <= CanvasConfig.defaultCanvasSize.width)
-            #expect(panel.frame.maxY <= CanvasConfig.defaultCanvasSize.height)
+            #expect(panel.frame.maxX <= SizeConstants.defaultCanvasSize.width)
+            #expect(panel.frame.maxY <= SizeConstants.defaultCanvasSize.height)
         }
     }
 
@@ -82,8 +82,8 @@ import Testing
         for panel in panels {
             #expect(panel.frame.origin.x >= 0)
             #expect(panel.frame.origin.y >= 0)
-            #expect(panel.frame.maxX <= CanvasConfig.defaultCanvasSize.width + 10)
-            #expect(panel.frame.maxY <= CanvasConfig.defaultCanvasSize.height)
+            #expect(panel.frame.maxX <= SizeConstants.defaultCanvasSize.width + 10)
+            #expect(panel.frame.maxY <= SizeConstants.defaultCanvasSize.height)
         }
     }
 
@@ -127,8 +127,8 @@ import Testing
         for panel in panels {
             #expect(panel.frame.origin.x >= 0)
             #expect(panel.frame.origin.y >= 0)
-            #expect(panel.frame.maxX <= CanvasConfig.defaultCanvasSize.width + 1)
-            #expect(panel.frame.maxY <= CanvasConfig.defaultCanvasSize.height + 1)
+            #expect(panel.frame.maxX <= SizeConstants.defaultCanvasSize.width + 1)
+            #expect(panel.frame.maxY <= SizeConstants.defaultCanvasSize.height + 1)
         }
     }
 

@@ -39,12 +39,11 @@ func createTestNSImage(color: NSColor, size: CGSize = CGSize(width: 100, height:
 
 func createTestImageItem(color: NSColor = .systemBlue, size: CGSize = CGSize(width: 100, height: 100), id: UUID = UUID(), filename: String = "test.jpg") -> ImageItem {
     let cgImage = createTestCGImage(color: color, size: size)
-    let nsImage = NSImage(cgImage: cgImage, size: size)
     let thumbnail = NSImage(cgImage: cgImage, size: CGSize(width: 64, height: 64))
-    return ImageItem(id: id, nsImage: nsImage, cgImage: cgImage, thumbnail: thumbnail, filename: filename, size: size)
+    return ImageItem(id: id, cgImage: cgImage, thumbnail: thumbnail, filename: filename, size: size)
 }
 
-// MARK: - Tracking Assembler
+// MARK: - Tracking Assembler (legacy, kept for backward compatibility)
 
 final class TrackingAssembler: CollageAssembly {
     var assembleCalls = 0
@@ -103,6 +102,99 @@ final class TrackingAssembler: CollageAssembly {
     }
 }
 
+// MARK: - Consolidated Test Assembler
+
+/// Unified mock for `CollageAssembly` combining tracking, configurable returns,
+/// delays, and error injection. Replaces TrackingAssembler, MockAssembler,
+/// TestPreviewAssembler, and GenerationControlledAssembler.
+final class TestAssembler: CollageAssembly {
+    // Configuration
+    var trackCalls = false
+    var assembleData: Data? = Data([0xFF, 0xD8, 0xFF, 0xE0])
+    var assemblePreviewImage: NSImage?
+    var panelImage: NSImage?
+    var backgroundImage: NSImage?
+    var titleImage: NSImage?
+    var previewDelayMs: UInt64 = 0
+    var panelDelayMs: UInt64 = 0
+    var shouldThrow = false
+    var titleReturnsNilForEmpty = true
+
+    // Call counters (only incremented when trackCalls = true)
+    var assembleCalls = 0
+    var previewCalls = 0
+    var renderPanelCalls = 0
+    var renderBackgroundCalls = 0
+    var titleRenderCalls = 0
+
+    // Last call data
+    var lastAssembleConfig: AssemblyConfig?
+    var lastAssembleCgImages: [CGImage?]?
+    var lastAssembleQuality: Double = 0
+    var lastPreviewConfig: AssemblyConfig?
+    var lastPreviewSize: CGSize = .zero
+    var lastPanelCrop: CropInfo?
+    var lastPanelSize: CGSize = .zero
+    var lastTitleConfig: TitleConfig?
+    var lastTitleCanvasSize: CGSize = .zero
+
+    func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) async -> Data? {
+        if trackCalls {
+            assembleCalls += 1
+            lastAssembleConfig = config
+            lastAssembleCgImages = cgImages
+            lastAssembleQuality = quality
+        }
+        return assembleData
+    }
+
+    func assemblePreviewWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
+        if trackCalls {
+            previewCalls += 1
+            lastPreviewConfig = config
+            lastPreviewSize = previewSize
+        }
+        if previewDelayMs > 0 {
+            try? await Task.sleep(for: .milliseconds(previewDelayMs))
+        }
+        return assemblePreviewImage ?? NSImage(size: previewSize)
+    }
+
+    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage? {
+        if trackCalls {
+            renderPanelCalls += 1
+            lastPanelCrop = crop
+            lastPanelSize = panelSize
+        }
+        if panelDelayMs > 0 {
+            try? await Task.sleep(for: .milliseconds(panelDelayMs))
+        }
+        return panelImage ?? NSImage(size: panelSize)
+    }
+
+    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
+        if trackCalls {
+            renderBackgroundCalls += 1
+        }
+        if let bg = backgroundImage {
+            return NSImage(cgImage: bg, size: previewSize)
+        }
+        return NSImage(size: previewSize)
+    }
+
+    func renderTitle(titleConfig: TitleConfig, canvasSize: CGSize) async -> NSImage? {
+        if trackCalls {
+            titleRenderCalls += 1
+            lastTitleConfig = titleConfig
+            lastTitleCanvasSize = canvasSize
+        }
+        if titleReturnsNilForEmpty, titleConfig.textData.text.isEmpty {
+            return nil
+        }
+        return titleImage
+    }
+}
+
 @MainActor
 func makeAssemblyConfig(
     panels: [ImagePanel] = [],
@@ -116,7 +208,7 @@ func makeAssemblyConfig(
     gradientEndColor: NSColor = .darkGray,
     gradientAngle: Double = 135,
     backgroundOpacity: Double = 1.0,
-    canvasSize: CGSize = CanvasConfig.defaultCanvasSize
+    canvasSize: CGSize = SizeConstants.defaultCanvasSize
 ) -> AssemblyConfig {
     let attrString = NSAttributedString(string: titleText)
     let textData = TitleTextData.extract(from: attrString)

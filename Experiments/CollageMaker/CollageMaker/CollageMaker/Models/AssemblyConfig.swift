@@ -7,6 +7,8 @@ struct LayoutConfig {
     let panelAssignments: [UUID: Int]
 }
 
+// Safety: Contains [ImagePanel] (struct with UUID + CGRect + Int),
+// [CropInfo] (struct with CGRect), and [UUID: Int]. All Sendable.
 extension LayoutConfig: @unchecked Sendable {}
 
 struct TitleConfig {
@@ -16,6 +18,8 @@ struct TitleConfig {
     let backgroundColor: CGColor
 }
 
+// Safety: Contains TitleTextData (Sendable), TitleStyle (@unchecked Sendable
+// due to NSColor), and CGColor (Sendable).
 extension TitleConfig: @unchecked Sendable {}
 
 // Safety: NSColor is MainActor-only, but BackgroundConfig is only ever
@@ -111,4 +115,6 @@ extension AssemblyConfig {
     }
 }
 
+// Safety: Contains LayoutConfig, TitleConfig, BackgroundConfig (all
+// @unchecked Sendable) and CGSize (Sendable).
 extension AssemblyConfig: @unchecked Sendable {}

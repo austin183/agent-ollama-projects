@@ -26,19 +26,19 @@ struct ExportPanel: View {
 
                 switch viewModel.backgroundStyle {
                 case .solid:
-                    NSColorPickerView(color: $viewModel.backgroundColor)
+                    ColorWellView(color: $viewModel.backgroundColor)
                         .accessibilityLabel("Background color")
                         .frame(height: 28)
 
                 case .gradient:
                     HStack(spacing: 8) {
-                        NSColorPickerView(color: $viewModel.gradientStartColor)
+                        ColorWellView(color: $viewModel.gradientStartColor)
                             .frame(width: 32, height: 28)
                         Text("Start")
                             .font(.caption)
                             .foregroundStyle(.secondary)
 
-                        NSColorPickerView(color: $viewModel.gradientEndColor)
+                        ColorWellView(color: $viewModel.gradientEndColor)
                             .frame(width: 32, height: 28)
                         Text("End")
                             .font(.caption)
@@ -140,7 +140,7 @@ struct ExportPanel: View {
                     Text("Color")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    NSColorPickerView(
+                    ColorWellView(
                         color: Binding(
                             get: { viewModel.titleStyle.fontColor },
                             set: { viewModel.setTitleFontColor($0) }
@@ -151,7 +151,7 @@ struct ExportPanel: View {
                     Text("BG")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    NSColorPickerView(
+                    ColorWellView(
                         color: Binding(
                             get: { viewModel.titleStyle.backgroundColor },
                             set: { viewModel.setTitleBackgroundColor($0) }
@@ -261,39 +261,4 @@ struct ExportPanel: View {
     }
 }
 
-private struct NSColorPickerView: NSViewRepresentable {
-    @Binding var color: NSColor
 
-    func makeNSView(context: Context) -> NSColorWell {
-        let well = NSColorWell()
-        well.isContinuous = true
-        well.alphaValue = 1.0
-        well.target = context.coordinator
-        well.action = #selector(Coordinator.colorChanged(_:))
-        well.color = color
-        return well
-    }
-
-    func updateNSView(_ well: NSColorWell, context: Context) {
-        well.color = color
-        well.target = context.coordinator
-        well.action = #selector(Coordinator.colorChanged(_:))
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(color: $color)
-    }
-
-    class Coordinator: NSObject {
-        @Binding var color: NSColor
-
-        init(color: Binding<NSColor>) {
-            _color = color
-            super.init()
-        }
-
-        @objc func colorChanged(_ sender: NSColorWell) {
-            color = sender.color
-        }
-    }
-}

@@ -540,6 +540,53 @@ await scheduler.render {
 | Serial queue, cancelled work still runs FIFO | Generation counter at caller level |
 | Main-actor state update after background work | `Task { [weak self] ... self.property = result }` |
 
+### Synchronous Closures Inside `withCheckedContinuation`
+
+The `RenderScheduler.render` method takes a **synchronous** closure (`@Sendable () -> T`), not an async one. The closure runs on a `DispatchQueue` thread, not an async context.
+
+**Swift 6 traps:**
+- `await` inside the closure is a compile error — the closure is synchronous
+- `actor` methods require `await` — can't call them from inside the closure
+- Mutating captured `var` produces *"mutation of captured var in concurrently-executing code"*
+
+**Solution — Thread-Safe Class with NSLock:**
+```swift
+final class ThreadSafeArray<Element: Sendable>: @unchecked Sendable {
+    private var items: [Element] = []
+    private let lock = NSLock()
+
+    func append(_ item: Element) {
+        lock.lock(); defer { lock.unlock() }; items.append(item)
+    }
+
+    func getItems() -> [Element] {
+        lock.lock(); defer { lock.unlock() }; items
+    }
+}
+```
+
+**Usage in tests:**
+```swift
+let tracker = ThreadSafeArray<String>()
+await scheduler.render {
+    tracker.append("enter")  // Synchronous, thread-safe
+    Thread.sleep(forTimeInterval: 0.001)  // Sync sleep, not Task.sleep
+    tracker.append("exit")
+    return ()
+}
+```
+
+**Why not other approaches:**
+- `actor` + `await` — closure is synchronous, `await` is illegal
+- `NSLock` on local `var` — Swift 6 forbids mutation of captured vars in concurrent code
+- `@MainActor` — queue runs on background thread, not main actor
+- `UnsafeMutablePointer` — unsafe, defeats the purpose
+
+**Key points:**
+- `@unchecked Sendable` is safe here because `NSLock` provides mutual exclusion
+- `Thread.sleep(forTimeInterval:)` is the synchronous equivalent of `Task.sleep`
+- This pattern applies whenever you need to collect results from synchronous closures executing concurrently
+
 ### `@unchecked Sendable` for Model Types with AppKit Values
 
 Swift's Sendable checker rejects structs containing `NSColor`, `NSAttributedString`, or other non-Sendable AppKit types. When these are only ever accessed on a known thread (e.g., the serial render queue), `@unchecked Sendable` is safe:
@@ -580,6 +627,7 @@ extension BackgroundConfig: @unchecked Sendable {}
 15. **Use an actor wrapper for shared DispatchQueue boilerplate** — When 3+ methods share the same serial queue, consolidate `withCheckedContinuation` into an actor's `render(_ work: @escaping @Sendable () -> T) async -> T` method
 16. **Cancel debounce tasks at higher-priority entry points** — When a method bypasses a debounced path to render immediately (e.g., `regenerateLayout()` calling `updatePreview()`), cancel the pending debounce task first to prevent a stale debounced render from overwriting fresh state
 17. **Debounce only continuous controls** — Slider and color picker `didSet` observers fire 30-60x/sec during drag and need 150ms debounced render. Discrete controls (typing, enum picker, image selection) render immediately. Rule of thumb: >10 events/sec = debounce
+18. **Synchronous closures can't use `await`** — `RenderScheduler.render { }` takes a synchronous closure. To collect mutable state from concurrent closures, use a `ThreadSafeArray<Element>` backed by `NSLock` + `@unchecked Sendable`. Use `Thread.sleep(forTimeInterval:)` instead of `Task.sleep`
 
 ## Pitfalls
 
@@ -588,6 +636,7 @@ extension BackgroundConfig: @unchecked Sendable {}
 - **`@ObservedObject` + `@MainActor`** — `MainActor.assumeIsolated` crash. Use `@EnvironmentObject`
 - **`[weak self]` on struct produces compile error** — `self` in a SwiftUI `struct` view is a value type, not a reference. Either capture `self` by value (no weak needed — structs have value semantics) or move timer/state to a `@MainActor final class` (e.g., `CollageViewModel`).
 - **Computed properties on `@unchecked Sendable` structs** — A computed property that accesses a MainActor-only type (e.g., `var cgColor: CGColor { nsColor.cgColor }`) evaluates on the *destination* thread, not the construction thread. Store the derived value in `init` instead.
+- **Synchronous dispatch closures can't `await`** — `RenderScheduler.render { }` closures are synchronous. `await` is a compile error. Mutating captured `var` is a Swift 6 error. Use `ThreadSafeArray` with `NSLock` for mutable state collection.
 
 ## Task vs Task.detached
 

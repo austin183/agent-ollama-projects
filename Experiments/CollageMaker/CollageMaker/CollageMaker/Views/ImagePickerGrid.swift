@@ -8,13 +8,7 @@ struct ImagePickerGrid: View {
     @State private var searchQuery = ""
 
     private var filteredImages: [(index: Int, item: ImageItem)] {
-        if searchQuery.isEmpty {
-            return images.enumerated().map { ($0.offset, $0.element) }
-        } else {
-            return images.enumerated()
-                .filter { $0.element.filename.localizedCaseInsensitiveContains(searchQuery) }
-                .map { ($0.offset, $0.element) }
-        }
+        images.indexed(by: searchQuery)
     }
 
     private let columns = [

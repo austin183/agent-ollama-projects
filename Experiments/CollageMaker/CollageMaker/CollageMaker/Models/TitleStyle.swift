@@ -5,18 +5,11 @@ struct TitleStyle: Codable, Equatable, @unchecked Sendable {
 
     /// Value type containing only the properties that affect text layout.
     /// Position, color, and background properties are intentionally excluded.
-    public struct LayoutKey: Hashable {
-        public let fontFamily: String
-        public let fontSize: CGFloat
-        public let width: CGFloat
-        public let alignment: NSTextAlignment
-
-        public init(fontFamily: String, fontSize: CGFloat, width: CGFloat, alignment: NSTextAlignment) {
-            self.fontFamily = fontFamily
-            self.fontSize = fontSize
-            self.width = width
-            self.alignment = alignment
-        }
+    struct LayoutKey: Hashable {
+        let fontFamily: String
+        let fontSize: CGFloat
+        let width: CGFloat
+        let alignment: NSTextAlignment
     }
 
     var fontFamily: String
@@ -30,7 +23,7 @@ struct TitleStyle: Codable, Equatable, @unchecked Sendable {
     var width: CGFloat
 
     /// Returns a key that changes only when text layout would change.
-    public var layoutKey: LayoutKey {
+    var layoutKey: LayoutKey {
         LayoutKey(
             fontFamily: fontFamily,
             fontSize: fontSize,
