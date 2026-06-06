@@ -157,4 +157,90 @@ import Testing
         let panels = LayoutGenerator.generate(numImages: 12, style: .hero)
         #expect(panels.count == 12)
     }
+
+    // MARK: - Diagonal Slices style
+
+    @Test func diagonalSlicesProducesPathGeometry() {
+        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, sliceAngle: 45)
+        #expect(panels.count == 4)
+        for panel in panels {
+            #expect(panel.geometry.cgPath != nil, "Panel should have CGPath geometry")
+        }
+    }
+
+    @Test func diagonalSlicesCoversCanvas() {
+        let panels = LayoutGenerator.generate(numImages: 3, style: .diagonalSlices, sliceAngle: 45)
+        let canvas = CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize)
+        for panel in panels {
+            #expect(canvas.intersects(panel.frame))
+        }
+    }
+
+    @Test func diagonalSlicesSingleImage() {
+        let panels = LayoutGenerator.generate(numImages: 1, style: .diagonalSlices)
+        #expect(panels.count == 1)
+        #expect(panels[0].frame == CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize))
+    }
+
+    @Test func diagonalSlicesAllImageIndicesUnique() {
+        let panels = LayoutGenerator.generate(numImages: 6, style: .diagonalSlices)
+        let indices = Set(panels.map { $0.imageIndex })
+        #expect(indices.count == panels.count)
+    }
+
+    @Test func diagonalSlicesWithCustomOrder() {
+        let order = [3, 0, 2, 1]
+        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, imageOrder: order)
+        #expect(panels[0].imageIndex == 3)
+        #expect(panels[1].imageIndex == 0)
+        #expect(panels[2].imageIndex == 2)
+        #expect(panels[3].imageIndex == 1)
+    }
+
+    @Test func diagonalSlicesZeroAngleProducesVerticalStrips() {
+        let panels = LayoutGenerator.generate(numImages: 3, style: .diagonalSlices, sliceAngle: 0)
+        #expect(panels.count == 3)
+        for panel in panels {
+            #expect(panel.frame.origin.y == 0)
+            #expect(panel.frame.maxY == SizeConstants.defaultCanvasSize.height)
+        }
+    }
+
+    @Test func diagonalSlicesNegativeAngle() {
+        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, sliceAngle: -30)
+        #expect(panels.count == 4)
+        for panel in panels {
+            #expect(panel.geometry.cgPath != nil)
+        }
+    }
+
+    @Test func diagonalSlicesTwoImages() {
+        let panels = LayoutGenerator.generate(numImages: 2, style: .diagonalSlices, sliceAngle: 45)
+        #expect(panels.count == 2)
+        #expect(panels[0].imageIndex == 0)
+        #expect(panels[1].imageIndex == 1)
+        for panel in panels {
+            #expect(panel.geometry.cgPath != nil)
+        }
+    }
+
+    @Test func diagonalSlicesLargeAngle() {
+        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, sliceAngle: 70)
+        #expect(panels.count == 4)
+        for panel in panels {
+            #expect(panel.geometry.cgPath != nil)
+            #expect(panel.frame.width > 0)
+            #expect(panel.frame.height > 0)
+        }
+    }
+
+    @Test func diagonalSlicesPanelsWithinReasonableBounds() {
+        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, sliceAngle: 45)
+        let canvas = CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize)
+        for panel in panels {
+            let intersection = canvas.intersection(panel.frame)
+            let overlapRatio = intersection.width * intersection.height / panel.frame.width * panel.frame.height
+            #expect(overlapRatio > 0.5, "Panel should have significant overlap with canvas")
+        }
+    }
 }

@@ -231,13 +231,50 @@ struct DiagonalSlicesLayoutStrategy: LayoutStrategy {
     }
 
     func generate(numImages: Int, canvasSize: CGSize, gutter: CGFloat, imageOrder: [Int]?, mosaicSeed: UInt64?) -> [ImagePanel] {
-        return UniformLayoutStrategy().generate(
-            numImages: numImages,
-            canvasSize: canvasSize,
-            gutter: gutter,
-            imageOrder: imageOrder,
-            mosaicSeed: mosaicSeed
-        )
+        guard numImages > 0 else { return [] }
+
+        if numImages == 1 {
+            let imgIdx = imageOrder?[0] ?? 0
+            return [ImagePanel(imageIndex: imgIdx, frame: CGRect(origin: .zero, size: canvasSize))]
+        }
+
+        let radians = angle * .pi / 180.0
+        let shear = tan(radians)
+
+        let totalGutter = CGFloat(numImages - 1) * gutter
+        let colWidth = (canvasSize.width - totalGutter) / CGFloat(numImages)
+
+        var panels: [ImagePanel] = []
+
+        for i in 0..<numImages {
+            let unshearedX = CGFloat(i) * (colWidth + gutter)
+            let unshearedRect = CGRect(x: unshearedX, y: 0, width: colWidth, height: canvasSize.height)
+
+            let corners: [CGPoint] = [
+                CGPoint(x: unshearedRect.origin.x + unshearedRect.origin.y * shear, y: unshearedRect.origin.y),
+                CGPoint(x: unshearedRect.maxX + unshearedRect.origin.y * shear, y: unshearedRect.origin.y),
+                CGPoint(x: unshearedRect.maxX + unshearedRect.maxY * shear, y: unshearedRect.maxY),
+                CGPoint(x: unshearedRect.origin.x + unshearedRect.maxY * shear, y: unshearedRect.maxY)
+            ]
+
+            let mutablePath = CGMutablePath()
+            mutablePath.move(to: corners[0])
+            mutablePath.addLine(to: corners[1])
+            mutablePath.addLine(to: corners[2])
+            mutablePath.addLine(to: corners[3])
+            mutablePath.closeSubpath()
+            let path = mutablePath
+
+            let minX = min(corners[0].x, corners[1].x, corners[2].x, corners[3].x)
+            let minY = min(corners[0].y, corners[1].y, corners[2].y, corners[3].y)
+            let maxX = max(corners[0].x, corners[1].x, corners[2].x, corners[3].x)
+            let maxY = max(corners[0].y, corners[1].y, corners[2].y, corners[3].y)
+            let bounds = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+            let imgIdx = imageOrder?[i] ?? i
+            panels.append(ImagePanel(imageIndex: imgIdx, geometry: .path(cgPath: path, boundingRect: bounds)))
+        }
+
+        return panels
     }
 }
 

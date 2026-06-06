@@ -169,3 +169,35 @@ When adding a coordinate conversion method, **trace the value to its producer fi
 4. Only then write the conversion method
 
 **Failure mode:** If the producer already outputs pixel coordinates and the conversion multiplies by image size again, the result overflows and clamps to edges — crops appear anchored at corners instead of centered.
+
+## CGPath Construction
+
+`CGPath` only provides initializers for rectangles and ellipses. To build an arbitrary path (polygon clip, hexagonal panel, star shape, etc.), use `CGMutablePath`.
+
+### Building an arbitrary path from vertices
+
+```swift
+let mutablePath = CGMutablePath()
+mutablePath.move(to: corners[0])
+for corner in corners[1...] {
+    mutablePath.addLine(to: corner)
+}
+mutablePath.closeSubpath()
+let path: CGPath = mutablePath  // implicit coercion
+```
+
+`CGMutablePath` coerces implicitly to `CGPath` — no explicit conversion needed. A closure-based `CGPath` factory initializer does not exist in the current SDK.
+
+### Computing bounding rect from known vertices
+
+`CGMutablePath` does not expose `boundingRect` in Swift. For convex polygons with known vertices, compute the bounding rect manually:
+
+```swift
+let minX = min(corners[0].x, corners[1].x, corners[2].x, corners[3].x)
+let minY = min(corners[0].y, corners[1].y, corners[2].y, corners[3].y)
+let maxX = max(corners[0].x, corners[1].x, corners[2].x, corners[3].x)
+let maxY = max(corners[0].y, corners[1].y, corners[2].y, corners[3].y)
+let bounds = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+```
+
+This is O(1) for a fixed vertex count and more efficient than iterating path elements or coercing to `CGPath` first.
