@@ -158,3 +158,81 @@ func updateNSView(_ nsView: NSScrollView, context: Context) {
 ```
 
 Both fixes together eliminate the cascade: the guard prevents re-entrant normalization, and the early return prevents unnecessary `typingAttributes` mutations.
+
+## Cross-View `updateNSView` Cascade
+
+The re-entrancy trap above covers the **self-referential** case (user types in the text view → cascade). A more insidious variant is the **cross-view** cascade: an unrelated `@Observable` property change triggers `updateNSView` on **every** `NSViewRepresentable` in the tree, including ones whose own data hasn't changed.
+
+**Key insight:** When ANY `@Observable` property changes, SwiftUI re-renders the entire view tree. Every `NSViewRepresentable` has `updateNSView` called, even if the data it depends on hasn't changed. If an unrelated `NSViewRepresentable` performs unconditional mutations (e.g., `typingAttributes` assignment, `setAttributedString`), those mutations can trigger delegate callbacks that write to bindings, starting a re-render cascade that freezes other UI controls.
+
+**Cascade path:**
+```
+User drags color picker → backgroundColor changes
+→ @Observable marks dirty → SwiftUI re-renders entire tree
+→ AttributedStringEditorView.updateNSView fires (unrelated to text)
+→ typingAttributes = newAttrs triggers textDidChange
+→ Coordinator writes normalized text to $attributedString binding
+→ $viewModel.titleAttrString binding writes → titleAttrString.didSet
+→ updatePreview() → another re-render → (loop)
+→ Color picker frozen, only white/full opacity selectable
+```
+
+**Symptom:** A color picker becomes stuck — only white and full opacity are selectable. The issue manifests after editing text in a text view (which populates the `NSAttributedString` binding), because the cascade requires non-empty text to produce a meaningful binding write.
+
+**Why the existing guard wasn't enough:** The existing `isUpdating` flag in `textDidChange` only guards against user-typing re-entrancy. The cross-view cascade originates from a completely different trigger (unrelated property change → SwiftUI re-render → `updateNSView`), which the existing guard doesn't intercept because `textDidChange` hasn't fired yet at that point.
+
+**Fix 1 — Guard `typingAttributes` assignment:**
+
+Compare current font against target before assigning:
+
+```swift
+func updateNSView(_ textView: NSTextView, context: Context) {
+    let targetFont = resolveFont(...)
+
+    if let currentFont = textView.typingAttributes[.font] as? NSFont,
+       currentFont.fontName == targetFont.fontName,
+       currentFont.pointSize == targetFont.pointSize {
+        // Skip typingAttributes — prevents textDidChange trigger
+    } else {
+        textView.typingAttributes[.font] = targetFont
+    }
+}
+```
+
+**Fix 2 — Guard text storage mutations with coordinator flag:**
+
+Set `isUpdating` from `updateNSView` to guard against programmatic re-entrancy:
+
+```swift
+func updateNSView(_ textView: NSTextView, context: Context) {
+    // ... early returns for unchanged data ...
+
+    context.coordinator.isUpdating = true
+    defer { context.coordinator.isUpdating = false }
+
+    textStorage.setAttributedString(normalized)
+    attributedString = normalized
+}
+```
+
+The coordinator's `isUpdating` flag (already used in `textDidChange` to guard against user-typing re-entrancy) is now also set from `updateNSView`. Both paths write to the same binding, so a single guard covers both.
+
+**Fix 3 — Conditional re-normalization:**
+
+Only re-normalize when font family or alignment actually changed:
+
+```swift
+let storageFont = textStorage.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
+let currentAlignment = (textStorage.attribute(.paragraphStyle, at: 0, effectiveRange: nil)
+    as? NSParagraphStyle)?.alignment
+if storageFont?.fontName == targetFont.fontName,
+   storageFont?.pointSize == targetFont.pointSize,
+   currentAlignment == titleStyle.alignment {
+    return  // Skip normalization and binding write
+}
+```
+
+**Diagnostic clues:**
+- **Color picker stuck on white/full opacity** — The cascade causes rapid re-renders that prevent the color picker's internal state from updating correctly.
+- **Issue appears after editing text** — Empty `NSAttributedString` produces a no-op binding write. Non-empty text produces a meaningful write that triggers `titleAttrString.didSet`.
+- **No crash, just frozen control** — The loop doesn't cause a stack overflow (SwiftUI batches renders), but it prevents the color picker from processing user input.
