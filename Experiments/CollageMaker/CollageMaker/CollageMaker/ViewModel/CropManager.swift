@@ -262,11 +262,32 @@ final class CropManager {
         CoordinateConverter.sourceRectInContainer(crop, imageSize: imageSize, container: container)
     }
 
-    static func hitTestPanel(at location: CGPoint, panelFrames: [UUID: CGRect]) -> UUID? {
-        for (id, frame) in panelFrames where frame.contains(location) {
-            return id
+    static func hitTestPanel(
+        at location: CGPoint,
+        panelFrames: [UUID: CGRect],
+        panelGeometries: [UUID: PanelGeometry]? = nil,
+        previewSize: CGSize
+    ) -> UUID? {
+        let candidates = panelFrames.filter { $0.value.contains(location) }
+        guard !candidates.isEmpty else { return nil }
+
+        if let geometries = panelGeometries {
+            let canvasPoint = screenToCanvasPoint(location, in: previewSize)
+            for (id, _) in candidates {
+                guard let geometry = geometries[id] else { continue }
+                switch geometry {
+                case .rect:
+                    return id
+                case .path(let cgPath, _):
+                    if cgPath.contains(canvasPoint) {
+                        return id
+                    }
+                }
+            }
+            return nil
         }
-        return nil
+
+        return candidates.first?.key
     }
 
     static func translateZoom(magnification: CGFloat, baseZoom: CGFloat, imageSize: CGSize, panelSize: CGSize) -> CGFloat {

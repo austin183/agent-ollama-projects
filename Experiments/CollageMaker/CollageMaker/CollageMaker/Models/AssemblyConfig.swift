@@ -56,11 +56,24 @@ struct BackgroundConfig: @unchecked Sendable {
     }
 }
 
+struct OverlayConfig: @unchecked Sendable {
+    let maskImage: CGImage
+    let opacity: CGFloat
+    let blendMode: CGBlendMode
+
+    init(maskImage: CGImage, opacity: CGFloat = 0.5, blendMode: CGBlendMode = .multiply) {
+        self.maskImage = maskImage
+        self.opacity = opacity
+        self.blendMode = blendMode
+    }
+}
+
 struct AssemblyConfig {
     let layout: LayoutConfig
     let title: TitleConfig
     let background: BackgroundConfig
     let canvasSize: CGSize
+    let overlay: OverlayConfig?
 
     init(
         panels: [ImagePanel],
@@ -76,7 +89,8 @@ struct AssemblyConfig {
         gradientEndColor: NSColor,
         gradientAngle: Double,
         backgroundOpacity: Double,
-        canvasSize: CGSize
+        canvasSize: CGSize,
+        overlay: OverlayConfig? = nil
     ) {
         self.layout = LayoutConfig(
             panels: panels,
@@ -98,6 +112,7 @@ struct AssemblyConfig {
             opacity: backgroundOpacity
         )
         self.canvasSize = canvasSize
+        self.overlay = overlay
     }
 }
 
@@ -106,12 +121,14 @@ extension AssemblyConfig {
         layout: LayoutConfig,
         title: TitleConfig,
         background: BackgroundConfig,
-        canvasSize: CGSize
+        canvasSize: CGSize,
+        overlay: OverlayConfig? = nil
     ) {
         self.layout = layout
         self.title = title
         self.background = background
         self.canvasSize = canvasSize
+        self.overlay = overlay
     }
 }
 

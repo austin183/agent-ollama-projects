@@ -65,4 +65,4 @@ The diff-review agent initially suspected a breaking change where `imageOrder` w
 |---|----------|-------|
 | 1 | **Medium** | Dead `ScrollPanManager.swift` and `ScrollPanManagerTests.swift` files remain on disk after scroll pan consolidation |
 
-**No compilation errors, logic bugs, or CLAUDE.md violations detected.** The refactoring is structurally sound.
+**No compilation errors, logic bugs, or AGENTS.md violations detected.** The refactoring is structurally sound.

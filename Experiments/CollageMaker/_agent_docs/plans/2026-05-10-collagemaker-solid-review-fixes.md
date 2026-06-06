@@ -248,7 +248,7 @@ func analyze(_ nsImage: NSImage) async throws -> SaliencyResult {
 }
 ```
 
-Wait — the review says "Should pass `orientation: cgImage.imageOrientation` per CLAUDE.md guidelines." The issue is that `NSImage` may have represented the image with rotation, but `cgImage(forProposedRect:)` extracts the raw pixels. If the original image had EXIF rotation, `NSImage` may have already applied it visually, but the `CGImage` pixels may be unrotated.
+Wait — the review says "Should pass `orientation: cgImage.imageOrientation` per AGENTS.md guidelines." The issue is that `NSImage` may have represented the image with rotation, but `cgImage(forProposedRect:)` extracts the raw pixels. If the original image had EXIF rotation, `NSImage` may have already applied it visually, but the `CGImage` pixels may be unrotated.
 
 The safest fix: check if `NSImage` has a size mismatch with `CGImage` that suggests rotation, and pass the appropriate orientation. However, `NSImage` does not expose EXIF orientation directly.
 

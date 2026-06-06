@@ -13,7 +13,7 @@ Look for problems that exist in the introduced code. This could be security issu
 **CRITICAL: We only want HIGH SIGNAL issues.** Flag issues where:
 - The code will fail to compile or parse (syntax errors, type errors, missing imports, unresolved references)
 - The code will definitely produce wrong results regardless of inputs (clear logic errors)
-- Clear, unambiguous CLAUDE.md violations where you can quote the exact rule being broken
+- Clear, unambiguous AGENTS.md violations where you can quote the exact rule being broken
 
 Do NOT flag:
 - Code style or quality concerns
@@ -25,7 +25,7 @@ If you are not certain an issue is real, do not flag it. False positives erode t
 
 Many times a diff will include changes in the _agent_docs folder.  These often include context about intention behind the code diffs.
 
-2. For each issue found in step 1, read the relevant source files to validate the issue with high confidence. For example, if "variable is not defined" was flagged, verify it's actually undefined in scope. If a CLAUDE.md violation was flagged, verify the rule applies to this file.
+2. For each issue found in step 1, read the relevant source files to validate the issue with high confidence. For example, if "variable is not defined" was flagged, verify it's actually undefined in scope. If a AGENTS.md violation was flagged, verify the rule applies to this file.
 
    When validating issues involving language runtime behavior (e.g., `didSet` firing, `@Observable` tracking, value vs reference type semantics), also consult the `building-macos-apps` skill and its `references/state/` files. These documents capture verified Swift behavior for this project — don't rely on model assumptions alone.
 
@@ -37,4 +37,4 @@ Many times a diff will include changes in the _agent_docs folder.  These often i
 
 4. Output a summary of the review findings to the terminal:
    - If issues were found, list each issue with a brief description.
-   - If no issues were found, state: "No issues found. Checked for bugs and CLAUDE.md compliance."
+   - If no issues were found, state: "No issues found. Checked for bugs and AGENTS.md compliance."

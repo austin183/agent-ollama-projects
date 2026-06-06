@@ -455,4 +455,4 @@ Each phase compiles and passes tests independently. Pause after each phase for m
 - SOLID review: `_agent_docs/reviews/collagemaker-solid-review.md`
 - SOLID fixes plan: `_agent_docs/plans/2026-05-10-collagemaker-solid-review-fixes.md`
 - Corrupted Protoype 1 code: `/Users/austin/workspace/agent-ollama-projects/claudeharness/workspace/SwiftCollageProject/CollageMaker/CollageMaker`
-- CLAUDE.md (project guidelines): root of workspace
+- AGENTS.md (project guidelines): root of workspace

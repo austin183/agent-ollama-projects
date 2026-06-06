@@ -36,6 +36,7 @@ struct CollageEditorView: View {
                 let panelFrames = viewModel.panels.reduce(into: [UUID: CGRect]()) { dict, panel in
                     dict[panel.id] = canvasToPreviewFrame(panel.frame, in: geometry.size)
                 }
+                let panelGeometries = Dictionary(uniqueKeysWithValues: viewModel.panels.map { ($0.id, $0.geometry) })
                 let titleFrame = titleCanvasFrame.map { canvasToPreviewFrame($0, in: geometry.size) }
 
                 ZStack {
@@ -239,7 +240,7 @@ struct CollageEditorView: View {
                                         return
                                     }
                                 }
-                                if let id = panelAt(location: value.startLocation, panelFrames: panelFrames) {
+                                if let id = panelAt(location: value.startLocation, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size) {
                                     gestureCoordinator.dragSourcePanelId = id
                                     if let imgIdx = viewModel.getEffectiveImageIndex(for: id) {
                                         gestureCoordinator.dragSourceImageIndex = imgIdx
@@ -247,7 +248,7 @@ struct CollageEditorView: View {
                                 }
                             }
                             if gestureCoordinator.dragSourcePanelId != nil {
-                                gestureCoordinator.dragTargetPanelId = panelAt(location: value.location, panelFrames: panelFrames)
+                                gestureCoordinator.dragTargetPanelId = panelAt(location: value.location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size)
                                 gestureCoordinator.dragCursorLocation = value.location
                             }
                         }
@@ -259,7 +260,7 @@ struct CollageEditorView: View {
                                 return
                             }
                             if let sourceId = gestureCoordinator.dragSourcePanelId,
-                               let targetId = panelAt(location: value.location, panelFrames: panelFrames),
+                                let targetId = panelAt(location: value.location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size),
                                sourceId != targetId {
                                 viewModel.swapPanelImages(sourceId: sourceId, targetId: targetId)
                             }
@@ -297,7 +298,7 @@ struct CollageEditorView: View {
                     if let titleFrame, titleFrame.contains(location) {
                         return
                     }
-                    if let id = panelAt(location: location, panelFrames: panelFrames) {
+                    if let id = panelAt(location: location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size) {
                         viewModel.selectedPanelId = id
                         if let panel = viewModel.panels.first(where: { $0.id == id }),
                            let frame = panelFrames[id] {
@@ -318,8 +319,8 @@ struct CollageEditorView: View {
         }
     }
 
-    private func panelAt(location: CGPoint, panelFrames: [UUID: CGRect]) -> UUID? {
-        if let id = CropManager.hitTestPanel(at: location, panelFrames: panelFrames),
+    private func panelAt(location: CGPoint, panelFrames: [UUID: CGRect], panelGeometries: [UUID: PanelGeometry], previewSize: CGSize) -> UUID? {
+        if let id = CropManager.hitTestPanel(at: location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: previewSize),
            let panel = viewModel.panels.first(where: { $0.id == id }),
            let frame = panelFrames[id] {
             logger.debug("panelAt: idx=\(panel.imageIndex) frame=\(DebugHelpers.rectStr(frame)) tap=\(DebugHelpers.pointStr(location)) hits=true")

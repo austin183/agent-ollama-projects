@@ -313,7 +313,7 @@ import Testing
         let panelFrame = CGRect(x: 100, y: 100, width: 200, height: 150)
         let panelFrames: [UUID: CGRect] = [panelId: panelFrame]
 
-        let hitId = CropManager.hitTestPanel(at: CGPoint(x: 150, y: 150), panelFrames: panelFrames)
+        let hitId = CropManager.hitTestPanel(at: CGPoint(x: 150, y: 150), panelFrames: panelFrames, previewSize: CGSize(width: 800, height: 600))
 
         #expect(hitId == panelId)
     }
@@ -323,7 +323,7 @@ import Testing
         let panelFrame = CGRect(x: 100, y: 100, width: 200, height: 150)
         let panelFrames: [UUID: CGRect] = [panelId: panelFrame]
 
-        let hitId = CropManager.hitTestPanel(at: CGPoint(x: 50, y: 50), panelFrames: panelFrames)
+        let hitId = CropManager.hitTestPanel(at: CGPoint(x: 50, y: 50), panelFrames: panelFrames, previewSize: CGSize(width: 800, height: 600))
 
         #expect(hitId == nil)
     }
@@ -331,7 +331,7 @@ import Testing
     @Test func hitTestPanelReturnsNilForEmptyFrames() {
         let panelFrames: [UUID: CGRect] = [:]
 
-        let hitId = CropManager.hitTestPanel(at: CGPoint(x: 100, y: 100), panelFrames: panelFrames)
+        let hitId = CropManager.hitTestPanel(at: CGPoint(x: 100, y: 100), panelFrames: panelFrames, previewSize: CGSize(width: 800, height: 600))
 
         #expect(hitId == nil)
     }
@@ -343,7 +343,7 @@ import Testing
         let frame2 = CGRect(x: 100, y: 100, width: 200, height: 200)
         let panelFrames: [UUID: CGRect] = [panelId1: frame1, panelId2: frame2]
 
-        let hitId = CropManager.hitTestPanel(at: CGPoint(x: 150, y: 150), panelFrames: panelFrames)
+        let hitId = CropManager.hitTestPanel(at: CGPoint(x: 150, y: 150), panelFrames: panelFrames, previewSize: CGSize(width: 800, height: 600))
 
         #expect(hitId == panelId1 || hitId == panelId2)
     }

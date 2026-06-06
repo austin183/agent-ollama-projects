@@ -303,7 +303,8 @@ private func makeCTFont(
         let systemFont = CTFontCreateUIFontForLanguage(.system, targetSize, nil)!
         let baseTraits = CTFontGetSymbolicTraits(systemFont)
         let mergedTraits = baseTraits.union(.traitBold)
-        baseFont = CTFontCreateCopyWithSymbolicTraits(systemFont, 0, nil, mergedTraits, .traitBold)!
+        baseFont = CTFontCreateCopyWithSymbolicTraits(systemFont, 0, nil, mergedTraits, .traitBold)
+            ?? systemFont
     } else {
         baseFont = CTFontCreateWithName(baseFamily as CFString, targetSize, nil)
     }
@@ -311,7 +312,8 @@ private func makeCTFont(
     if !existingTraits.isEmpty {
         let baseTraits = CTFontGetSymbolicTraits(baseFont)
         let mergedTraits = baseTraits.union(existingTraits)
-        return CTFontCreateCopyWithSymbolicTraits(baseFont, 0, nil, mergedTraits, existingTraits)!
+        return CTFontCreateCopyWithSymbolicTraits(baseFont, 0, nil, mergedTraits, existingTraits)
+            ?? baseFont
     }
 
     return baseFont

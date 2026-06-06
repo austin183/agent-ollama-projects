@@ -197,7 +197,48 @@ extension LayoutStyle {
         case .uniform: return UniformLayoutStrategy()
         case .hero: return HeroLayoutStrategy()
         case .mosaic: return MosaicLayoutStrategy()
+        case .doubleExposure: return DoubleExposureLayoutStrategy()
+        case .diagonalSlices: return DiagonalSlicesLayoutStrategy()
+        case .hexagonal: return HexagonalLayoutStrategy()
         }
+    }
+}
+
+// MARK: - Stub Strategies
+
+struct DoubleExposureLayoutStrategy: LayoutStrategy {
+    func generate(numImages: Int, canvasSize: CGSize, gutter: CGFloat, imageOrder: [Int]?, mosaicSeed: UInt64?) -> [ImagePanel] {
+        return UniformLayoutStrategy().generate(
+            numImages: numImages,
+            canvasSize: canvasSize,
+            gutter: gutter,
+            imageOrder: imageOrder,
+            mosaicSeed: mosaicSeed
+        )
+    }
+}
+
+struct DiagonalSlicesLayoutStrategy: LayoutStrategy {
+    func generate(numImages: Int, canvasSize: CGSize, gutter: CGFloat, imageOrder: [Int]?, mosaicSeed: UInt64?) -> [ImagePanel] {
+        return UniformLayoutStrategy().generate(
+            numImages: numImages,
+            canvasSize: canvasSize,
+            gutter: gutter,
+            imageOrder: imageOrder,
+            mosaicSeed: mosaicSeed
+        )
+    }
+}
+
+struct HexagonalLayoutStrategy: LayoutStrategy {
+    func generate(numImages: Int, canvasSize: CGSize, gutter: CGFloat, imageOrder: [Int]?, mosaicSeed: UInt64?) -> [ImagePanel] {
+        return UniformLayoutStrategy().generate(
+            numImages: numImages,
+            canvasSize: canvasSize,
+            gutter: gutter,
+            imageOrder: imageOrder,
+            mosaicSeed: mosaicSeed
+        )
     }
 }
 

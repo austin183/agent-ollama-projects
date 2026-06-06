@@ -2,7 +2,7 @@
 
 ### AGENTS.md Review and Progressive Disclosure Improvement
 
-**Goal:** Review the project's `AGENTS.md` file against CLAUDE.md best practices and improve progressive disclosure by leveraging the existing `building-macos-apps` skill reference material.
+**Goal:** Review the project's `AGENTS.md` file against AGENTS.md best practices and improve progressive disclosure by leveraging the existing `building-macos-apps` skill reference material.
 
 **Source:** User request to review `AGENTS.md` using the `reviewing-claude-md` skill.
 

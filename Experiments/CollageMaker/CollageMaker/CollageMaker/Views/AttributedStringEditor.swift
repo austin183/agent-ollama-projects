@@ -277,7 +277,7 @@ struct AttributedStringEditorView: NSViewRepresentable {
     }
 
     func updateNSView(_ textView: NSTextView, context: Context) {
-        guard textView.textStorage != nil else { return }
+        guard let textStorage = textView.textStorage else { return }
 
         context.coordinator.fontFamily = titleStyle.fontFamily
         context.coordinator.alignment = titleStyle.alignment
@@ -291,12 +291,6 @@ struct AttributedStringEditorView: NSViewRepresentable {
                 ?? NSFont.boldSystemFont(ofSize: editorFontSize)
         }
 
-        if let currentFont = textView.typingAttributes[.font] as? NSFont,
-           currentFont.fontName == targetFont.fontName,
-           currentFont.pointSize == targetFont.pointSize {
-            return
-        }
-
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = titleStyle.alignment
         textView.defaultParagraphStyle = paragraphStyle
@@ -306,6 +300,12 @@ struct AttributedStringEditorView: NSViewRepresentable {
         typingAttrs[.foregroundColor] = NSColor.white
         typingAttrs[.paragraphStyle] = paragraphStyle
         textView.typingAttributes = typingAttrs
+
+        let normalized = normalizeForEditor(textStorage, fontFamily: titleStyle.fontFamily, alignment: titleStyle.alignment)
+        let sel = textView.selectedRange
+        textStorage.setAttributedString(normalized)
+        textView.selectedRange = sel
+        attributedString = normalized
     }
 
     func makeCoordinator() -> Coordinator {

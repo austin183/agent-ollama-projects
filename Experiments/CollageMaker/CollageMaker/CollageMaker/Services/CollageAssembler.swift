@@ -134,6 +134,10 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
             panelAssignments: config.layout.panelAssignments
         )
 
+        if let overlay = config.overlay {
+            drawOverlay(into: context, overlay: overlay, canvasSize: config.canvasSize)
+        }
+
         if !config.title.textData.text.isEmpty {
             drawTitle(
                 into: context,
@@ -189,6 +193,10 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
             crops: config.layout.crops,
             panelAssignments: config.layout.panelAssignments
         )
+
+        if let overlay = config.overlay {
+            drawOverlay(into: context, overlay: overlay, canvasSize: config.canvasSize)
+        }
 
         if !config.title.textData.text.isEmpty {
             drawTitle(
@@ -315,7 +323,13 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
             let destRect = crop.destinationRect
 
             context.saveGState()
-            context.clip(to: destRect)
+
+            if let clipPath = panel.geometry.cgPath {
+                context.addPath(clipPath)
+                context.clip()
+            } else {
+                context.clip(to: destRect)
+            }
 
             if let cropped = cg.cropping(to: sourceRect) {
                 context.draw(cropped, in: destRect)
@@ -325,6 +339,14 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
 
             context.restoreGState()
         }
+    }
+
+    private func drawOverlay(into context: CGContext, overlay: OverlayConfig, canvasSize: CGSize) {
+        context.saveGState()
+        context.setBlendMode(overlay.blendMode)
+        context.setAlpha(overlay.opacity)
+        context.draw(overlay.maskImage, in: CGRect(origin: .zero, size: canvasSize))
+        context.restoreGState()
     }
 
     private func drawTitle(into context: CGContext, titleConfig: TitleConfig, canvasWidth: CGFloat, canvasHeight: CGFloat) {
@@ -353,6 +375,8 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
 
             context.saveGState()
             context.clip(to: destRect)
+            // renderPanel is used for sidebar crop preview, which always renders
+            // into a rectangular preview area. Path clipping is not needed here.
 
             if let cropped = cgImage.cropping(to: sourceRect) {
                 context.draw(cropped, in: destRect)
