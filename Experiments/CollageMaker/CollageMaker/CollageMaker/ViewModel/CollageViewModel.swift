@@ -158,14 +158,18 @@ final class CollageViewModel {
         didSet {
             guard !isInitializing else { return }
             registerUndo(oldValue: oldValue, actionName: "Change Slice Angle") { $0.diagonalSliceAngle = oldValue }
-            debouncedSave()
+            if layoutStyle == .diagonalSlices {
+                regenerateLayout(preserveCrops: false)
+            }
         }
     }
     var hexagonalSpacing: CGFloat = 8.0 {
         didSet {
             guard !isInitializing else { return }
             registerUndo(oldValue: oldValue, actionName: "Change Hex Spacing") { $0.hexagonalSpacing = oldValue }
-            debouncedSave()
+            if layoutStyle == .hexagonal {
+                regenerateLayout(preserveCrops: false)
+            }
         }
     }
 
@@ -524,7 +528,9 @@ final class CollageViewModel {
             canvasSize: SizeConstants.defaultCanvasSize,
             gutter: gutter,
             style: layoutStyle,
-            imageOrder: customImageOrder
+            imageOrder: customImageOrder,
+            sliceAngle: diagonalSliceAngle,
+            hexSpacing: hexagonalSpacing
         )
         let panelCount = panels.count
         let styleRaw = layoutStyle.rawValue

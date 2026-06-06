@@ -12,9 +12,11 @@ struct LayoutGenerator {
         gutter: CGFloat = 4,
         style: LayoutStyle = .hero,
         imageOrder: [Int]? = nil,
-        mosaicSeed: UInt64? = nil
+        mosaicSeed: UInt64? = nil,
+        sliceAngle: CGFloat = 45.0,
+        hexSpacing: CGFloat = 8.0
     ) -> [ImagePanel] {
-        style.makeStrategy().generate(
+        style.makeStrategy(sliceAngle: sliceAngle, hexSpacing: hexSpacing).generate(
             numImages: numImages,
             canvasSize: canvasSize,
             gutter: gutter,
@@ -192,14 +194,17 @@ struct MosaicLayoutStrategy: LayoutStrategy {
 // MARK: - LayoutStyle factory
 
 extension LayoutStyle {
-    func makeStrategy() -> LayoutStrategy {
+    func makeStrategy(
+        sliceAngle: CGFloat = 45.0,
+        hexSpacing: CGFloat = 8.0
+    ) -> LayoutStrategy {
         switch self {
         case .uniform: return UniformLayoutStrategy()
         case .hero: return HeroLayoutStrategy()
         case .mosaic: return MosaicLayoutStrategy()
         case .doubleExposure: return DoubleExposureLayoutStrategy()
-        case .diagonalSlices: return DiagonalSlicesLayoutStrategy()
-        case .hexagonal: return HexagonalLayoutStrategy()
+        case .diagonalSlices: return DiagonalSlicesLayoutStrategy(angle: sliceAngle)
+        case .hexagonal: return HexagonalLayoutStrategy(spacing: hexSpacing)
         }
     }
 }
@@ -219,6 +224,12 @@ struct DoubleExposureLayoutStrategy: LayoutStrategy {
 }
 
 struct DiagonalSlicesLayoutStrategy: LayoutStrategy {
+    let angle: CGFloat
+
+    init(angle: CGFloat = 45.0) {
+        self.angle = angle
+    }
+
     func generate(numImages: Int, canvasSize: CGSize, gutter: CGFloat, imageOrder: [Int]?, mosaicSeed: UInt64?) -> [ImagePanel] {
         return UniformLayoutStrategy().generate(
             numImages: numImages,
@@ -231,6 +242,12 @@ struct DiagonalSlicesLayoutStrategy: LayoutStrategy {
 }
 
 struct HexagonalLayoutStrategy: LayoutStrategy {
+    let spacing: CGFloat
+
+    init(spacing: CGFloat = 8.0) {
+        self.spacing = spacing
+    }
+
     func generate(numImages: Int, canvasSize: CGSize, gutter: CGFloat, imageOrder: [Int]?, mosaicSeed: UInt64?) -> [ImagePanel] {
         return UniformLayoutStrategy().generate(
             numImages: numImages,

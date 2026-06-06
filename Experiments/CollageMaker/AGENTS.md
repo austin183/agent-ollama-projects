@@ -79,3 +79,4 @@ The `building-macos-apps` skill provides detailed patterns for:
 
 # Things to Avoid
 - **Do not ask agents to return full file contents** - Agents should return clues and references, but it is more efficient to read files directly than to ask an agent to read it and return its contents.
+- **Do not try to find stuff in `~/workspace/ollama-projects/`** - That is not a valid directory.
