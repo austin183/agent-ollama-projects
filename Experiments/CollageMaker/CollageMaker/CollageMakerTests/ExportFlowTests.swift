@@ -6,7 +6,7 @@ import Testing
 @MainActor
 @Suite(.serialized) struct ExportFlowTests {
 
-    private func makeViewModel(assembler: CollageAssembly = TrackingAssembler()) -> CollageViewModel {
+    private func makeViewModel(assembler: CollageAssembly = { let a = TestAssembler(); a.trackCalls = true; return a }()) -> CollageViewModel {
         let suiteName = "CollageMakerTests.\(UUID().uuidString)"
         let testDefaults = UserDefaults(suiteName: suiteName)!
         let persistence = UserDefaultsPersistence(defaults: testDefaults)
@@ -20,56 +20,61 @@ import Testing
     // MARK: - Preview Flow
 
     @Test func updatePreviewCallsAssembler() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = (0..<2).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
-        #expect(trackingAssembler.previewCalls >= 1)
+        #expect(assembler.previewCalls >= 1)
     }
 
     @Test func updatePreviewUsesCorrectCanvasSize() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
-        #expect(trackingAssembler.lastPreviewCanvasSize == SizeConstants.defaultCanvasSize)
+        #expect(assembler.lastPreviewConfig?.canvasSize == SizeConstants.defaultCanvasSize)
     }
 
     @Test func updatePreviewUsesCorrectPreviewSize() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
-        #expect(trackingAssembler.lastPreviewPreviewSize == SizeConstants.defaultPreviewSize)
+        #expect(assembler.lastPreviewPreviewSize == SizeConstants.defaultPreviewSize)
     }
 
     @Test func updatePreviewPassesCorrectPanelCount() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = (0..<4).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
-        #expect(trackingAssembler.lastPreviewPanels.count == 4)
+        #expect(assembler.lastPreviewPanels.count == 4)
     }
 
     @Test func updatePreviewPassesTitle() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
@@ -78,7 +83,7 @@ import Testing
         vm.titleAttrString = NSAttributedString(string: "My Collage")
 
         try? await Task.sleep(nanoseconds: 50_000_000)
-        #expect(trackingAssembler.lastPreviewTitle == "My Collage")
+        #expect(assembler.lastPreviewTitle == "My Collage")
     }
 
     // MARK: - Panel Assignment Flow

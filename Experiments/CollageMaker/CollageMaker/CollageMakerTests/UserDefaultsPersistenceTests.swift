@@ -145,7 +145,7 @@ import Testing
     private func createViewModel() -> CollageViewModel {
         CollageViewModel(
             saliencyAnalyzer: MockSaliencyAnalyzer(),
-            assembler: MockAssembler(),
+            assembler: TestAssembler(),
             persistence: persistence
         )
     }

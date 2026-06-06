@@ -7,7 +7,7 @@ import Testing
 @MainActor
 @Suite(.serialized) struct ExportManagerTests {
 
-    private let assembler = TrackingAssembler()
+    private let assembler: TestAssembler = { let a = TestAssembler(); a.trackCalls = true; return a }()
     private var manager: ExportManager {
         ExportManager(assembler: assembler)
     }
@@ -58,7 +58,7 @@ import Testing
         let config = makeAssemblyConfig(panels: panels)
         let cgImage = createTestCGImage(color: .systemBlue, size: CGSize(width: 200, height: 200))
 
-        // Verify the assembler integration by checking TrackingAssembler records calls.
+        // Verify the assembler integration by checking TestAssembler records calls.
         // Note: Full export flow requires NSSavePanel which can't run headless.
         _ = await assembler.assembleWithCGImages(
             config: config,

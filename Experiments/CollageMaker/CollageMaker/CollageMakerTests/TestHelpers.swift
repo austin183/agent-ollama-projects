@@ -43,70 +43,33 @@ func createTestImageItem(color: NSColor = .systemBlue, size: CGSize = CGSize(wid
     return ImageItem(id: id, cgImage: cgImage, thumbnail: thumbnail, filename: filename, size: size)
 }
 
-// MARK: - Tracking Assembler (legacy, kept for backward compatibility)
+// MARK: - Mock Saliency Analyzer
 
-final class TrackingAssembler: CollageAssembly {
-    var assembleCalls = 0
-    var previewCalls = 0
-    var renderPanelCalls = 0
-    var renderBackgroundCalls = 0
-    var titleRenderCalls = 0
-    var lastAssemblePanels: [ImagePanel] = []
-    var lastAssembleCgImages: [CGImage?] = []
-    var lastAssembleCrops: [UUID: CropInfo] = [:]
-    var lastAssembleAssignments: [UUID: Int] = [:]
-    var lastAssembleTitle: String = ""
-    var lastAssembleTitleStyle: TitleStyle = .default
-    var lastAssembleCanvasSize: CGSize = .zero
-    var lastAssembleQuality: Double = 0
-    var lastPreviewCanvasSize: CGSize = .zero
-    var lastPreviewPreviewSize: CGSize = .zero
-    var lastPreviewPanels: [ImagePanel] = []
-    var lastPreviewTitle: String = ""
+final class MockSaliencyAnalyzer: SaliencyAnalysis {
+    var analyzeResult: SaliencyResult?
+    var shouldThrow: Bool = false
 
-    func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) async -> Data? {
-        assembleCalls += 1
-        lastAssemblePanels = config.layout.panels
-        lastAssembleCgImages = cgImages
-        lastAssembleCrops = config.layout.crops
-        lastAssembleAssignments = config.layout.panelAssignments
-        lastAssembleTitle = config.title.textData.text
-        lastAssembleTitleStyle = config.title.style
-        lastAssembleCanvasSize = config.canvasSize
-        lastAssembleQuality = quality
-        return Data([0xFF, 0xD8, 0xFF, 0xE0])
+    func analyze(_ cgImage: CGImage) async throws -> SaliencyResult {
+        if shouldThrow {
+            throw SaliencyError.analysisFailed
+        }
+        return analyzeResult ?? SaliencyResult(center: CGPoint(x: 50, y: 50), radius: 20, confidence: 0.9)
     }
 
-    func assemblePreviewWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
-        previewCalls += 1
-        lastPreviewCanvasSize = config.canvasSize
-        lastPreviewPreviewSize = previewSize
-        lastPreviewPanels = config.layout.panels
-        lastPreviewTitle = config.title.textData.text
-        return NSImage(size: previewSize)
-    }
-
-    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage? {
-        renderPanelCalls += 1
-        return NSImage(size: panelSize)
-    }
-
-    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
-        renderBackgroundCalls += 1
-        return NSImage(size: previewSize)
-    }
-
-    func renderTitle(titleConfig: TitleConfig, canvasSize: CGSize) async -> NSImage? {
-        titleRenderCalls += 1
-        return nil
+    func analyzeAll(_ cgImages: [CGImage]) async throws -> [SaliencyResult] {
+        if shouldThrow {
+            throw SaliencyError.analysisFailed
+        }
+        return cgImages.map { _ in
+            analyzeResult ?? SaliencyResult(center: CGPoint(x: 50, y: 50), radius: 20, confidence: 0.9)
+        }
     }
 }
 
 // MARK: - Consolidated Test Assembler
 
 /// Unified mock for `CollageAssembly` combining tracking, configurable returns,
-/// delays, and error injection. Replaces TrackingAssembler, MockAssembler,
-/// TestPreviewAssembler, and GenerationControlledAssembler.
+/// delays, and error injection.
 final class TestAssembler: CollageAssembly {
     // Configuration
     var trackCalls = false
@@ -131,8 +94,17 @@ final class TestAssembler: CollageAssembly {
     var lastAssembleConfig: AssemblyConfig?
     var lastAssembleCgImages: [CGImage?]?
     var lastAssembleQuality: Double = 0
+    var lastAssemblePanels: [ImagePanel] = []
+    var lastAssembleCrops: [UUID: CropInfo] = [:]
+    var lastAssembleAssignments: [UUID: Int] = [:]
+    var lastAssembleTitle: String = ""
+    var lastAssembleTitleStyle: TitleStyle = .default
+    var lastAssembleCanvasSize: CGSize = .zero
     var lastPreviewConfig: AssemblyConfig?
     var lastPreviewSize: CGSize = .zero
+    var lastPreviewPreviewSize: CGSize = .zero
+    var lastPreviewPanels: [ImagePanel] = []
+    var lastPreviewTitle: String = ""
     var lastPanelCrop: CropInfo?
     var lastPanelSize: CGSize = .zero
     var lastTitleConfig: TitleConfig?
@@ -144,6 +116,12 @@ final class TestAssembler: CollageAssembly {
             lastAssembleConfig = config
             lastAssembleCgImages = cgImages
             lastAssembleQuality = quality
+            lastAssemblePanels = config.layout.panels
+            lastAssembleCrops = config.layout.crops
+            lastAssembleAssignments = config.layout.panelAssignments
+            lastAssembleTitle = config.title.textData.text
+            lastAssembleTitleStyle = config.title.style
+            lastAssembleCanvasSize = config.canvasSize
         }
         return assembleData
     }
@@ -153,6 +131,9 @@ final class TestAssembler: CollageAssembly {
             previewCalls += 1
             lastPreviewConfig = config
             lastPreviewSize = previewSize
+            lastPreviewPreviewSize = previewSize
+            lastPreviewPanels = config.layout.panels
+            lastPreviewTitle = config.title.textData.text
         }
         if previewDelayMs > 0 {
             try? await Task.sleep(for: .milliseconds(previewDelayMs))
@@ -191,7 +172,7 @@ final class TestAssembler: CollageAssembly {
         if titleReturnsNilForEmpty, titleConfig.textData.text.isEmpty {
             return nil
         }
-        return titleImage
+        return titleImage ?? NSImage(size: canvasSize)
     }
 }
 

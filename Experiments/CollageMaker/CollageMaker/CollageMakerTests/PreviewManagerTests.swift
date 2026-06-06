@@ -4,32 +4,8 @@ import Testing
 @testable import CollageMaker
 
 @MainActor
-final class TestPreviewAssembler: CollageAssembly {
-    func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) async -> Data? {
-        Data()
-    }
-
-    func assemblePreviewWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
-        NSImage(size: previewSize)
-    }
-
-    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage? {
-        NSImage(size: panelSize)
-    }
-
-    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
-        NSImage(size: previewSize)
-    }
-
-    func renderTitle(titleConfig: TitleConfig, canvasSize: CGSize) async -> NSImage? {
-        guard !titleConfig.textData.text.isEmpty else { return nil }
-        return NSImage(size: canvasSize)
-    }
-}
-
-@MainActor
 @Suite(.serialized) struct PreviewManagerTests {
-    private let assembler = TestPreviewAssembler()
+    private let assembler = TestAssembler()
     private var manager: PreviewManager {
         PreviewManager(assembler: assembler)
     }
@@ -254,7 +230,8 @@ final class TestPreviewAssembler: CollageAssembly {
     // MARK: - Generation-based stale discard
 
     @Test func stalePreviewRenderIsDiscarded() async {
-        let slowAssembler = GenerationControlledAssembler()
+        let slowAssembler = TestAssembler()
+        slowAssembler.previewDelayMs = 100
         let mgr = PreviewManager(assembler: slowAssembler)
 
         let image = createTestImageItem(color: .systemBlue, size: CGSize(width: 200, height: 200))
@@ -268,7 +245,6 @@ final class TestPreviewAssembler: CollageAssembly {
         let config = makeAssemblyConfig(panels: panels, crops: crops)
 
         // First update – will be slow (100ms)
-        slowAssembler.delayMs = 100
         mgr.updatePreview(
             config: config,
             cgImages: [image.cgImage],
@@ -278,7 +254,7 @@ final class TestPreviewAssembler: CollageAssembly {
 
         // Second update – will be fast (10ms), should win
         try? await Task.sleep(for: .milliseconds(5))
-        slowAssembler.delayMs = 10
+        slowAssembler.previewDelayMs = 10
         mgr.updatePreview(
             config: config,
             cgImages: [image.cgImage],
@@ -291,33 +267,5 @@ final class TestPreviewAssembler: CollageAssembly {
         // The second (faster) render should have completed first,
         // and the first (slower) render should be discarded as stale.
         #expect(mgr.previewImage != nil)
-    }
-}
-
-// MARK: - Generation-controlled test assembler
-
-@MainActor
-final class GenerationControlledAssembler: CollageAssembly {
-    var delayMs: UInt64 = 0
-
-    func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) async -> Data? {
-        Data()
-    }
-
-    func assemblePreviewWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
-        try? await Task.sleep(for: .milliseconds(delayMs))
-        return NSImage(size: previewSize)
-    }
-
-    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage? {
-        NSImage(size: panelSize)
-    }
-
-    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
-        NSImage(size: previewSize)
-    }
-
-    func renderTitle(titleConfig: TitleConfig, canvasSize: CGSize) async -> NSImage? {
-        nil
     }
 }

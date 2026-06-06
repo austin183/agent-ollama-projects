@@ -3,62 +3,12 @@ import CoreGraphics
 import Testing
 @testable import CollageMaker
 
-// MARK: - Mock services
-
-final class MockSaliencyAnalyzer: SaliencyAnalysis {
-    var analyzeResult: SaliencyResult?
-    var shouldThrow: Bool = false
-
-    func analyze(_ cgImage: CGImage) async throws -> SaliencyResult {
-        if shouldThrow {
-            throw SaliencyError.analysisFailed
-        }
-        return analyzeResult ?? SaliencyResult(center: CGPoint(x: 50, y: 50), radius: 20, confidence: 0.9)
-    }
-
-    func analyzeAll(_ cgImages: [CGImage]) async throws -> [SaliencyResult] {
-        if shouldThrow {
-            throw SaliencyError.analysisFailed
-        }
-        return cgImages.map { _ in
-            analyzeResult ?? SaliencyResult(center: CGPoint(x: 50, y: 50), radius: 20, confidence: 0.9)
-        }
-    }
-}
-
-final class MockAssembler: CollageAssembly {
-    var assembleData: Data? = Data()
-    var assemblePreviewImage: NSImage? = NSImage(size: SizeConstants.defaultPreviewSize)
-
-    func assembleWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, quality: Double) async -> Data? {
-        assembleData
-    }
-
-    func assemblePreviewWithCGImages(config: AssemblyConfig, cgImages: [CGImage?], backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
-        assemblePreviewImage
-    }
-
-    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage? {
-        return NSImage(size: panelSize)
-    }
-
-    func renderBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) async -> NSImage? {
-        return NSImage(size: previewSize)
-    }
-
-    func renderTitle(titleConfig: TitleConfig, canvasSize: CGSize) async -> NSImage? {
-        return nil
-    }
-}
-
-// MARK: - Tests
-
 @MainActor
 @Suite(.serialized) struct CollageViewModelTests {
 
     private func makeViewModel(
         saliencyAnalyzer: SaliencyAnalysis = MockSaliencyAnalyzer(),
-        assembler: CollageAssembly = MockAssembler()
+        assembler: CollageAssembly = TestAssembler()
     ) -> CollageViewModel {
         let suiteName = "CollageMakerTests.\(UUID().uuidString)"
         let testDefaults = UserDefaults(suiteName: suiteName)!
@@ -227,96 +177,102 @@ final class MockAssembler: CollageAssembly {
     // MARK: - Title attribute changes
 
     @Test func titleColorChangeUpdatesPreview() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         await vm.awaitPendingTasks()
-        let callsBefore = trackingAssembler.titleRenderCalls
+        let callsBefore = assembler.titleRenderCalls
 
         vm.titleStyle.fontColor = .red
 
         await vm.awaitPendingTasks()
-        #expect(trackingAssembler.titleRenderCalls > callsBefore)
+        #expect(assembler.titleRenderCalls > callsBefore)
     }
 
     @Test func titleBackgroundColorChangeUpdatesPreview() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         await vm.awaitPendingTasks()
-        let callsBefore = trackingAssembler.titleRenderCalls
+        let callsBefore = assembler.titleRenderCalls
 
         vm.titleStyle.backgroundColor = .white
 
         await vm.awaitPendingTasks()
-        #expect(trackingAssembler.titleRenderCalls > callsBefore)
+        #expect(assembler.titleRenderCalls > callsBefore)
     }
 
     @Test func titleShowBackgroundChangeUpdatesPreview() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         await vm.awaitPendingTasks()
-        let callsBefore = trackingAssembler.titleRenderCalls
+        let callsBefore = assembler.titleRenderCalls
 
         vm.titleStyle.showBackground = false
 
         await vm.awaitPendingTasks()
-        #expect(trackingAssembler.titleRenderCalls > callsBefore)
+        #expect(assembler.titleRenderCalls > callsBefore)
     }
 
     // MARK: - Title setter side effects (Phase 2)
 
     @Test func titleAttrStringSetterCallsUpdatePreview() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         await vm.awaitPendingTasks()
-        let callsBefore = trackingAssembler.titleRenderCalls
+        let callsBefore = assembler.titleRenderCalls
 
         vm.titleAttrString = NSAttributedString(string: "Hello World")
 
         await vm.awaitPendingTasks()
-        #expect(trackingAssembler.titleRenderCalls > callsBefore)
+        #expect(assembler.titleRenderCalls > callsBefore)
     }
 
     @Test func titleStyleSetterNotDraggingCallsUpdatePreview() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
         await vm.awaitPendingTasks()
-        let callsBefore = trackingAssembler.titleRenderCalls
+        let callsBefore = assembler.titleRenderCalls
 
         vm.isDraggingTitle = false
         vm.titleStyle.fontSize = 56
 
         await vm.awaitPendingTasks()
-        #expect(trackingAssembler.titleRenderCalls > callsBefore)
+        #expect(assembler.titleRenderCalls > callsBefore)
     }
 
     @Test func titleStyleSetterDraggingCallsUpdateTitleImageLive() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
@@ -324,19 +280,20 @@ final class MockAssembler: CollageAssembly {
         vm.regenerateLayout()
 
         await vm.awaitPendingTasks()
-        let renderCallsBefore = trackingAssembler.titleRenderCalls
+        let renderCallsBefore = assembler.titleRenderCalls
 
         vm.isDraggingTitle = true
         vm.titleStyle.positionX = 0.75
 
         await vm.awaitPendingTasks()
         try? await Task.sleep(nanoseconds: 200_000_000)
-        #expect(trackingAssembler.titleRenderCalls > renderCallsBefore)
+        #expect(assembler.titleRenderCalls > renderCallsBefore)
     }
 
     @Test func titleStyleSetterDraggingSkipsUndo() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
@@ -360,8 +317,9 @@ final class MockAssembler: CollageAssembly {
     }
 
     @Test func finishTitleDragRendersImmediately() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
@@ -369,17 +327,18 @@ final class MockAssembler: CollageAssembly {
         vm.regenerateLayout()
 
         await vm.awaitPendingTasks()
-        let renderCallsBefore = trackingAssembler.titleRenderCalls
+        let renderCallsBefore = assembler.titleRenderCalls
 
         vm.finishTitleDrag()
 
         await vm.awaitPendingTasks()
-        #expect(trackingAssembler.titleRenderCalls > renderCallsBefore)
+        #expect(assembler.titleRenderCalls > renderCallsBefore)
     }
 
     @Test func setTitleFontFamilyCallsUpdateTitleImageLive() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
@@ -387,18 +346,19 @@ final class MockAssembler: CollageAssembly {
         vm.regenerateLayout()
 
         await vm.awaitPendingTasks()
-        let renderCallsBefore = trackingAssembler.titleRenderCalls
+        let renderCallsBefore = assembler.titleRenderCalls
 
         vm.setTitleFontFamily("Helvetica")
 
         await vm.awaitPendingTasks()
         try? await Task.sleep(nanoseconds: 200_000_000)
-        #expect(trackingAssembler.titleRenderCalls > renderCallsBefore)
+        #expect(assembler.titleRenderCalls > renderCallsBefore)
     }
 
     @Test func setTitleFontSizeCallsUpdateTitleImageDebounced() async {
-        let trackingAssembler = TrackingAssembler()
-        let vm = makeViewModel(assembler: trackingAssembler)
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
 
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
@@ -406,13 +366,13 @@ final class MockAssembler: CollageAssembly {
         vm.regenerateLayout()
 
         await vm.awaitPendingTasks()
-        let renderCallsBefore = trackingAssembler.titleRenderCalls
+        let renderCallsBefore = assembler.titleRenderCalls
 
         vm.setTitleFontSize(60)
 
         await vm.awaitPendingTasks()
         try? await Task.sleep(nanoseconds: 200_000_000)
-        #expect(trackingAssembler.titleRenderCalls > renderCallsBefore)
+        #expect(assembler.titleRenderCalls > renderCallsBefore)
     }
 
     // MARK: - Cached title layout (Phase 1)
