@@ -139,6 +139,36 @@ final class CollageViewModel {
         }
     }
 
+    // Style-specific configuration
+    var doubleExposureMaskImage: NSImage? {
+        didSet {
+            guard !isInitializing else { return }
+            registerUndo(oldValue: oldValue, actionName: "Change Mask Image") { $0.doubleExposureMaskImage = oldValue }
+            updatePreview()
+        }
+    }
+    var doubleExposureMaskOpacity: CGFloat = 0.5 {
+        didSet {
+            guard !isInitializing else { return }
+            registerUndo(oldValue: oldValue, actionName: "Change Mask Opacity") { $0.doubleExposureMaskOpacity = oldValue }
+            updatePreviewDebounced()
+        }
+    }
+    var diagonalSliceAngle: CGFloat = 45.0 {
+        didSet {
+            guard !isInitializing else { return }
+            registerUndo(oldValue: oldValue, actionName: "Change Slice Angle") { $0.diagonalSliceAngle = oldValue }
+            debouncedSave()
+        }
+    }
+    var hexagonalSpacing: CGFloat = 8.0 {
+        didSet {
+            guard !isInitializing else { return }
+            registerUndo(oldValue: oldValue, actionName: "Change Hex Spacing") { $0.hexagonalSpacing = oldValue }
+            debouncedSave()
+        }
+    }
+
     var titleAttrString: NSAttributedString = NSAttributedString(string: "") {
         didSet {
             guard !oldValue.isEqual(titleAttrString) else { return }
@@ -196,8 +226,22 @@ final class CollageViewModel {
 
     var backgroundColor: NSColor = .black {
         didSet {
-            registerUndo(oldValue: oldValue, actionName: "Change Background Color") { $0.backgroundColor = oldValue }
-            updatePreviewDebounced()
+            guard !isInitializing else { return }
+            backgroundColorDidChange(oldValue: oldValue)
+        }
+    }
+
+    private func backgroundColorDidChange(oldValue: NSColor) {
+        backgroundColorDebounceTask?.cancel()
+        backgroundColorDebounceTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            guard let self else { return }
+            undoManager.registerUndo(withTarget: self) { target in
+                target.backgroundColor = oldValue
+            }
+            undoManager.setActionName("Change Background Color")
+            debouncedSave()
+            updatePreview()
         }
     }
 
@@ -364,6 +408,9 @@ final class CollageViewModel {
         self.backgroundImage = bundle.backgroundImage
         self.backgroundOpacity = bundle.backgroundOpacity
         imageLibrary.customImageOrder = bundle.customImageOrder
+        self.doubleExposureMaskOpacity = bundle.doubleExposureMaskOpacity
+        self.diagonalSliceAngle = bundle.diagonalSliceAngle
+        self.hexagonalSpacing = bundle.hexagonalSpacing
         isInitializing = false
     }
 
@@ -777,6 +824,20 @@ final class CollageViewModel {
         let textData = TitleTextData.extract(from: titleAttrString)
         let fontColor = titleStyle.fontColor.cgColor
         let titleBgColor = titleStyle.backgroundColor.cgColor
+
+        let overlay: OverlayConfig? = {
+            guard layoutStyle == .doubleExposure,
+                  let maskImage = doubleExposureMaskImage,
+                  let cgImage = maskImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+                return nil
+            }
+            return OverlayConfig(
+                maskImage: cgImage,
+                opacity: doubleExposureMaskOpacity,
+                blendMode: .multiply
+            )
+        }()
+
         return AssemblyConfig(
             panels: panels,
             crops: cropMap,
@@ -791,7 +852,8 @@ final class CollageViewModel {
             gradientEndColor: gradientEndColor,
             gradientAngle: gradientAngle,
             backgroundOpacity: backgroundOpacity,
-            canvasSize: SizeConstants.defaultCanvasSize
+            canvasSize: SizeConstants.defaultCanvasSize,
+            overlay: overlay
         )
     }
 
@@ -803,6 +865,7 @@ final class CollageViewModel {
     private var titleDebounceTask: Task<Void, Never>?
     private var fontSizeDebounceTask: Task<Void, Never>?
     private var gutterDebounceTask: Task<Void, Never>?
+    private var backgroundColorDebounceTask: Task<Void, Never>?
 
     func updatePanelPreview(panelId: UUID) {
         guard let panel = panels.first(where: { $0.id == panelId }),

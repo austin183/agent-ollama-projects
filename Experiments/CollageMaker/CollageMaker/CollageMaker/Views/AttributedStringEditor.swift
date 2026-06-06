@@ -295,11 +295,32 @@ struct AttributedStringEditorView: NSViewRepresentable {
         paragraphStyle.alignment = titleStyle.alignment
         textView.defaultParagraphStyle = paragraphStyle
 
-        var typingAttrs = textView.typingAttributes
-        typingAttrs[.font] = targetFont
-        typingAttrs[.foregroundColor] = NSColor.white
-        typingAttrs[.paragraphStyle] = paragraphStyle
-        textView.typingAttributes = typingAttrs
+        // Only update typingAttributes when font actually changed.
+        // Unconditional assignment can trigger textDidChange and start
+        // a re-render cascade that interferes with other UI controls.
+        let currentFont = textView.typingAttributes[.font] as? NSFont
+        if currentFont?.fontName != targetFont.fontName || currentFont?.pointSize != targetFont.pointSize {
+            var typingAttrs = textView.typingAttributes
+            typingAttrs[.font] = targetFont
+            typingAttrs[.foregroundColor] = NSColor.white
+            typingAttrs[.paragraphStyle] = paragraphStyle
+            textView.typingAttributes = typingAttrs
+        }
+
+        // Only re-normalize when font family or alignment actually changed.
+        let storageFont = textStorage.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
+        let currentAlignment = (textStorage.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle)?.alignment
+        if storageFont?.fontName == targetFont.fontName,
+           storageFont?.pointSize == targetFont.pointSize,
+           currentAlignment == titleStyle.alignment {
+            return
+        }
+
+        // Block textDidChange during programmatic update to prevent cascade:
+        // setAttributedString → textDidChange → binding write → titleAttrString.didSet
+        // → updatePreview → SwiftUI re-render → updateNSView (infinite loop)
+        context.coordinator.isUpdating = true
+        defer { context.coordinator.isUpdating = false }
 
         let normalized = normalizeForEditor(textStorage, fontFamily: titleStyle.fontFamily, alignment: titleStyle.alignment)
         let sel = textView.selectedRange
@@ -318,7 +339,7 @@ struct AttributedStringEditorView: NSViewRepresentable {
         var fontFamily: String
         var alignment: NSTextAlignment
         var onSelectionChange: ((Bool, Bool, Bool) -> Void)?
-        private var isUpdating = false
+        var isUpdating = false
 
         init(attributedString: Binding<NSAttributedString>, fontFamily: String, alignment: NSTextAlignment) {
             _attributedString = attributedString

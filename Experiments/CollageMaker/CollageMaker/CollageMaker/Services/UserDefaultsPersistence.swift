@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-/// Bundle of persisted values loaded from UserDefaults, used to initialize CollageViewModel.
+    /// Bundle of persisted values loaded from UserDefaults, used to initialize CollageViewModel.
 struct PersistenceBundle {
     var layoutStyle: LayoutStyle
     var titleAttrString: NSAttributedString
@@ -17,6 +17,9 @@ struct PersistenceBundle {
     var backgroundImagePath: String?
     var backgroundOpacity: Double
     var customImageOrder: [Int]
+    var doubleExposureMaskOpacity: CGFloat
+    var diagonalSliceAngle: CGFloat
+    var hexagonalSpacing: CGFloat
 }
 
 /// Centralized UserDefaults persistence for CollageViewModel.
@@ -41,6 +44,9 @@ final class UserDefaultsPersistence {
         static let backgroundOpacity = "backgroundOpacity"
         static let customImageOrder = "customImageOrder"
         static let backgroundImagePath = "backgroundImagePath"
+        static let doubleExposureMaskOpacity = "doubleExposureMaskOpacity"
+        static let diagonalSliceAngle = "diagonalSliceAngle"
+        static let hexagonalSpacing = "hexagonalSpacing"
 
         // Export
         static let defaultExportFolder = "defaultExportFolder"
@@ -76,6 +82,9 @@ final class UserDefaultsPersistence {
         defaults.set(viewModel.gradientAngle, forKey: Keys.gradientAngle)
         defaults.set(viewModel.backgroundOpacity, forKey: Keys.backgroundOpacity)
         saveCustomImageOrder(viewModel.customImageOrder)
+        defaults.set(Double(viewModel.doubleExposureMaskOpacity), forKey: Keys.doubleExposureMaskOpacity)
+        defaults.set(Double(viewModel.diagonalSliceAngle), forKey: Keys.diagonalSliceAngle)
+        defaults.set(Double(viewModel.hexagonalSpacing), forKey: Keys.hexagonalSpacing)
 
         if let path = viewModel.backgroundImagePath {
             defaults.set(path, forKey: Keys.backgroundImagePath)
@@ -117,6 +126,9 @@ final class UserDefaultsPersistence {
         let (backgroundImage, backgroundImagePath) = loadBackgroundImage()
         let backgroundOpacity = loadBackgroundOpacity()
         let customImageOrder = loadCustomImageOrder()
+        let doubleExposureMaskOpacity = CGFloat(defaults.double(forKey: Keys.doubleExposureMaskOpacity))
+        let diagonalSliceAngle = CGFloat(defaults.double(forKey: Keys.diagonalSliceAngle))
+        let hexagonalSpacing = CGFloat(defaults.double(forKey: Keys.hexagonalSpacing))
 
         return PersistenceBundle(
             layoutStyle: layoutStyle,
@@ -132,7 +144,10 @@ final class UserDefaultsPersistence {
             backgroundImage: backgroundImage,
             backgroundImagePath: backgroundImagePath,
             backgroundOpacity: backgroundOpacity,
-            customImageOrder: customImageOrder
+            customImageOrder: customImageOrder,
+            doubleExposureMaskOpacity: doubleExposureMaskOpacity,
+            diagonalSliceAngle: diagonalSliceAngle,
+            hexagonalSpacing: hexagonalSpacing
         )
     }
 
