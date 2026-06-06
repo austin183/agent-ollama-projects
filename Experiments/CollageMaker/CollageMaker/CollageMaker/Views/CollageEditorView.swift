@@ -93,8 +93,9 @@ struct CollageEditorView: View {
                     }
 
                     if let sourceId = gestureCoordinator.dragSourcePanelId,
-                       let scaledFrame = panelFrames[sourceId] {
-                        Rectangle()
+                        let scaledFrame = panelFrames[sourceId],
+                        let sourcePanel = viewModel.panels.first(where: { $0.id == sourceId }) {
+                        PanelShape(geometry: sourcePanel.geometry)
                             .fill(Color.clear)
                             .stroke(Color.cyan, lineWidth: 2.5)
                             .frame(width: scaledFrame.width, height: scaledFrame.height)
@@ -102,9 +103,10 @@ struct CollageEditorView: View {
                     }
 
                     if let targetId = gestureCoordinator.dragTargetPanelId,
-                       let scaledFrame = panelFrames[targetId],
-                       targetId != gestureCoordinator.dragSourcePanelId {
-                        Rectangle()
+                        let scaledFrame = panelFrames[targetId],
+                        targetId != gestureCoordinator.dragSourcePanelId,
+                        let targetPanel = viewModel.panels.first(where: { $0.id == targetId }) {
+                        PanelShape(geometry: targetPanel.geometry)
                             .fill(Color.clear)
                             .stroke(Color.green, lineWidth: 2.5)
                             .frame(width: scaledFrame.width, height: scaledFrame.height)
@@ -334,6 +336,20 @@ struct CollageEditorView: View {
     }
 }
 
+private struct PanelShape: Shape {
+    let geometry: PanelGeometry
+
+    func path(in rect: CGRect) -> Path {
+        switch geometry {
+        case .rect:
+            return Path(rect)
+        case .path(let cgPath, let boundingRect):
+            var t = CGAffineTransform(translationX: -boundingRect.origin.x, y: -boundingRect.origin.y)
+            return Path(cgPath.copy(using: &t)!)
+        }
+    }
+}
+
 private struct PanelHitArea: View {
     let panel: ImagePanel
     let frame: CGRect
@@ -341,7 +357,7 @@ private struct PanelHitArea: View {
     let imageIndex: Int?
 
     var body: some View {
-        Rectangle()
+        PanelShape(geometry: panel.geometry)
             .fill(Color.clear)
             .frame(width: frame.width, height: frame.height)
             .position(x: frame.midX, y: frame.midY)
@@ -389,7 +405,7 @@ private struct PanelOverlay: View {
             }
 
             if viewModel.selectedPanelId == panel.id, let frame = scaledFrame {
-                Rectangle()
+                PanelShape(geometry: panel.geometry)
                     .fill(Color.clear)
                     .stroke(Color.white, lineWidth: 2)
                     .frame(width: frame.width, height: frame.height)
