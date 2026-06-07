@@ -286,14 +286,98 @@ struct HexagonalLayoutStrategy: LayoutStrategy {
     }
 
     func generate(numImages: Int, canvasSize: CGSize, gutter: CGFloat, imageOrder: [Int]?, mosaicSeed: UInt64?) -> [ImagePanel] {
-        return UniformLayoutStrategy().generate(
-            numImages: numImages,
-            canvasSize: canvasSize,
-            gutter: gutter,
-            imageOrder: imageOrder,
-            mosaicSeed: mosaicSeed
-        )
+        guard numImages > 0 else { return [] }
+
+        if numImages == 1 {
+            let imgIdx = imageOrder?[0] ?? 0
+            return [ImagePanel(imageIndex: imgIdx, frame: CGRect(origin: .zero, size: canvasSize))]
+        }
+
+        let canvasCenter = CGPoint(x: canvasSize.width / 2, y: canvasSize.height / 2)
+
+        // Estimate rings needed to hold all images (center + rings)
+        let remaining = numImages - 1
+        var ringsNeeded = 0
+        var capacity = 0
+        while capacity < remaining {
+            ringsNeeded += 1
+            capacity += 6 * ringsNeeded
+        }
+
+        // Effective radius for grid spacing; visual radius derived so hexagons don't overlap
+        // Min center distance on axial grid = sqrt(3) * R_eff, so R = sqrt(3)/2 * R_eff - S/2
+        // Must account for hex extent beyond outermost centers:
+        //   Horizontal: sqrt(3)*R_eff*(rings + 0.5) <= W/2
+        //   Vertical:   R_eff*(1.5*rings + sqrt(3)/2) <= H/2
+        let R_eff = min(canvasSize.width / (sqrt(3.0) * CGFloat(2 * ringsNeeded + 1)),
+                        canvasSize.height / (3.0 * CGFloat(ringsNeeded) + sqrt(3.0)))
+        let R = max(sqrt(3.0) / 2.0 * R_eff - spacing / 2.0, spacing)
+
+        // Axial coordinate directions for pointy-top hex ring traversal
+        // Must follow ring perimeter: (0,-1) → (-1,0) → (-1,+1) → (0,+1) → (+1,0) → (+1,-1)
+        let directions: [(dq: Int, dr: Int)] = [
+            (0, -1), (-1, 0), (-1, +1), (0, +1), (+1, 0), (+1, -1)
+        ]
+
+        // Generate hexagon center positions using axial hex grid
+        var centers: [CGPoint] = [canvasCenter]
+
+        for ring in 1...ringsNeeded {
+            var q = ring
+            var r = 0
+            for (dq, dr) in directions {
+                for _ in 0..<ring {
+                    guard centers.count - 1 < numImages else { break }
+                    let x = canvasCenter.x + (CGFloat(q) + CGFloat(r) / 2.0) * sqrt(3.0) * R_eff
+                    let y = canvasCenter.y + CGFloat(r) * 1.5 * R_eff
+                    centers.append(CGPoint(x: x, y: y))
+                    q += dq
+                    r += dr
+                }
+                if centers.count - 1 >= numImages { break }
+            }
+            if centers.count - 1 >= numImages { break }
+        }
+
+        var panels: [ImagePanel] = []
+        for i in 0..<numImages {
+            guard i < centers.count else { break }
+            let center = centers[i]
+            let (path, bounds) = createHexagonPath(center: center, radius: R)
+            let imgIdx = imageOrder?[i] ?? i
+            panels.append(ImagePanel(imageIndex: imgIdx, geometry: .path(cgPath: path, boundingRect: bounds)))
+        }
+
+        return panels
     }
+}
+
+// MARK: - Hexagon Geometry
+
+private func createHexagonPath(center: CGPoint, radius: CGFloat) -> (path: CGPath, boundingRect: CGRect) {
+    let mutablePath = CGMutablePath()
+    var vertices: [CGPoint] = []
+
+    for i in 0..<6 {
+        let angle = .pi / 6.0 + .pi / 3.0 * CGFloat(i)
+        let x = center.x + radius * cos(angle)
+        let y = center.y + radius * sin(angle)
+        vertices.append(CGPoint(x: x, y: y))
+        if i == 0 {
+            mutablePath.move(to: vertices[0])
+        } else {
+            mutablePath.addLine(to: vertices[i])
+        }
+    }
+    mutablePath.closeSubpath()
+
+    let minX = vertices.map { $0.x }.min()!
+    let minY = vertices.map { $0.y }.min()!
+    let maxX = vertices.map { $0.x }.max()!
+    let maxY = vertices.map { $0.y }.max()!
+    let bounds = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+
+    return (mutablePath, bounds)
 }
 
 // MARK: - Seeded PRNG

@@ -85,6 +85,7 @@ import Testing
             crop: crop,
             cgImage: cgImage,
             panelSize: CGSize(width: 100, height: 100),
+            geometry: .rect(CGRect(x: 0, y: 0, width: 100, height: 100)),
             panelId: panelId
         )
 
@@ -182,6 +183,7 @@ import Testing
                 crop: crop,
                 cgImage: cgImage,
                 panelSize: CGSize(width: 100, height: 100),
+                geometry: .rect(CGRect(x: 0, y: 0, width: 100, height: 100)),
                 panelId: panelId
             )
         }

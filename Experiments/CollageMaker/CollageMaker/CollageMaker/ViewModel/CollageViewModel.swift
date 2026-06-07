@@ -887,6 +887,7 @@ final class CollageViewModel {
             crop: crop,
             cgImage: cgImage,
             panelSize: panelSize,
+            geometry: panel.geometry,
             panelId: panelId
         )
     }

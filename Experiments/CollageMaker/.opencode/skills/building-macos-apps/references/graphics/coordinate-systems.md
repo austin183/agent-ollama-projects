@@ -201,3 +201,97 @@ let bounds = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
 ```
 
 This is O(1) for a fixed vertex count and more efficient than iterating path elements or coercing to `CGPath` first.
+
+## Hexagonal Grid Layout (Pointy-Top)
+
+Use axial coordinates `(q, r)` for honeycomb placement — **not polar angles**. Polar ring placement produces elliptical rings with overlapping hexagons at diagonal angles.
+
+### Axial to Pixel Conversion
+
+```swift
+let x = centerX + (CGFloat(q) + CGFloat(r) / 2.0) * sqrt(3) * R_eff
+let y = centerY + CGFloat(r) * 1.5 * R_eff
+```
+
+**Pitfall:** `CGFloat(q + r / 2)` truncates odd `r` — use `CGFloat(q) + CGFloat(r) / 2.0`.
+
+### Effective Radius (Fits Canvas Including Hex Extents)
+
+`R_eff` determines center positions. Must account for hex extent beyond outermost centers:
+
+```swift
+let R_eff = min(
+    canvasW / (sqrt(3) * (2 * rings + 1)),
+    canvasH / (3 * rings + sqrt(3))
+)
+```
+
+**Pitfall:** `W / (2√3·rings)` only places outermost centers at canvas edge — hexagons extend `√3·R` horizontally and `R` vertically beyond their centers, clipping ring-1 hexagons off-canvas.
+
+### Visual Hexagon Radius
+
+```swift
+let R = max(sqrt(3) / 2 * R_eff - spacing / 2, spacing)
+```
+
+Minimum center-to-center distance on an axial pointy-top grid is `√3·R_eff` (not `2·R_eff`). Guard against negative `R`.
+
+### Frame Dimensions
+
+```swift
+let frameWidth = sqrt(3) * R
+let frameHeight = 2 * R
+```
+
+### Ring Traversal
+
+For ring N (0 = center), start at `(q: N, r: 0)` and walk 6 directions, `N` steps each:
+
+```swift
+let directions: [(dq: Int, dr: Int)] = [
+    (0, -1), (-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1)
+]
+
+var q = ring, r = 0
+for dir in directions {
+    for _ in 0..<ring {
+        q += dir.dq; r += dir.dr
+        // place hex at (q, r)
+    }
+}
+```
+
+**Pitfall:** `for step { for direction { ... } }` cycles all 6 directions `step` times, producing duplicates. Correct order: outer loop = directions, inner loop = steps.
+
+### Non-Overlap Test Threshold
+
+Minimum center-to-center distance for non-overlapping pointy-top hexagons is `2·R`. Since `frame.width = √3·R`, the threshold is `2 * frame.width / sqrt(3)`, not `frame.width`.
+
+### Spacing vs Center Positions
+
+`spacing` only affects visual radius `R`, not center positions (which depend on `R_eff`). Tests comparing layout spread across different spacing values will fail — centers don't move.
+
+## Per-Panel Path Clipping
+
+When rendering panels with non-rectangular shapes (hexagons, diagonal slices), clip at the `CGContext` level — not with SwiftUI `.clipShape`.
+
+### Why `.clipShape` Fails
+
+`PanelShape.path(in:)` returns a path in origin-local coordinates, but `.position()` places the view elsewhere in the parent `ZStack`. The clip region misses the image content.
+
+### CGContext Clipping Pattern
+
+Pass panel geometry to `renderPanel()`, translate the path by `-boundingRect.origin` (rendering context is origin-local), and clip before drawing:
+
+```swift
+func renderPanel(context: CGContext, geometry: PanelGeometry, image: CGImage) {
+    let path = geometry.createPath(in: geometry.boundingRect)
+    context.saveGState()
+    context.addPath(path)
+    context.clip()
+    context.draw(image, in: geometry.boundingRect)
+    context.restoreGState()
+}
+```
+
+**Protocol impact:** Adding `geometry` to `renderPanel()` cascades to `PanelRenderer`, `PreviewManager`, `CollageViewModel`, all test mocks, and all test call sites.

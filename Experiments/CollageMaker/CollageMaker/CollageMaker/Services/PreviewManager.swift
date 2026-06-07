@@ -84,6 +84,7 @@ final class PreviewManager {
         crop: CropInfo,
         cgImage: CGImage,
         panelSize: CGSize,
+        geometry: PanelGeometry,
         panelId: UUID
     ) {
         panelGenerations[panelId, default: 0] += 1
@@ -91,12 +92,13 @@ final class PreviewManager {
         let assembler = self.assembler
 
         panelPreviewTasks[panelId]?.cancel()
-        panelPreviewTasks[panelId] = Task { [weak self, assembler, crop, cgImage, panelSize, panelId, gen] in
+        panelPreviewTasks[panelId] = Task { [weak self, assembler, crop, cgImage, panelSize, geometry, panelId, gen] in
             guard let self, gen == self.panelGenerations[panelId] else { return }
             let result = await assembler.renderPanel(
                 crop: crop,
                 cgImage: cgImage,
-                panelSize: panelSize
+                panelSize: panelSize,
+                geometry: geometry
             )
             guard gen == self.panelGenerations[panelId] else { return }
             self.panelRenderedImages[panelId] = result
@@ -118,6 +120,7 @@ final class PreviewManager {
                 crop: crop,
                 cgImage: cgImage,
                 panelSize: panel.frame.size,
+                geometry: panel.geometry,
                 panelId: panel.id
             )
         }

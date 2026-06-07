@@ -141,7 +141,7 @@ final class TestAssembler: CollageAssembly {
         return assemblePreviewImage ?? NSImage(size: previewSize)
     }
 
-    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize) async -> NSImage? {
+    func renderPanel(crop: CropInfo, cgImage: CGImage, panelSize: CGSize, geometry: PanelGeometry) async -> NSImage? {
         if trackCalls {
             renderPanelCalls += 1
             lastPanelCrop = crop

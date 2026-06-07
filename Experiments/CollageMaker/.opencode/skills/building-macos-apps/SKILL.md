@@ -124,13 +124,14 @@ AppTarget/
 
 ## Coordinate System Traps
 
-Vision, CoreGraphics, and NSImage use different origins. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) for conversion functions, EXIF mismatch fixes, canvas-to-preview mapping, normalized position storage, and the producer-tracing verification pattern.
+Vision, CoreGraphics, and NSImage use different origins. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) for conversion functions, EXIF mismatch fixes, canvas-to-preview mapping, normalized position storage, the producer-tracing verification pattern, hexagonal grid layout with axial coordinates, and per-panel CGContext path clipping.
 
 **Critical mismatches:**
 - Vision: bottom-left (0,0), normalized 0-1
 - CoreGraphics CGContext: bottom-left (0,0)
 - NSImage / SwiftUI: top-left (0,0)
 - EXIF orientation corrections shift CGImage coordinates -- strip EXIF with `NSImage(cgImage:cgImage, size: .zero)`
+- Hexagonal grid layout requires axial `(q, r)` coordinates — polar angles produce elliptical, overlapping rings. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) § "Hexagonal Grid Layout"
 
 **Before writing a coordinate conversion:** Trace the value to its producer. The producer's arithmetic is the source of truth — plan descriptions and variable names can be wrong about coordinate space. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) § "Verify Data Flow Before Adding Conversions".
 

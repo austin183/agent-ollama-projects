@@ -28,7 +28,8 @@ protocol PanelRenderer {
     func renderPanel(
         crop: CropInfo,
         cgImage: CGImage,
-        panelSize: CGSize
+        panelSize: CGSize,
+        geometry: PanelGeometry
     ) async -> NSImage?
 }
 
@@ -364,7 +365,8 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
     func renderPanel(
         crop: CropInfo,
         cgImage: CGImage,
-        panelSize: CGSize
+        panelSize: CGSize,
+        geometry: PanelGeometry
     ) async -> NSImage? {
         await scheduler.render {
             guard let context = self.createPureCGContext(size: panelSize) else { return nil }
@@ -374,9 +376,18 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
             let destRect = CGRect(origin: .zero, size: panelSize)
 
             context.saveGState()
-            context.clip(to: destRect)
-            // renderPanel is used for sidebar crop preview, which always renders
-            // into a rectangular preview area. Path clipping is not needed here.
+
+            if case .path(let cgPath, let boundingRect) = geometry {
+                var t = CGAffineTransform(translationX: -boundingRect.origin.x, y: -boundingRect.origin.y)
+                if let translated = cgPath.copy(using: &t) {
+                    context.addPath(translated)
+                    context.clip()
+                } else {
+                    context.clip(to: destRect)
+                }
+            } else {
+                context.clip(to: destRect)
+            }
 
             if let cropped = cgImage.cropping(to: sourceRect) {
                 context.draw(cropped, in: destRect)

@@ -344,8 +344,17 @@ private struct PanelShape: Shape {
         case .rect:
             return Path(rect)
         case .path(let cgPath, let boundingRect):
-            var t = CGAffineTransform(translationX: -boundingRect.origin.x, y: -boundingRect.origin.y)
-            return Path(cgPath.copy(using: &t)!)
+            guard boundingRect.width > 0, boundingRect.height > 0 else {
+                return Path(rect)
+            }
+            let scaleX = rect.width / boundingRect.width
+            let scaleY = rect.height / boundingRect.height
+            var t = CGAffineTransform(translationX: -boundingRect.origin.x * scaleX, y: -boundingRect.origin.y * scaleY)
+            t = t.scaledBy(x: scaleX, y: scaleY)
+            if let transformed = cgPath.copy(using: &t) {
+                return Path(transformed)
+            }
+            return Path(rect)
         }
     }
 }
