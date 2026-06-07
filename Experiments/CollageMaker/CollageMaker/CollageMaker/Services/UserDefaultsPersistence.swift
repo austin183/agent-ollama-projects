@@ -18,6 +18,8 @@ struct PersistenceBundle {
     var backgroundOpacity: Double
     var customImageOrder: [Int]
     var doubleExposureMaskOpacity: CGFloat
+    var doubleExposureMaskImage: NSImage?
+    var doubleExposureMaskImagePath: String?
     var diagonalSliceAngle: CGFloat
     var hexagonalSpacing: CGFloat
 }
@@ -45,6 +47,7 @@ final class UserDefaultsPersistence {
         static let customImageOrder = "customImageOrder"
         static let backgroundImagePath = "backgroundImagePath"
         static let doubleExposureMaskOpacity = "doubleExposureMaskOpacity"
+        static let doubleExposureMaskImagePath = "doubleExposureMaskImagePath"
         static let diagonalSliceAngle = "diagonalSliceAngle"
         static let hexagonalSpacing = "hexagonalSpacing"
 
@@ -91,6 +94,12 @@ final class UserDefaultsPersistence {
         } else {
             defaults.removeObject(forKey: Keys.backgroundImagePath)
         }
+
+        if let path = viewModel.doubleExposureMaskImagePath {
+            defaults.set(path, forKey: Keys.doubleExposureMaskImagePath)
+        } else {
+            defaults.removeObject(forKey: Keys.doubleExposureMaskImagePath)
+        }
     }
 
     // MARK: - Load
@@ -127,6 +136,7 @@ final class UserDefaultsPersistence {
         let backgroundOpacity = loadBackgroundOpacity()
         let customImageOrder = loadCustomImageOrder()
         let doubleExposureMaskOpacity = CGFloat(defaults.double(forKey: Keys.doubleExposureMaskOpacity))
+        let (doubleExposureMaskImage, doubleExposureMaskImagePath) = loadDoubleExposureMaskImage()
         let diagonalSliceAngle = CGFloat(defaults.double(forKey: Keys.diagonalSliceAngle))
         let hexagonalSpacing = CGFloat(defaults.double(forKey: Keys.hexagonalSpacing))
 
@@ -146,6 +156,8 @@ final class UserDefaultsPersistence {
             backgroundOpacity: backgroundOpacity,
             customImageOrder: customImageOrder,
             doubleExposureMaskOpacity: doubleExposureMaskOpacity,
+            doubleExposureMaskImage: doubleExposureMaskImage,
+            doubleExposureMaskImagePath: doubleExposureMaskImagePath,
             diagonalSliceAngle: diagonalSliceAngle,
             hexagonalSpacing: hexagonalSpacing
         )
@@ -220,6 +232,19 @@ final class UserDefaultsPersistence {
 
     private func loadBackgroundImage() -> (image: NSImage?, path: String?) {
         guard let path = defaults.string(forKey: Keys.backgroundImagePath),
+              let url = URL(string: path),
+              FileManager.default.fileExists(atPath: path),
+              let data = try? Data(contentsOf: url),
+              let image = NSImage(data: data) else {
+            return (nil, nil)
+        }
+        return (image, path)
+    }
+
+    // MARK: - Double Exposure Mask Image
+
+    private func loadDoubleExposureMaskImage() -> (image: NSImage?, path: String?) {
+        guard let path = defaults.string(forKey: Keys.doubleExposureMaskImagePath),
               let url = URL(string: path),
               FileManager.default.fileExists(atPath: path),
               let data = try? Data(contentsOf: url),

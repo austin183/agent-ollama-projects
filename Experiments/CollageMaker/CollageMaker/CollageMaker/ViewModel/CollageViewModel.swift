@@ -144,9 +144,13 @@ final class CollageViewModel {
         didSet {
             guard !isInitializing else { return }
             registerUndo(oldValue: oldValue, actionName: "Change Mask Image") { $0.doubleExposureMaskImage = oldValue }
+            if doubleExposureMaskImage == nil {
+                doubleExposureMaskImagePath = nil
+            }
             updatePreview()
         }
     }
+    var doubleExposureMaskImagePath: String?
     var doubleExposureMaskOpacity: CGFloat = 0.5 {
         didSet {
             guard !isInitializing else { return }
@@ -413,6 +417,8 @@ final class CollageViewModel {
         self.backgroundOpacity = bundle.backgroundOpacity
         imageLibrary.customImageOrder = bundle.customImageOrder
         self.doubleExposureMaskOpacity = bundle.doubleExposureMaskOpacity
+        self.doubleExposureMaskImagePath = bundle.doubleExposureMaskImagePath
+        self.doubleExposureMaskImage = bundle.doubleExposureMaskImage
         self.diagonalSliceAngle = bundle.diagonalSliceAngle
         self.hexagonalSpacing = bundle.hexagonalSpacing
         isInitializing = false
@@ -421,6 +427,11 @@ final class CollageViewModel {
     func setBackgroundImage(_ image: NSImage?, path: String?) {
         backgroundImagePath = path
         backgroundImage = image
+    }
+
+    func setMaskImage(_ image: NSImage?, path: String?) {
+        doubleExposureMaskImagePath = path
+        doubleExposureMaskImage = image
     }
 
     // MARK: - Undo Helpers

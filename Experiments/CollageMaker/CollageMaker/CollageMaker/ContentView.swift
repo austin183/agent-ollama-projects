@@ -193,6 +193,84 @@ struct ContentView: View {
                         .accessibilityLabel("Gutter width")
                         .accessibilityValue("\(Int(viewModel.gutter)) points")
                 }
+
+                if viewModel.layoutStyle == .diagonalSlices {
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text("Slice Angle")
+                            Spacer()
+                            Text("\(Int(viewModel.diagonalSliceAngle))°")
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.caption)
+                        Slider(value: $viewModel.diagonalSliceAngle, in: 5...85, step: 1)
+                            .accessibilityLabel("Diagonal slice angle")
+                            .accessibilityValue("\(Int(viewModel.diagonalSliceAngle)) degrees")
+                    }
+                }
+
+                if viewModel.layoutStyle == .hexagonal {
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text("Hex Spacing")
+                            Spacer()
+                            Text("\(Int(viewModel.hexagonalSpacing))pt")
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.caption)
+                        Slider(value: $viewModel.hexagonalSpacing, in: 0...30, step: 1)
+                            .accessibilityLabel("Hexagonal spacing")
+                            .accessibilityValue("\(Int(viewModel.hexagonalSpacing)) points")
+                    }
+                }
+
+                if viewModel.layoutStyle == .doubleExposure {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            if let maskImg = viewModel.doubleExposureMaskImage {
+                                Image(nsImage: maskImg)
+                                    .resizable()
+                                    .frame(width: 32, height: 32)
+                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                            } else {
+                                Image(systemName: "photo.badge.plus")
+                                    .frame(width: 32, height: 32)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Button("Choose Mask") {
+                                chooseMaskImage()
+                            }
+                            .buttonStyle(.bordered)
+                            .accessibilityLabel("Choose mask image")
+                            .accessibilityHint("Opens file picker")
+
+                            Spacer()
+
+                            if viewModel.doubleExposureMaskImage != nil {
+                                Button {
+                                    viewModel.doubleExposureMaskImage = nil
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Remove mask image")
+                            }
+                        }
+
+                        HStack {
+                            Text("Mask Opacity")
+                            Spacer()
+                            Text("\(Int(viewModel.doubleExposureMaskOpacity * 100))%")
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.caption)
+                        Slider(value: $viewModel.doubleExposureMaskOpacity, in: 0...1)
+                            .accessibilityLabel("Mask opacity")
+                            .accessibilityValue("\(Int(viewModel.doubleExposureMaskOpacity * 100)) percent")
+                    }
+                }
             }
 
             if !viewModel.imageLibrary.images.isEmpty {
@@ -255,6 +333,23 @@ struct ContentView: View {
         .onTapGesture {
             if viewModel.imageLibrary.images.isEmpty {
                 viewModel.browseImages()
+            }
+        }
+    }
+
+    private func chooseMaskImage() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [.jpeg, .png, .tiff, .heic, .heif]
+
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        panel.begin { [weak viewModel] response in
+            if response == .OK, let url = panel.url,
+                let data = try? Data(contentsOf: url),
+                let image = NSImage(data: data) {
+                viewModel?.setMaskImage(image, path: url.path)
             }
         }
     }
