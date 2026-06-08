@@ -56,6 +56,14 @@ struct CollageEditorView: View {
                             )
                         }
 
+                        if let overlayImg = viewModel.overlayImage {
+                            Image(nsImage: overlayImg)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: geometry.size.width, height: geometry.size.height)
+                                .blendMode(overlayBlendMode(from: viewModel.overlayBlendMode))
+                        }
+
                         if let titleImg = viewModel.titleImage {
                             Image(nsImage: titleImg)
                                 .resizable()
@@ -421,5 +429,22 @@ private struct PanelOverlay: View {
                     .position(x: frame.midX, y: frame.midY)
             }
         }
+    }
+}
+
+private func overlayBlendMode(from cgBlendMode: CGBlendMode?) -> BlendMode {
+    guard let mode = cgBlendMode else { return .multiply }
+    switch mode {
+    case .multiply: return .multiply
+    case .screen: return .screen
+    case .overlay: return .overlay
+    case .darken: return .darken
+    case .colorDodge: return .colorDodge
+    case .colorBurn: return .colorBurn
+    case .hardLight: return .hardLight
+    case .softLight: return .softLight
+    case .difference: return .difference
+    case .exclusion: return .exclusion
+    default: return .multiply
     }
 }

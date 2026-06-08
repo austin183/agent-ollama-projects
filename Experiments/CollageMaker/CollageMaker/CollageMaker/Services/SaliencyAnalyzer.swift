@@ -99,17 +99,27 @@ actor SaliencyAnalyzer: SaliencyAnalysis {
 
     func analyzeAll(_ cgImages: [CGImage]) async throws -> [SaliencyResult] {
         logger.info("Analyzing \(cgImages.count) image(s) for saliency")
-        return try await withThrowingTaskGroup(of: (Int, SaliencyResult).self) { group in
+        return await withTaskGroup(of: (Int, Result<SaliencyResult, Error>).self) { group in
             for (index, cgImage) in cgImages.enumerated() {
                 group.addTask {
-                    let result = try await self.analyze(cgImage)
+                    let result: Result<SaliencyResult, Error>
+                    do {
+                        result = .success(try await self.analyze(cgImage))
+                    } catch {
+                        result = .failure(error)
+                    }
                     return (index, result)
                 }
             }
 
             var results: [Int: SaliencyResult] = [:]
-            for try await (index, result) in group {
-                results[index] = result
+            for await (index, result) in group {
+                switch result {
+                case .success(let saliencyResult):
+                    results[index] = saliencyResult
+                case .failure(let error):
+                    logger.error("Saliency analysis failed for image at index \(index): \(error.localizedDescription, privacy: .public)")
+                }
             }
             return (0..<cgImages.count).compactMap { results[$0] }
         }

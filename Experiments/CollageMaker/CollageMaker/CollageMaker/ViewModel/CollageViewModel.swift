@@ -27,7 +27,7 @@ final class CollageViewModel {
     let imageLibrary = ImageLibraryManager()
     private var isInitializing = false
     private var saliencyResults: [Int: SaliencyResult] = [:]
-    private var saveDebounceTask: Task<Void, Never>?
+    private let debouncer = Debouncer()
     private var cropMapVersion = 0
     private var titleImageVersion = 0
 
@@ -217,16 +217,14 @@ final class CollageViewModel {
     }
 
     private func gutterDidChange(oldValue: CGFloat) {
-        gutterDebounceTask?.cancel()
-        gutterDebounceTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 150_000_000)
+        debouncer.debounce(id: "gutter", delay: .milliseconds(150)) { [weak self] in
             guard let self else { return }
-            undoManager.registerUndo(withTarget: self) { target in
+            self.undoManager.registerUndo(withTarget: self) { target in
                 target.gutter = oldValue
             }
-            undoManager.setActionName("Change Gutter")
-            debouncedSave()
-            regenerateLayout(preserveCrops: true)
+            self.undoManager.setActionName("Change Gutter")
+            self.debouncedSave()
+            self.regenerateLayout(preserveCrops: true)
         }
     }
 
@@ -240,16 +238,14 @@ final class CollageViewModel {
     }
 
     private func backgroundColorDidChange(oldValue: NSColor) {
-        backgroundColorDebounceTask?.cancel()
-        backgroundColorDebounceTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 150_000_000)
+        debouncer.debounce(id: "backgroundColor", delay: .milliseconds(150)) { [weak self] in
             guard let self else { return }
-            undoManager.registerUndo(withTarget: self) { target in
+            self.undoManager.registerUndo(withTarget: self) { target in
                 target.backgroundColor = oldValue
             }
-            undoManager.setActionName("Change Background Color")
-            debouncedSave()
-            updatePreview()
+            self.undoManager.setActionName("Change Background Color")
+            self.debouncedSave()
+            self.updatePreview()
         }
     }
 
@@ -318,6 +314,14 @@ final class CollageViewModel {
         get { previewManager.previewBackgroundImage }
         set { previewManager.previewBackgroundImage = newValue }
     }
+    var overlayImage: NSImage? {
+        get { previewManager.overlayImage }
+        set { previewManager.overlayImage = newValue }
+    }
+    var overlayBlendMode: CGBlendMode? {
+        get { previewManager.overlayBlendMode }
+        set { previewManager.overlayBlendMode = newValue }
+    }
     var panelRenderedImages: [UUID: NSImage] {
         get { previewManager.panelRenderedImages }
         set { previewManager.panelRenderedImages = newValue }
@@ -346,12 +350,9 @@ final class CollageViewModel {
     }
 
     private func debouncedSave() {
-        saveDebounceTask?.cancel()
-        let persistence = self.persistence
-        saveDebounceTask = Task { [weak self, persistence] in
-            try? await Task.sleep(nanoseconds: 300_000_000)
+        debouncer.debounce(id: "save", delay: .milliseconds(300)) { [weak self] in
             guard let self else { return }
-            persistence.save(self)
+            self.persistence.save(self)
         }
     }
 
@@ -521,7 +522,7 @@ final class CollageViewModel {
     // MARK: - Layout
 
     func regenerateLayout(preserveCrops: Bool = false) {
-        previewRenderDebounceTask?.cancel()
+        debouncer.cancel(id: "previewRender")
         guard !images.isEmpty else { return }
 
         let layoutStart = ContinuousClock.now
@@ -652,7 +653,7 @@ final class CollageViewModel {
                 images: images,
                 results: indexed
             )
-            previewRenderDebounceTask?.cancel()
+            debouncer.cancel(id: "previewRender")
             updatePreview()
             updateAllPanelPreviews()
         } catch {
@@ -685,9 +686,7 @@ final class CollageViewModel {
         cropManager.applyPan(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
         throttledNotifyCropMapChanged()
 
-        previewDebounceTask?.cancel()
-        previewDebounceTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 150_000_000)
+        debouncer.debounce(id: "panPreview", delay: .milliseconds(150)) { [weak self] in
             if let panelId = self?.cropManager.activePanelId {
                 self?.updatePanelPreview(panelId: panelId)
             }
@@ -714,13 +713,9 @@ final class CollageViewModel {
         cropManager.applyPinch(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
         throttledNotifyCropMapChanged()
 
-        panelPreviewTask?.cancel()
         if let panelId = cropManager.activePanelId {
-            panelPreviewTask = Task.detached { [weak self, panelId] in
-                guard let self else { return }
-                await MainActor.run {
-                    self.updatePanelPreview(panelId: panelId)
-                }
+            debouncer.debounce(id: "pinchPreview", delay: .milliseconds(0)) { [weak self] in
+                self?.updatePanelPreview(panelId: panelId)
             }
         }
     }
@@ -761,12 +756,8 @@ final class CollageViewModel {
         let now = ContinuousClock.now
         guard now - lastOverlayRenderTime >= overlayRenderInterval else { return }
         lastOverlayRenderTime = now
-        panelPreviewTask?.cancel()
-        panelPreviewTask = Task.detached { [weak self, panelId] in
-            guard let self else { return }
-            await MainActor.run {
-                self.updatePanelPreview(panelId: panelId)
-            }
+        debouncer.debounce(id: "overlayRender", delay: .milliseconds(0)) { [weak self] in
+            self?.updatePanelPreview(panelId: panelId)
         }
     }
 
@@ -783,7 +774,7 @@ final class CollageViewModel {
     }
 
     func finishOverlayCrop(panelId: UUID) {
-        panelPreviewTask?.cancel()
+        debouncer.cancel(id: "overlayRender")
         updatePanelPreview(panelId: panelId)
         notifyCropMapChanged()
     }
@@ -807,12 +798,8 @@ final class CollageViewModel {
         guard now - lastScrollRenderTime >= scrollRenderInterval,
               let panelId = cropManager.scrollPanActivePanelId else { return }
         lastScrollRenderTime = now
-        previewDebounceTask?.cancel()
-        previewDebounceTask = Task.detached { [weak self, panelId] in
-            guard let self else { return }
-            await MainActor.run {
-                self.updatePanelPreview(panelId: panelId)
-            }
+        debouncer.debounce(id: "scrollPanPreview", delay: .milliseconds(0)) { [weak self] in
+            self?.updatePanelPreview(panelId: panelId)
         }
     }
 
@@ -829,8 +816,7 @@ final class CollageViewModel {
     }
 
     func endScrollPan() {
-        previewDebounceTask?.cancel()
-        previewDebounceTask = nil
+        debouncer.cancel(id: "scrollPanPreview")
         cropManager.endScrollPan()
         notifyCropMapChanged()
     }
@@ -876,14 +862,6 @@ final class CollageViewModel {
 
     // MARK: - Preview & Export
 
-    private var previewDebounceTask: Task<Void, Never>?
-    private var previewRenderDebounceTask: Task<Void, Never>?
-    private var panelPreviewTask: Task<Void, Never>?
-    private var titleDebounceTask: Task<Void, Never>?
-    private var fontSizeDebounceTask: Task<Void, Never>?
-    private var gutterDebounceTask: Task<Void, Never>?
-    private var backgroundColorDebounceTask: Task<Void, Never>?
-
     func updatePanelPreview(panelId: UUID) {
         guard let panel = panels.first(where: { $0.id == panelId }),
               let crop = cropMap[panelId] else { return }
@@ -923,9 +901,7 @@ final class CollageViewModel {
     }
 
     func updatePreviewDebounced() {
-        previewRenderDebounceTask?.cancel()
-        previewRenderDebounceTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 150_000_000)
+        debouncer.debounce(id: "previewRender", delay: .milliseconds(150)) { [weak self] in
             self?.updatePreview()
         }
     }
@@ -949,6 +925,12 @@ final class CollageViewModel {
 
         if isLayeredMode {
             updateBackground()
+            if let overlay = config.overlay {
+                previewManager.updateOverlay(
+                    overlay: overlay,
+                    canvasSize: SizeConstants.defaultCanvasSize
+                )
+            }
             updateTitleImage()
         }
     }
@@ -962,6 +944,12 @@ final class CollageViewModel {
             panelAssignments: panelAssignments
         )
         updateBackground()
+        if let overlay = buildAssemblyConfig().overlay {
+            previewManager.updateOverlay(
+                overlay: overlay,
+                canvasSize: SizeConstants.defaultCanvasSize
+            )
+        }
         updateTitleImage()
     }
 
@@ -975,15 +963,13 @@ final class CollageViewModel {
     }
 
     func updateTitleImageLive() {
-        titleDebounceTask?.cancel()
-        titleDebounceTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 150_000_000)
+        debouncer.debounce(id: "titleImage", delay: .milliseconds(150)) { [weak self] in
             self?.updateTitleImage()
         }
     }
 
     func finishTitleDrag() {
-        titleDebounceTask?.cancel()
+        debouncer.cancel(id: "titleImage")
         updateTitleImage()
         debouncedSave()
     }
@@ -1023,9 +1009,7 @@ final class CollageViewModel {
         let oldValue = titleStyle.fontSize
         titleStyle.fontSize = size
         applyTitleChange(at: \.fontSize, oldValue: oldValue, actionName: "Change Font Size") {
-            self.fontSizeDebounceTask?.cancel()
-            self.fontSizeDebounceTask = Task { [weak self] in
-                try? await Task.sleep(nanoseconds: 150_000_000)
+            self.debouncer.debounce(id: "fontSize", delay: .milliseconds(150)) { [weak self] in
                 self?.updateTitleImage()
             }
         }

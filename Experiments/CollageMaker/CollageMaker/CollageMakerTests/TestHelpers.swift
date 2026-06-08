@@ -174,6 +174,10 @@ final class TestAssembler: CollageAssembly {
         }
         return titleImage ?? NSImage(size: canvasSize)
     }
+
+    func renderOverlay(overlay: OverlayConfig, canvasSize: CGSize) async -> NSImage? {
+        NSImage(size: canvasSize)
+    }
 }
 
 @MainActor

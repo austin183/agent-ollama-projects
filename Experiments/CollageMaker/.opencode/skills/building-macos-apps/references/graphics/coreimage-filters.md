@@ -224,3 +224,16 @@ class MockAssembler: CollageAssembly {
 - **Canvas-to-UI coordinate conversion** — When overlaying SwiftUI hit areas on top of a CoreGraphics-rendered image, the hit area coordinates must account for Y-axis inversion (CoreGraphics bottom-left vs SwiftUI top-left) AND aspect-ratio fitting (`.aspectRatio(contentMode: .fit)` scales down, not up). The fitted size formula: if canvas aspect > preview aspect, constrain by preview width (`fittedWidth = previewWidth, fittedHeight = previewWidth / canvasAspect`); otherwise constrain by preview height.
 - **NSImage display size hint vs actual resolution** — `NSImage(cgImage:size:)` `size` parameter is a display hint for AppKit, not the actual pixel dimensions. The underlying bitmap retains its original resolution. SwiftUI's `Image(nsImage:)` ignores this hint and uses the bitmap's actual pixel dimensions, then scales via `.aspectRatio(contentMode: .fit)`. Coordinate conversion must use the actual canvas resolution, not the hint size.
 - **EXIF coordinate mismatch with CGImage overlays** — `Image(nsImage:)` applies EXIF orientation corrections (rotation, flip) before display, but `sourceRect` coordinates from CGImage operations live in raw pixel space. The overlay appears shifted or rotated. Fix: create `NSImage(cgImage: image.cgImage, size: .zero)` to strip EXIF metadata, ensuring the displayed image matches the CGImage coordinate space.
+- **CGBlendMode on empty CGContext produces black** — Multiply blend computes `source × destination`. On a fresh transparent context, every destination pixel is `(0,0,0,0)`, so the result is black regardless of source. Do NOT pre-render a blend operation into an isolated empty context expecting the blend to "stick" for later compositing. Instead, render the overlay without blend mode (just opacity) in CGContext, then apply the blend mode at the compositing layer where destination pixels exist:
+
+```swift
+// Render phase — no blend mode, just opacity
+context.setAlpha(overlay.opacity)
+context.draw(maskImage, in: rect)
+
+// Compositing phase — SwiftUI ZStack
+Image(nsImage: overlayImage)
+    .blendMode(.multiply)  // blend against actual panel content
+```
+
+Blend mode requires non-zero destination pixels. A context that already contains drawn content (background + panels) is a valid destination.

@@ -49,7 +49,14 @@ protocol TitleRenderer {
     ) async -> NSImage?
 }
 
-protocol CollageAssembly: CollageRenderer, PanelRenderer, BackgroundRenderer, TitleRenderer {}
+protocol OverlayRenderer {
+    func renderOverlay(
+        overlay: OverlayConfig,
+        canvasSize: CGSize
+    ) async -> NSImage?
+}
+
+protocol CollageAssembly: CollageRenderer, PanelRenderer, BackgroundRenderer, TitleRenderer, OverlayRenderer {}
 
 extension CollageAssembly {
     func assemble(
@@ -456,6 +463,21 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
                 canvasHeight: canvasSize.height
             )
 
+            guard let cgImage = context.makeImage() else { return nil }
+            return NSImage(cgImage: cgImage, size: canvasSize)
+        }
+    }
+
+    func renderOverlay(
+        overlay: OverlayConfig,
+        canvasSize: CGSize
+    ) async -> NSImage? {
+        await scheduler.render {
+            guard let context = self.createPureCGContext(size: canvasSize) else { return nil }
+            context.saveGState()
+            context.setAlpha(overlay.opacity)
+            context.draw(overlay.maskImage, in: CGRect(origin: .zero, size: canvasSize))
+            context.restoreGState()
             guard let cgImage = context.makeImage() else { return nil }
             return NSImage(cgImage: cgImage, size: canvasSize)
         }

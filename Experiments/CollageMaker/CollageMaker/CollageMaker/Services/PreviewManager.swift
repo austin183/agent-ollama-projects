@@ -12,6 +12,8 @@ private let logger = Logger(
 final class PreviewManager {
     var previewImage: NSImage?
     var previewBackgroundImage: NSImage?
+    var overlayImage: NSImage?
+    var overlayBlendMode: CGBlendMode?
     var panelRenderedImages: [UUID: NSImage] = [:]
     var titleImage: NSImage?
 
@@ -19,10 +21,12 @@ final class PreviewManager {
     private var previewDebounceTask: Task<Void, Never>?
     private var panelPreviewTasks: [UUID: Task<Void, Never>] = [:]
     private var backgroundTask: Task<Void, Never>?
+    private var overlayTask: Task<Void, Never>?
     private var titleTask: Task<Void, Never>?
 
     private var previewGeneration: Int = 0
     private var backgroundGeneration: Int = 0
+    private var overlayGeneration: Int = 0
     private var panelGenerations: [UUID: Int] = [:]
     private var titleGeneration: Int = 0
 
@@ -77,6 +81,27 @@ final class PreviewManager {
             )
             guard gen == self.backgroundGeneration else { return }
             self.previewBackgroundImage = result
+        }
+    }
+
+    func updateOverlay(
+        overlay: OverlayConfig,
+        canvasSize: CGSize
+    ) {
+        overlayGeneration += 1
+        let gen = overlayGeneration
+        let assembler = self.assembler
+
+        overlayTask?.cancel()
+        overlayTask = Task { [weak self, assembler, overlay, canvasSize] in
+            guard let self else { return }
+            let result = await assembler.renderOverlay(
+                overlay: overlay,
+                canvasSize: canvasSize
+            )
+            guard gen == self.overlayGeneration else { return }
+            self.overlayImage = result
+            self.overlayBlendMode = overlay.blendMode
         }
     }
 
@@ -177,11 +202,13 @@ final class PreviewManager {
         previewDebounceTask?.cancel()
         panelPreviewTasks.values.forEach { $0.cancel() }
         backgroundTask?.cancel()
+        overlayTask?.cancel()
         titleTask?.cancel()
         previewTask = nil
         previewDebounceTask = nil
         panelPreviewTasks.removeAll()
         backgroundTask = nil
+        overlayTask = nil
         titleTask = nil
     }
 
@@ -189,10 +216,13 @@ final class PreviewManager {
         cancelAllTasks()
         previewImage = nil
         previewBackgroundImage = nil
+        overlayImage = nil
+        overlayBlendMode = nil
         panelRenderedImages.removeAll()
         titleImage = nil
         previewGeneration = 0
         backgroundGeneration = 0
+        overlayGeneration = 0
         panelGenerations.removeAll()
         titleGeneration = 0
     }

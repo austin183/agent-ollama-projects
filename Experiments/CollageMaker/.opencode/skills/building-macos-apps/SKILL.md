@@ -267,6 +267,7 @@ See [references/graphics/coreimage-filters.md](references/graphics/coreimage-fil
 - `bytesPerRow: 0` lets system calculate it
 - `interpolationQuality = .high` for resize quality
 - Use `NSAttributedString.draw(at:)` for text, not deprecated CGContext text API
+- **CGBlendMode on empty CGContext produces black** — multiply on transparent buffer = `source × (0,0,0,0)` = black. Render overlay without blend mode in CGContext, apply `.blendMode()` in SwiftUI ZStack where destination pixels exist. See [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md) § Pitfalls
 
 ## Gesture Patterns
 
