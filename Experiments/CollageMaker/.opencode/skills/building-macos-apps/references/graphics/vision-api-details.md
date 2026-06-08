@@ -113,11 +113,11 @@ let imageY = (maxPoint.y / CGFloat(mapH)) * CGFloat(imageHeight)
 
 ```swift
 actor SaliencyAnalyzer {
-    func analyze(_ nsImage: NSImage) async throws -> SaliencyResult {
-        guard let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            throw SaliencyError.invalidImage
-        }
-
+    // MARK: - nonisolated for genuine parallelism in withThrowingTaskGroup
+    // analyze accesses no actor-stored state — only local vars + Vision API.
+    // Without nonisolated, each task's await self.analyze() serializes through
+    // the actor's single-threaded executor, eliminating all parallelism.
+    nonisolated func analyze(_ cgImage: CGImage) async throws -> SaliencyResult {
         let saliencyRequest = VNGenerateAttentionBasedSaliencyImageRequest()
         let faceRequest = VNDetectFaceRectanglesRequest()
 
@@ -130,19 +130,19 @@ actor SaliencyAnalyzer {
         // Return SaliencyResult(center, radius, confidence)
     }
 
-    func analyzeAll(_ images: [NSImage]) async throws -> [SaliencyResult] {
+    func analyzeAll(_ cgImages: [CGImage]) async throws -> [SaliencyResult] {
         try await withThrowingTaskGroup(of: (Int, SaliencyResult).self) { group in
             var results: [Int: SaliencyResult] = [:]
-            for (index, image) in images.enumerated() {
+            for (index, image) in cgImages.enumerated() {
                 group.addTask {
-                    let result = try await self.analyze(image)
+                    let result = try await self.analyze(image)  // Genuine parallelism
                     return (index, result)
                 }
             }
             for try await (index, result) in group {
                 results[index] = result
             }
-            return (0..<images.count).compactMap { results[$0] }
+            return (0..<cgImages.count).compactMap { results[$0] }
         }
     }
 }
@@ -150,6 +150,7 @@ actor SaliencyAnalyzer {
 
 **Key points:**
 - `actor` provides thread-safe async isolation
+- **`nonisolated` on `analyze`** is required for genuine parallelism — without it, `withThrowingTaskGroup` tasks serialize through the actor executor. Caller extracts `CGImage` from `NSImage` on main thread before passing in.
 - `withThrowingTaskGroup` for concurrent batch analysis
 - Saliency heat map is 68x68 `CVPixelBuffer` of `Float` values
 - `salientObjects` are `VNRectangleObservation` with normalized bounding boxes

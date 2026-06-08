@@ -215,6 +215,7 @@ See [references/state/swift-concurrency.md](references/state/swift-concurrency.m
 - **Background thread text rendering** — `NSAttributedString`/`NSMutableAttributedString` require AppKit and are not thread-safe. For `CTFrameDraw` on a background thread, use CoreFoundation C API (`CFAttributedStringCreateMutable`, `CFAttributedStringSetAttribute` with `kCTFontAttributeName`, etc.). See [references/graphics/coretext-background-rendering.md](references/graphics/coretext-background-rendering.md)
 - **`@unchecked Sendable` on model types** -- safe when non-Sendable AppKit properties (NSColor, NSAttributedString) are only accessed on a known thread. Document the justification. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
 - **Synchronous dispatch closures can't `await`** -- `RenderScheduler.render { }` takes a synchronous closure. `await` is a compile error. Mutating captured `var` fails Swift 6. Use `ThreadSafeArray` with `NSLock` + `@unchecked Sendable` for mutable state. Use `Thread.sleep(forTimeInterval:)` not `Task.sleep`. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
+- **Actor methods in `withThrowingTaskGroup` serialize** -- `await self.method()` hops through the actor's single-threaded executor, eliminating parallelism. Mark pure-computation methods `nonisolated` (no `self.` access, only locals/params/external APIs). See [references/state/swift-concurrency.md](references/state/swift-concurrency.md) § "`nonisolated` Actor Methods"
 
 ## Swift Compilation Gotchas
 
@@ -243,6 +244,7 @@ See [references/graphics/vision-api-details.md](references/graphics/vision-api-d
 
 **Key points:**
 - Use `actor` for thread-safe async isolation
+- **Mark `analyze` as `nonisolated`** — without it, `withThrowingTaskGroup` calls serialize through the actor executor, giving zero parallelism. The method must access no actor-stored state (only locals, params, Vision API). Caller extracts `CGImage` on main thread before passing in. See [references/graphics/vision-api-details.md](references/graphics/vision-api-details.md)
 - Use legacy API (`VN`-prefixed) for macOS 13.0+ compatibility
 - Saliency heat map is 68x68 `CVPixelBuffer` of `Float` values
 - Always pass `cgImage.imageOrientation` to `VNImageRequestHandler`

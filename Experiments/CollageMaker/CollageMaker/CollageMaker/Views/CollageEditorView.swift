@@ -349,8 +349,8 @@ private struct PanelShape: Shape {
             }
             let scaleX = rect.width / boundingRect.width
             let scaleY = rect.height / boundingRect.height
-            var t = CGAffineTransform(translationX: -boundingRect.origin.x * scaleX, y: -boundingRect.origin.y * scaleY)
-            t = t.scaledBy(x: scaleX, y: scaleY)
+            var t = CGAffineTransform(translationX: -boundingRect.origin.x * scaleX, y: boundingRect.origin.y * scaleY + rect.height)
+            t = t.scaledBy(x: scaleX, y: -scaleY)
             if let transformed = cgPath.copy(using: &t) {
                 return Path(transformed)
             }

@@ -24,7 +24,7 @@ protocol SaliencyAnalysis {
 }
 
 actor SaliencyAnalyzer: SaliencyAnalysis {
-    func analyze(_ cgImage: CGImage) async throws -> SaliencyResult {
+    nonisolated func analyze(_ cgImage: CGImage) async throws -> SaliencyResult {
         let analyzeStart = ContinuousClock.now
         defer { perfLogger.debug("Single Image Saliency completed in \(ContinuousClock.now - analyzeStart)") }
 

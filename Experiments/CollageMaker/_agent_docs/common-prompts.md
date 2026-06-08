@@ -13,7 +13,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan for Phase 4 in @_agent_docs/plans/2026-06-06-round99-implementation.md using our macos skills for guidance.
+Please implement the plan for Phase A in @_agent_docs/plans/2026-06-08-post-round-99-review-fixes.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
@@ -24,7 +24,7 @@ Please work on the change request in @_agent_docs/change-requests/round-21.md us
 # Review
 ## Generic
 ```
-/code-review /building-macos-apps Please review our project and write your review to @_agent_docs/reviews 
+/code-review /building-macos-apps Please review our project and write your review to @_agent_docs/reviews/2026-06-07-post-round-99-harold.md 
 ```
 
 ## Human Interface Guidelines Review
@@ -45,7 +45,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/hexagonal-grid-layout-learnings.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/actor-nonisolated-parallelism-learnings.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Researching

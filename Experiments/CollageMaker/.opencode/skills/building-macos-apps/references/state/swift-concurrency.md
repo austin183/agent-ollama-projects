@@ -608,6 +608,42 @@ extension BackgroundConfig: @unchecked Sendable {}
 
 **Note on `NSAttributedString`:** Apple doesn't mark it `Sendable`. Add `extension NSAttributedString: @unchecked Sendable {}` in the file that uses it. This produces a harmless compiler warning about conforming an imported type to an imported protocol.
 
+## `nonisolated` Actor Methods — Genuine Parallelism
+
+An actor method called via `withThrowingTaskGroup` **appears concurrent but is serialized**. Each `await self.method()` hops through the actor's single-threaded executor, eliminating all parallelism.
+
+**The fix:** Mark the method `nonisolated` when it accesses no actor-isolated state:
+
+```swift
+actor SaliencyAnalyzer {
+    nonisolated func analyze(_ cgImage: CGImage) async throws -> SaliencyResult {
+        // Only local variables, Vision API calls, module-level constants
+        // No self.property access
+    }
+
+    func analyzeAll(_ cgImages: [CGImage]) async throws -> [SaliencyResult] {
+        try await withThrowingTaskGroup(of: (Int, SaliencyResult).self) { group in
+            for (i, img) in cgImages.enumerated() {
+                group.addTask {
+                    let result = try await self.analyze(img)  // Genuine parallelism
+                    return (i, result)
+                }
+            }
+            // collect and reorder...
+        }
+    }
+}
+```
+
+**Verification checklist before marking `nonisolated`:**
+1. **No `self.` access** to actor-stored properties
+2. **Only local variables** and function parameters
+3. **Module-level constants** (e.g., `private let logger`) are fine — not actor-isolated
+4. **External async APIs** (Vision, URLSession, etc.) are fine — not actor-isolated
+5. **Protocol conformance** — the protocol must not require actor isolation
+
+**Anti-pattern:** Placing a pure function inside an actor solely for protocol conformance, then expecting `withThrowingTaskGroup` to provide parallelism. The actor executor serializes everything unless the method is `nonisolated`.
+
 ## Summary Rules
 
 1. **Mark ViewModel as `@MainActor`** — all `@Published` properties are main-thread-safe
@@ -628,6 +664,7 @@ extension BackgroundConfig: @unchecked Sendable {}
 16. **Cancel debounce tasks at higher-priority entry points** — When a method bypasses a debounced path to render immediately (e.g., `regenerateLayout()` calling `updatePreview()`), cancel the pending debounce task first to prevent a stale debounced render from overwriting fresh state
 17. **Debounce only continuous controls** — Slider and color picker `didSet` observers fire 30-60x/sec during drag and need 150ms debounced render. Discrete controls (typing, enum picker, image selection) render immediately. Rule of thumb: >10 events/sec = debounce
 18. **Synchronous closures can't use `await`** — `RenderScheduler.render { }` takes a synchronous closure. To collect mutable state from concurrent closures, use a `ThreadSafeArray<Element>` backed by `NSLock` + `@unchecked Sendable`. Use `Thread.sleep(forTimeInterval:)` instead of `Task.sleep`
+19. **Actor methods in `withThrowingTaskGroup` serialize through actor executor** — `await self.method()` on an actor hops through the actor's single-threaded executor, eliminating parallelism. Mark pure-computation methods `nonisolated` to bypass the actor executor. Verify: no `self.` access, only locals/params/external APIs.
 
 ## Pitfalls
 
@@ -637,6 +674,7 @@ extension BackgroundConfig: @unchecked Sendable {}
 - **`[weak self]` on struct produces compile error** — `self` in a SwiftUI `struct` view is a value type, not a reference. Either capture `self` by value (no weak needed — structs have value semantics) or move timer/state to a `@MainActor final class` (e.g., `CollageViewModel`).
 - **Computed properties on `@unchecked Sendable` structs** — A computed property that accesses a MainActor-only type (e.g., `var cgColor: CGColor { nsColor.cgColor }`) evaluates on the *destination* thread, not the construction thread. Store the derived value in `init` instead.
 - **Synchronous dispatch closures can't `await`** — `RenderScheduler.render { }` closures are synchronous. `await` is a compile error. Mutating captured `var` is a Swift 6 error. Use `ThreadSafeArray` with `NSLock` for mutable state collection.
+- **Actor method in `withThrowingTaskGroup` serializes all work** — Even though `withThrowingTaskGroup` creates concurrent tasks, `await self.method()` on an actor serializes through the actor executor. Mark the method `nonisolated` if it doesn't access actor state.
 
 ## Task vs Task.detached
 
