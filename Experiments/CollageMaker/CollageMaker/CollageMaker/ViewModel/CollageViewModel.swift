@@ -963,9 +963,7 @@ final class CollageViewModel {
     }
 
     func updateTitleImageLive() {
-        debouncer.debounce(id: "titleImage", delay: .milliseconds(150)) { [weak self] in
-            self?.updateTitleImage()
-        }
+        updateTitleImage()
     }
 
     func finishTitleDrag() {
