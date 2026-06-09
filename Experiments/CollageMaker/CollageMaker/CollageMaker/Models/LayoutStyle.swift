@@ -1,4 +1,20 @@
+import CoreGraphics
 import SwiftUI
+
+/// Strategy-specific parameters for layout generation.
+/// New layouts read only the properties they need — adding a parameter
+/// for one strategy does not affect the signature of callers.
+struct LayoutOptions {
+    var sliceAngle: CGFloat = 45.0
+    var hexSpacing: CGFloat = 8.0
+
+    /// Required — Swift does not synthesize a parameterless init when a custom init is present.
+    init() {}
+    init(sliceAngle: CGFloat, hexSpacing: CGFloat) {
+        self.sliceAngle = sliceAngle
+        self.hexSpacing = hexSpacing
+    }
+}
 
 enum LayoutStyle: String, CaseIterable, Identifiable, Codable {
     case uniform
@@ -31,5 +47,4 @@ enum LayoutStyle: String, CaseIterable, Identifiable, Codable {
         case .hexagonal: "hexagon.fill"
         }
     }
-
 }

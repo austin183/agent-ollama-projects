@@ -20,7 +20,7 @@ private let perfLogger = Logger(
 final class CollageViewModel {
     private let saliencyAnalyzer: SaliencyAnalysis
     private let assembler: any CollageAssembly
-    private let persistence: UserDefaultsPersistence
+    private let persistence: any ViewModelPersistence
     let cropManager = CropManager()
     let previewManager: PreviewManager
     let undoManager = UndoManager()
@@ -388,7 +388,7 @@ final class CollageViewModel {
     init(
         saliencyAnalyzer: SaliencyAnalysis,
         assembler: CollageAssembly,
-        persistence: UserDefaultsPersistence
+        persistence: any ViewModelPersistence
     ) {
         self.saliencyAnalyzer = saliencyAnalyzer
         self.assembler = assembler
@@ -541,8 +541,7 @@ final class CollageViewModel {
             gutter: gutter,
             style: layoutStyle,
             imageOrder: customImageOrder,
-            sliceAngle: diagonalSliceAngle,
-            hexSpacing: hexagonalSpacing
+            options: LayoutOptions(sliceAngle: diagonalSliceAngle, hexSpacing: hexagonalSpacing)
         )
         let panelCount = panels.count
         let styleRaw = layoutStyle.rawValue
@@ -842,19 +841,25 @@ final class CollageViewModel {
         }()
 
         return AssemblyConfig(
-            panels: panels,
-            crops: cropMap,
-            panelAssignments: panelAssignments,
-            titleTextData: textData,
-            titleStyle: titleStyle,
-            titleFontColor: fontColor,
-            titleBackgroundColor: titleBgColor,
-            backgroundColor: backgroundColor,
-            backgroundStyle: backgroundStyle,
-            gradientStartColor: gradientStartColor,
-            gradientEndColor: gradientEndColor,
-            gradientAngle: gradientAngle,
-            backgroundOpacity: backgroundOpacity,
+            layout: LayoutConfig(
+                panels: panels,
+                crops: cropMap,
+                panelAssignments: panelAssignments
+            ),
+            title: TitleConfig(
+                textData: textData,
+                style: titleStyle,
+                fontColor: fontColor,
+                backgroundColor: titleBgColor
+            ),
+            background: BackgroundConfig(
+                style: backgroundStyle,
+                color: backgroundColor,
+                gradientStartColor: gradientStartColor,
+                gradientEndColor: gradientEndColor,
+                gradientAngle: gradientAngle,
+                opacity: backgroundOpacity
+            ),
             canvasSize: SizeConstants.defaultCanvasSize,
             overlay: overlay
         )
@@ -1081,6 +1086,7 @@ final class CollageViewModel {
 
 extension URL {
     var folderExists: Bool {
-        FileManager.default.fileExists(atPath: deletingLastPathComponent().path)
+        var isDirectory: ObjCBool = false
+        return FileManager.default.fileExists(atPath: self.path, isDirectory: &isDirectory) && isDirectory.boolValue
     }
 }

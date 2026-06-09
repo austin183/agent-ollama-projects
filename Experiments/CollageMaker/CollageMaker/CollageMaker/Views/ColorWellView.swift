@@ -15,6 +15,8 @@ struct ColorWellView: NSViewRepresentable {
     }
 
     func updateNSView(_ well: NSColorWell, context: Context) {
+        context.coordinator.isUpdating = true
+        defer { context.coordinator.isUpdating = false }
         well.color = color
         well.target = context.coordinator
         well.action = #selector(Coordinator.colorChanged(_:))
@@ -26,6 +28,7 @@ struct ColorWellView: NSViewRepresentable {
 
     class Coordinator: NSObject {
         @Binding var color: NSColor
+        var isUpdating = false
 
         init(color: Binding<NSColor>) {
             _color = color
@@ -33,6 +36,7 @@ struct ColorWellView: NSViewRepresentable {
         }
 
         @objc func colorChanged(_ sender: NSColorWell) {
+            guard !isUpdating else { return }
             color = sender.color
         }
     }

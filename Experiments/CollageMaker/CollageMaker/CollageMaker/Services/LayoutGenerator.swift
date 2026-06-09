@@ -13,10 +13,9 @@ struct LayoutGenerator {
         style: LayoutStyle = .hero,
         imageOrder: [Int]? = nil,
         mosaicSeed: UInt64? = nil,
-        sliceAngle: CGFloat = 45.0,
-        hexSpacing: CGFloat = 8.0
+        options: LayoutOptions = LayoutOptions()
     ) -> [ImagePanel] {
-        style.makeStrategy(sliceAngle: sliceAngle, hexSpacing: hexSpacing).generate(
+        style.makeStrategy(options: options).generate(
             numImages: numImages,
             canvasSize: canvasSize,
             gutter: gutter,
@@ -194,17 +193,14 @@ struct MosaicLayoutStrategy: LayoutStrategy {
 // MARK: - LayoutStyle factory
 
 extension LayoutStyle {
-    func makeStrategy(
-        sliceAngle: CGFloat = 45.0,
-        hexSpacing: CGFloat = 8.0
-    ) -> LayoutStrategy {
+    func makeStrategy(options: LayoutOptions) -> LayoutStrategy {
         switch self {
         case .uniform: return UniformLayoutStrategy()
         case .hero: return HeroLayoutStrategy()
         case .mosaic: return MosaicLayoutStrategy()
         case .doubleExposure: return DoubleExposureLayoutStrategy()
-        case .diagonalSlices: return DiagonalSlicesLayoutStrategy(angle: sliceAngle)
-        case .hexagonal: return HexagonalLayoutStrategy(spacing: hexSpacing)
+        case .diagonalSlices: return DiagonalSlicesLayoutStrategy(angle: options.sliceAngle)
+        case .hexagonal: return HexagonalLayoutStrategy(spacing: options.hexSpacing)
         }
     }
 }

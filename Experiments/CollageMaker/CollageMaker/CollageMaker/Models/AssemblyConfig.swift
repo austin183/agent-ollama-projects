@@ -76,6 +76,21 @@ struct AssemblyConfig {
     let overlay: OverlayConfig?
 
     init(
+        layout: LayoutConfig,
+        title: TitleConfig,
+        background: BackgroundConfig,
+        canvasSize: CGSize,
+        overlay: OverlayConfig? = nil
+    ) {
+        self.layout = layout
+        self.title = title
+        self.background = background
+        self.canvasSize = canvasSize
+        self.overlay = overlay
+    }
+
+    @available(*, deprecated, renamed: "init(layout:title:background:canvasSize:overlay:)")
+    init(
         panels: [ImagePanel],
         crops: [UUID: CropInfo],
         panelAssignments: [UUID: Int],
@@ -92,43 +107,29 @@ struct AssemblyConfig {
         canvasSize: CGSize,
         overlay: OverlayConfig? = nil
     ) {
-        self.layout = LayoutConfig(
-            panels: panels,
-            crops: crops,
-            panelAssignments: panelAssignments
+        self.init(
+            layout: LayoutConfig(
+                panels: panels,
+                crops: crops,
+                panelAssignments: panelAssignments
+            ),
+            title: TitleConfig(
+                textData: titleTextData,
+                style: titleStyle,
+                fontColor: titleFontColor,
+                backgroundColor: titleBackgroundColor
+            ),
+            background: BackgroundConfig(
+                style: backgroundStyle,
+                color: backgroundColor,
+                gradientStartColor: gradientStartColor,
+                gradientEndColor: gradientEndColor,
+                gradientAngle: gradientAngle,
+                opacity: backgroundOpacity
+            ),
+            canvasSize: canvasSize,
+            overlay: overlay
         )
-        self.title = TitleConfig(
-            textData: titleTextData,
-            style: titleStyle,
-            fontColor: titleFontColor,
-            backgroundColor: titleBackgroundColor
-        )
-        self.background = BackgroundConfig(
-            style: backgroundStyle,
-            color: backgroundColor,
-            gradientStartColor: gradientStartColor,
-            gradientEndColor: gradientEndColor,
-            gradientAngle: gradientAngle,
-            opacity: backgroundOpacity
-        )
-        self.canvasSize = canvasSize
-        self.overlay = overlay
-    }
-}
-
-extension AssemblyConfig {
-    init(
-        layout: LayoutConfig,
-        title: TitleConfig,
-        background: BackgroundConfig,
-        canvasSize: CGSize,
-        overlay: OverlayConfig? = nil
-    ) {
-        self.layout = layout
-        self.title = title
-        self.background = background
-        self.canvasSize = canvasSize
-        self.overlay = overlay
     }
 }
 

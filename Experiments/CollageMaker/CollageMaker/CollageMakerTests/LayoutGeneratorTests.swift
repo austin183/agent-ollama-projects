@@ -161,7 +161,7 @@ import Testing
     // MARK: - Diagonal Slices style
 
     @Test func diagonalSlicesProducesPathGeometry() {
-        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, sliceAngle: 45)
+        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, options: LayoutOptions(sliceAngle: 45, hexSpacing: 8))
         #expect(panels.count == 4)
         for panel in panels {
             #expect(panel.geometry.cgPath != nil, "Panel should have CGPath geometry")
@@ -169,7 +169,7 @@ import Testing
     }
 
     @Test func diagonalSlicesCoversCanvas() {
-        let panels = LayoutGenerator.generate(numImages: 3, style: .diagonalSlices, sliceAngle: 45)
+        let panels = LayoutGenerator.generate(numImages: 3, style: .diagonalSlices, options: LayoutOptions(sliceAngle: 45, hexSpacing: 8))
         let canvas = CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize)
         for panel in panels {
             #expect(canvas.intersects(panel.frame))
@@ -198,7 +198,7 @@ import Testing
     }
 
     @Test func diagonalSlicesZeroAngleProducesVerticalStrips() {
-        let panels = LayoutGenerator.generate(numImages: 3, style: .diagonalSlices, sliceAngle: 0)
+        let panels = LayoutGenerator.generate(numImages: 3, style: .diagonalSlices, options: LayoutOptions(sliceAngle: 0, hexSpacing: 8))
         #expect(panels.count == 3)
         for panel in panels {
             #expect(panel.frame.origin.y == 0)
@@ -207,7 +207,7 @@ import Testing
     }
 
     @Test func diagonalSlicesNegativeAngle() {
-        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, sliceAngle: -30)
+        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, options: LayoutOptions(sliceAngle: -30, hexSpacing: 8))
         #expect(panels.count == 4)
         for panel in panels {
             #expect(panel.geometry.cgPath != nil)
@@ -215,7 +215,7 @@ import Testing
     }
 
     @Test func diagonalSlicesTwoImages() {
-        let panels = LayoutGenerator.generate(numImages: 2, style: .diagonalSlices, sliceAngle: 45)
+        let panels = LayoutGenerator.generate(numImages: 2, style: .diagonalSlices, options: LayoutOptions(sliceAngle: 45, hexSpacing: 8))
         #expect(panels.count == 2)
         #expect(panels[0].imageIndex == 0)
         #expect(panels[1].imageIndex == 1)
@@ -225,7 +225,7 @@ import Testing
     }
 
     @Test func diagonalSlicesLargeAngle() {
-        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, sliceAngle: 70)
+        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, options: LayoutOptions(sliceAngle: 70, hexSpacing: 8))
         #expect(panels.count == 4)
         for panel in panels {
             #expect(panel.geometry.cgPath != nil)
@@ -235,7 +235,7 @@ import Testing
     }
 
     @Test func diagonalSlicesPanelsWithinReasonableBounds() {
-        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, sliceAngle: 45)
+        let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, options: LayoutOptions(sliceAngle: 45, hexSpacing: 8))
         let canvas = CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize)
         for panel in panels {
             let intersection = canvas.intersection(panel.frame)
@@ -247,7 +247,7 @@ import Testing
     // MARK: - Hexagonal style
 
     @Test func hexagonalProducesPathGeometry() {
-        let panels = LayoutGenerator.generate(numImages: 7, style: .hexagonal, hexSpacing: 8)
+        let panels = LayoutGenerator.generate(numImages: 7, style: .hexagonal, options: LayoutOptions(sliceAngle: 45, hexSpacing: 8))
         #expect(panels.count == 7)
         for panel in panels {
             #expect(panel.geometry.cgPath != nil)
@@ -257,7 +257,7 @@ import Testing
     @Test func hexagonalFirstPanelIsCenter() {
         let canvas = CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize)
         let center = CGPoint(x: canvas.midX, y: canvas.midY)
-        let panels = LayoutGenerator.generate(numImages: 7, style: .hexagonal, hexSpacing: 8)
+        let panels = LayoutGenerator.generate(numImages: 7, style: .hexagonal, options: LayoutOptions(sliceAngle: 45, hexSpacing: 8))
         let firstPanel = panels[0]
         #expect(abs(firstPanel.frame.midX - center.x) < 10)
         #expect(abs(firstPanel.frame.midY - center.y) < 10)
@@ -305,7 +305,7 @@ import Testing
     }
 
     @Test func hexagonalPanelsOverlapCanvas() {
-        let panels = LayoutGenerator.generate(numImages: 7, style: .hexagonal, hexSpacing: 8)
+        let panels = LayoutGenerator.generate(numImages: 7, style: .hexagonal, options: LayoutOptions(sliceAngle: 45, hexSpacing: 8))
         let canvas = CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize)
         for panel in panels {
             #expect(canvas.intersects(panel.frame))
@@ -313,14 +313,14 @@ import Testing
     }
 
     @Test func hexagonalSpacingAffectsLayout() {
-        let tight = LayoutGenerator.generate(numImages: 7, style: .hexagonal, hexSpacing: 2)
-        let loose = LayoutGenerator.generate(numImages: 7, style: .hexagonal, hexSpacing: 20)
+        let tight = LayoutGenerator.generate(numImages: 7, style: .hexagonal, options: LayoutOptions(sliceAngle: 45, hexSpacing: 2))
+        let loose = LayoutGenerator.generate(numImages: 7, style: .hexagonal, options: LayoutOptions(sliceAngle: 45, hexSpacing: 20))
         // Larger spacing → smaller visual hexagons (more gap between neighbors)
         #expect(loose[0].frame.width < tight[0].frame.width)
     }
 
     @Test func hexagonalPanelsDoNotOverlap() {
-        let panels = LayoutGenerator.generate(numImages: 7, style: .hexagonal, hexSpacing: 8)
+        let panels = LayoutGenerator.generate(numImages: 7, style: .hexagonal, options: LayoutOptions(sliceAngle: 45, hexSpacing: 8))
         // For pointy-top hex: frame.width = sqrt(3) * R → R = frame.width / sqrt(3)
         // Minimum center distance for non-overlap = 2 * R
         let R = panels[0].frame.width / sqrt(3.0)

@@ -1,7 +1,15 @@
 import AppKit
 import Foundation
 
-    /// Bundle of persisted values loaded from UserDefaults, used to initialize CollageViewModel.
+/// Protocol that abstracts ViewModel persistence so CollageViewModel
+/// depends on an interface rather than the concrete UserDefaults implementation.
+@MainActor
+protocol ViewModelPersistence {
+    func save(_ viewModel: CollageViewModel)
+    func load() -> PersistenceBundle
+}
+
+/// Bundle of persisted values loaded from UserDefaults, used to initialize CollageViewModel.
 struct PersistenceBundle {
     var layoutStyle: LayoutStyle
     var titleAttrString: NSAttributedString
@@ -263,3 +271,5 @@ final class UserDefaultsPersistence {
         return 1.0
     }
 }
+
+extension UserDefaultsPersistence: ViewModelPersistence {}

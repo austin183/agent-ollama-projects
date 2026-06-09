@@ -198,19 +198,25 @@ func makeAssemblyConfig(
     let attrString = NSAttributedString(string: titleText)
     let textData = TitleTextData.extract(from: attrString)
     return AssemblyConfig(
-        panels: panels,
-        crops: crops,
-        panelAssignments: panelAssignments,
-        titleTextData: textData,
-        titleStyle: titleStyle,
-        titleFontColor: titleStyle.fontColor.cgColor,
-        titleBackgroundColor: titleStyle.backgroundColor.cgColor,
-        backgroundColor: backgroundColor,
-        backgroundStyle: backgroundStyle,
-        gradientStartColor: gradientStartColor,
-        gradientEndColor: gradientEndColor,
-        gradientAngle: gradientAngle,
-        backgroundOpacity: backgroundOpacity,
+        layout: LayoutConfig(
+            panels: panels,
+            crops: crops,
+            panelAssignments: panelAssignments
+        ),
+        title: TitleConfig(
+            textData: textData,
+            style: titleStyle,
+            fontColor: titleStyle.fontColor.cgColor,
+            backgroundColor: titleStyle.backgroundColor.cgColor
+        ),
+        background: BackgroundConfig(
+            style: backgroundStyle,
+            color: backgroundColor,
+            gradientStartColor: gradientStartColor,
+            gradientEndColor: gradientEndColor,
+            gradientAngle: gradientAngle,
+            opacity: backgroundOpacity
+        ),
         canvasSize: canvasSize
     )
 }
