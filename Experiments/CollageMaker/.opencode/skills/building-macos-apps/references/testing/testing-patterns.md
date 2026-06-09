@@ -63,6 +63,49 @@ let bitmapInfo: CGBitmapInfo = [.byteOrder32Big, .noneSkipLast]
 
 Or use `NSBitmapImageRep` with RGBA as fallback (see above).
 
+## CGPathApply Compiler Crash in Test Targets
+
+`CGPath.apply(info:)` with a closure that accesses `element.pointee.type` can crash the swift-frontend compiler in a test target. The crash is at compile time, not runtime.
+
+**Workaround:** Test `CGAffineTransform` logic by applying the transform to known `CGPoint` coordinates instead of iterating path elements:
+
+```swift
+let transform = PanelGeometry.transformForPanel(boundingRect: boundingRect, targetRect: targetRect)
+let mappedPoint = CGPoint(x: 50, y: 0).applying(transform)
+#expect(mappedPoint.y == 100)
+```
+
+Avoid `CGPathApply` in test targets entirely.
+
+## Transform Extraction for Testability
+
+When a SwiftUI `Shape` contains `CGAffineTransform` logic, the transform math is inseparable from the SwiftUI `Path` type — and the test target cannot import SwiftUI. Extract the transform computation to a static method on a model type that only depends on `CoreGraphics`:
+
+```swift
+// In a model file (no SwiftUI dependency):
+enum PanelGeometry {
+    static func transformForPanel(boundingRect: CGRect, targetRect: CGRect) -> CGAffineTransform {
+        // Pure CG math — testable without SwiftUI
+    }
+}
+
+// In a SwiftUI view:
+struct PanelShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let transform = PanelGeometry.transformForPanel(...)
+        return Path(cgPath.copy(using: &transform)!)
+    }
+}
+```
+
+This is a specific instance of the broader static method pattern: extract pure-function logic from UI types to make it testable.
+
+## Shadow Implementation Anti-Pattern
+
+When testing a `private` type or method, duplicating the logic locally in the test file provides zero regression protection — if the actual code changes, the shadow continues to pass against its own (stale) logic.
+
+**Fix:** Extract the testable unit to `internal` visibility or a static method on a model type. If the test file contains more than a few lines of logic that mirrors the code under test, the test is checking itself, not the implementation.
+
 ## Testing @Published State Changes
 
 ```swift
@@ -238,6 +281,18 @@ Never create `NSImage` in a computed property accessed from `body`. SwiftUI call
 - Test resources: `Bundle.module.url(forResource:withExtension:)`
 - **`tolerance:` not available** — This Xcode version's Swift Testing doesn't support `tolerance:` on `#expect()`. Use range checks: `#expect(value > lower && value < upper)`, or exact equality for integer-valued `CGFloat`s
 - **`import Foundation` required for `UUID`** — `CoreGraphics` and `Testing` don't transitively import `Foundation`. New test files need `import Foundation` explicitly
+- **Weak switch assertions** — A `switch` in a test that ignores one case with `break` passes silently even if the decoder returns the wrong case. Record an issue in unexpected branches:
+
+```swift
+switch decoded.destination {
+case .rect:
+    Issue.record("Expected .path geometry after round-trip")
+case .path(_, let rect):
+    #expect(rect == boundingRect)
+}
+```
+
+Every branch of a `switch` in a test should either assert something or explain why that branch is acceptable. An empty branch is a latent bug.
 
 ## Running Tests via xcodebuild
 
@@ -485,6 +540,8 @@ The UUID ensures each ViewModel gets a fresh, empty `UserDefaults` that no other
 
 ## Pitfalls
 
+- **`CGPathApply` compiler crash** — `CGPath.apply(info:)` with a closure accessing `element.pointee.type` can crash swift-frontend in test targets. Test transforms via `CGPoint.applying(_:)` instead.
+- **Shadow implementation** — Duplicating production logic in a test file to verify `private` code provides zero regression protection. Extract to `internal` or a static model method.
 - **`xcodebuild test` skips Swift Testing** — use `-only-testing:TargetName` flag
 - **`@MainActor` test struct** — annotate test structs when testing `@testable` imports with `@MainActor` types
 - **`NSGraphicsContext` state** — always `saveGraphicsState()` / `restoreGraphicsState()` for test image creation

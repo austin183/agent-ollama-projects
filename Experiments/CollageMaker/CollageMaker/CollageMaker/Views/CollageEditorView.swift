@@ -344,7 +344,7 @@ struct CollageEditorView: View {
     }
 }
 
-private struct PanelShape: Shape {
+struct PanelShape: Shape {
     let geometry: PanelGeometry
 
     func path(in rect: CGRect) -> Path {
@@ -352,14 +352,8 @@ private struct PanelShape: Shape {
         case .rect:
             return Path(rect)
         case .path(let cgPath, let boundingRect):
-            guard boundingRect.width > 0, boundingRect.height > 0 else {
-                return Path(rect)
-            }
-            let scaleX = rect.width / boundingRect.width
-            let scaleY = rect.height / boundingRect.height
-            var t = CGAffineTransform(translationX: -boundingRect.origin.x * scaleX, y: boundingRect.origin.y * scaleY + rect.height)
-            t = t.scaledBy(x: scaleX, y: -scaleY)
-            if let transformed = cgPath.copy(using: &t) {
+            var transform = PanelGeometry.transformForPanel(boundingRect: boundingRect, targetRect: rect)
+            if let transformed = cgPath.copy(using: &transform) {
                 return Path(transformed)
             }
             return Path(rect)

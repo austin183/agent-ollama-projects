@@ -22,4 +22,18 @@ enum PanelGeometry: @unchecked Sendable {
         case .path(let p, _): return p
         }
     }
+
+    /// Computes the CGAffineTransform to convert a CGPath from canvas coordinates
+    /// (CoreGraphics, origin=bottom-left) to SwiftUI view coordinates (origin=top-left).
+    static func transformForPanel(boundingRect: CGRect, targetRect: CGRect) -> CGAffineTransform {
+        guard boundingRect.width > 0, boundingRect.height > 0 else {
+            return .identity
+        }
+        let scaleX = targetRect.width / boundingRect.width
+        let scaleY = targetRect.height / boundingRect.height
+        var t = CGAffineTransform(translationX: -boundingRect.origin.x * scaleX,
+                                   y: boundingRect.origin.y * scaleY + targetRect.height)
+        t = t.scaledBy(x: scaleX, y: -scaleY)
+        return t
+    }
 }
