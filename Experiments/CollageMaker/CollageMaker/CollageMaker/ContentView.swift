@@ -203,7 +203,7 @@ struct ContentView: View {
                                 .foregroundStyle(.secondary)
                         }
                         .font(.caption)
-                        Slider(value: $viewModel.diagonalSliceAngle, in: 5...85, step: 1)
+                        Slider(value: $viewModel.diagonalSliceAngle, in: 0...75, step: 1)
                             .accessibilityLabel("Diagonal slice angle")
                             .accessibilityValue("\(Int(viewModel.diagonalSliceAngle)) degrees")
                     }

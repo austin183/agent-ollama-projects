@@ -13,7 +13,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan for Phase D in @_agent_docs/plans/2026-06-08-post-round-99-review-fixes.md using our macos skills for guidance.
+Please implement the plan in @_agent_docs/plans/2026-06-09-diagonal-slices-canvas-coverage.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
@@ -45,7 +45,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/cgpath-apply-compiler-crash-testing-learnings.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/shear-transform-canvas-coverage-learnings.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Researching

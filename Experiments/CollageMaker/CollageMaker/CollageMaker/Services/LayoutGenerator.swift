@@ -237,13 +237,16 @@ struct DiagonalSlicesLayoutStrategy: LayoutStrategy {
         let radians = angle * .pi / 180.0
         let shear = tan(radians)
 
-        let totalGutter = CGFloat(numImages - 1) * gutter
-        let colWidth = (canvasSize.width - totalGutter) / CGFloat(numImages)
+        let shearOffset = canvasSize.height * shear
+        let effectiveGutter = gutter * cos(radians) * cos(radians)
+        let totalGutter = CGFloat(numImages - 1) * effectiveGutter
+        let colWidth = (canvasSize.width + shearOffset - totalGutter) / CGFloat(numImages)
+        let centerOffset = -shearOffset
 
         var panels: [ImagePanel] = []
 
         for i in 0..<numImages {
-            let unshearedX = CGFloat(i) * (colWidth + gutter)
+            let unshearedX = centerOffset + CGFloat(i) * (colWidth + effectiveGutter)
             let unshearedRect = CGRect(x: unshearedX, y: 0, width: colWidth, height: canvasSize.height)
 
             let corners: [CGPoint] = [

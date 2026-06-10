@@ -124,7 +124,7 @@ AppTarget/
 
 ## Coordinate System Traps
 
-Vision, CoreGraphics, and NSImage use different origins. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) for conversion functions, EXIF mismatch fixes, canvas-to-preview mapping, normalized position storage, the producer-tracing verification pattern, hexagonal grid layout with axial coordinates, and per-panel CGContext path clipping.
+Vision, CoreGraphics, and NSImage use different origins. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) for conversion functions, EXIF mismatch fixes, canvas-to-preview mapping, normalized position storage, the producer-tracing verification pattern, hexagonal grid layout with axial coordinates, per-panel CGContext path clipping, and shear transform asymmetric coverage math.
 
 **Critical mismatches:**
 - Vision: bottom-left (0,0), normalized 0-1
@@ -268,6 +268,7 @@ See [references/graphics/coreimage-filters.md](references/graphics/coreimage-fil
 - `interpolationQuality = .high` for resize quality
 - Use `NSAttributedString.draw(at:)` for text, not deprecated CGContext text API
 - **CGBlendMode on empty CGContext produces black** — multiply on transparent buffer = `source × (0,0,0,0)` = black. Render overlay without blend mode in CGContext, apply `.blendMode()` in SwiftUI ZStack where destination pixels exist. See [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md) § Pitfalls
+- **CGContext implicit clipping vs ZStack** — single-context rendering clips to bitmap bounds automatically; layered per-panel rendering in ZStack does not. Add `.clipShape(Rectangle())` + `.frame()` + `.position()` to the ZStack. See [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md) § Pitfalls
 
 ## Gesture Patterns
 

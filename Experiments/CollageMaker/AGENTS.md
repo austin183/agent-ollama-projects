@@ -1,6 +1,11 @@
 # CollageMaker — Agent Instructions
 
+# Things to Avoid
+- **Do not ask agents to return full file contents** - Agents should return clues and references, but it is more efficient to read files directly than to ask an agent to read it and return its contents.
+- **Do not try to find stuff in `~/workspace/ollama-projects/`** - That is not a valid directory.
+
 ## Project at a glance
+**We are in `~/workspace/agent-ollama-projects/`**
 
 macOS SwiftUI desktop app that assembles photo collages with Vision-based saliency analysis. Single Xcode project, no SPM or CocoaPods.
 
@@ -75,8 +80,3 @@ The `building-macos-apps` skill provides detailed patterns for:
 - **Gestures**: targeting, magnification, live preview — `references/gestures/swiftui-gestures.md`
 - **Vision framework**: actor isolation, saliency heat maps — `references/graphics/vision-api-details.md`
 - **Windowing**: `WindowGroup`, `Settings` scenes — `references/tooling/windowing.md`
-
-
-# Things to Avoid
-- **Do not ask agents to return full file contents** - Agents should return clues and references, but it is more efficient to read files directly than to ask an agent to read it and return its contents.
-- **Do not try to find stuff in `~/workspace/ollama-projects/`** - That is not a valid directory.

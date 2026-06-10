@@ -295,3 +295,13 @@ func renderPanel(context: CGContext, geometry: PanelGeometry, image: CGImage) {
 ```
 
 **Protocol impact:** Adding `geometry` to `renderPanel()` cascades to `PanelRenderer`, `PreviewManager`, `CollageViewModel`, all test mocks, and all test call sites.
+
+## Shear Transform Asymmetric Coverage
+
+A horizontal shear `x' = x + y·tan(θ)` displaces different y-levels by different amounts: top edge (y=0) has zero displacement, bottom edge (y=H) is displaced by `H·tan(θ)`.
+
+To cover the full canvas `[0, W]` at every y-level, the unsheared left edge of the first panel must start at `-H·tan(θ)` (the maximum displacement), **not** `-H·tan(θ)/2`. The `/2` formula assumes symmetric displacement at both ends, but shear is zero at one end and maximum at the other.
+
+**Verification:** At y=H, sheared left edge = `centerOffset + H·tan(θ)`. For this to equal 0: `centerOffset = -H·tan(θ)`.
+
+**Common pitfall:** Plan reviews may claim `centerOffset = -shearOffset/2` is correct by reasoning about the "bottom-left canvas corner." But they confuse the top-left sheared corner (`centerOffset + H·s`) with the bottom-left (`centerOffset` at y=0, no shear). In CGContext bottom-left coords, y=H is the bottom edge, which is the one that needs to reach x=0.

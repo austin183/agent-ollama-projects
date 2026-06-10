@@ -237,3 +237,5 @@ Image(nsImage: overlayImage)
 ```
 
 Blend mode requires non-zero destination pixels. A context that already contains drawn content (background + panels) is a valid destination.
+
+- **CGContext implicit clipping vs SwiftUI ZStack** — A `CGContext` created at bitmap size `S` silently discards all drawing outside `[0, S]`. In a single-context rendering mode, this clips content automatically. In a layered mode (per-panel `NSImage`s placed in a SwiftUI `ZStack`), each panel renders to its own bitmap at its bounding rect size with no canvas-level clipping — panels extending beyond the canvas are visible. Fix: add `.clipShape(Rectangle())` + `.frame(width:, height:)` + `.position(x:, y:)` to the ZStack using the fitted canvas preview frame. When a rendering pipeline has multiple modes, verify clipping behavior is consistent — a visual discrepancy between modes usually means one mode is missing a clip that the other provides implicitly.

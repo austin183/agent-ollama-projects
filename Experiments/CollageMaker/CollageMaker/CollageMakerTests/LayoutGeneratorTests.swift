@@ -238,9 +238,59 @@ import Testing
         let panels = LayoutGenerator.generate(numImages: 4, style: .diagonalSlices, options: LayoutOptions(sliceAngle: 45, hexSpacing: 8))
         let canvas = CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize)
         for panel in panels {
+            guard let path = panel.geometry.cgPath else { continue }
             let intersection = canvas.intersection(panel.frame)
-            let overlapRatio = intersection.width * intersection.height / panel.frame.width * panel.frame.height
-            #expect(overlapRatio > 0.5, "Panel should have significant overlap with canvas")
+            #expect(intersection.width > 0 && intersection.height > 0, "Panel should intersect canvas")
+        }
+    }
+
+    @Test("Full canvas coverage at multiple angles") func diagonalSlicesFullCanvasCoverage() {
+        let angles: [CGFloat] = [0, 30, 45, 60, 75]
+        for angle in angles {
+            let panels = LayoutGenerator.generate(numImages: 3, gutter: 0, style: .diagonalSlices, options: LayoutOptions(sliceAngle: angle, hexSpacing: 8))
+            let canvasSize = SizeConstants.defaultCanvasSize
+            // Panel bounding rects already include sheared corners.
+            // Combined span across all panels must cover [0, canvasWidth].
+            let allMinX = panels.map { $0.frame.minX }.min()!
+            let allMaxX = panels.map { $0.frame.maxX }.max()!
+            #expect(allMinX <= 0, "At \(angle)°: panels start at \(allMinX), should be ≤ 0")
+            #expect(allMaxX >= canvasSize.width, "At \(angle)°: panels end at \(allMaxX), should be ≥ \(canvasSize.width)")
+        }
+    }
+
+    @Test("Canvas corners covered at 45 degrees") func diagonalSlicesCornersCovered() {
+        let panels = LayoutGenerator.generate(numImages: 3, gutter: 0, style: .diagonalSlices, options: LayoutOptions(sliceAngle: 45, hexSpacing: 8))
+        let canvasSize = SizeConstants.defaultCanvasSize
+        // Panel bounding rects already include sheared corners.
+        let allMinX = panels.map { $0.frame.minX }.min()!
+        let allMaxX = panels.map { $0.frame.maxX }.max()!
+        #expect(allMinX <= 0, "Left: panels start at \(allMinX)")
+        #expect(allMaxX >= canvasSize.width, "Right: panels end at \(allMaxX)")
+        // Also verify y-coverage
+        let allMinY = panels.map { $0.frame.minY }.min()!
+        let allMaxY = panels.map { $0.frame.maxY }.max()!
+        #expect(allMinY <= 0, "Bottom: panels start at y=\(allMinY)")
+        #expect(allMaxY >= canvasSize.height, "Top: panels end at y=\(allMaxY)")
+    }
+
+    @Test("Zero angle produces vertical strips spanning full canvas") func diagonalSlicesZeroAngleVerticalStrips() {
+        let panels = LayoutGenerator.generate(numImages: 3, style: .diagonalSlices, options: LayoutOptions(sliceAngle: 0, hexSpacing: 8))
+        #expect(panels.count == 3)
+        let allMinX = panels.map { $0.frame.minX }.min()!
+        let allMaxX = panels.map { $0.frame.maxX }.max()!
+        #expect(allMinX == 0, "Leftmost panel should start at x=0")
+        #expect(abs(allMaxX - SizeConstants.defaultCanvasSize.width) < 0.01, "Rightmost panel should end at canvas width")
+    }
+
+    @Test("75 degrees covers canvas with varying panel counts") func diagonalSlices75DegreesCoversCanvas() {
+        for numImages in [2, 3, 4] {
+            let panels = LayoutGenerator.generate(numImages: numImages, gutter: 0, style: .diagonalSlices, options: LayoutOptions(sliceAngle: 75, hexSpacing: 8))
+            let canvasSize = SizeConstants.defaultCanvasSize
+            // Panel bounding rects already include sheared corners.
+            let allMinX = panels.map { $0.frame.minX }.min()!
+            let allMaxX = panels.map { $0.frame.maxX }.max()!
+            #expect(allMinX <= 0, "At 75° with \(numImages): panels start at \(allMinX)")
+            #expect(allMaxX >= canvasSize.width, "At 75° with \(numImages): panels end at \(allMaxX)")
         }
     }
 

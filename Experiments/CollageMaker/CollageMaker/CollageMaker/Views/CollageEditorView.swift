@@ -38,6 +38,7 @@ struct CollageEditorView: View {
                 }
                 let panelGeometries = Dictionary(uniqueKeysWithValues: viewModel.panels.map { ($0.id, $0.geometry) })
                 let titleFrame = titleCanvasFrame.map { canvasToPreviewFrame($0, in: geometry.size) }
+                let canvasPreviewFrame = canvasToPreviewFrame(CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize), in: geometry.size)
 
                 ZStack {
                     if viewModel.isLayeredMode {
@@ -132,6 +133,9 @@ struct CollageEditorView: View {
                             .position(cursorLoc)
                     }
                 }
+                .clipShape(RoundedRectangle(cornerRadius: 0))
+                .frame(width: canvasPreviewFrame.width, height: canvasPreviewFrame.height)
+                .position(x: canvasPreviewFrame.midX, y: canvasPreviewFrame.midY)
                 .overlay {
                     ScrollPanView(
                         selectedPanelId: viewModel.selectedPanelId,
