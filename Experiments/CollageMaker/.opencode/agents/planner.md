@@ -1,5 +1,5 @@
 ---
-description: Explores codebase and designs implementation plans for features and fixes
+description: Explores codebase and designs implementation plans for features and fixes using the current model
 mode: subagent
 permission:
   edit: deny

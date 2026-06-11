@@ -296,7 +296,48 @@ func renderPanel(context: CGContext, geometry: PanelGeometry, image: CGImage) {
 
 **Protocol impact:** Adding `geometry` to `renderPanel()` cascades to `PanelRenderer`, `PreviewManager`, `CollageViewModel`, all test mocks, and all test call sites.
 
-## Shear Transform Asymmetric Coverage
+## Polygon Clipping to Canvas Bounds
+
+When a polygon (parallelogram, hexagon, arbitrary shape) extends beyond the canvas, SwiftUI's `.clipped()` clips to the **container** frame (GeometryReader bounds), not the canvas. The fix is to clip polygon vertices to canvas bounds **before** the coordinate transform using Sutherland-Hodgman clipping.
+
+### Sutherland-Hodgman Algorithm
+
+Clip an arbitrary polygon to a rectangular region by processing each edge sequentially:
+
+```swift
+static func clipPolygon(_ subject: [CGPoint], to clipRect: CGRect) -> [CGPoint] {
+    var result = subject
+    result = clipEdge(result, edge: .left(clipRect.minX))
+    result = clipEdge(result, edge: .right(clipRect.maxX))
+    result = clipEdge(result, edge: .top(clipRect.minY))
+    result = clipEdge(result, edge: .bottom(clipRect.maxY))
+    return result
+}
+```
+
+Each edge clips the polygon to its "inside" half-plane. Works for any convex or concave polygon with 3+ vertices.
+
+### Coordinate Space Requirement
+
+The polygon vertices and clip rectangle **must be in the same coordinate space**. If vertices are in panel coordinates (relative to panel bounding box origin), the clip rectangle must also be in panel coordinates:
+
+```swift
+let clipInPanelCoords = CGRect(
+    x: -panelFrame.origin.x,
+    y: -panelFrame.origin.y,
+    width: canvasWidth,
+    height: canvasHeight
+)
+```
+
+**Non-intuitive:** Panels whose frames start at negative offsets (outside the canvas) produce positive clip bounds.
+
+### When to Use
+
+- Parallelograms extending beyond canvas in diagonal layouts
+- Hexagonal panels at canvas edges
+- Any polygon that needs rectangular bounds before coordinate transformation
+- When `.clipped()` clips to the wrong rectangle (container vs canvas)
 
 A horizontal shear `x' = x + y·tan(θ)` displaces different y-levels by different amounts: top edge (y=0) has zero displacement, bottom edge (y=H) is displaced by `H·tan(θ)`.
 

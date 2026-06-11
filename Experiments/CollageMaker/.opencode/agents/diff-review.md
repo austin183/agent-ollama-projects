@@ -1,5 +1,5 @@
 ---
-description: Reviews code for issues related to changes since in current diffs not committed
+description: Reviews code for issues related to changes since in current diffs not committed with current model
 mode: subagent
 permission:
   edit: deny

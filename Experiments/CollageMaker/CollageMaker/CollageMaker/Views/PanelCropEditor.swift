@@ -39,7 +39,8 @@ struct PanelCropEditor: View {
                                 imageSize: image.size,
                                 crop: crop,
                                 containerSize: geo.size,
-                                panelGeometry: panel.geometry
+                                panelGeometry: panel.geometry,
+                                panelFrame: panel.frame
                             )
                             .accessibilityLabel("Crop preview")
                             .accessibilityHint("Shows the portion of the image visible in the panel")
@@ -53,17 +54,18 @@ struct PanelCropEditor: View {
                                         let visibleRegion: VisibleRegion
                                         switch panel.geometry {
                                         case .rect:
-                                            let visRect = computeVisibleRect(
+                                            let visRect = CropPreviewView.computeVisibleRect(
                                                 crop,
                                                 imageSize: image.size,
                                                 container: geo.size
                                             )
                                             visibleRegion = .rect(visRect)
                                         case .path:
-                                            let quad = computeQuadInContainer(
+                                            let quad = CropPreviewView.computeQuadInContainer(
                                                 crop,
                                                 imageSize: image.size,
-                                                container: geo.size
+                                                container: geo.size,
+                                                panelFrame: panel.frame
                                             )
                                             visibleRegion = .quad(quad)
                                         }
@@ -146,72 +148,6 @@ struct PanelCropEditor: View {
     }
 
     // MARK: - Coordinate Conversion
-
-    private func computeVisibleRect(_ crop: CropInfo, imageSize: CGSize, container: CGSize) -> CGRect {
-        CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
-    }
-
-    private func computeQuadInContainer(_ crop: CropInfo, imageSize: CGSize, container: CGSize) -> [CGPoint] {
-        let (fittedSize, fitOffset) = FitMath.fit(imageSize, into: container)
-        let boundingRect = crop.destination.boundingRect
-        guard boundingRect.width > 0, boundingRect.height > 0,
-              let cgPath = crop.destination.cgPath else {
-            let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
-            return [
-                CGPoint(x: vis.minX, y: vis.minY),
-                CGPoint(x: vis.maxX, y: vis.minY),
-                CGPoint(x: vis.minX, y: vis.maxY),
-                CGPoint(x: vis.maxX, y: vis.maxY)
-            ]
-        }
-
-        let corners = extractPathPoints(cgPath)
-        guard corners.count == 4 else {
-            let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
-            return [
-                CGPoint(x: vis.minX, y: vis.minY),
-                CGPoint(x: vis.maxX, y: vis.minY),
-                CGPoint(x: vis.minX, y: vis.maxY),
-                CGPoint(x: vis.maxX, y: vis.maxY)
-            ]
-        }
-
-        return corners.map { corner in
-            let relX = (corner.x - boundingRect.minX) / boundingRect.width
-            let relY_topLeft = 1.0 - (corner.y - boundingRect.minY) / boundingRect.height
-            return CGPoint(
-                x: fitOffset.x + (crop.sourceRect.minX + relX * crop.sourceRect.width) / imageSize.width * fittedSize.width,
-                y: fitOffset.y + (crop.sourceRect.minY + relY_topLeft * crop.sourceRect.height) / imageSize.height * fittedSize.height
-            )
-        }
-    }
-
-    private func extractPathPoints(_ cgPath: CGPath) -> [CGPoint] {
-        class PointCollector { var points: [CGPoint] = [] }
-        let collector = PointCollector()
-        cgPath.apply(info: Unmanaged.passUnretained(collector).toOpaque()) { info, element in
-            let c = Unmanaged<PointCollector>.fromOpaque(info!).takeUnretainedValue()
-            let elem = element.pointee
-            switch elem.type {
-            case .moveToPoint:
-                c.points.append(elem.points.pointee)
-            case .addLineToPoint:
-                c.points.append(elem.points.pointee)
-            case .addQuadCurveToPoint:
-                c.points.append(elem.points.pointee)
-                c.points.append(elem.points.advanced(by: 1).pointee)
-            case .addCurveToPoint:
-                c.points.append(elem.points.pointee)
-                c.points.append(elem.points.advanced(by: 1).pointee)
-                c.points.append(elem.points.advanced(by: 2).pointee)
-            case .closeSubpath:
-                break
-            @unknown default:
-                break
-            }
-        }
-        return collector.points
-    }
 
     private func adjustCropDuringDrag(
         value: DragGesture.Value,
@@ -382,6 +318,7 @@ struct CropPreviewView: View {
     let crop: CropInfo?
     let containerSize: CGSize
     let panelGeometry: PanelGeometry
+    let panelFrame: CGRect
 
     var body: some View {
         ZStack {
@@ -393,9 +330,13 @@ struct CropPreviewView: View {
 
             if let crop {
                 let region = computeVisibleRegion(crop, container: containerSize)
-                dimOverlay(region: region, container: containerSize)
-                strokeVisibleRegion(region)
-                visibleRegionHandles(region)
+                ZStack {
+                    dimOverlay(region: region, container: containerSize)
+                    strokeVisibleRegion(region)
+                    visibleRegionHandles(region)
+                }
+                .frame(width: containerSize.width, height: containerSize.height)
+                .clipped()
             }
         }
     }
@@ -405,70 +346,8 @@ struct CropPreviewView: View {
         case .rect:
             return .rect(CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container))
         case .path:
-            return .quad(computeQuadInContainer(crop, container: container))
+            return .quad(Self.computeQuadInContainer(crop, imageSize: imageSize, container: container, panelFrame: panelFrame))
         }
-    }
-
-    private func computeQuadInContainer(_ crop: CropInfo, container: CGSize) -> [CGPoint] {
-        let (fittedSize, fitOffset) = FitMath.fit(imageSize, into: container)
-        let boundingRect = crop.destination.boundingRect
-        guard boundingRect.width > 0, boundingRect.height > 0,
-              let cgPath = crop.destination.cgPath else {
-            let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
-            return [
-                CGPoint(x: vis.minX, y: vis.minY),
-                CGPoint(x: vis.maxX, y: vis.minY),
-                CGPoint(x: vis.minX, y: vis.maxY),
-                CGPoint(x: vis.maxX, y: vis.maxY)
-            ]
-        }
-
-        let corners = extractPathPoints(cgPath)
-        guard corners.count == 4 else {
-            let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
-            return [
-                CGPoint(x: vis.minX, y: vis.minY),
-                CGPoint(x: vis.maxX, y: vis.minY),
-                CGPoint(x: vis.minX, y: vis.maxY),
-                CGPoint(x: vis.maxX, y: vis.maxY)
-            ]
-        }
-
-        return corners.map { corner in
-            let relX = (corner.x - boundingRect.minX) / boundingRect.width
-            let relY_topLeft = 1.0 - (corner.y - boundingRect.minY) / boundingRect.height
-            return CGPoint(
-                x: fitOffset.x + (crop.sourceRect.minX + relX * crop.sourceRect.width) / imageSize.width * fittedSize.width,
-                y: fitOffset.y + (crop.sourceRect.minY + relY_topLeft * crop.sourceRect.height) / imageSize.height * fittedSize.height
-            )
-        }
-    }
-
-    private func extractPathPoints(_ cgPath: CGPath) -> [CGPoint] {
-        class PointCollector { var points: [CGPoint] = [] }
-        let collector = PointCollector()
-        cgPath.apply(info: Unmanaged.passUnretained(collector).toOpaque()) { info, element in
-            let c = Unmanaged<PointCollector>.fromOpaque(info!).takeUnretainedValue()
-            let elem = element.pointee
-            switch elem.type {
-            case .moveToPoint:
-                c.points.append(elem.points.pointee)
-            case .addLineToPoint:
-                c.points.append(elem.points.pointee)
-            case .addQuadCurveToPoint:
-                c.points.append(elem.points.pointee)
-                c.points.append(elem.points.advanced(by: 1).pointee)
-            case .addCurveToPoint:
-                c.points.append(elem.points.pointee)
-                c.points.append(elem.points.advanced(by: 1).pointee)
-                c.points.append(elem.points.advanced(by: 2).pointee)
-            case .closeSubpath:
-                break
-            @unknown default:
-                break
-            }
-        }
-        return collector.points
     }
 
     private func dimOverlay(region: VisibleRegion, container: CGSize) -> some View {
@@ -478,6 +357,7 @@ struct CropPreviewView: View {
             case .rect(let r):
                 path.addRect(r)
             case .quad(let vertices):
+                guard !vertices.isEmpty else { break }
                 path.move(to: vertices[0])
                 for i in 1..<vertices.count {
                     path.addLine(to: vertices[i])
@@ -499,6 +379,7 @@ struct CropPreviewView: View {
                 .stroke(Color.white.opacity(0.8), lineWidth: 1.5)
             case .quad(let vertices):
                 Path { path in
+                    guard !vertices.isEmpty else { return }
                     path.move(to: vertices[0])
                     for i in 1..<vertices.count {
                         path.addLine(to: vertices[i])
@@ -544,6 +425,193 @@ struct CropPreviewView: View {
         CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
     }
 
+    static func computeQuadInContainer(_ crop: CropInfo, imageSize: CGSize, container: CGSize, panelFrame: CGRect) -> [CGPoint] {
+        let (fittedSize, fitOffset) = FitMath.fit(imageSize, into: container)
+        let boundingRect = crop.destination.boundingRect
+        guard boundingRect.width > 0, boundingRect.height > 0,
+              let cgPath = crop.destination.cgPath else {
+            let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
+            return [
+                CGPoint(x: vis.minX, y: vis.minY),
+                CGPoint(x: vis.maxX, y: vis.minY),
+                CGPoint(x: vis.minX, y: vis.maxY),
+                CGPoint(x: vis.maxX, y: vis.maxY)
+            ]
+        }
+
+        var corners = extractPathPoints(cgPath)
+
+        // Clip polygon vertices to canvas bounds (in panel coordinates).
+        // The path points are relative to the panel's bounding box origin.
+        // Canvas bounds in panel coordinates:
+        //   left = -panelFrame.origin.x, right = canvasWidth - panelFrame.origin.x
+        //   top = -panelFrame.origin.y, bottom = canvasHeight - panelFrame.origin.y
+        let canvasSize = SizeConstants.defaultCanvasSize
+        let canvasClipInPanel = CGRect(
+            x: -panelFrame.origin.x,
+            y: -panelFrame.origin.y,
+            width: canvasSize.width + panelFrame.origin.x,
+            height: canvasSize.height + panelFrame.origin.y
+        )
+        corners = clipPolygon(corners, to: canvasClipInPanel)
+        guard !corners.isEmpty else {
+            let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
+            return [
+                CGPoint(x: vis.minX, y: vis.minY),
+                CGPoint(x: vis.maxX, y: vis.minY),
+                CGPoint(x: vis.minX, y: vis.maxY),
+                CGPoint(x: vis.maxX, y: vis.maxY)
+            ]
+        }
+
+        return corners.map { corner in
+            let relX = (corner.x - boundingRect.minX) / boundingRect.width
+            let relY_topLeft = 1.0 - (corner.y - boundingRect.minY) / boundingRect.height
+            return CGPoint(
+                x: fitOffset.x + (crop.sourceRect.minX + relX * crop.sourceRect.width) / imageSize.width * fittedSize.width,
+                y: fitOffset.y + (crop.sourceRect.minY + relY_topLeft * crop.sourceRect.height) / imageSize.height * fittedSize.height
+            )
+        }
+    }
+
+    // Sutherland-Hodgman polygon clipping
+    private static func clipPolygon(_ subject: [CGPoint], to clipRect: CGRect) -> [CGPoint] {
+        guard !subject.isEmpty else { return [] }
+
+        func clipEdge(_ input: [CGPoint], with respectTo: ClipEdge) -> [CGPoint] {
+            guard !input.isEmpty else { return [] }
+            var output: [CGPoint] = []
+            let prev = input[input.count - 1]
+            var prevInside = respectTo.isInside(prev)
+
+            for curr in input {
+                let currInside = respectTo.isInside(curr)
+                switch (prevInside, currInside) {
+                case (true, true):
+                    output.append(curr)
+                case (false, true):
+                    if let intersect = respectTo.intersection(from: prev, to: curr) {
+                        output.append(intersect)
+                    }
+                    output.append(curr)
+                case (true, false):
+                    if let intersect = respectTo.intersection(from: prev, to: curr) {
+                        output.append(intersect)
+                    }
+                case (false, false):
+                    break
+                }
+                prevInside = currInside
+                // Track current as prev for next iteration
+            }
+            return output
+        }
+
+        // Need proper prev tracking
+        func clipEdgeCorrect(_ input: [CGPoint], with respectTo: ClipEdge) -> [CGPoint] {
+            guard !input.isEmpty else { return [] }
+            var output: [CGPoint] = []
+            var prev = input[input.count - 1]
+            var prevInside = respectTo.isInside(prev)
+
+            for curr in input {
+                let currInside = respectTo.isInside(curr)
+                if currInside {
+                    if !prevInside {
+                        if let intersect = respectTo.intersection(from: prev, to: curr) {
+                            output.append(intersect)
+                        }
+                    }
+                    output.append(curr)
+                } else if prevInside {
+                    if let intersect = respectTo.intersection(from: prev, to: curr) {
+                        output.append(intersect)
+                    }
+                }
+                prev = curr
+                prevInside = currInside
+            }
+            return output
+        }
+
+        enum ClipEdge {
+            case left(CGFloat), right(CGFloat), top(CGFloat), bottom(CGFloat)
+
+            func isInside(_ p: CGPoint) -> Bool {
+                switch self {
+                case .left(let x): return p.x >= x
+                case .right(let x): return p.x <= x
+                case .top(let y): return p.y >= y
+                case .bottom(let y): return p.y <= y
+                }
+            }
+
+            func intersection(from: CGPoint, to: CGPoint) -> CGPoint? {
+                let t = self.tValue(from: from, to: to)
+                guard t.isFinite, t >= 0, t <= 1 else { return nil }
+                return CGPoint(
+                    x: from.x + t * (to.x - from.x),
+                    y: from.y + t * (to.y - from.y)
+                )
+            }
+
+            func tValue(from: CGPoint, to: CGPoint) -> CGFloat {
+                switch self {
+                case .left(let x):
+                    let dx = to.x - from.x
+                    guard dx != 0 else { return .infinity }
+                    return (x - from.x) / dx
+                case .right(let x):
+                    let dx = to.x - from.x
+                    guard dx != 0 else { return .infinity }
+                    return (x - from.x) / dx
+                case .top(let y):
+                    let dy = to.y - from.y
+                    guard dy != 0 else { return .infinity }
+                    return (y - from.y) / dy
+                case .bottom(let y):
+                    let dy = to.y - from.y
+                    guard dy != 0 else { return .infinity }
+                    return (y - from.y) / dy
+                }
+            }
+        }
+
+        var result = subject
+        result = clipEdgeCorrect(result, with: .left(clipRect.minX))
+        result = clipEdgeCorrect(result, with: .right(clipRect.maxX))
+        result = clipEdgeCorrect(result, with: .top(clipRect.minY))
+        result = clipEdgeCorrect(result, with: .bottom(clipRect.maxY))
+        return result
+    }
+
+    static func extractPathPoints(_ cgPath: CGPath) -> [CGPoint] {
+        class PointCollector { var points: [CGPoint] = [] }
+        let collector = PointCollector()
+        cgPath.apply(info: Unmanaged.passUnretained(collector).toOpaque()) { info, element in
+            let c = Unmanaged<PointCollector>.fromOpaque(info!).takeUnretainedValue()
+            let elem = element.pointee
+            switch elem.type {
+            case .moveToPoint:
+                c.points.append(elem.points.pointee)
+            case .addLineToPoint:
+                c.points.append(elem.points.pointee)
+            case .addQuadCurveToPoint:
+                c.points.append(elem.points.pointee)
+                c.points.append(elem.points.advanced(by: 1).pointee)
+            case .addCurveToPoint:
+                c.points.append(elem.points.pointee)
+                c.points.append(elem.points.advanced(by: 1).pointee)
+                c.points.append(elem.points.advanced(by: 2).pointee)
+            case .closeSubpath:
+                break
+            @unknown default:
+                break
+            }
+        }
+        return collector.points
+    }
+
     static func detectDragMode(visibleRegion: VisibleRegion, startLocation: CGPoint) -> OverlayDragMode {
         let handleThreshold: CGFloat = 16
 
@@ -564,24 +632,29 @@ struct CropPreviewView: View {
             if visibleRect.contains(startLocation) { return .drag }
 
         case .quad(let vertices):
-            guard vertices.count == 4 else { break }
-            let tlDist = hypot(startLocation.x - vertices[0].x, startLocation.y - vertices[0].y)
-            if tlDist <= handleThreshold { return .resizeTopLeft }
+            guard vertices.count >= 3 else { break }
 
-            let trDist = hypot(startLocation.x - vertices[1].x, startLocation.y - vertices[1].y)
-            if trDist <= handleThreshold { return .resizeTopRight }
+            // For quads, check corner handles for resize
+            if vertices.count == 4 {
+                let tlDist = hypot(startLocation.x - vertices[0].x, startLocation.y - vertices[0].y)
+                if tlDist <= handleThreshold { return .resizeTopLeft }
 
-            let blDist = hypot(startLocation.x - vertices[2].x, startLocation.y - vertices[2].y)
-            if blDist <= handleThreshold { return .resizeBottomLeft }
+                let trDist = hypot(startLocation.x - vertices[1].x, startLocation.y - vertices[1].y)
+                if trDist <= handleThreshold { return .resizeTopRight }
 
-            let brDist = hypot(startLocation.x - vertices[3].x, startLocation.y - vertices[3].y)
-            if brDist <= handleThreshold { return .resizeBottomRight }
+                let blDist = hypot(startLocation.x - vertices[2].x, startLocation.y - vertices[2].y)
+                if blDist <= handleThreshold { return .resizeBottomLeft }
 
+                let brDist = hypot(startLocation.x - vertices[3].x, startLocation.y - vertices[3].y)
+                if brDist <= handleThreshold { return .resizeBottomRight }
+            }
+
+            // Build path from all vertices for containment test
             var p = Path()
             p.move(to: vertices[0])
-            p.addLine(to: vertices[1])
-            p.addLine(to: vertices[2])
-            p.addLine(to: vertices[3])
+            for i in 1..<vertices.count {
+                p.addLine(to: vertices[i])
+            }
             p.closeSubpath()
             if p.contains(startLocation) { return .drag }
         }

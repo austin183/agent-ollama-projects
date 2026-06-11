@@ -1,5 +1,5 @@
 ---
-description: Explores codebase and designs implementation plans for features and fixes
+description: Explores codebase and designs implementation plans for features and fixes using Gemma 4
 mode: subagent
 model: lmstudio/google/gemma-4-31b-qat
 permission:

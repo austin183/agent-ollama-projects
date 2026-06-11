@@ -1,5 +1,5 @@
 ---
-description: Reviews code for SOLID principles and best practices
+description: Reviews code for SOLID principles and best practices with current model
 mode: subagent
 permission:
   edit: deny

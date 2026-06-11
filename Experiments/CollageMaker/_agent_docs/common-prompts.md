@@ -5,6 +5,12 @@
 Can you please help me think through how we can address the change request in @_agent_docs/change-requests/round-18.md using our macos skills for guidance?
 ```
 
+or with input from multiple models
+
+```
+Can you please run the @planner-g31 agent to create a draft plan for @_agent_docs/change-requests/round-99.4.md  and then use the results to inform your own plan on how to address the issues presented? 
+```
+
 ## Review
 (In Plan Mode (Tab Key to change Modes))
 ```
@@ -13,7 +19,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan in @_agent_docs/plans/2026-06-10-round-99.2-bug-fixes.md using our macos skills for guidance.
+Please implement the plan in @_agent_docs/plans/2026-06-11-round-99.3-crop-overlay-fixes.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
@@ -45,7 +51,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/shear-transform-canvas-coverage-learnings.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/polygon-clip-and-vertex-guard-propagation.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Researching

@@ -1,5 +1,5 @@
 ---
-description: Reviews code for SOLID principles and best practices
+description: Reviews code for SOLID principles and best practices with Gemma
 mode: subagent
 model: lmstudio/google/gemma-4-31b-qat
 permission:
