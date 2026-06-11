@@ -1,7 +1,6 @@
 ---
 description: Reviews code for issues related to changes since in current diffs not committed
 mode: subagent
-temperature: 0.2
 permission:
   edit: deny
 ---

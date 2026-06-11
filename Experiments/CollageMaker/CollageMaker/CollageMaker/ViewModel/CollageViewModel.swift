@@ -621,8 +621,8 @@ final class CollageViewModel {
         panelAssignments[targetId] = customImageOrder[targetSlot]
 
         if let cropA = cropMap[sourceId], let cropB = cropMap[targetId] {
-            cropMap[sourceId] = CropInfo(panelId: sourceId, sourceRect: cropB.sourceRect, destinationRect: cropA.destinationRect)
-            cropMap[targetId] = CropInfo(panelId: targetId, sourceRect: cropA.sourceRect, destinationRect: cropB.destinationRect)
+            cropMap[sourceId] = CropInfo(panelId: sourceId, sourceRect: cropB.sourceRect, destination: cropA.destination)
+            cropMap[targetId] = CropInfo(panelId: targetId, sourceRect: cropA.sourceRect, destination: cropB.destination)
         }
 
         updatePanelPreview(panelId: sourceId)
@@ -765,7 +765,7 @@ final class CollageViewModel {
         let newCrop = CropInfo(
             panelId: panelId,
             sourceRect: sourceRect,
-            destinationRect: crop.destinationRect
+            destination: crop.destination
         )
         cropManager.cropMap[panelId] = newCrop
         throttledNotifyCropMapChanged()

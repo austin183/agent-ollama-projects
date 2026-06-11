@@ -16,6 +16,11 @@ enum PanelGeometry: @unchecked Sendable {
         }
     }
 
+    var isRect: Bool {
+        if case .rect = self { return true }
+        return false
+    }
+
     var cgPath: CGPath? {
         switch self {
         case .rect(let r): return CGPath(rect: r, transform: nil)

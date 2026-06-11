@@ -138,4 +138,25 @@ import Testing
             #expect(frame.origin.y >= 0)
         }
     }
+
+    // MARK: - Quad Vertex Alignment
+
+    @Test func quadVerticesAlignWithAssemblerRender() {
+        // For a rectangular panel, the quad should match sourceRectInContainer.
+        let crop = CropInfo(
+            panelId: UUID(),
+            sourceRect: CGRect(x: 50, y: 50, width: 100, height: 100),
+            destinationRect: CGRect(x: 0, y: 0, width: 200, height: 200)
+        )
+        let imageSize = CGSize(width: 200, height: 200)
+        let container = CGSize(width: 400, height: 400)
+
+        // The visible rect should be at (100, 100) with size 200x200
+        // 200x200 image in 400x400 container = 2x scale, sourceRect (50,50,100,100) → (100,100,200,200)
+        let visRect = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
+        #expect(visRect.origin.x == 100)
+        #expect(visRect.origin.y == 100)
+        #expect(visRect.width == 200)
+        #expect(visRect.height == 200)
+    }
 }

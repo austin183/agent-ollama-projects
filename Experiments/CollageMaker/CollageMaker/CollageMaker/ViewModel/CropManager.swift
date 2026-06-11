@@ -72,7 +72,7 @@ final class CropManager {
             cropMap[panel.id] = CropInfo(
                 panelId: panel.id,
                 sourceRect: cropRect,
-                destinationRect: panel.frame
+                destination: panel.geometry
             )
         }
     }
@@ -100,7 +100,7 @@ final class CropManager {
             cropMap[panel.id] = CropInfo(
                 panelId: panel.id,
                 sourceRect: sourceRect,
-                destinationRect: panel.frame
+                destination: panel.geometry
             )
         }
     }
@@ -119,7 +119,7 @@ final class CropManager {
             cropMap[panel.id] = CropInfo(
                 panelId: panel.id,
                 sourceRect: sourceRect,
-                destinationRect: panel.frame
+                destination: panel.geometry
             )
         }
     }
@@ -169,7 +169,7 @@ final class CropManager {
         cropMap[id] = CropInfo(
             panelId: id,
             sourceRect: CGRect(x: newOX, y: newOY, width: scaledW, height: scaledH),
-            destinationRect: crop.destinationRect
+            destination: crop.destination
         )
 
         if finish { endGesture() }
@@ -224,7 +224,7 @@ final class CropManager {
         cropMap[id] = CropInfo(
             panelId: id,
             sourceRect: CGRect(x: newOX, y: newOY, width: scaledW, height: scaledH),
-            destinationRect: crop.destinationRect
+            destination: crop.destination
         )
 
         if finish { endGesture() }
@@ -243,7 +243,7 @@ final class CropManager {
         cropMap[panelId] = CropInfo(
             panelId: panelId,
             sourceRect: cropRect,
-            destinationRect: panel.frame
+            destination: panel.geometry
         )
     }
 

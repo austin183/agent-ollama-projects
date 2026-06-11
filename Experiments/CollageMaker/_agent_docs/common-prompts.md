@@ -13,7 +13,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan in @_agent_docs/plans/2026-06-09-diagonal-slices-canvas-coverage.md using our macos skills for guidance.
+Please implement the plan in @_agent_docs/plans/2026-06-10-round-99.2-bug-fixes.md using our macos skills for guidance.
 ```
 
 # Small Change Requests

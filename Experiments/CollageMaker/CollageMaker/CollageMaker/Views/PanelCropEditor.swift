@@ -7,6 +7,7 @@ struct PanelCropEditor: View {
     @State private var dragBaseOrigin: CGPoint = .zero
     @State private var dragBaseSize: CGSize = .zero
     @State private var dragBaseSourceRect: CGRect = .zero
+    @State private var dragBaseQuad: [CGPoint] = []
     @State private var containerSize: CGSize = .zero
 
     private var currentImage: ImageItem? {
@@ -20,6 +21,10 @@ struct PanelCropEditor: View {
     }
 
     var body: some View {
+        // Establish @Observable dependency at top of body so crop map
+        // changes from canvas gestures trigger re-evaluation.
+        let crop = viewModel.cropMap[panel.id]
+
         VStack(alignment: .leading, spacing: 12) {
             Text("Panel Editor")
                 .font(.headline)
@@ -32,8 +37,9 @@ struct PanelCropEditor: View {
                             CropPreviewView(
                                 nsImage: image.nsImage,
                                 imageSize: image.size,
-                                crop: viewModel.cropMap[panel.id],
-                                containerSize: geo.size
+                                crop: crop,
+                                containerSize: geo.size,
+                                panelGeometry: panel.geometry
                             )
                             .accessibilityLabel("Crop preview")
                             .accessibilityHint("Shows the portion of the image visible in the panel")
@@ -44,17 +50,34 @@ struct PanelCropEditor: View {
                                     guard let crop = currentCrop else { return }
 
                                     if overlayDragMode == .none {
-                                        let visRect = computeVisibleRect(
-                                            crop,
-                                            imageSize: image.size,
-                                            container: geo.size
-                                        )
+                                        let visibleRegion: VisibleRegion
+                                        switch panel.geometry {
+                                        case .rect:
+                                            let visRect = computeVisibleRect(
+                                                crop,
+                                                imageSize: image.size,
+                                                container: geo.size
+                                            )
+                                            visibleRegion = .rect(visRect)
+                                        case .path:
+                                            let quad = computeQuadInContainer(
+                                                crop,
+                                                imageSize: image.size,
+                                                container: geo.size
+                                            )
+                                            visibleRegion = .quad(quad)
+                                        }
                                         overlayDragMode = CropPreviewView.detectDragMode(
-                                            visibleRect: visRect,
+                                            visibleRegion: visibleRegion,
                                             startLocation: value.startLocation
                                         )
-                                        dragBaseOrigin = visRect.origin
-                                        dragBaseSize = visRect.size
+                                        if case .rect(let visRect) = visibleRegion {
+                                            dragBaseOrigin = visRect.origin
+                                            dragBaseSize = visRect.size
+                                        }
+                                        if case .quad(let quad) = visibleRegion {
+                                            dragBaseQuad = quad
+                                        }
                                         dragBaseSourceRect = crop.sourceRect
                                         if overlayDragMode != .none {
                                             viewModel.isLiveGesturing = true
@@ -111,7 +134,7 @@ struct PanelCropEditor: View {
                 .accessibilityLabel("Reset crop")
                 .accessibilityHint("Restores the default crop for this image")
 
-                Text("Drag to move · Corner drag to zoom (proportional)")
+                Text("Drag to move\(panel.geometry.isRect ? " · Corner drag to zoom (proportional)" : "")")
                     .accessibilityHidden(true)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -126,6 +149,68 @@ struct PanelCropEditor: View {
 
     private func computeVisibleRect(_ crop: CropInfo, imageSize: CGSize, container: CGSize) -> CGRect {
         CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
+    }
+
+    private func computeQuadInContainer(_ crop: CropInfo, imageSize: CGSize, container: CGSize) -> [CGPoint] {
+        let (fittedSize, fitOffset) = FitMath.fit(imageSize, into: container)
+        let boundingRect = crop.destination.boundingRect
+        guard boundingRect.width > 0, boundingRect.height > 0,
+              let cgPath = crop.destination.cgPath else {
+            let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
+            return [
+                CGPoint(x: vis.minX, y: vis.minY),
+                CGPoint(x: vis.maxX, y: vis.minY),
+                CGPoint(x: vis.minX, y: vis.maxY),
+                CGPoint(x: vis.maxX, y: vis.maxY)
+            ]
+        }
+
+        let corners = extractPathPoints(cgPath)
+        guard corners.count == 4 else {
+            let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
+            return [
+                CGPoint(x: vis.minX, y: vis.minY),
+                CGPoint(x: vis.maxX, y: vis.minY),
+                CGPoint(x: vis.minX, y: vis.maxY),
+                CGPoint(x: vis.maxX, y: vis.maxY)
+            ]
+        }
+
+        return corners.map { corner in
+            let relX = (corner.x - boundingRect.minX) / boundingRect.width
+            let relY_topLeft = 1.0 - (corner.y - boundingRect.minY) / boundingRect.height
+            return CGPoint(
+                x: fitOffset.x + (crop.sourceRect.minX + relX * crop.sourceRect.width) / imageSize.width * fittedSize.width,
+                y: fitOffset.y + (crop.sourceRect.minY + relY_topLeft * crop.sourceRect.height) / imageSize.height * fittedSize.height
+            )
+        }
+    }
+
+    private func extractPathPoints(_ cgPath: CGPath) -> [CGPoint] {
+        class PointCollector { var points: [CGPoint] = [] }
+        let collector = PointCollector()
+        cgPath.apply(info: Unmanaged.passUnretained(collector).toOpaque()) { info, element in
+            let c = Unmanaged<PointCollector>.fromOpaque(info!).takeUnretainedValue()
+            let elem = element.pointee
+            switch elem.type {
+            case .moveToPoint:
+                c.points.append(elem.points.pointee)
+            case .addLineToPoint:
+                c.points.append(elem.points.pointee)
+            case .addQuadCurveToPoint:
+                c.points.append(elem.points.pointee)
+                c.points.append(elem.points.advanced(by: 1).pointee)
+            case .addCurveToPoint:
+                c.points.append(elem.points.pointee)
+                c.points.append(elem.points.advanced(by: 1).pointee)
+                c.points.append(elem.points.advanced(by: 2).pointee)
+            case .closeSubpath:
+                break
+            @unknown default:
+                break
+            }
+        }
+        return collector.points
     }
 
     private func adjustCropDuringDrag(
@@ -286,11 +371,17 @@ enum OverlayDragMode {
     case none, drag, resizeBottomRight, resizeTopRight, resizeBottomLeft, resizeTopLeft
 }
 
+enum VisibleRegion {
+    case rect(CGRect)
+    case quad([CGPoint])
+}
+
 struct CropPreviewView: View {
     let nsImage: NSImage
     let imageSize: CGSize
     let crop: CropInfo?
     let containerSize: CGSize
+    let panelGeometry: PanelGeometry
 
     var body: some View {
         ZStack {
@@ -301,42 +392,150 @@ struct CropPreviewView: View {
                 .clipped()
 
             if let crop {
-                dimOverlay(crop: crop, container: containerSize)
+                let region = computeVisibleRegion(crop, container: containerSize)
+                dimOverlay(region: region, container: containerSize)
+                strokeVisibleRegion(region)
+                visibleRegionHandles(region)
             }
         }
     }
 
-    private func dimOverlay(crop: CropInfo, container: CGSize) -> some View {
-        let visible = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
+    private func computeVisibleRegion(_ crop: CropInfo, container: CGSize) -> VisibleRegion {
+        switch crop.destination {
+        case .rect:
+            return .rect(CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container))
+        case .path:
+            return .quad(computeQuadInContainer(crop, container: container))
+        }
+    }
 
-        return ZStack {
-            Path { path in
-                path.addRect(CGRect(x: 0, y: 0, width: container.width, height: container.height))
-                path.addRect(visible)
+    private func computeQuadInContainer(_ crop: CropInfo, container: CGSize) -> [CGPoint] {
+        let (fittedSize, fitOffset) = FitMath.fit(imageSize, into: container)
+        let boundingRect = crop.destination.boundingRect
+        guard boundingRect.width > 0, boundingRect.height > 0,
+              let cgPath = crop.destination.cgPath else {
+            let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
+            return [
+                CGPoint(x: vis.minX, y: vis.minY),
+                CGPoint(x: vis.maxX, y: vis.minY),
+                CGPoint(x: vis.minX, y: vis.maxY),
+                CGPoint(x: vis.maxX, y: vis.maxY)
+            ]
+        }
+
+        let corners = extractPathPoints(cgPath)
+        guard corners.count == 4 else {
+            let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
+            return [
+                CGPoint(x: vis.minX, y: vis.minY),
+                CGPoint(x: vis.maxX, y: vis.minY),
+                CGPoint(x: vis.minX, y: vis.maxY),
+                CGPoint(x: vis.maxX, y: vis.maxY)
+            ]
+        }
+
+        return corners.map { corner in
+            let relX = (corner.x - boundingRect.minX) / boundingRect.width
+            let relY_topLeft = 1.0 - (corner.y - boundingRect.minY) / boundingRect.height
+            return CGPoint(
+                x: fitOffset.x + (crop.sourceRect.minX + relX * crop.sourceRect.width) / imageSize.width * fittedSize.width,
+                y: fitOffset.y + (crop.sourceRect.minY + relY_topLeft * crop.sourceRect.height) / imageSize.height * fittedSize.height
+            )
+        }
+    }
+
+    private func extractPathPoints(_ cgPath: CGPath) -> [CGPoint] {
+        class PointCollector { var points: [CGPoint] = [] }
+        let collector = PointCollector()
+        cgPath.apply(info: Unmanaged.passUnretained(collector).toOpaque()) { info, element in
+            let c = Unmanaged<PointCollector>.fromOpaque(info!).takeUnretainedValue()
+            let elem = element.pointee
+            switch elem.type {
+            case .moveToPoint:
+                c.points.append(elem.points.pointee)
+            case .addLineToPoint:
+                c.points.append(elem.points.pointee)
+            case .addQuadCurveToPoint:
+                c.points.append(elem.points.pointee)
+                c.points.append(elem.points.advanced(by: 1).pointee)
+            case .addCurveToPoint:
+                c.points.append(elem.points.pointee)
+                c.points.append(elem.points.advanced(by: 1).pointee)
+                c.points.append(elem.points.advanced(by: 2).pointee)
+            case .closeSubpath:
+                break
+            @unknown default:
+                break
             }
-            .fill(Color.black.opacity(0.55), style: FillStyle(eoFill: true))
+        }
+        return collector.points
+    }
 
-            Path { path in
-                path.addRect(visible)
+    private func dimOverlay(region: VisibleRegion, container: CGSize) -> some View {
+        Path { path in
+            path.addRect(CGRect(x: 0, y: 0, width: container.width, height: container.height))
+            switch region {
+            case .rect(let r):
+                path.addRect(r)
+            case .quad(let vertices):
+                path.move(to: vertices[0])
+                for i in 1..<vertices.count {
+                    path.addLine(to: vertices[i])
+                }
+                path.closeSubpath()
             }
-            .stroke(Color.white.opacity(0.8), lineWidth: 1.5)
+        }
+        .fill(Color.black.opacity(0.55), style: FillStyle(eoFill: true))
+        .allowsHitTesting(false)
+    }
 
-            cornerHandles(for: visible)
+    private func strokeVisibleRegion(_ region: VisibleRegion) -> some View {
+        Group {
+            switch region {
+            case .rect(let r):
+                Path { path in
+                    path.addRect(r)
+                }
+                .stroke(Color.white.opacity(0.8), lineWidth: 1.5)
+            case .quad(let vertices):
+                Path { path in
+                    path.move(to: vertices[0])
+                    for i in 1..<vertices.count {
+                        path.addLine(to: vertices[i])
+                    }
+                    path.closeSubpath()
+                }
+                .stroke(Color.white.opacity(0.8), lineWidth: 1.5)
+            }
         }
         .allowsHitTesting(false)
     }
 
-    private func cornerHandles(for visible: CGRect) -> some View {
+    private func visibleRegionHandles(_ region: VisibleRegion) -> some View {
         let handleSize: CGFloat = 10
+        let vertices: [CGPoint]
+
+        switch region {
+        case .rect(let r):
+            vertices = [
+                CGPoint(x: r.minX, y: r.minY),
+                CGPoint(x: r.maxX, y: r.minY),
+                CGPoint(x: r.minX, y: r.maxY),
+                CGPoint(x: r.maxX, y: r.maxY)
+            ]
+        case .quad(let v):
+            vertices = v
+        }
 
         return ZStack {
-            ForEach(Corners.allCases, id: \.self) { corner in
+            ForEach(vertices.indices, id: \.self) { i in
                 Rectangle()
                     .fill(Color.orange.opacity(0.3))
                     .frame(width: handleSize, height: handleSize)
-                    .position(corner.position(for: visible, handleSize: handleSize))
+                    .position(vertices[i])
             }
         }
+        .allowsHitTesting(false)
     }
 
     // MARK: - Static Helpers
@@ -345,46 +544,46 @@ struct CropPreviewView: View {
         CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
     }
 
-    static func detectDragMode(
-        visibleRect: CGRect,
-        startLocation: CGPoint
-    ) -> OverlayDragMode {
+    static func detectDragMode(visibleRegion: VisibleRegion, startLocation: CGPoint) -> OverlayDragMode {
         let handleThreshold: CGFloat = 16
 
-        let brDist = hypot(
-            startLocation.x - visibleRect.maxX,
-            startLocation.y - visibleRect.maxY
-        )
-        if brDist <= handleThreshold {
-            return .resizeBottomRight
-        }
+        switch visibleRegion {
+        case .rect(let visibleRect):
+            let brDist = hypot(startLocation.x - visibleRect.maxX, startLocation.y - visibleRect.maxY)
+            if brDist <= handleThreshold { return .resizeBottomRight }
 
-        let trDist = hypot(
-            startLocation.x - visibleRect.maxX,
-            startLocation.y - visibleRect.minY
-        )
-        if trDist <= handleThreshold {
-            return .resizeTopRight
-        }
+            let trDist = hypot(startLocation.x - visibleRect.maxX, startLocation.y - visibleRect.minY)
+            if trDist <= handleThreshold { return .resizeTopRight }
 
-        let blDist = hypot(
-            startLocation.x - visibleRect.minX,
-            startLocation.y - visibleRect.maxY
-        )
-        if blDist <= handleThreshold {
-            return .resizeBottomLeft
-        }
+            let blDist = hypot(startLocation.x - visibleRect.minX, startLocation.y - visibleRect.maxY)
+            if blDist <= handleThreshold { return .resizeBottomLeft }
 
-        let tlDist = hypot(
-            startLocation.x - visibleRect.minX,
-            startLocation.y - visibleRect.minY
-        )
-        if tlDist <= handleThreshold {
-            return .resizeTopLeft
-        }
+            let tlDist = hypot(startLocation.x - visibleRect.minX, startLocation.y - visibleRect.minY)
+            if tlDist <= handleThreshold { return .resizeTopLeft }
 
-        if visibleRect.contains(startLocation) {
-            return .drag
+            if visibleRect.contains(startLocation) { return .drag }
+
+        case .quad(let vertices):
+            guard vertices.count == 4 else { break }
+            let tlDist = hypot(startLocation.x - vertices[0].x, startLocation.y - vertices[0].y)
+            if tlDist <= handleThreshold { return .resizeTopLeft }
+
+            let trDist = hypot(startLocation.x - vertices[1].x, startLocation.y - vertices[1].y)
+            if trDist <= handleThreshold { return .resizeTopRight }
+
+            let blDist = hypot(startLocation.x - vertices[2].x, startLocation.y - vertices[2].y)
+            if blDist <= handleThreshold { return .resizeBottomLeft }
+
+            let brDist = hypot(startLocation.x - vertices[3].x, startLocation.y - vertices[3].y)
+            if brDist <= handleThreshold { return .resizeBottomRight }
+
+            var p = Path()
+            p.move(to: vertices[0])
+            p.addLine(to: vertices[1])
+            p.addLine(to: vertices[2])
+            p.addLine(to: vertices[3])
+            p.closeSubpath()
+            if p.contains(startLocation) { return .drag }
         }
 
         return .none
