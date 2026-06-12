@@ -342,7 +342,18 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
             if let cropped = cg.cropping(to: sourceRect) {
                 context.draw(cropped, in: destRect)
             } else {
-                context.draw(cg, in: destRect)
+                // sourceRect may extend beyond image bounds (e.g., parallelogram
+                // extending off-canvas). Clamp and draw the overlapping portion.
+                let imageBounds = CGRect(x: 0, y: 0, width: cg.width, height: cg.height)
+                let clamped = sourceRect.intersection(imageBounds)
+                if clamped.width > 0, clamped.height > 0,
+                   let clippedCrop = cg.cropping(to: clamped) {
+                    let drawX = destRect.origin.x + (clamped.origin.x - sourceRect.origin.x) / sourceRect.width * destRect.width
+                    let drawY = destRect.origin.y + (clamped.origin.y - sourceRect.origin.y) / sourceRect.height * destRect.height
+                    let drawW = clamped.width / sourceRect.width * destRect.width
+                    let drawH = clamped.height / sourceRect.height * destRect.height
+                    context.draw(clippedCrop, in: CGRect(x: drawX, y: drawY, width: drawW, height: drawH))
+                }
             }
 
             context.restoreGState()
@@ -399,7 +410,16 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
             if let cropped = cgImage.cropping(to: sourceRect) {
                 context.draw(cropped, in: destRect)
             } else {
-                context.draw(cgImage, in: destRect)
+                let imageBounds = CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height)
+                let clamped = sourceRect.intersection(imageBounds)
+                if clamped.width > 0, clamped.height > 0,
+                   let clippedCrop = cgImage.cropping(to: clamped) {
+                    let drawX = destRect.origin.x + (clamped.origin.x - sourceRect.origin.x) / sourceRect.width * destRect.width
+                    let drawY = destRect.origin.y + (clamped.origin.y - sourceRect.origin.y) / sourceRect.height * destRect.height
+                    let drawW = clamped.width / sourceRect.width * destRect.width
+                    let drawH = clamped.height / sourceRect.height * destRect.height
+                    context.draw(clippedCrop, in: CGRect(x: drawX, y: drawY, width: drawW, height: drawH))
+                }
             }
 
             context.restoreGState()

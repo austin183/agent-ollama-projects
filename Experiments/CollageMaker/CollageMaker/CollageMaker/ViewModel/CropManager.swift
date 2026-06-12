@@ -160,11 +160,19 @@ final class CropManager {
         let zoom = gestureBaseZoom ?? 1.0
         let scaledW = panelSize.width * zoom
         let scaledH = panelSize.height * zoom
-        let maxOX = max(0, image.size.width - scaledW)
-        let maxOY = max(0, image.size.height - scaledH)
 
-        let newOX = clamp(baseOrigin.x - panDelta.width, min: 0, max: maxOX)
-        let newOY = clamp(baseOrigin.y - panDelta.height, min: 0, max: maxOY)
+        let visBounds = computeVisibleSourceBounds(destRect: crop.destinationRect, sourceW: scaledW, sourceH: scaledH)
+
+        let effectiveBaseX = baseOrigin.x + visBounds.offsetX
+        let effectiveBaseY = baseOrigin.y + visBounds.offsetY
+        let maxEffX = max(0, image.size.width - visBounds.visibleW)
+        let maxEffY = max(0, image.size.height - visBounds.visibleH)
+
+        let newEffX = clamp(effectiveBaseX - panDelta.width, min: 0, max: maxEffX)
+        let newEffY = clamp(effectiveBaseY - panDelta.height, min: 0, max: maxEffY)
+
+        let newOX = newEffX - visBounds.offsetX
+        let newOY = newEffY - visBounds.offsetY
 
         cropMap[id] = CropInfo(
             panelId: id,
@@ -211,6 +219,8 @@ final class CropManager {
         let newZoom = clamp(baseZoom / zoomDelta, min: 0.5, max: maxZoomOut)
         let scaledW = panelSize.width * newZoom
         let scaledH = panelSize.height * newZoom
+
+        let visBounds = computeVisibleSourceBounds(destRect: crop.destinationRect, sourceW: scaledW, sourceH: scaledH)
 
         let currentCenterX = crop.sourceRect.midX
         let currentCenterY = crop.sourceRect.midY
@@ -315,6 +325,31 @@ final class CropManager {
 
     private func computeBestFitSource(imageSize: CGSize, panelSize: CGSize) -> CGRect {
         FitMath.sourceRect(imageSize: imageSize, panelSize: panelSize)
+    }
+
+    struct VisibleSourceBounds {
+        let offsetX: CGFloat
+        let offsetY: CGFloat
+        let visibleW: CGFloat
+        let visibleH: CGFloat
+    }
+
+    private func computeVisibleSourceBounds(destRect: CGRect, sourceW: CGFloat, sourceH: CGFloat) -> VisibleSourceBounds {
+        let canvasSize = SizeConstants.defaultCanvasSize
+        let visMinX = Swift.max(0, destRect.minX)
+        let visMaxX = Swift.min(canvasSize.width, destRect.maxX)
+        let visMinY = Swift.max(0, destRect.minY)
+        let visMaxY = Swift.min(canvasSize.height, destRect.maxY)
+        let offCanvasLeft = Swift.max(0, -destRect.minX)
+        let offCanvasTop = Swift.max(0, -destRect.minY)
+        let dw = destRect.width
+        let dh = destRect.height
+        return VisibleSourceBounds(
+            offsetX: dw > 0 ? offCanvasLeft / dw * sourceW : 0,
+            offsetY: dh > 0 ? offCanvasTop / dh * sourceH : 0,
+            visibleW: dw > 0 ? (visMaxX - visMinX) / dw * sourceW : sourceW,
+            visibleH: dh > 0 ? (visMaxY - visMinY) / dh * sourceH : sourceH
+        )
     }
 
     private func endGesture() {

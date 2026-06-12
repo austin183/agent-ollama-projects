@@ -7,7 +7,8 @@ struct PanelCropEditor: View {
     @State private var dragBaseOrigin: CGPoint = .zero
     @State private var dragBaseSize: CGSize = .zero
     @State private var dragBaseSourceRect: CGRect = .zero
-    @State private var dragBaseQuad: [CGPoint] = []
+    @State private var dragVisibleOffset: CGPoint = .zero
+    @State private var dragVisibleSize: CGSize = .zero
     @State private var containerSize: CGSize = .zero
 
     private var currentImage: ImageItem? {
@@ -51,15 +52,16 @@ struct PanelCropEditor: View {
                                     guard let crop = currentCrop else { return }
 
                                     if overlayDragMode == .none {
+                                        let sourceRectProj = CropPreviewView.computeVisibleRect(
+                                            crop,
+                                            imageSize: image.size,
+                                            container: geo.size
+                                        )
+
                                         let visibleRegion: VisibleRegion
                                         switch panel.geometry {
                                         case .rect:
-                                            let visRect = CropPreviewView.computeVisibleRect(
-                                                crop,
-                                                imageSize: image.size,
-                                                container: geo.size
-                                            )
-                                            visibleRegion = .rect(visRect)
+                                            visibleRegion = .rect(sourceRectProj)
                                         case .path:
                                             let quad = CropPreviewView.computeQuadInContainer(
                                                 crop,
@@ -69,18 +71,50 @@ struct PanelCropEditor: View {
                                             )
                                             visibleRegion = .quad(quad)
                                         }
+
                                         overlayDragMode = CropPreviewView.detectDragMode(
                                             visibleRegion: visibleRegion,
                                             startLocation: value.startLocation
                                         )
-                                        if case .rect(let visRect) = visibleRegion {
-                                            dragBaseOrigin = visRect.origin
-                                            dragBaseSize = visRect.size
-                                        }
-                                        if case .quad(let quad) = visibleRegion {
-                                            dragBaseQuad = quad
+
+                                        switch panel.geometry {
+                                        case .rect:
+                                            dragBaseOrigin = sourceRectProj.origin
+                                            dragBaseSize = sourceRectProj.size
+                                            dragVisibleOffset = .zero
+                                            dragVisibleSize = crop.sourceRect.size
+                                        case .path:
+                                            if case .quad(let vertices) = visibleRegion, vertices.count >= 3 {
+                                                let minX = vertices.map { $0.x }.min()!
+                                                let maxX = vertices.map { $0.x }.max()!
+                                                let minY = vertices.map { $0.y }.min()!
+                                                let maxY = vertices.map { $0.y }.max()!
+                                                dragBaseOrigin = CGPoint(x: minX, y: minY)
+                                                dragBaseSize = CGSize(width: maxX - minX, height: maxY - minY)
+                                            }
+                                            // Compute visible offset/size: how much of the sourceRect
+                                            // maps to the off-canvas portion of the parallelogram.
+                                            let br = crop.destinationRect
+                                            let canvasSize = SizeConstants.defaultCanvasSize
+                                            let visMinX = Swift.max(0, br.minX)
+                                            let visMaxX = Swift.min(canvasSize.width, br.maxX)
+                                            let visMinY = Swift.max(0, br.minY)
+                                            let visMaxY = Swift.min(canvasSize.height, br.maxY)
+                                            let offCanvasLeft = Swift.max(0, -br.minX)
+                                            let offCanvasTop = Swift.max(0, -br.minY)
+                                            let bw = br.width
+                                            let bh = br.height
+                                            dragVisibleOffset = CGPoint(
+                                                x: offCanvasLeft / bw * crop.sourceRect.width,
+                                                y: offCanvasTop / bh * crop.sourceRect.height
+                                            )
+                                            dragVisibleSize = CGSize(
+                                                width: (visMaxX - visMinX) / bw * crop.sourceRect.width,
+                                                height: (visMaxY - visMinY) / bh * crop.sourceRect.height
+                                            )
                                         }
                                         dragBaseSourceRect = crop.sourceRect
+
                                         if overlayDragMode != .none {
                                             viewModel.isLiveGesturing = true
                                             viewModel.beginOverlayCropUndo(panelId: panel.id)
@@ -136,7 +170,7 @@ struct PanelCropEditor: View {
                 .accessibilityLabel("Reset crop")
                 .accessibilityHint("Restores the default crop for this image")
 
-                Text("Drag to move\(panel.geometry.isRect ? " · Corner drag to zoom (proportional)" : "")")
+                Text("Drag to move · Corner drag to zoom (proportional)")
                     .accessibilityHidden(true)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -168,11 +202,23 @@ struct PanelCropEditor: View {
             let transX = value.translation.width * scaleX
             let transY = value.translation.height * scaleY
 
-            let maxOX = max(0, image.size.width - crop.sourceRect.width)
-            let maxOY = max(0, image.size.height - crop.sourceRect.height)
+            // For path panels, the visible portion of the sourceRect is offset
+            // by the off-canvas portion of the parallelogram. Adjust clamping
+            // so the visible triangle can reach image edges.
+            let visOffset = panel.geometry.isRect ? CGPoint.zero : dragVisibleOffset
+            let visSize = panel.geometry.isRect ? crop.sourceRect.size : dragVisibleSize
 
-            let newOX = max(0, min(dragBaseSourceRect.origin.x + transX, maxOX))
-            let newOY = max(0, min(dragBaseSourceRect.origin.y + transY, maxOY))
+            let effectiveBaseX = dragBaseSourceRect.origin.x + visOffset.x
+            let effectiveBaseY = dragBaseSourceRect.origin.y + visOffset.y
+
+            let maxEffX = image.size.width - visSize.width
+            let maxEffY = image.size.height - visSize.height
+
+            let newEffX = max(0, min(effectiveBaseX + transX, maxEffX))
+            let newEffY = max(0, min(effectiveBaseY + transY, maxEffY))
+
+            let newOX = newEffX - visOffset.x
+            let newOY = newEffY - visOffset.y
 
             viewModel.applyOverlayCropLive(
                 panelId: panel.id,
@@ -441,19 +487,13 @@ struct CropPreviewView: View {
 
         var corners = extractPathPoints(cgPath)
 
-        // Clip polygon vertices to canvas bounds (in panel coordinates).
-        // The path points are relative to the panel's bounding box origin.
-        // Canvas bounds in panel coordinates:
-        //   left = -panelFrame.origin.x, right = canvasWidth - panelFrame.origin.x
-        //   top = -panelFrame.origin.y, bottom = canvasHeight - panelFrame.origin.y
+        // Clip polygon vertices to canvas bounds.
+        // extractPathPoints returns points in canvas coordinates (verified against
+        // LayoutGenerator: DiagonalSlicesLayoutStrategy uses unshearedRect.origin.x,
+        // HexagonalLayoutStrategy uses canvasCenter.x), so clip directly to canvas.
         let canvasSize = SizeConstants.defaultCanvasSize
-        let canvasClipInPanel = CGRect(
-            x: -panelFrame.origin.x,
-            y: -panelFrame.origin.y,
-            width: canvasSize.width + panelFrame.origin.x,
-            height: canvasSize.height + panelFrame.origin.y
-        )
-        corners = clipPolygon(corners, to: canvasClipInPanel)
+        let canvasClipRect = CGRect(origin: .zero, size: canvasSize)
+        corners = clipPolygon(corners, to: canvasClipRect)
         guard !corners.isEmpty else {
             let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
             return [
@@ -478,36 +518,6 @@ struct CropPreviewView: View {
     private static func clipPolygon(_ subject: [CGPoint], to clipRect: CGRect) -> [CGPoint] {
         guard !subject.isEmpty else { return [] }
 
-        func clipEdge(_ input: [CGPoint], with respectTo: ClipEdge) -> [CGPoint] {
-            guard !input.isEmpty else { return [] }
-            var output: [CGPoint] = []
-            let prev = input[input.count - 1]
-            var prevInside = respectTo.isInside(prev)
-
-            for curr in input {
-                let currInside = respectTo.isInside(curr)
-                switch (prevInside, currInside) {
-                case (true, true):
-                    output.append(curr)
-                case (false, true):
-                    if let intersect = respectTo.intersection(from: prev, to: curr) {
-                        output.append(intersect)
-                    }
-                    output.append(curr)
-                case (true, false):
-                    if let intersect = respectTo.intersection(from: prev, to: curr) {
-                        output.append(intersect)
-                    }
-                case (false, false):
-                    break
-                }
-                prevInside = currInside
-                // Track current as prev for next iteration
-            }
-            return output
-        }
-
-        // Need proper prev tracking
         func clipEdgeCorrect(_ input: [CGPoint], with respectTo: ClipEdge) -> [CGPoint] {
             guard !input.isEmpty else { return [] }
             var output: [CGPoint] = []
@@ -634,19 +644,21 @@ struct CropPreviewView: View {
         case .quad(let vertices):
             guard vertices.count >= 3 else { break }
 
-            // For quads, check corner handles for resize
-            if vertices.count == 4 {
-                let tlDist = hypot(startLocation.x - vertices[0].x, startLocation.y - vertices[0].y)
-                if tlDist <= handleThreshold { return .resizeTopLeft }
+            // Classify each vertex by its position relative to the bounding box center
+            let centerX = (vertices.map { $0.x }.min()! + vertices.map { $0.x }.max()!) / 2
+            let centerY = (vertices.map { $0.y }.min()! + vertices.map { $0.y }.max()!) / 2
 
-                let trDist = hypot(startLocation.x - vertices[1].x, startLocation.y - vertices[1].y)
-                if trDist <= handleThreshold { return .resizeTopRight }
+            for v in vertices {
+                let dist = hypot(startLocation.x - v.x, startLocation.y - v.y)
+                guard dist <= handleThreshold else { continue }
 
-                let blDist = hypot(startLocation.x - vertices[2].x, startLocation.y - vertices[2].y)
-                if blDist <= handleThreshold { return .resizeBottomLeft }
+                let isLeft = v.x <= centerX
+                let isTop = v.y <= centerY
 
-                let brDist = hypot(startLocation.x - vertices[3].x, startLocation.y - vertices[3].y)
-                if brDist <= handleThreshold { return .resizeBottomRight }
+                if isTop && isLeft { return .resizeTopLeft }
+                if isTop && !isLeft { return .resizeTopRight }
+                if !isTop && isLeft { return .resizeBottomLeft }
+                if !isTop && !isLeft { return .resizeBottomRight }
             }
 
             // Build path from all vertices for containment test

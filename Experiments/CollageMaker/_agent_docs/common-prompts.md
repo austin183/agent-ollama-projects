@@ -19,7 +19,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan in @_agent_docs/plans/2026-06-11-round-99.3-crop-overlay-fixes.md using our macos skills for guidance.
+Please implement the plan in @_agent_docs/plans/2026-06-11-round-99.4-crop-overlay-fixes.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
