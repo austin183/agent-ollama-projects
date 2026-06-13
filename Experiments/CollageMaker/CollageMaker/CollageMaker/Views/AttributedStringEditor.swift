@@ -199,7 +199,9 @@ struct AttributedStringEditor: View {
     }
 
     private func refreshStyleState() {
-        guard let textView = textViewHolder.textView, let textStorage = textView.textStorage else { return }
+        guard let textView = textViewHolder.textView,
+              let textStorage = textView.textStorage,
+              textStorage.length > 0 else { return }
         let sel = textView.selectedRange
         let loc = min(sel.location, max(0, textStorage.length - 1))
 
@@ -308,6 +310,7 @@ struct AttributedStringEditorView: NSViewRepresentable {
         }
 
         // Only re-normalize when font family or alignment actually changed.
+        guard textStorage.length > 0 else { return }
         let storageFont = textStorage.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
         let currentAlignment = (textStorage.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle)?.alignment
         if storageFont?.fontName == targetFont.fontName,

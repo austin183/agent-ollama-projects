@@ -19,7 +19,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan in @_agent_docs/plans/2026-06-12-round-99.5-diff-review-fixes.md using our macos skills for guidance.
+Please implement the plan for Phase 3 in @_agent_docs/plans/2026-06-13-srp-decomposition.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
@@ -30,7 +30,7 @@ Please work on the change request in @_agent_docs/change-requests/round-21.md us
 # Review
 ## Generic
 ```
-/code-review /building-macos-apps Please review our project and write your review to @_agent_docs/reviews/2026-06-12-review-harold.md 
+/code-review /building-macos-apps Please review our project and write your review to @_agent_docs/reviews/2026-06-12-review-mitch.md 
 ```
 
 ## Human Interface Guidelines Review

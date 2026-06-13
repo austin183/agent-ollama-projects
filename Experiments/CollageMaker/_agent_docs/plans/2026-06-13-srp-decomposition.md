@@ -4,7 +4,7 @@
 **Scope:** Decompose CollageViewModel (1,092 lines), CollageEditorView, CollageAssembler (497 lines), PanelCropEditor (674 lines), ContentView.sidebar (260 lines)
 **Target:** CollageViewModel reduced to ~450 lines; 5-6 focused managers; pure geometry utilities
 **Deferred:** LayoutManager extraction (layout orchestration is inherently cross-cutting)
-**Status:** Not started
+**Status:** Phase 2 complete (2026-06-13)
 
 ---
 
