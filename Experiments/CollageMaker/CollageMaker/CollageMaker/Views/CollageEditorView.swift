@@ -334,7 +334,7 @@ struct CollageEditorView: View {
     }
 
     private func panelAt(location: CGPoint, panelFrames: [UUID: CGRect], panelGeometries: [UUID: PanelGeometry], previewSize: CGSize) -> UUID? {
-        if let id = CropManager.hitTestPanel(at: location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: previewSize),
+        if let id = CoordinateConverter.hitTestPanel(at: location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: previewSize, canvasSize: SizeConstants.defaultCanvasSize),
            let panel = viewModel.panels.first(where: { $0.id == id }),
            let frame = panelFrames[id] {
             logger.debug("panelAt: idx=\(panel.imageIndex) frame=\(DebugHelpers.rectStr(frame)) tap=\(DebugHelpers.pointStr(location)) hits=true")
@@ -344,7 +344,7 @@ struct CollageEditorView: View {
     }
 
     private func canvasToPreviewFrame(_ canvasRect: CGRect, in previewSize: CGSize) -> CGRect {
-        CropManager.canvasToPreviewFrame(canvasRect, in: previewSize)
+        CoordinateConverter.canvasToPreviewFrame(canvasRect, in: previewSize, canvasSize: SizeConstants.defaultCanvasSize)
     }
 }
 

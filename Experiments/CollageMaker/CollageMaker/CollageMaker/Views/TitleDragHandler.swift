@@ -35,7 +35,7 @@ struct TitleDragHandler {
     }
 
     func computeDragOffset(startLocation: CGPoint) -> CGPoint {
-        let startCanvas = CropManager.screenToCanvasPoint(startLocation, in: previewSize)
+        let startCanvas = CoordinateConverter.screenToCanvasPoint(startLocation, in: previewSize, canvasSize: SizeConstants.defaultCanvasSize)
         let titleCenterCanvasY = titleCanvasFrame.minY + titleCanvasFrame.height / 2
         return CGPoint(
             x: titleCanvasFrame.midX - startCanvas.x,
@@ -48,7 +48,7 @@ struct TitleDragHandler {
         offset: CGPoint,
         canvasSize: CGSize
     ) -> (positionX: CGFloat, positionY: CGFloat) {
-        let canvasPoint = CropManager.screenToCanvasPoint(screenLocation, in: previewSize)
+        let canvasPoint = CoordinateConverter.screenToCanvasPoint(screenLocation, in: previewSize, canvasSize: SizeConstants.defaultCanvasSize)
         let positionX = (canvasPoint.x + offset.x) / canvasSize.width
         let positionY = 1.0 - (canvasPoint.y + offset.y) / canvasSize.height
         return (positionX, positionY)
@@ -61,7 +61,7 @@ struct TitleDragHandler {
         minWidth: CGFloat,
         canvasSize: CGSize
     ) -> (width: CGFloat, positionXDelta: CGFloat) {
-        let canvasPoint = CropManager.screenToCanvasPoint(screenLocation, in: previewSize)
+        let canvasPoint = CoordinateConverter.screenToCanvasPoint(screenLocation, in: previewSize, canvasSize: SizeConstants.defaultCanvasSize)
         let canvasX = canvasPoint.x
 
         switch edge {
@@ -78,7 +78,7 @@ struct TitleDragHandler {
     }
 
     private func canvasToPreviewFrame(_ canvasRect: CGRect, in previewSize: CGSize) -> CGRect {
-        CropManager.canvasToPreviewFrame(canvasRect, in: previewSize)
+        CoordinateConverter.canvasToPreviewFrame(canvasRect, in: previewSize, canvasSize: SizeConstants.defaultCanvasSize)
     }
 }
 

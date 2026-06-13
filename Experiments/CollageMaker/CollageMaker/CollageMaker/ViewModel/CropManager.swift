@@ -312,26 +312,13 @@ final class CropManager {
         panelGeometries: [UUID: PanelGeometry]? = nil,
         previewSize: CGSize
     ) -> UUID? {
-        let candidates = panelFrames.filter { $0.value.contains(location) }
-        guard !candidates.isEmpty else { return nil }
-
-        if let geometries = panelGeometries {
-            let canvasPoint = screenToCanvasPoint(location, in: previewSize)
-            for (id, _) in candidates {
-                guard let geometry = geometries[id] else { continue }
-                switch geometry {
-                case .rect:
-                    return id
-                case .path(let cgPath, _):
-                    if cgPath.contains(canvasPoint) {
-                        return id
-                    }
-                }
-            }
-            return nil
-        }
-
-        return candidates.first?.key
+        CoordinateConverter.hitTestPanel(
+            at: location,
+            panelFrames: panelFrames,
+            panelGeometries: panelGeometries,
+            previewSize: previewSize,
+            canvasSize: SizeConstants.defaultCanvasSize
+        )
     }
 
     static func translateZoom(magnification: CGFloat, baseZoom: CGFloat, imageSize: CGSize, panelSize: CGSize) -> CGFloat {
@@ -341,13 +328,7 @@ final class CropManager {
     }
 
     static func screenToCanvasPoint(_ screenPoint: CGPoint, in previewSize: CGSize) -> CGPoint {
-        let canvasSize = SizeConstants.defaultCanvasSize
-        let (fittedSize, offset) = FitMath.fit(canvasSize, into: previewSize)
-
-        let canvasX = (screenPoint.x - offset.x) / fittedSize.width * canvasSize.width
-        let canvasY = canvasSize.height - (screenPoint.y - offset.y) / fittedSize.height * canvasSize.height
-
-        return CGPoint(x: canvasX, y: canvasY)
+        CoordinateConverter.screenToCanvasPoint(screenPoint, in: previewSize, canvasSize: SizeConstants.defaultCanvasSize)
     }
 
     private func currentZoom(for panelId: UUID) -> CGFloat {
@@ -423,5 +404,45 @@ struct CoordinateConverter {
             width: crop.sourceRect.width / imageSize.width * fittedSize.width,
             height: crop.sourceRect.height / imageSize.height * fittedSize.height
         )
+    }
+
+    /// Converts a point from screen/preview coordinates (top-left origin) to canvas coordinates (bottom-left origin).
+    static func screenToCanvasPoint(_ screenPoint: CGPoint, in previewSize: CGSize, canvasSize: CGSize) -> CGPoint {
+        let (fittedSize, offset) = FitMath.fit(canvasSize, into: previewSize)
+
+        let canvasX = (screenPoint.x - offset.x) / fittedSize.width * canvasSize.width
+        let canvasY = canvasSize.height - (screenPoint.y - offset.y) / fittedSize.height * canvasSize.height
+
+        return CGPoint(x: canvasX, y: canvasY)
+    }
+
+    /// Hit-tests a location against panel frames, with optional geometry-aware path testing.
+    static func hitTestPanel(
+        at location: CGPoint,
+        panelFrames: [UUID: CGRect],
+        panelGeometries: [UUID: PanelGeometry]? = nil,
+        previewSize: CGSize,
+        canvasSize: CGSize
+    ) -> UUID? {
+        let candidates = panelFrames.filter { $0.value.contains(location) }
+        guard !candidates.isEmpty else { return nil }
+
+        if let geometries = panelGeometries {
+            let canvasPoint = screenToCanvasPoint(location, in: previewSize, canvasSize: canvasSize)
+            for (id, _) in candidates {
+                guard let geometry = geometries[id] else { continue }
+                switch geometry {
+                case .rect:
+                    return id
+                case .path(let cgPath, _):
+                    if cgPath.contains(canvasPoint) {
+                        return id
+                    }
+                }
+            }
+            return nil
+        }
+
+        return candidates.first?.key
     }
 }

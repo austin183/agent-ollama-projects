@@ -501,7 +501,7 @@ struct CropPreviewView: View {
         // HexagonalLayoutStrategy uses canvasCenter.x), so clip directly to canvas.
         let canvasSize = SizeConstants.defaultCanvasSize
         let canvasClipRect = CGRect(origin: .zero, size: canvasSize)
-        corners = clipPolygon(corners, to: canvasClipRect)
+        corners = PolygonClipper.clip(corners, to: canvasClipRect)
         guard !corners.isEmpty else {
             let vis = CropManager.sourceRectInContainer(crop, imageSize: imageSize, container: container)
             return [
@@ -520,87 +520,6 @@ struct CropPreviewView: View {
                 y: fitOffset.y + (crop.sourceRect.minY + relY_topLeft * crop.sourceRect.height) / imageSize.height * fittedSize.height
             )
         }
-    }
-
-    // Sutherland-Hodgman polygon clipping
-    private static func clipPolygon(_ subject: [CGPoint], to clipRect: CGRect) -> [CGPoint] {
-        guard !subject.isEmpty else { return [] }
-
-        func clipEdgeCorrect(_ input: [CGPoint], with respectTo: ClipEdge) -> [CGPoint] {
-            guard !input.isEmpty else { return [] }
-            var output: [CGPoint] = []
-            var prev = input[input.count - 1]
-            var prevInside = respectTo.isInside(prev)
-
-            for curr in input {
-                let currInside = respectTo.isInside(curr)
-                if currInside {
-                    if !prevInside {
-                        if let intersect = respectTo.intersection(from: prev, to: curr) {
-                            output.append(intersect)
-                        }
-                    }
-                    output.append(curr)
-                } else if prevInside {
-                    if let intersect = respectTo.intersection(from: prev, to: curr) {
-                        output.append(intersect)
-                    }
-                }
-                prev = curr
-                prevInside = currInside
-            }
-            return output
-        }
-
-        enum ClipEdge {
-            case left(CGFloat), right(CGFloat), top(CGFloat), bottom(CGFloat)
-
-            func isInside(_ p: CGPoint) -> Bool {
-                switch self {
-                case .left(let x): return p.x >= x
-                case .right(let x): return p.x <= x
-                case .top(let y): return p.y >= y
-                case .bottom(let y): return p.y <= y
-                }
-            }
-
-            func intersection(from: CGPoint, to: CGPoint) -> CGPoint? {
-                let t = self.tValue(from: from, to: to)
-                guard t.isFinite, t >= 0, t <= 1 else { return nil }
-                return CGPoint(
-                    x: from.x + t * (to.x - from.x),
-                    y: from.y + t * (to.y - from.y)
-                )
-            }
-
-            func tValue(from: CGPoint, to: CGPoint) -> CGFloat {
-                switch self {
-                case .left(let x):
-                    let dx = to.x - from.x
-                    guard dx != 0 else { return .infinity }
-                    return (x - from.x) / dx
-                case .right(let x):
-                    let dx = to.x - from.x
-                    guard dx != 0 else { return .infinity }
-                    return (x - from.x) / dx
-                case .top(let y):
-                    let dy = to.y - from.y
-                    guard dy != 0 else { return .infinity }
-                    return (y - from.y) / dy
-                case .bottom(let y):
-                    let dy = to.y - from.y
-                    guard dy != 0 else { return .infinity }
-                    return (y - from.y) / dy
-                }
-            }
-        }
-
-        var result = subject
-        result = clipEdgeCorrect(result, with: .left(clipRect.minX))
-        result = clipEdgeCorrect(result, with: .right(clipRect.maxX))
-        result = clipEdgeCorrect(result, with: .top(clipRect.minY))
-        result = clipEdgeCorrect(result, with: .bottom(clipRect.maxY))
-        return result
     }
 
     static func detectDragMode(visibleRegion: VisibleRegion, startLocation: CGPoint) -> OverlayDragMode {
