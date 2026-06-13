@@ -8,6 +8,8 @@ private let logger = Logger(
     category: "Export"
 )
 
+// MARK: - Protocols
+
 protocol CollageRenderer {
     func assembleWithCGImages(
         config: AssemblyConfig,
@@ -24,7 +26,7 @@ protocol CollageRenderer {
     ) async -> NSImage?
 }
 
-protocol PanelRenderer {
+protocol PanelRendering {
     func renderPanel(
         crop: CropInfo,
         cgImage: CGImage,
@@ -33,7 +35,7 @@ protocol PanelRenderer {
     ) async -> NSImage?
 }
 
-protocol BackgroundRenderer {
+protocol BackgroundRendering {
     func renderBackground(
         config: BackgroundConfig,
         canvasSize: CGSize,
@@ -42,21 +44,21 @@ protocol BackgroundRenderer {
     ) async -> NSImage?
 }
 
-protocol TitleRenderer {
+protocol TitleRendering {
     func renderTitle(
         titleConfig: TitleConfig,
         canvasSize: CGSize
     ) async -> NSImage?
 }
 
-protocol OverlayRenderer {
+protocol OverlayRendering {
     func renderOverlay(
         overlay: OverlayConfig,
         canvasSize: CGSize
     ) async -> NSImage?
 }
 
-protocol CollageAssembly: CollageRenderer, PanelRenderer, BackgroundRenderer, TitleRenderer, OverlayRenderer {}
+protocol CollageAssembly: CollageRenderer, PanelRendering, BackgroundRendering, TitleRendering, OverlayRendering {}
 
 extension CollageAssembly {
     func assemble(
@@ -75,6 +77,8 @@ extension CollageAssembly {
         )
     }
 }
+
+// MARK: - Assembler
 
 final class CollageAssembler: CollageAssembly, @unchecked Sendable {
     private let scheduler = RenderScheduler()
@@ -134,7 +138,7 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
 
         context.interpolationQuality = .high
 
-        drawPanels(
+        PanelRenderer.drawPanels(
             into: context,
             panels: config.layout.panels,
             cgImages: cgImages,
@@ -143,7 +147,7 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         )
 
         if let overlay = config.overlay {
-            drawOverlay(into: context, overlay: overlay, canvasSize: config.canvasSize)
+            OverlayRenderer.drawOverlay(into: context, overlay: overlay, canvasSize: config.canvasSize)
         }
 
         if !config.title.textData.text.isEmpty {
@@ -166,35 +170,13 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
     ) -> CGImage? {
         let scale = previewSize.width / config.canvasSize.width
 
-        guard let context = createPureCGContext(size: previewSize) else { return nil }
+        guard let context = ContextFactory.createBitmap(size: previewSize) else { return nil }
         context.interpolationQuality = .medium
         context.scaleBy(x: scale, y: scale)
 
-        switch config.background.style {
-        case .solid:
-            context.setFillColor(config.background.backgroundColor)
-            context.fill(CGRect(x: 0, y: 0, width: config.canvasSize.width, height: config.canvasSize.height))
+        drawBackground(into: context, config: config.background, size: config.canvasSize, backgroundImage: backgroundImage)
 
-        case .gradient:
-            drawGradient(
-                into: context,
-                size: config.canvasSize,
-                startColor: config.background.gradientStartCGColor,
-                endColor: config.background.gradientEndCGColor,
-                angle: config.background.gradientAngle
-            )
-
-        case .image:
-            drawImageBackground(
-                into: context,
-                size: config.canvasSize,
-                backgroundColor: config.background.backgroundColor,
-                backgroundImage: backgroundImage,
-                opacity: config.background.opacity
-            )
-        }
-
-        drawPanels(
+        PanelRenderer.drawPanels(
             into: context,
             panels: config.layout.panels,
             cgImages: cgImages,
@@ -203,7 +185,7 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         )
 
         if let overlay = config.overlay {
-            drawOverlay(into: context, overlay: overlay, canvasSize: config.canvasSize)
+            OverlayRenderer.drawOverlay(into: context, overlay: overlay, canvasSize: config.canvasSize)
         }
 
         if !config.title.textData.text.isEmpty {
@@ -222,151 +204,34 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         config: AssemblyConfig,
         backgroundImage: CGImage?
     ) -> CGContext? {
-        guard let ctx = createPureCGContext(size: config.canvasSize) else { return nil }
-
-        switch config.background.style {
-        case .solid:
-            ctx.setFillColor(config.background.backgroundColor)
-            ctx.fill(CGRect(x: 0, y: 0, width: config.canvasSize.width, height: config.canvasSize.height))
-
-        case .gradient:
-            drawGradient(
-                into: ctx,
-                size: config.canvasSize,
-                startColor: config.background.gradientStartCGColor,
-                endColor: config.background.gradientEndCGColor,
-                angle: config.background.gradientAngle
-            )
-
-        case .image:
-            drawImageBackground(
-                into: ctx,
-                size: config.canvasSize,
-                backgroundColor: config.background.backgroundColor,
-                backgroundImage: backgroundImage,
-                opacity: config.background.opacity
-            )
-        }
-
+        guard let ctx = ContextFactory.createBitmap(size: config.canvasSize) else { return nil }
+        drawBackground(into: ctx, config: config.background, size: config.canvasSize, backgroundImage: backgroundImage)
         return ctx
     }
 
-    private func createPureCGContext(size: CGSize) -> CGContext? {
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let bytesPerRow = Int(size.width) * 4
-        let context = CGContext(
-            data: nil,
-            width: Int(size.width),
-            height: Int(size.height),
-            bitsPerComponent: 8,
-            bytesPerRow: bytesPerRow,
-            space: colorSpace,
-            bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue
-        )
-        return context
-    }
+    private func drawBackground(into context: CGContext, config: BackgroundConfig, size: CGSize, backgroundImage: CGImage?) {
+        switch config.style {
+        case .solid:
+            BackgroundRenderer.drawSolidBackground(into: context, size: size, color: config.backgroundColor)
 
-    private func drawGradient(
-        into context: CGContext,
-        size: CGSize,
-        startColor: CGColor,
-        endColor: CGColor,
-        angle: Double
-    ) {
-        let colors: [CGColor] = [startColor, endColor]
-        let locations: [CGFloat] = [0.0, 1.0]
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        guard let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: locations) else { return }
+        case .gradient:
+            BackgroundRenderer.drawGradient(
+                into: context,
+                size: size,
+                startColor: config.gradientStartCGColor,
+                endColor: config.gradientEndCGColor,
+                angle: config.gradientAngle
+            )
 
-        let radians = angle * .pi / 180.0
-        let cx = size.width / 2
-        let cy = size.height / 2
-        let halfDiag = CGFloat(sqrt(size.width * size.width + size.height * size.height)) / 2
-        let startX = cx - cos(radians) * halfDiag
-        let startY = cy - sin(radians) * halfDiag
-        let endX = cx + cos(radians) * halfDiag
-        let endY = cy + sin(radians) * halfDiag
-
-        context.drawLinearGradient(
-            gradient,
-            start: CGPoint(x: startX, y: startY),
-            end: CGPoint(x: endX, y: endY),
-            options: []
-        )
-    }
-
-    private func drawImageBackground(
-        into context: CGContext,
-        size: CGSize,
-        backgroundColor: CGColor,
-        backgroundImage: CGImage?,
-        opacity: Double
-    ) {
-        context.setFillColor(backgroundColor)
-        context.fill(CGRect(x: 0, y: 0, width: size.width, height: size.height))
-
-        guard let bgImage = backgroundImage else { return }
-        context.saveGState()
-        context.setAlpha(opacity)
-        context.draw(bgImage, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
-        context.restoreGState()
-    }
-
-    private func drawPanels(
-        into context: CGContext,
-        panels: [ImagePanel],
-        cgImages: [CGImage?],
-        crops: [UUID: CropInfo],
-        panelAssignments: [UUID: Int]
-    ) {
-        for panel in panels {
-            let effectiveIndex = panelAssignments[panel.id] ?? panel.imageIndex
-            guard
-                effectiveIndex < cgImages.count,
-                let cg = cgImages[effectiveIndex],
-                let crop = crops[panel.id]
-            else { continue }
-
-            let sourceRect = crop.sourceRect
-            let destRect = crop.destinationRect
-
-            context.saveGState()
-
-            if let clipPath = panel.geometry.cgPath {
-                context.addPath(clipPath)
-                context.clip()
-            } else {
-                context.clip(to: destRect)
-            }
-
-            if let cropped = cg.cropping(to: sourceRect) {
-                context.draw(cropped, in: destRect)
-            } else {
-                drawClampedCrop(context: context, cgImage: cg, sourceRect: sourceRect, destRect: destRect)
-            }
-
-            context.restoreGState()
+        case .image:
+            BackgroundRenderer.drawImageBackground(
+                into: context,
+                size: size,
+                backgroundColor: config.backgroundColor,
+                backgroundImage: backgroundImage,
+                opacity: config.opacity
+            )
         }
-    }
-
-    private func drawClampedCrop(context: CGContext, cgImage: CGImage, sourceRect: CGRect, destRect: CGRect) {
-        let imageBounds = CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height)
-        let clamped = sourceRect.intersection(imageBounds)
-        guard clamped.width > 0, clamped.height > 0,
-              let clippedCrop = cgImage.cropping(to: clamped) else { return }
-        let drawX = destRect.origin.x + (clamped.origin.x - sourceRect.origin.x) / sourceRect.width * destRect.width
-        let drawY = destRect.origin.y + (clamped.origin.y - sourceRect.origin.y) / sourceRect.height * destRect.height
-        let drawW = clamped.width / sourceRect.width * destRect.width
-        let drawH = clamped.height / sourceRect.height * destRect.height
-        context.draw(clippedCrop, in: CGRect(x: drawX, y: drawY, width: drawW, height: drawH))
-    }
-
-    private func drawOverlay(into context: CGContext, overlay: OverlayConfig, canvasSize: CGSize) {
-        context.saveGState()
-        context.setBlendMode(overlay.blendMode)
-        context.setAlpha(overlay.opacity)
-        context.draw(overlay.maskImage, in: CGRect(origin: .zero, size: canvasSize))
-        context.restoreGState()
     }
 
     private func drawTitle(into context: CGContext, titleConfig: TitleConfig, canvasWidth: CGFloat, canvasHeight: CGFloat) {
@@ -388,36 +253,12 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         geometry: PanelGeometry
     ) async -> NSImage? {
         await scheduler.render {
-            guard let context = self.createPureCGContext(size: panelSize) else { return nil }
-            context.interpolationQuality = .medium
-
-            let sourceRect = crop.sourceRect
-            let destRect = CGRect(origin: .zero, size: panelSize)
-
-            context.saveGState()
-
-            if case .path(let cgPath, let boundingRect) = geometry {
-                var t = CGAffineTransform(translationX: -boundingRect.origin.x, y: -boundingRect.origin.y)
-                if let translated = cgPath.copy(using: &t) {
-                    context.addPath(translated)
-                    context.clip()
-                } else {
-                    context.clip(to: destRect)
-                }
-            } else {
-                context.clip(to: destRect)
-            }
-
-            if let cropped = cgImage.cropping(to: sourceRect) {
-                context.draw(cropped, in: destRect)
-            } else {
-                self.drawClampedCrop(context: context, cgImage: cgImage, sourceRect: sourceRect, destRect: destRect)
-            }
-
-            context.restoreGState()
-
-            guard let cgImage = context.makeImage() else { return nil }
-            return NSImage(cgImage: cgImage, size: panelSize)
+            PanelRenderer.renderPanel(
+                crop: crop,
+                cgImage: cgImage,
+                panelSize: panelSize,
+                geometry: geometry
+            )
         }
     }
 
@@ -428,34 +269,12 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         previewSize: CGSize
     ) async -> NSImage? {
         await scheduler.render {
-            guard let context = self.createPureCGContext(size: canvasSize) else { return nil }
-
-            switch config.style {
-            case .solid:
-                context.setFillColor(config.backgroundColor)
-                context.fill(CGRect(x: 0, y: 0, width: canvasSize.width, height: canvasSize.height))
-
-            case .gradient:
-                self.drawGradient(
-                    into: context,
-                    size: canvasSize,
-                    startColor: config.gradientStartCGColor,
-                    endColor: config.gradientEndCGColor,
-                    angle: config.gradientAngle
-                )
-
-            case .image:
-                self.drawImageBackground(
-                    into: context,
-                    size: canvasSize,
-                    backgroundColor: config.backgroundColor,
-                    backgroundImage: backgroundImage,
-                    opacity: config.opacity
-                )
-            }
-
-            guard let cgImage = context.makeImage() else { return nil }
-            return NSImage(cgImage: cgImage, size: previewSize)
+            BackgroundRenderer.renderBackground(
+                config: config,
+                canvasSize: canvasSize,
+                backgroundImage: backgroundImage,
+                previewSize: previewSize
+            )
         }
     }
 
@@ -466,14 +285,15 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         guard !titleConfig.textData.text.isEmpty else { return nil }
 
         return await scheduler.render {
-            guard let context = self.createPureCGContext(size: canvasSize) else { return nil }
+            guard let context = ContextFactory.createBitmap(size: canvasSize) else { return nil }
 
-            self.drawTitle(
-                into: context,
-                titleConfig: titleConfig,
-                canvasWidth: canvasSize.width,
-                canvasHeight: canvasSize.height
+            let metrics = TitleMetricsCT.prepare(
+                textData: titleConfig.textData,
+                style: titleConfig.style,
+                fontColor: titleConfig.fontColor,
+                backgroundColor: titleConfig.backgroundColor
             )
+            metrics.drawTitle(into: context, canvasWidth: canvasSize.width, canvasHeight: canvasSize.height)
 
             guard let cgImage = context.makeImage() else { return nil }
             return NSImage(cgImage: cgImage, size: canvasSize)
@@ -485,13 +305,7 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
         canvasSize: CGSize
     ) async -> NSImage? {
         await scheduler.render {
-            guard let context = self.createPureCGContext(size: canvasSize) else { return nil }
-            context.saveGState()
-            context.setAlpha(overlay.opacity)
-            context.draw(overlay.maskImage, in: CGRect(origin: .zero, size: canvasSize))
-            context.restoreGState()
-            guard let cgImage = context.makeImage() else { return nil }
-            return NSImage(cgImage: cgImage, size: canvasSize)
+            OverlayRenderer.renderOverlay(overlay: overlay, canvasSize: canvasSize)
         }
     }
 }
