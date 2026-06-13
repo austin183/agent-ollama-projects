@@ -375,7 +375,7 @@ struct ContentView: View {
                         .id(panel.id)
                 }
 
-                ExportPanel(viewModel: viewModel)
+                ExportPanel(viewModel: viewModel, backgroundManager: viewModel.backgroundManager, titleManager: viewModel.titleManager)
             }
             .frame(maxWidth: .infinity, alignment: .top)
         }

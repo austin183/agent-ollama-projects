@@ -4,9 +4,11 @@ import UniformTypeIdentifiers
 
 struct ExportPanel: View {
     @Bindable var viewModel: CollageViewModel
+    let backgroundManager: BackgroundManager
+    let titleManager: TitleManager
 
     private var displayFamily: String {
-        viewModel.titleStyle.fontFamily.isEmpty ? "(System Default)" : viewModel.titleStyle.fontFamily
+        titleManager.titleStyle.fontFamily.isEmpty ? "(System Default)" : titleManager.titleStyle.fontFamily
     }
 
     var body: some View {
@@ -16,7 +18,10 @@ struct ExportPanel: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                Picker("Background Style", selection: $viewModel.backgroundStyle) {
+                Picker("Background Style", selection: Binding(
+                    get: { viewModel.backgroundStyle },
+                    set: { viewModel.backgroundStyle = $0 }
+                )) {
                     Text("Solid").tag(BackgroundStyle.solid)
                     Text("Gradient").tag(BackgroundStyle.gradient)
                     Text("Image").tag(BackgroundStyle.image)
@@ -26,19 +31,28 @@ struct ExportPanel: View {
 
                 switch viewModel.backgroundStyle {
                 case .solid:
-                    ColorWellView(color: $viewModel.backgroundColor)
+                    ColorWellView(color: Binding(
+                        get: { viewModel.backgroundColor },
+                        set: { viewModel.backgroundColor = $0 }
+                    ))
                         .accessibilityLabel("Background color")
                         .frame(height: 28)
 
                 case .gradient:
                     HStack(spacing: 8) {
-                        ColorWellView(color: $viewModel.gradientStartColor)
+                        ColorWellView(color: Binding(
+                            get: { viewModel.gradientStartColor },
+                            set: { viewModel.gradientStartColor = $0 }
+                        ))
                             .frame(width: 32, height: 28)
                         Text("Start")
                             .font(.caption)
                             .foregroundStyle(.secondary)
 
-                        ColorWellView(color: $viewModel.gradientEndColor)
+                        ColorWellView(color: Binding(
+                            get: { viewModel.gradientEndColor },
+                            set: { viewModel.gradientEndColor = $0 }
+                        ))
                             .frame(width: 32, height: 28)
                         Text("End")
                             .font(.caption)
@@ -49,7 +63,10 @@ struct ExportPanel: View {
                         Text("Angle")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Slider(value: $viewModel.gradientAngle, in: 0...360)
+                        Slider(value: Binding(
+                            get: { viewModel.gradientAngle },
+                            set: { viewModel.gradientAngle = $0 }
+                        ), in: 0...360)
                             .accessibilityLabel("Gradient angle")
                             .accessibilityValue("\(Int(viewModel.gradientAngle)) degrees")
                             .frame(width: 80)
@@ -83,7 +100,10 @@ struct ExportPanel: View {
                         Text("Opacity")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Slider(value: $viewModel.backgroundOpacity, in: 0...1)
+                        Slider(value: Binding(
+                            get: { viewModel.backgroundOpacity },
+                            set: { viewModel.backgroundOpacity = $0 }
+                        ), in: 0...1)
                             .accessibilityLabel("Background image opacity")
                             .accessibilityValue("\(Int(viewModel.backgroundOpacity * 100)) percent")
                             .frame(width: 80)
@@ -101,7 +121,10 @@ struct ExportPanel: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 AttributedStringEditor(
-                    attributedString: $viewModel.titleAttrString,
+                    attributedString: Binding(
+                        get: { viewModel.titleAttrString },
+                        set: { viewModel.titleAttrString = $0 }
+                    ),
                     titleStyle: viewModel.titleStyle
                 )
                 .accessibilityLabel("Title text editor")

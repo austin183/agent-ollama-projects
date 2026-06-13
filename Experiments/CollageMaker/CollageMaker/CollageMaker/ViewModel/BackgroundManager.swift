@@ -1,0 +1,54 @@
+import AppKit
+import Foundation
+
+@MainActor
+@Observable
+final class BackgroundManager {
+    var backgroundColor: NSColor = .black
+    var backgroundStyle: BackgroundStyle = .solid
+    var gradientStartColor: NSColor = .black
+    var gradientEndColor: NSColor = .darkGray
+    var gradientAngle: Double = 0
+    var backgroundImage: NSImage?
+    var backgroundImagePath: String?
+    var backgroundOpacity: Double = 1.0
+
+    func buildConfig() -> BackgroundConfig {
+        BackgroundConfig(
+            style: backgroundStyle,
+            color: backgroundColor,
+            gradientStartColor: gradientStartColor,
+            gradientEndColor: gradientEndColor,
+            gradientAngle: gradientAngle,
+            opacity: backgroundOpacity
+        )
+    }
+
+    func setBackgroundImage(_ image: NSImage?, path: String?) {
+        backgroundImagePath = path
+        backgroundImage = image
+    }
+
+    func updateBackground(viewModel: CollageViewModel) {
+        let bgConfig = buildConfig()
+        let backgroundImageCG = backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+
+        viewModel.previewManager.updateBackground(
+            config: bgConfig,
+            canvasSize: SizeConstants.defaultCanvasSize,
+            backgroundImage: backgroundImageCG,
+            previewSize: SizeConstants.defaultPreviewSize
+        )
+    }
+
+    func reset() {
+        backgroundColor = .black
+        backgroundStyle = .solid
+        gradientStartColor = .black
+        gradientEndColor = .darkGray
+        gradientAngle = 0
+        backgroundImage = nil
+        backgroundImagePath = nil
+        backgroundOpacity = 1.0
+    }
+}
