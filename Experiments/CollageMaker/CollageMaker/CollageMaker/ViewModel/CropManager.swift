@@ -161,7 +161,7 @@ final class CropManager {
         let scaledW = panelSize.width * zoom
         let scaledH = panelSize.height * zoom
 
-        let visBounds = computeVisibleSourceBounds(destRect: crop.destinationRect, sourceW: scaledW, sourceH: scaledH)
+        let visBounds = Self.computeVisibleSourceBounds(destRect: crop.destinationRect, sourceW: scaledW, sourceH: scaledH)
 
         let effectiveBaseX = baseOrigin.x + visBounds.offsetX
         let effectiveBaseY = baseOrigin.y + visBounds.offsetY
@@ -220,16 +220,50 @@ final class CropManager {
         let scaledW = panelSize.width * newZoom
         let scaledH = panelSize.height * newZoom
 
-        let visBounds = computeVisibleSourceBounds(destRect: crop.destinationRect, sourceW: scaledW, sourceH: scaledH)
+        let visBounds = Self.computeVisibleSourceBounds(destRect: crop.destinationRect, sourceW: scaledW, sourceH: scaledH)
+        let oldVisBounds = Self.computeVisibleSourceBounds(destRect: crop.destinationRect, sourceW: crop.sourceRect.width, sourceH: crop.sourceRect.height)
 
-        let currentCenterX = crop.sourceRect.midX
-        let currentCenterY = crop.sourceRect.midY
+        // Determine the zoom anchor point. The anchor's effective source
+        // coordinate is computed from the OLD crop, and the offset subtracted
+        // is the anchor's position within the NEW visible region.
+        var anchorEffX: CGFloat = 0
+        var anchorOffsetX: CGFloat = 0
+        var anchorEffY: CGFloat = 0
+        var anchorOffsetY: CGFloat = 0
 
-        let maxOX = max(0, image.size.width - scaledW)
-        let maxOY = max(0, image.size.height - scaledH)
+        if crop.destination.isRect {
+            let cx = crop.sourceRect.origin.x + oldVisBounds.offsetX + oldVisBounds.visibleW / 2
+            let cy = crop.sourceRect.origin.y + oldVisBounds.offsetY + oldVisBounds.visibleH / 2
+            anchorEffX = cx; anchorOffsetX = visBounds.visibleW / 2
+            anchorEffY = cy; anchorOffsetY = visBounds.visibleH / 2
+        } else {
+            let dest = crop.destinationRect
+            let baseEffX = crop.sourceRect.origin.x + oldVisBounds.offsetX
+            let baseEffY = crop.sourceRect.origin.y + oldVisBounds.offsetY
 
-        let newOX = clamp(currentCenterX - scaledW / 2, min: 0, max: maxOX)
-        let newOY = clamp(currentCenterY - scaledH / 2, min: 0, max: maxOY)
+            if dest.minX < 0 {
+                // Left edge clipped — anchor at top-left of visible region
+                anchorEffX = baseEffX; anchorOffsetX = 0
+                anchorEffY = baseEffY; anchorOffsetY = 0
+            } else if dest.maxX > SizeConstants.defaultCanvasSize.width {
+                // Right edge clipped — anchor at bottom-right of visible region
+                anchorEffX = baseEffX + oldVisBounds.visibleW; anchorOffsetX = visBounds.visibleW
+                anchorEffY = baseEffY + oldVisBounds.visibleH; anchorOffsetY = visBounds.visibleH
+            } else {
+                // Fully on-canvas — anchor at top-left of visible region
+                anchorEffX = baseEffX; anchorOffsetX = 0
+                anchorEffY = baseEffY; anchorOffsetY = 0
+            }
+        }
+
+        let maxEffX = max(0, image.size.width - visBounds.visibleW)
+        let maxEffY = max(0, image.size.height - visBounds.visibleH)
+
+        let newEffX = clamp(anchorEffX - anchorOffsetX, min: 0, max: maxEffX)
+        let newEffY = clamp(anchorEffY - anchorOffsetY, min: 0, max: maxEffY)
+
+        let newOX = newEffX - visBounds.offsetX
+        let newOY = newEffY - visBounds.offsetY
 
         cropMap[id] = CropInfo(
             panelId: id,
@@ -327,14 +361,14 @@ final class CropManager {
         FitMath.sourceRect(imageSize: imageSize, panelSize: panelSize)
     }
 
-    struct VisibleSourceBounds {
+    internal struct VisibleSourceBounds {
         let offsetX: CGFloat
         let offsetY: CGFloat
         let visibleW: CGFloat
         let visibleH: CGFloat
     }
 
-    private func computeVisibleSourceBounds(destRect: CGRect, sourceW: CGFloat, sourceH: CGFloat) -> VisibleSourceBounds {
+    static func computeVisibleSourceBounds(destRect: CGRect, sourceW: CGFloat, sourceH: CGFloat) -> VisibleSourceBounds {
         let canvasSize = SizeConstants.defaultCanvasSize
         let visMinX = Swift.max(0, destRect.minX)
         let visMaxX = Swift.min(canvasSize.width, destRect.maxX)

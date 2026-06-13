@@ -8,7 +8,7 @@ Can you please help me think through how we can address the change request in @_
 or with input from multiple models
 
 ```
-Can you please run the @planner-g31 agent to create a draft plan for @_agent_docs/change-requests/round-99.4.md  and then use the results to inform your own plan on how to address the issues presented? 
+Can you please run the @planner and @planner-g31 agents to create draft plans for @_agent_docs/change-requests/round-99.5.md and then use the results to inform your own plan on how to address the issues presented?
 ```
 
 ## Review
@@ -19,7 +19,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan in @_agent_docs/plans/2026-06-11-round-99.4-crop-overlay-fixes.md using our macos skills for guidance.
+Please implement the plan in @_agent_docs/plans/2026-06-12-round-99.5-diff-review-fixes.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
@@ -51,7 +51,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/polygon-clip-and-vertex-guard-propagation.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/pinch-zoom-anchor-old-vs-new-bounds.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Researching

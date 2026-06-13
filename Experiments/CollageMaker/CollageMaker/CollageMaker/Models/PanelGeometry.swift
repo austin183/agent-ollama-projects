@@ -41,4 +41,31 @@ enum PanelGeometry: @unchecked Sendable {
         t = t.scaledBy(x: scaleX, y: -scaleY)
         return t
     }
+
+    static func extractPathPoints(_ cgPath: CGPath) -> [CGPoint] {
+        class PointCollector { var points: [CGPoint] = [] }
+        let collector = PointCollector()
+        cgPath.apply(info: Unmanaged.passUnretained(collector).toOpaque()) { info, element in
+            let c = Unmanaged<PointCollector>.fromOpaque(info!).takeUnretainedValue()
+            let elem = element.pointee
+            switch elem.type {
+            case .moveToPoint:
+                c.points.append(elem.points.pointee)
+            case .addLineToPoint:
+                c.points.append(elem.points.pointee)
+            case .addQuadCurveToPoint:
+                c.points.append(elem.points.pointee)
+                c.points.append(elem.points.advanced(by: 1).pointee)
+            case .addCurveToPoint:
+                c.points.append(elem.points.pointee)
+                c.points.append(elem.points.advanced(by: 1).pointee)
+                c.points.append(elem.points.advanced(by: 2).pointee)
+            case .closeSubpath:
+                break
+            @unknown default:
+                break
+            }
+        }
+        return collector.points
+    }
 }

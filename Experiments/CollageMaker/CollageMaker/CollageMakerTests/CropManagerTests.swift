@@ -459,4 +459,35 @@ import Testing
         #expect(result.origin.x > 0)
         #expect(result.origin.y > 0)
     }
+
+    // MARK: - Off-canvas .path Panel Pinch Zoom
+
+    @Test func pinchZoomOffCanvasPathPanelUsesEffectiveOriginClamping() {
+        let manager = CropManager()
+        let image = createTestImageItem(size: CGSize(width: 4000, height: 4000))
+
+        // Create a .path panel that extends off-canvas to the left
+        let canvasSize = SizeConstants.defaultCanvasSize
+        let offCanvasRect = CGRect(x: -200, y: 0, width: 600, height: canvasSize.height)
+        let mutablePath = CGMutablePath()
+        mutablePath.addRect(offCanvasRect)
+        let panel = ImagePanel(imageIndex: 0, geometry: .path(cgPath: mutablePath, boundingRect: offCanvasRect))
+        let panels = [panel]
+
+        manager.computeInitialCrops(panels: panels, images: [image])
+        let panelId = panel.id
+
+        // Pinch zoom in
+        manager.beginPinch(panelId: panelId)
+        manager.pinch(magnification: 2.0)
+        manager.applyPinch(panelId: panelId, panels: panels, images: [image])
+
+        let crop = manager.cropMap[panelId]!
+        // Source rect origin should remain non-negative (clamped to image bounds)
+        #expect(crop.sourceRect.origin.x >= 0)
+        #expect(crop.sourceRect.origin.y >= 0)
+        // Source rect should not extend beyond image bounds
+        #expect(crop.sourceRect.origin.x + crop.sourceRect.width <= image.size.width + 1)
+        #expect(crop.sourceRect.origin.y + crop.sourceRect.height <= image.size.height + 1)
+    }
 }

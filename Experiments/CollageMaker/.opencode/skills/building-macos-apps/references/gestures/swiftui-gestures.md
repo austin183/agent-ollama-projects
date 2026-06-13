@@ -257,6 +257,9 @@ private func throttledScrollPanRender() {
 - **Hardcoded zoom limits don't scale** — `clamp(min: 0.5, max: 3.0)` assumes a fixed image/panel relationship. When the image is much larger than the panel, the max prevents zooming out enough to see the full image. Compute the zoom-out limit dynamically from actual dimensions.
 - **CG-rendered content needs CG live preview, not SwiftUI overlay** — SwiftUI `Text` uses a different font engine than `NSAttributedString.draw(in:)`. Font metrics (ascent, descent, leading, em-square) differ even with identical font descriptors. A SwiftUI overlay will never match CG output pixel-for-pixel. For live gesture feedback on CG-rendered content (titles, watermarks, annotations), debounce the CG render at ~150ms on the specific layer, not the full composite. Show the pre-rendered `NSImage` during the debounce gap for continuity. Cancel the debounce task and run a full composite on gesture end.
 - **High-frequency gesture cancels every render** — `DragGesture.onChanged` fires at ~60fps. The "cancel previous task + schedule new render" pattern will cancel every render because the next event arrives before the render completes. Throttle the render cadence at the ViewModel level (e.g., 50ms) instead of canceling on every event.
+- **Zoom anchor drift from using new bounds for both anchor and offset** — When computing the zoom anchor, the anchor's source coordinate must come from the old (pre-zoom) crop, while the offset uses the new (post-zoom) visible region. Using new bounds for both creates a feedback loop — the anchor itself moves as zoom changes, causing visible drift on every pinch.
+- **Center-based zoom drifts on sheared parallelograms** — For `.path` panels with diagonal edges, `boundingBox.width/2` as the anchor drifts proportionally to `tan(angle)/2`. Use a fixed corner anchor (top-left for left-clipped, bottom-right for right-clipped) instead of any computed center.
+- **Anchoring to `sourceRect.midX` drifts off-canvas panels** — The full source rect center differs from the visible center by `(scaledW - visibleW)/2`. Always anchor to a point the user can see, not to a point that may be off-screen.
 
 ### Dynamic Zoom Bounds
 
@@ -283,3 +286,61 @@ let newZoom = clamp(baseZoom / magnification, min: minZoomIn, max: maxZoomOut)
 The max zoom-out is where the source rect equals the largest panel-aspect-matched rect that fits inside the image.
 
 **Zoom-in floor is constant:** Unlike zoom-out (content-dependent), zoom-in has a fixed semantic floor. `0.5` means the source rect is half the panel size (2x magnification), independent of image dimensions.
+
+### Zoom Anchor Computation
+
+When applying pinch zoom, the anchor point must remain visually fixed. The anchor's **source coordinate** comes from the **old** (pre-zoom) crop, while the **offset** subtracted uses the **new** (post-zoom) visible region. Using new bounds for both creates feedback drift — the anchor moves as zoom changes.
+
+```swift
+// NEW visible bounds (post-zoom dimensions)
+let visBounds = Self.computeVisibleSourceBounds(
+    destRect: crop.destinationRect, sourceW: scaledW, sourceH: scaledH
+)
+
+// OLD visible bounds (pre-zoom, from current crop)
+let oldVisBounds = Self.computeVisibleSourceBounds(
+    destRect: crop.destinationRect,
+    sourceW: crop.sourceRect.width, sourceH: crop.sourceRect.height
+)
+
+// Anchor source coordinate from OLD crop (the point that should stay fixed)
+let anchorEffX = crop.sourceRect.origin.x + oldVisBounds.offsetX + oldVisBounds.visibleW / 2
+
+// Anchor offset within NEW visible region
+let anchorOffsetX = visBounds.visibleW / 2
+
+// New origin = anchor coordinate minus offset
+let maxEffX = max(0, image.size.width - visBounds.visibleW)
+let newEffX = clamp(anchorEffX - anchorOffsetX, min: 0, max: maxEffX)
+let newOX = newEffX - visBounds.offsetX
+```
+
+**Why old bounds for the anchor:** The anchor is a point in the image that should not move during zoom. It is defined by the current (pre-zoom) crop state. Using new bounds shifts the anchor as zoom changes.
+
+**Why new bounds for the offset:** The offset represents "distance from anchor to the new source rect origin." It must use new visible dimensions since that is what the source rect will be after zoom.
+
+### Corner Anchors for Irregular Shapes
+
+For `.path` panels (parallelograms, triangles, hexagons), center-based zoom drifts on sheared shapes — drift proportional to `tan(angle)/2`. At 43° this is obvious. Use a fixed corner anchor instead:
+
+```swift
+if dest.minX < 0 {
+    // Left edge clipped — anchor at top-left
+    anchorEffX = baseEffX; anchorOffsetX = 0
+    anchorEffY = baseEffY; anchorOffsetY = 0
+} else if dest.maxX > canvasWidth {
+    // Right edge clipped — anchor at bottom-right
+    anchorEffX = baseEffX + oldVisBounds.visibleW; anchorOffsetX = visBounds.visibleW
+    anchorEffY = baseEffY + oldVisBounds.visibleH; anchorOffsetY = visBounds.visibleH
+} else {
+    // Fully on-canvas — anchor at top-left
+    anchorEffX = baseEffX; anchorOffsetX = 0
+    anchorEffY = baseEffY; anchorOffsetY = 0
+}
+```
+
+**When to use:** Any `.path` panel where the shape is not a rectangle. A fixed corner is more predictable than any computed center for irregular geometry.
+
+### `computeVisibleSourceBounds` as Static Method
+
+Make `computeVisibleSourceBounds` a `static func` on `CropManager`. It computes the visible source region given a destination rect and scaled source dimensions. Being static enables reuse from `PanelCropEditor` (overlay drag initialization), `CropManager` (pan and pinch), and tests — eliminating duplicated math.

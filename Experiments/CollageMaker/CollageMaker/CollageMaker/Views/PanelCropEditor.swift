@@ -92,26 +92,13 @@ struct PanelCropEditor: View {
                                                 dragBaseOrigin = CGPoint(x: minX, y: minY)
                                                 dragBaseSize = CGSize(width: maxX - minX, height: maxY - minY)
                                             }
-                                            // Compute visible offset/size: how much of the sourceRect
-                                            // maps to the off-canvas portion of the parallelogram.
-                                            let br = crop.destinationRect
-                                            let canvasSize = SizeConstants.defaultCanvasSize
-                                            let visMinX = Swift.max(0, br.minX)
-                                            let visMaxX = Swift.min(canvasSize.width, br.maxX)
-                                            let visMinY = Swift.max(0, br.minY)
-                                            let visMaxY = Swift.min(canvasSize.height, br.maxY)
-                                            let offCanvasLeft = Swift.max(0, -br.minX)
-                                            let offCanvasTop = Swift.max(0, -br.minY)
-                                            let bw = br.width
-                                            let bh = br.height
-                                            dragVisibleOffset = CGPoint(
-                                                x: offCanvasLeft / bw * crop.sourceRect.width,
-                                                y: offCanvasTop / bh * crop.sourceRect.height
-                                            )
-                                            dragVisibleSize = CGSize(
-                                                width: (visMaxX - visMinX) / bw * crop.sourceRect.width,
-                                                height: (visMaxY - visMinY) / bh * crop.sourceRect.height
-                                            )
+                                             let visBounds = CropManager.computeVisibleSourceBounds(
+                                                 destRect: crop.destinationRect,
+                                                 sourceW: crop.sourceRect.width,
+                                                 sourceH: crop.sourceRect.height
+                                             )
+                                             dragVisibleOffset = CGPoint(x: visBounds.offsetX, y: visBounds.offsetY)
+                                             dragVisibleSize = CGSize(width: visBounds.visibleW, height: visBounds.visibleH)
                                         }
                                         dragBaseSourceRect = crop.sourceRect
 
@@ -211,8 +198,8 @@ struct PanelCropEditor: View {
             let effectiveBaseX = dragBaseSourceRect.origin.x + visOffset.x
             let effectiveBaseY = dragBaseSourceRect.origin.y + visOffset.y
 
-            let maxEffX = image.size.width - visSize.width
-            let maxEffY = image.size.height - visSize.height
+            let maxEffX = max(0, image.size.width - visSize.width)
+            let maxEffY = max(0, image.size.height - visSize.height)
 
             let newEffX = max(0, min(effectiveBaseX + transX, maxEffX))
             let newEffY = max(0, min(effectiveBaseY + transY, maxEffY))
@@ -235,7 +222,7 @@ struct PanelCropEditor: View {
                 fittedW: fittedW,
                 fittedH: fittedH,
                 fitOffset: fitOffset,
-                baseSourceRect: dragBaseSourceRect
+                destRect: crop.destinationRect
             )
 
         case .resizeTopRight:
@@ -248,7 +235,7 @@ struct PanelCropEditor: View {
                 fittedW: fittedW,
                 fittedH: fittedH,
                 fitOffset: fitOffset,
-                baseSourceRect: dragBaseSourceRect
+                destRect: crop.destinationRect
             )
 
         case .resizeBottomLeft:
@@ -261,7 +248,7 @@ struct PanelCropEditor: View {
                 fittedW: fittedW,
                 fittedH: fittedH,
                 fitOffset: fitOffset,
-                baseSourceRect: dragBaseSourceRect
+                destRect: crop.destinationRect
             )
 
         case .resizeTopLeft:
@@ -274,7 +261,7 @@ struct PanelCropEditor: View {
                 fittedW: fittedW,
                 fittedH: fittedH,
                 fitOffset: fitOffset,
-                baseSourceRect: dragBaseSourceRect
+                destRect: crop.destinationRect
             )
 
         case .none:
@@ -291,7 +278,7 @@ struct PanelCropEditor: View {
         fittedW: CGFloat,
         fittedH: CGFloat,
         fitOffset: CGPoint,
-        baseSourceRect: CGRect
+        destRect: CGRect
     ) {
         let panelAspect = panel.frame.width / panel.frame.height
 
@@ -321,7 +308,7 @@ struct PanelCropEditor: View {
             clampedOY = container.height - newH
         }
 
-        let sourceOrigin = CGPoint(
+        var sourceOrigin = CGPoint(
             x: (clampedOX - fitOffset.x) / fittedW * image.size.width,
             y: (clampedOY - fitOffset.y) / fittedH * image.size.height
         )
@@ -338,6 +325,27 @@ struct PanelCropEditor: View {
 
         sourceSize.width = Swift.max(minSourceW, Swift.min(maxSourceW, sourceSize.width))
         sourceSize.height = Swift.max(minSourceH, Swift.min(maxSourceH, sourceSize.height))
+
+        // For .path panels, adjust source origin to keep the non-dragged
+        // parallelogram edge stable. When sourceSize changes, the parallelogram
+        // edges shift because the source rect maps to the parallelogram bounding
+        // box. Compensate by shifting the origin proportionally.
+        if !panel.geometry.isRect, destRect.width > 0, destRect.height > 0 {
+            let deltaW = sourceSize.width - crop.sourceRect.width
+            let deltaH = sourceSize.height - crop.sourceRect.height
+
+            if anchor.x <= dragBaseOrigin.x + CGFloat.ulpOfOne {
+                sourceOrigin.x += deltaW * (-destRect.minX) / destRect.width
+            } else {
+                sourceOrigin.x += deltaW * (destRect.minX + destRect.width) / destRect.width - deltaW
+            }
+
+            if anchor.y <= dragBaseOrigin.y + CGFloat.ulpOfOne {
+                sourceOrigin.y += deltaH * (-destRect.minY) / destRect.height
+            } else {
+                sourceOrigin.y += deltaH * (destRect.minY + destRect.height) / destRect.height - deltaH
+            }
+        }
 
         let clampedOriginX = Swift.max(0, Swift.min(sourceOrigin.x, max(0, image.size.width - sourceSize.width)))
         let clampedOriginY = Swift.max(0, Swift.min(sourceOrigin.y, max(0, image.size.height - sourceSize.height)))
@@ -485,7 +493,7 @@ struct CropPreviewView: View {
             ]
         }
 
-        var corners = extractPathPoints(cgPath)
+        var corners = PanelGeometry.extractPathPoints(cgPath)
 
         // Clip polygon vertices to canvas bounds.
         // extractPathPoints returns points in canvas coordinates (verified against
@@ -593,33 +601,6 @@ struct CropPreviewView: View {
         result = clipEdgeCorrect(result, with: .top(clipRect.minY))
         result = clipEdgeCorrect(result, with: .bottom(clipRect.maxY))
         return result
-    }
-
-    static func extractPathPoints(_ cgPath: CGPath) -> [CGPoint] {
-        class PointCollector { var points: [CGPoint] = [] }
-        let collector = PointCollector()
-        cgPath.apply(info: Unmanaged.passUnretained(collector).toOpaque()) { info, element in
-            let c = Unmanaged<PointCollector>.fromOpaque(info!).takeUnretainedValue()
-            let elem = element.pointee
-            switch elem.type {
-            case .moveToPoint:
-                c.points.append(elem.points.pointee)
-            case .addLineToPoint:
-                c.points.append(elem.points.pointee)
-            case .addQuadCurveToPoint:
-                c.points.append(elem.points.pointee)
-                c.points.append(elem.points.advanced(by: 1).pointee)
-            case .addCurveToPoint:
-                c.points.append(elem.points.pointee)
-                c.points.append(elem.points.advanced(by: 1).pointee)
-                c.points.append(elem.points.advanced(by: 2).pointee)
-            case .closeSubpath:
-                break
-            @unknown default:
-                break
-            }
-        }
-        return collector.points
     }
 
     static func detectDragMode(visibleRegion: VisibleRegion, startLocation: CGPoint) -> OverlayDragMode {
