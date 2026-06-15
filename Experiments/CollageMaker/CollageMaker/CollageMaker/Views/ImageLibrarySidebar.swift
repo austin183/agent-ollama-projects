@@ -68,7 +68,7 @@ struct ImageLibrarySidebar: View {
                         Spacer()
 
                         Button {
-                            viewModel.removeImage(at: index)
+                            viewModel.imageCoordinator.removeImage(at: index)
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(.secondary)
@@ -78,21 +78,21 @@ struct ImageLibrarySidebar: View {
                     .contentShape(Rectangle())
                     .contextMenu {
                         Button("Remove", role: .destructive) {
-                            viewModel.removeImage(at: index)
+                            viewModel.imageCoordinator.removeImage(at: index)
                         }
                     }
                     .onTapGesture {
-                        viewModel.selectPanelForImage(at: index)
+                        viewModel.imageCoordinator.selectPanelForImage(at: index)
                         isDetailCollapsed = false
                     }
                 }
                 .onMove { from, to in
-                    viewModel.moveImages(from: from, to: to)
+                    viewModel.imageCoordinator.moveImages(from: from, to: to)
                 }
             }
 
             Button {
-                viewModel.browseImages()
+                viewModel.imageCoordinator.browseImages()
             } label: {
                 Label("Add Images", systemImage: "plus.circle.fill")
             }

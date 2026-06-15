@@ -28,8 +28,8 @@ final class CollageViewModel {
     let imageLibrary = ImageLibraryManager()
     let backgroundManager = BackgroundManager()
     let titleManager = TitleManager()
+    var imageCoordinator: ImageCoordinator!
     private var isInitializing = false
-    private var saliencyResults: [Int: SaliencyResult] = [:]
     let debouncer = Debouncer()
     private var cropMapVersion = 0
     var titleImageVersion = 0
@@ -434,6 +434,15 @@ final class CollageViewModel {
         self.previewManager = PreviewManager(assembler: assembler)
         self.exportManager = ExportManager(assembler: assembler)
         self.undoManager.levelsOfUndo = 60
+        self.imageCoordinator = ImageCoordinator(
+            viewModel: self,
+            imageLibrary: imageLibrary,
+            layoutManager: layoutManager,
+            cropManager: cropManager,
+            previewManager: previewManager,
+            undoManager: undoManager,
+            saliencyAnalyzer: saliencyAnalyzer
+        )
 
         imageLibrary.onImagesChanged = { [weak self] in
             self?.regenerateLayout()
@@ -491,76 +500,17 @@ final class CollageViewModel {
         undoManager.setActionName("Move Title")
     }
 
-    // MARK: - Image Loading
+    // MARK: - Image Loading (delegated to ImageCoordinator)
 
-    func browseImages() {
-        imageLibrary.browseImages()
-    }
+    func browseImages() { imageCoordinator.browseImages() }
 
-    func addImages(from urls: [URL]) async {
-        await imageLibrary.addImages(from: urls)
-        if !images.isEmpty && !isProcessing {
-            Task { [weak self] in
-                await self?.analyzeSaliency()
-            }
-        }
-    }
+    func addImages(from urls: [URL]) async { await imageCoordinator.addImages(from: urls) }
 
-    func removeImage(at index: Int) {
-        guard let (removed, at) = imageLibrary.removeImage(at: index) else { return }
-        undoManager.registerUndo(withTarget: self) { target in
-            target.imageLibrary.images.insert(removed, at: at)
-            target.regenerateLayout()
-        }
-        undoManager.setActionName("Remove Image")
+    func removeImage(at index: Int) { imageCoordinator.removeImage(at: index) }
 
-        Task { [weak self] in
-            await self?.analyzeSaliency()
-        }
-    }
+    func moveImages(from: IndexSet, to: Int) { imageCoordinator.moveImages(from: from, to: to) }
 
-    func moveImages(from: IndexSet, to: Int) {
-        let oldCustomOrder = customImageOrder
-        imageLibrary.moveImages(from: from, to: to)
-        layoutManager.panelAssignments.removeAll()
-        undoManager.registerUndo(withTarget: self) { target in
-            target.customImageOrder = oldCustomOrder
-            target.regenerateLayout()
-        }
-        undoManager.setActionName("Reorder Images")
-
-        Task { [weak self] in
-            await self?.analyzeSaliency()
-        }
-    }
-
-    func clearAll() {
-        guard !images.isEmpty else { return }
-        logger.info("Clear all images")
-        let oldPanels = panels, oldCropMap = cropMap
-        let oldImages = imageLibrary.clearAll()
-        let oldBgImage = backgroundManager.backgroundImage
-        let oldBgImagePath = backgroundManager.backgroundImagePath
-        backgroundManager.reset()
-        titleManager.reset()
-        layoutManager.reset()
-        undoManager.registerUndo(withTarget: self) { target in
-            target.imageLibrary.images = oldImages
-            target.layoutManager.panels = oldPanels
-            target.cropMap = oldCropMap
-            target.backgroundManager.backgroundImage = oldBgImage
-            target.backgroundManager.backgroundImagePath = oldBgImagePath
-            target.regenerateLayout()
-        }
-        undoManager.setActionName("Clear All")
-        exportManager.exportTask?.cancel()
-        cropManager.cropMap.removeAll()
-        saliencyResults.removeAll()
-        selectedPanelId = nil
-        previewManager.clearAll()
-        processingCount = 0
-        errorMessage = nil
-    }
+    func clearAll() { imageCoordinator.clearAll() }
 
     // MARK: - Layout
 
@@ -576,7 +526,7 @@ final class CollageViewModel {
             customImageOrder: customImageOrder,
             cropManager: cropManager,
             previewManager: previewManager,
-            saliencyResults: saliencyResults,
+            saliencyResults: imageCoordinator.saliencyResults,
             preserveCrops: preserveCrops
         )
 
@@ -591,82 +541,28 @@ final class CollageViewModel {
         updateAllPanelPreviews()
     }
 
-    // MARK: - Panel Image Assignment
+    // MARK: - Panel Image Assignment (delegated to ImageCoordinator)
 
     func assignImage(_ imageIndex: Int, to panelId: UUID) {
-        layoutManager.panelAssignments[panelId] = imageIndex
-        resetCrop(panelId: panelId)
-        updatePanelPreview(panelId: panelId)
+        imageCoordinator.assignImage(imageIndex, to: panelId)
     }
 
     func getEffectiveImageIndex(for panelId: UUID) -> Int? {
-        if let assigned = panelAssignments[panelId] {
-            return assigned
-        }
-        guard let panelIndex = panels.firstIndex(where: { $0.id == panelId }) else { return nil }
-        return panelIndex
+        imageCoordinator.getEffectiveImageIndex(for: panelId)
     }
 
     func selectPanelForImage(at imageIndex: Int) {
-        guard imageIndex < images.count else { return }
-        if let panel = panels.first(where: { panelAssignments[$0.id] == imageIndex || $0.imageIndex == imageIndex }) {
-            selectedPanelId = panel.id
-        }
+        imageCoordinator.selectPanelForImage(at: imageIndex)
     }
 
     func swapPanelImages(sourceId: UUID, targetId: UUID) {
-        guard sourceId != targetId else { return }
-        guard let sourceSlot = panels.firstIndex(where: { $0.id == sourceId }),
-              let targetSlot = panels.firstIndex(where: { $0.id == targetId }) else { return }
-        let oldOrder = customImageOrder
-        undoManager.registerUndo(withTarget: self) { target in
-            target.customImageOrder = oldOrder
-            target.regenerateLayout()
-        }
-        undoManager.setActionName("Swap Images")
-        customImageOrder.swapAt(sourceSlot, targetSlot)
-        layoutManager.panelAssignments[sourceId] = customImageOrder[sourceSlot]
-        layoutManager.panelAssignments[targetId] = customImageOrder[targetSlot]
-
-        if let cropA = cropMap[sourceId], let cropB = cropMap[targetId] {
-            cropMap[sourceId] = CropInfo(panelId: sourceId, sourceRect: cropB.sourceRect, destination: cropA.destination)
-            cropMap[targetId] = CropInfo(panelId: targetId, sourceRect: cropA.sourceRect, destination: cropB.destination)
-        }
-
-        updatePanelPreview(panelId: sourceId)
-        updatePanelPreview(panelId: targetId)
+        imageCoordinator.swapPanelImages(sourceId: sourceId, targetId: targetId)
     }
 
-    // MARK: - Saliency
+    // MARK: - Saliency (delegated to ImageCoordinator)
 
     func analyzeSaliency() async {
-        guard !images.isEmpty else { return }
-        logger.info("Saliency analysis started for \(self.images.count) image(s)")
-        beginProcessing()
-        defer { endProcessing() }
-
-        do {
-            let saliencyStart = ContinuousClock.now
-            defer { perfLogger.debug("Saliency Analysis completed in \(ContinuousClock.now - saliencyStart)") }
-            let results = try await saliencyAnalyzer.analyzeAll(images.map { $0.cgImage })
-            var indexed: [Int: SaliencyResult] = [:]
-            for (i, result) in results.enumerated() {
-                indexed[i] = result
-            }
-            logger.info("Saliency analysis complete: \(indexed.count) result(s)")
-            saliencyResults = indexed
-            cropManager.computeCropsFromSaliency(
-                panels: panels,
-                images: images,
-                results: indexed
-            )
-            debouncer.cancel(id: "previewRender")
-            updatePreview()
-            updateAllPanelPreviews()
-        } catch {
-            logger.error("Saliency analysis failed: \(error.localizedDescription, privacy: .public)")
-            errorMessage = error.localizedDescription
-        }
+        await imageCoordinator.analyzeSaliency()
     }
 
     // MARK: - Crop (delegated to CropManager)

@@ -42,7 +42,7 @@ struct ContentView: View {
                     .accessibilityHint("Opens save dialog")
 
                     Button {
-                        viewModel.browseImages()
+                        viewModel.imageCoordinator.browseImages()
                     } label: {
                         Image(systemName: "plus.circle.fill")
                     }
@@ -102,7 +102,7 @@ struct ContentView: View {
         }
         .onTapGesture {
             if viewModel.imageLibrary.images.isEmpty {
-                viewModel.browseImages()
+                viewModel.imageCoordinator.browseImages()
             }
         }
     }
@@ -132,7 +132,7 @@ struct ContentView: View {
 
         if !loadedUrls.isEmpty {
             logger.info("Loaded \(loadedUrls.count) image(s) from drop")
-            await viewModel.addImages(from: loadedUrls)
+            await viewModel.imageCoordinator.addImages(from: loadedUrls)
         }
     }
 

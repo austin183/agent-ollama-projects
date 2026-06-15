@@ -12,7 +12,7 @@ struct PanelCropEditor: View {
     @State private var containerSize: CGSize = .zero
 
     private var currentImage: ImageItem? {
-        guard let idx = viewModel.getEffectiveImageIndex(for: panel.id),
+        guard let idx = viewModel.imageCoordinator.getEffectiveImageIndex(for: panel.id),
                idx < viewModel.imageLibrary.images.count else { return nil }
         return viewModel.imageLibrary.images[idx]
     }

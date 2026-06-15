@@ -256,7 +256,7 @@ struct CollageEditorView: View {
                                 }
                                 if let id = hitPanel(at: value.startLocation, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size) {
                                     gestureCoordinator.dragSourcePanelId = id
-                                    if let imgIdx = viewModel.getEffectiveImageIndex(for: id) {
+                                    if let imgIdx = viewModel.imageCoordinator.getEffectiveImageIndex(for: id) {
                                         gestureCoordinator.dragSourceImageIndex = imgIdx
                                     }
                                 }
@@ -276,7 +276,7 @@ struct CollageEditorView: View {
                             if let sourceId = gestureCoordinator.dragSourcePanelId,
                                 let targetId = hitPanel(at: value.location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size),
                                sourceId != targetId {
-                                viewModel.swapPanelImages(sourceId: sourceId, targetId: targetId)
+                                viewModel.imageCoordinator.swapPanelImages(sourceId: sourceId, targetId: targetId)
                             }
                             gestureCoordinator.dragSourcePanelId = nil
                             gestureCoordinator.dragTargetPanelId = nil
@@ -393,7 +393,7 @@ private struct PanelOverlay: View {
             }
 
             if let frame = scaledFrame {
-                let imageIndex = viewModel.getEffectiveImageIndex(for: panel.id)
+                let imageIndex = viewModel.imageCoordinator.getEffectiveImageIndex(for: panel.id)
                 PanelHitArea(
                     panel: panel,
                     frame: frame,
@@ -409,7 +409,7 @@ private struct PanelOverlay: View {
                     Divider()
                     if let idx = imageIndex {
                         Button("Remove Image", role: .destructive) {
-                            viewModel.removeImage(at: idx)
+                            viewModel.imageCoordinator.removeImage(at: idx)
                         }
                     }
                 }
