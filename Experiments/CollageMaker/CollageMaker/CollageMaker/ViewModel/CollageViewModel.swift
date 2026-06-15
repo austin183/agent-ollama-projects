@@ -142,17 +142,14 @@ final class CollageViewModel {
     // MARK: - Layout Setters (side effects: undo, preview, regeneration)
 
     func setLayoutStyle(_ style: LayoutStyle) {
-        let old = layoutManager.layoutStyle
-        layoutManager.layoutStyle = style
+        let old = layoutManager.setLayoutStyle(style)
         guard !isInitializing else { return }
         registerUndo(oldValue: old, actionName: "Change Layout") { $0.layoutManager.layoutStyle = old }
-        logger.info("Layout style changed to \(self.layoutStyle.rawValue, privacy: .public)")
         regenerateLayout()
     }
 
     func setGutter(_ value: CGFloat) {
-        let old = layoutManager.gutter
-        layoutManager.gutter = value
+        let old = layoutManager.setGutter(value)
         guard !isInitializing else { return }
         debouncer.debounce(id: "gutter", delay: .milliseconds(150)) { [weak self] in
             guard let self else { return }
@@ -166,8 +163,7 @@ final class CollageViewModel {
     }
 
     func setDiagonalSliceAngle(_ value: CGFloat) {
-        let old = layoutManager.diagonalSliceAngle
-        layoutManager.diagonalSliceAngle = value
+        let old = layoutManager.setDiagonalSliceAngle(value)
         guard !isInitializing else { return }
         registerUndo(oldValue: old, actionName: "Change Slice Angle") { $0.layoutManager.diagonalSliceAngle = old }
         if layoutStyle == .diagonalSlices {
@@ -176,8 +172,7 @@ final class CollageViewModel {
     }
 
     func setHexagonalSpacing(_ value: CGFloat) {
-        let old = layoutManager.hexagonalSpacing
-        layoutManager.hexagonalSpacing = value
+        let old = layoutManager.setHexagonalSpacing(value)
         guard !isInitializing else { return }
         registerUndo(oldValue: old, actionName: "Change Hex Spacing") { $0.layoutManager.hexagonalSpacing = old }
         if layoutStyle == .hexagonal {
@@ -186,22 +181,15 @@ final class CollageViewModel {
     }
 
     func setDoubleExposureMaskOpacity(_ value: CGFloat) {
-        let old = layoutManager.doubleExposureMaskOpacity
-        layoutManager.doubleExposureMaskOpacity = value
+        let old = layoutManager.setDoubleExposureMaskOpacity(value)
         guard !isInitializing else { return }
         registerUndo(oldValue: old, actionName: "Change Mask Opacity") { $0.layoutManager.doubleExposureMaskOpacity = old }
         updatePreviewDebounced()
     }
 
     func setMaskImage(_ image: NSImage?, path: String?) {
-        let oldImage = layoutManager.doubleExposureMaskImage
-        let oldPath = layoutManager.doubleExposureMaskImagePath
-        layoutManager.doubleExposureMaskImagePath = path
-        layoutManager.doubleExposureMaskImage = image
+        let (oldImage, oldPath) = layoutManager.setMaskImage(image, path: path)
         guard !isInitializing else { return }
-        if image == nil {
-            layoutManager.doubleExposureMaskImagePath = nil
-        }
         registerUndo(oldValue: oldImage, actionName: "Change Mask Image") { target in
             target.layoutManager.doubleExposureMaskImage = oldImage
             target.layoutManager.doubleExposureMaskImagePath = oldPath
@@ -500,18 +488,6 @@ final class CollageViewModel {
         undoManager.setActionName("Move Title")
     }
 
-    // MARK: - Image Loading (delegated to ImageCoordinator)
-
-    func browseImages() { imageCoordinator.browseImages() }
-
-    func addImages(from urls: [URL]) async { await imageCoordinator.addImages(from: urls) }
-
-    func removeImage(at index: Int) { imageCoordinator.removeImage(at: index) }
-
-    func moveImages(from: IndexSet, to: Int) { imageCoordinator.moveImages(from: from, to: to) }
-
-    func clearAll() { imageCoordinator.clearAll() }
-
     // MARK: - Layout
 
     func regenerateLayout(preserveCrops: Bool = false) {
@@ -539,24 +515,6 @@ final class CollageViewModel {
         isLayeredMode = false
         updatePreview()
         updateAllPanelPreviews()
-    }
-
-    // MARK: - Panel Image Assignment (delegated to ImageCoordinator)
-
-    func assignImage(_ imageIndex: Int, to panelId: UUID) {
-        imageCoordinator.assignImage(imageIndex, to: panelId)
-    }
-
-    func getEffectiveImageIndex(for panelId: UUID) -> Int? {
-        imageCoordinator.getEffectiveImageIndex(for: panelId)
-    }
-
-    func selectPanelForImage(at imageIndex: Int) {
-        imageCoordinator.selectPanelForImage(at: imageIndex)
-    }
-
-    func swapPanelImages(sourceId: UUID, targetId: UUID) {
-        imageCoordinator.swapPanelImages(sourceId: sourceId, targetId: targetId)
     }
 
     // MARK: - Saliency (delegated to ImageCoordinator)

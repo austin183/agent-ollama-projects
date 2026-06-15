@@ -62,7 +62,7 @@ struct ContentView: View {
         }
         .alert("Clear All Images?", isPresented: showingClearAlert) {
             Button("Clear All", role: .destructive) {
-                viewModel.clearAll()
+                viewModel.imageCoordinator.clearAll()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -140,7 +140,7 @@ struct ContentView: View {
         ScrollView {
             VStack(spacing: 24) {
                 if let selectedId = viewModel.selectedPanelId,
-                   let panel = viewModel.panels.first(where: { $0.id == selectedId }) {
+                    let panel = viewModel.layoutManager.panels.first(where: { $0.id == selectedId }) {
                     PanelCropEditor(panel: panel, viewModel: viewModel)
                         .id(panel.id)
                 }

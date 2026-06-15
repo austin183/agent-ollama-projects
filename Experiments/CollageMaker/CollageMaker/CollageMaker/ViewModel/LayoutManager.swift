@@ -1,5 +1,11 @@
 import AppKit
 import Foundation
+import OSLog
+
+private let logger = Logger(
+    subsystem: "austin183.indie.CollageMaker",
+    category: "LayoutManager"
+)
 
 @MainActor
 @Observable
@@ -97,5 +103,49 @@ final class LayoutManager {
         doubleExposureMaskImage = nil
         doubleExposureMaskImagePath = nil
         doubleExposureMaskOpacity = 0.5
+    }
+
+    // MARK: - Setters with Side Effects
+
+    func setLayoutStyle(_ style: LayoutStyle) -> LayoutStyle {
+        let old = layoutStyle
+        layoutStyle = style
+        logger.info("Layout style changed to \(style.rawValue, privacy: .public)")
+        return old
+    }
+
+    func setGutter(_ value: CGFloat) -> CGFloat {
+        let old = gutter
+        gutter = value
+        return old
+    }
+
+    func setDiagonalSliceAngle(_ value: CGFloat) -> CGFloat {
+        let old = diagonalSliceAngle
+        diagonalSliceAngle = value
+        return old
+    }
+
+    func setHexagonalSpacing(_ value: CGFloat) -> CGFloat {
+        let old = hexagonalSpacing
+        hexagonalSpacing = value
+        return old
+    }
+
+    func setDoubleExposureMaskOpacity(_ value: CGFloat) -> CGFloat {
+        let old = doubleExposureMaskOpacity
+        doubleExposureMaskOpacity = value
+        return old
+    }
+
+    func setMaskImage(_ image: NSImage?, path: String?) -> (NSImage?, String?) {
+        let oldImage = doubleExposureMaskImage
+        let oldPath = doubleExposureMaskImagePath
+        doubleExposureMaskImagePath = path
+        doubleExposureMaskImage = image
+        if image == nil {
+            doubleExposureMaskImagePath = nil
+        }
+        return (oldImage, oldPath)
     }
 }

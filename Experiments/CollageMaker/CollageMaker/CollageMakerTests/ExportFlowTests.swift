@@ -95,17 +95,17 @@ import Testing
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
-        let panels = vm.panels
+        let panels = vm.layoutManager.panels
         let sourceId = panels[0].id
         let targetId = panels[1].id
 
-        let sourceBefore = vm.getEffectiveImageIndex(for: sourceId)
-        let targetBefore = vm.getEffectiveImageIndex(for: targetId)
+        let sourceBefore = vm.imageCoordinator.getEffectiveImageIndex(for: sourceId)
+        let targetBefore = vm.imageCoordinator.getEffectiveImageIndex(for: targetId)
 
-        vm.swapPanelImages(sourceId: sourceId, targetId: targetId)
+        vm.imageCoordinator.swapPanelImages(sourceId: sourceId, targetId: targetId)
 
-        let sourceAfter = vm.getEffectiveImageIndex(for: sourceId)
-        let targetAfter = vm.getEffectiveImageIndex(for: targetId)
+        let sourceAfter = vm.imageCoordinator.getEffectiveImageIndex(for: sourceId)
+        let targetAfter = vm.imageCoordinator.getEffectiveImageIndex(for: targetId)
 
         #expect(sourceAfter == targetBefore)
         #expect(targetAfter == sourceBefore)
@@ -118,11 +118,11 @@ import Testing
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
-        let panels = vm.panels
+        let panels = vm.layoutManager.panels
         let cropA = vm.cropMap[panels[0].id]?.sourceRect
         let cropB = vm.cropMap[panels[1].id]?.sourceRect
 
-        vm.swapPanelImages(sourceId: panels[0].id, targetId: panels[1].id)
+        vm.imageCoordinator.swapPanelImages(sourceId: panels[0].id, targetId: panels[1].id)
 
         #expect(vm.cropMap[panels[0].id]?.sourceRect == cropB)
         #expect(vm.cropMap[panels[1].id]?.sourceRect == cropA)
@@ -137,7 +137,7 @@ import Testing
         vm.imageLibrary.images = [image]
         vm.regenerateLayout()
 
-        let panelId = vm.panels[0].id
+        let panelId = vm.layoutManager.panels[0].id
         let initialCrop = vm.cropMap[panelId]?.sourceRect
 
         vm.beginPan(panelId: panelId)
@@ -159,12 +159,12 @@ import Testing
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
-        vm.clearAll()
+        vm.imageCoordinator.clearAll()
 
         #expect(vm.imageLibrary.images.isEmpty)
-        #expect(vm.panels.isEmpty)
+        #expect(vm.layoutManager.panels.isEmpty)
         #expect(vm.cropMap.isEmpty)
-        #expect(vm.panelAssignments.isEmpty)
+        #expect(vm.layoutManager.panelAssignments.isEmpty)
         #expect(vm.previewImage == nil)
     }
 
@@ -177,10 +177,10 @@ import Testing
         vm.imageLibrary.images = [image]
         vm.setLayoutStyle(.uniform)
 
-        let uniformCrop = vm.cropMap[vm.panels[0].id]?.sourceRect
+        let uniformCrop = vm.cropMap[vm.layoutManager.panels[0].id]?.sourceRect
 
         vm.setLayoutStyle(.hero)
-        let heroCrop = vm.cropMap[vm.panels[0].id]?.sourceRect
+        let heroCrop = vm.cropMap[vm.layoutManager.panels[0].id]?.sourceRect
 
         #expect(uniformCrop != nil)
         #expect(heroCrop != nil)
@@ -193,10 +193,10 @@ import Testing
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
-        #expect(vm.panelAssignments.count == vm.panels.count)
+        #expect(vm.layoutManager.panelAssignments.count == vm.layoutManager.panels.count)
 
-        for panel in vm.panels {
-            #expect(vm.panelAssignments[panel.id] != nil)
+        for panel in vm.layoutManager.panels {
+            #expect(vm.layoutManager.panelAssignments[panel.id] != nil)
         }
     }
 
@@ -209,13 +209,13 @@ import Testing
 
         try? await Task.sleep(nanoseconds: 200_000_000)
 
-        let panelsNoGutter = vm.panels.map { $0.frame }
+        let panelsNoGutter = vm.layoutManager.panels.map { $0.frame }
 
         vm.setGutter(20)
 
         try? await Task.sleep(nanoseconds: 200_000_000)
 
-        let panelsWithGutter = vm.panels.map { $0.frame }
+        let panelsWithGutter = vm.layoutManager.panels.map { $0.frame }
 
         #expect(panelsNoGutter != panelsWithGutter)
     }

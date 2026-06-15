@@ -25,7 +25,7 @@ import Testing
     @Test func initialStateIsEmpty() {
         let vm = makeViewModel()
         #expect(vm.imageLibrary.images.isEmpty)
-        #expect(vm.panels.isEmpty)
+        #expect(vm.layoutManager.panels.isEmpty)
         #expect(vm.cropMap.isEmpty)
         #expect(vm.selectedPanelId == nil)
         #expect(vm.previewImage == nil)
@@ -37,7 +37,7 @@ import Testing
     @Test func setLayoutStyleUpdatesStyle() {
         let vm = makeViewModel()
         vm.setLayoutStyle(.uniform)
-        #expect(vm.layoutStyle == .uniform)
+        #expect(vm.layoutManager.layoutStyle == .uniform)
     }
 
     @Test func setLayoutStyleRegeneratesLayout() {
@@ -46,7 +46,7 @@ import Testing
         let images = (0..<3).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
         vm.setLayoutStyle(.uniform)
-        #expect(vm.layoutStyle == .uniform)
+        #expect(vm.layoutManager.layoutStyle == .uniform)
     }
 
     // MARK: - Clear all
@@ -55,9 +55,9 @@ import Testing
         let vm = makeViewModel()
         vm.titleAttrString = NSAttributedString(string: "Test")
         vm.setGutter(10)
-        vm.clearAll()
+        vm.imageCoordinator.clearAll()
         #expect(vm.imageLibrary.images.isEmpty)
-        #expect(vm.panels.isEmpty)
+        #expect(vm.layoutManager.panels.isEmpty)
         #expect(vm.cropMap.isEmpty)
         #expect(vm.previewImage == nil)
     }
@@ -67,7 +67,7 @@ import Testing
     @Test func updateGutterUpdatesValue() {
         let vm = makeViewModel()
         vm.setGutter(8)
-        #expect(vm.gutter == 8)
+        #expect(vm.layoutManager.gutter == 8)
     }
 
     // MARK: - Panel assignment
@@ -75,8 +75,8 @@ import Testing
     @Test func assignImageUpdatesPanelAssignments() {
         let vm = makeViewModel()
         let panelId = UUID()
-        vm.assignImage(2, to: panelId)
-        #expect(vm.panelAssignments[panelId] == 2)
+        vm.imageCoordinator.assignImage(2, to: panelId)
+        #expect(vm.layoutManager.panelAssignments[panelId] == 2)
     }
 
     @Test func getEffectiveImageIndexUsesAssignment() {
@@ -84,9 +84,9 @@ import Testing
         let panels = LayoutGenerator.generate(numImages: 3, style: .uniform)
         vm.layoutManager.panels = panels
 
-        vm.assignImage(0, to: panels[2].id)
-        #expect(vm.getEffectiveImageIndex(for: panels[2].id) == 0)
-        #expect(vm.getEffectiveImageIndex(for: panels[1].id) == 1)
+        vm.imageCoordinator.assignImage(0, to: panels[2].id)
+        #expect(vm.imageCoordinator.getEffectiveImageIndex(for: panels[2].id) == 0)
+        #expect(vm.imageCoordinator.getEffectiveImageIndex(for: panels[1].id) == 1)
     }
 
     // MARK: - Saliency error handling
@@ -97,7 +97,7 @@ import Testing
         let vm = makeViewModel(saliencyAnalyzer: mockSaliency)
         vm.imageLibrary.images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.layoutManager.panels = LayoutGenerator.generate(numImages: 1, style: .hero)
-        vm.cropManager.computeInitialCrops(panels: vm.panels, images: vm.imageLibrary.images)
+        vm.cropManager.computeInitialCrops(panels: vm.layoutManager.panels, images: vm.imageLibrary.images)
         vm.cropMap = vm.cropManager.cropMap
 
         await vm.analyzeSaliency()
@@ -140,7 +140,7 @@ import Testing
         vm.imageLibrary.images = images
         vm.customImageOrder = [0, 1, 2, 3, 4]
 
-        vm.moveImages(from: IndexSet(integer: 3), to: 0)
+        vm.imageCoordinator.moveImages(from: IndexSet(integer: 3), to: 0)
         #expect(vm.customImageOrder == [3, 0, 1, 2, 4])
     }
 
@@ -150,7 +150,7 @@ import Testing
         vm.imageLibrary.images = images
         vm.customImageOrder = [0, 1, 2, 3, 4]
 
-        vm.moveImages(from: IndexSet(integer: 0), to: 4)
+        vm.imageCoordinator.moveImages(from: IndexSet(integer: 0), to: 4)
         #expect(vm.customImageOrder == [1, 2, 3, 4, 0])
     }
 
@@ -160,7 +160,7 @@ import Testing
         vm.imageLibrary.images = images
         vm.customImageOrder = [0]
 
-        vm.moveImages(from: IndexSet(integer: 0), to: 0)
+        vm.imageCoordinator.moveImages(from: IndexSet(integer: 0), to: 0)
         #expect(vm.customImageOrder == [0])
     }
 
@@ -170,7 +170,7 @@ import Testing
         vm.imageLibrary.images = images
         vm.customImageOrder = []
 
-        vm.moveImages(from: IndexSet(integer: 0), to: 2)
+        vm.imageCoordinator.moveImages(from: IndexSet(integer: 0), to: 2)
         #expect(vm.imageLibrary.images.count == 3)
     }
 

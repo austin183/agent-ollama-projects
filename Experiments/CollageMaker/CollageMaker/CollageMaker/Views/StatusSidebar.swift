@@ -26,10 +26,10 @@ struct StatusSidebar: View {
             }
         }
 
-        if viewModel.panels.count < viewModel.imageLibrary.images.count {
+        if viewModel.layoutManager.panels.count < viewModel.imageLibrary.images.count {
             Section("Notice") {
                 Label(
-                    "Only \(viewModel.panels.count) of \(viewModel.imageLibrary.images.count) images are in the layout",
+                    "Only \(viewModel.layoutManager.panels.count) of \(viewModel.imageLibrary.images.count) images are in the layout",
                     systemImage: "info.circle"
                 )
                 .foregroundStyle(.secondary)

@@ -55,6 +55,6 @@ import Testing
         try? await Task.sleep(nanoseconds: 200_000_000)
 
         #expect(assembler.previewCalls > 0)
-        #expect(vm.panels.count == 5)
+        #expect(vm.layoutManager.panels.count == 5)
     }
 }
