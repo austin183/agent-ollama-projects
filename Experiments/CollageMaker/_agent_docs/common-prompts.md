@@ -19,7 +19,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan for Phase 3 in @_agent_docs/plans/2026-06-13-srp-decomposition.md using our macos skills for guidance.
+Please implement the plan for Phase 2 in @_agent_docs/plans/2026-06-14-vm-decomposition-round2.md using our macos skills for guidance.
 ```
 
 # Small Change Requests

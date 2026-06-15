@@ -28,17 +28,17 @@ struct CollageCommands: Commands {
 
         CommandMenu("Layout") {
             Button("Uniform") {
-                viewModel.layoutStyle = .uniform
+                viewModel.setLayoutStyle(.uniform)
             }
             .keyboardShortcut("1", modifiers: .command)
 
             Button("Hero") {
-                viewModel.layoutStyle = .hero
+                viewModel.setLayoutStyle(.hero)
             }
             .keyboardShortcut("2", modifiers: .command)
 
             Button("Mosaic") {
-                viewModel.layoutStyle = .mosaic
+                viewModel.setLayoutStyle(.mosaic)
             }
             .keyboardShortcut("3", modifiers: .command)
         }

@@ -54,7 +54,7 @@ import Testing
     @Test func clearAllResetsState() {
         let vm = makeViewModel()
         vm.titleAttrString = NSAttributedString(string: "Test")
-        vm.gutter = 10
+        vm.setGutter(10)
         vm.clearAll()
         #expect(vm.imageLibrary.images.isEmpty)
         #expect(vm.panels.isEmpty)
@@ -66,7 +66,7 @@ import Testing
 
     @Test func updateGutterUpdatesValue() {
         let vm = makeViewModel()
-        vm.updateGutter(8)
+        vm.setGutter(8)
         #expect(vm.gutter == 8)
     }
 
@@ -82,7 +82,7 @@ import Testing
     @Test func getEffectiveImageIndexUsesAssignment() {
         let vm = makeViewModel()
         let panels = LayoutGenerator.generate(numImages: 3, style: .uniform)
-        vm.panels = panels
+        vm.layoutManager.panels = panels
 
         vm.assignImage(0, to: panels[2].id)
         #expect(vm.getEffectiveImageIndex(for: panels[2].id) == 0)
@@ -96,7 +96,7 @@ import Testing
         mockSaliency.shouldThrow = true
         let vm = makeViewModel(saliencyAnalyzer: mockSaliency)
         vm.imageLibrary.images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
-        vm.panels = LayoutGenerator.generate(numImages: 1, style: .hero)
+        vm.layoutManager.panels = LayoutGenerator.generate(numImages: 1, style: .hero)
         vm.cropManager.computeInitialCrops(panels: vm.panels, images: vm.imageLibrary.images)
         vm.cropMap = vm.cropManager.cropMap
 
@@ -122,7 +122,7 @@ import Testing
         let panels = LayoutGenerator.generate(numImages: 1, style: .uniform)
 
         vm.imageLibrary.images = [image]
-        vm.panels = panels
+        vm.layoutManager.panels = panels
 
         CropManager().computeInitialCrops(panels: panels, images: [image])
         vm.cropMap = CropManager().cropMap

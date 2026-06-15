@@ -205,13 +205,13 @@ import Testing
 
         let images = (0..<4).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
-        vm.gutter = 0
+        vm.setGutter(0)
 
         try? await Task.sleep(nanoseconds: 200_000_000)
 
         let panelsNoGutter = vm.panels.map { $0.frame }
 
-        vm.gutter = 20
+        vm.setGutter(20)
 
         try? await Task.sleep(nanoseconds: 200_000_000)
 

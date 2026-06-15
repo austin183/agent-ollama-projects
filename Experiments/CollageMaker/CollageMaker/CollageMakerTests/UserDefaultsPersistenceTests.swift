@@ -16,7 +16,7 @@ import Testing
 
     @Test func saveAndLoadLayoutStyle() {
         let viewModel = createViewModel()
-        viewModel.layoutStyle = .mosaic
+        viewModel.setLayoutStyle(.mosaic)
         persistence.save(viewModel)
 
         let bundle = persistence.load()
@@ -25,7 +25,7 @@ import Testing
 
     @Test func saveAndLoadGutter() {
         let viewModel = createViewModel()
-        viewModel.gutter = 15
+        viewModel.setGutter(15)
         persistence.save(viewModel)
 
         let bundle = persistence.load()
@@ -115,8 +115,8 @@ import Testing
 
     @Test func fullRoundTrip() {
         let viewModel = createViewModel()
-        viewModel.layoutStyle = .uniform
-        viewModel.gutter = 12
+        viewModel.setLayoutStyle(.uniform)
+        viewModel.setGutter(12)
         viewModel.exportQuality = 0.85
         viewModel.backgroundStyle = .gradient
         viewModel.gradientAngle = 270

@@ -21,6 +21,7 @@ final class CollageViewModel {
     private let saliencyAnalyzer: SaliencyAnalysis
     private let assembler: any CollageAssembly
     private let persistence: any ViewModelPersistence
+    let layoutManager = LayoutManager()
     let cropManager = CropManager()
     let previewManager: PreviewManager
     let undoManager = UndoManager()
@@ -90,7 +91,7 @@ final class CollageViewModel {
             debouncedSave()
         }
     }
-    var panels: [ImagePanel] = []
+    var panels: [ImagePanel] { layoutManager.panels }
     var selectedPanelId: UUID?
 
     /// Single source of truth for crop state — delegated to CropManager.
@@ -125,71 +126,87 @@ final class CollageViewModel {
         }
     }
 
-    var layoutStyle: LayoutStyle = .hero {
-        didSet {
-            registerUndo(oldValue: oldValue, actionName: "Change Layout") { $0.layoutStyle = oldValue }
-            logger.info("Layout style changed to \(self.layoutStyle.rawValue, privacy: .public)")
-            regenerateLayout()
-        }
-    }
+    var layoutStyle: LayoutStyle { layoutManager.layoutStyle }
 
-    // Style-specific configuration
-    var doubleExposureMaskImage: NSImage? {
-        didSet {
-            guard !isInitializing else { return }
-            registerUndo(oldValue: oldValue, actionName: "Change Mask Image") { $0.doubleExposureMaskImage = oldValue }
-            if doubleExposureMaskImage == nil {
-                doubleExposureMaskImagePath = nil
-            }
-            updatePreview()
-        }
-    }
-    var doubleExposureMaskImagePath: String?
-    var doubleExposureMaskOpacity: CGFloat = 0.5 {
-        didSet {
-            guard !isInitializing else { return }
-            registerUndo(oldValue: oldValue, actionName: "Change Mask Opacity") { $0.doubleExposureMaskOpacity = oldValue }
-            updatePreviewDebounced()
-        }
-    }
-    var diagonalSliceAngle: CGFloat = 45.0 {
-        didSet {
-            guard !isInitializing else { return }
-            registerUndo(oldValue: oldValue, actionName: "Change Slice Angle") { $0.diagonalSliceAngle = oldValue }
-            if layoutStyle == .diagonalSlices {
-                regenerateLayout(preserveCrops: false)
-            }
-        }
-    }
-    var hexagonalSpacing: CGFloat = 8.0 {
-        didSet {
-            guard !isInitializing else { return }
-            registerUndo(oldValue: oldValue, actionName: "Change Hex Spacing") { $0.hexagonalSpacing = oldValue }
-            if layoutStyle == .hexagonal {
-                regenerateLayout(preserveCrops: false)
-            }
-        }
-    }
+    // Style-specific configuration (delegated to LayoutManager)
+    var doubleExposureMaskImage: NSImage? { layoutManager.doubleExposureMaskImage }
+    var doubleExposureMaskImagePath: String? { layoutManager.doubleExposureMaskImagePath }
+    var doubleExposureMaskOpacity: CGFloat { layoutManager.doubleExposureMaskOpacity }
+    var diagonalSliceAngle: CGFloat { layoutManager.diagonalSliceAngle }
+    var hexagonalSpacing: CGFloat { layoutManager.hexagonalSpacing }
 
     // titleAttrString, title, titleStyle — delegated to titleManager (see above)
 
-    var gutter: CGFloat = 0 {
-        didSet {
-            guard !isInitializing else { return }
-            gutterDidChange(oldValue: oldValue)
-        }
+    var gutter: CGFloat { layoutManager.gutter }
+
+    // MARK: - Layout Setters (side effects: undo, preview, regeneration)
+
+    func setLayoutStyle(_ style: LayoutStyle) {
+        let old = layoutManager.layoutStyle
+        layoutManager.layoutStyle = style
+        guard !isInitializing else { return }
+        registerUndo(oldValue: old, actionName: "Change Layout") { $0.layoutManager.layoutStyle = old }
+        logger.info("Layout style changed to \(self.layoutStyle.rawValue, privacy: .public)")
+        regenerateLayout()
     }
 
-    private func gutterDidChange(oldValue: CGFloat) {
+    func setGutter(_ value: CGFloat) {
+        let old = layoutManager.gutter
+        layoutManager.gutter = value
+        guard !isInitializing else { return }
         debouncer.debounce(id: "gutter", delay: .milliseconds(150)) { [weak self] in
             guard let self else { return }
             self.undoManager.registerUndo(withTarget: self) { target in
-                target.gutter = oldValue
+                target.layoutManager.gutter = old
             }
             self.undoManager.setActionName("Change Gutter")
             self.debouncedSave()
             self.regenerateLayout(preserveCrops: true)
         }
+    }
+
+    func setDiagonalSliceAngle(_ value: CGFloat) {
+        let old = layoutManager.diagonalSliceAngle
+        layoutManager.diagonalSliceAngle = value
+        guard !isInitializing else { return }
+        registerUndo(oldValue: old, actionName: "Change Slice Angle") { $0.layoutManager.diagonalSliceAngle = old }
+        if layoutStyle == .diagonalSlices {
+            regenerateLayout(preserveCrops: false)
+        }
+    }
+
+    func setHexagonalSpacing(_ value: CGFloat) {
+        let old = layoutManager.hexagonalSpacing
+        layoutManager.hexagonalSpacing = value
+        guard !isInitializing else { return }
+        registerUndo(oldValue: old, actionName: "Change Hex Spacing") { $0.layoutManager.hexagonalSpacing = old }
+        if layoutStyle == .hexagonal {
+            regenerateLayout(preserveCrops: false)
+        }
+    }
+
+    func setDoubleExposureMaskOpacity(_ value: CGFloat) {
+        let old = layoutManager.doubleExposureMaskOpacity
+        layoutManager.doubleExposureMaskOpacity = value
+        guard !isInitializing else { return }
+        registerUndo(oldValue: old, actionName: "Change Mask Opacity") { $0.layoutManager.doubleExposureMaskOpacity = old }
+        updatePreviewDebounced()
+    }
+
+    func setMaskImage(_ image: NSImage?, path: String?) {
+        let oldImage = layoutManager.doubleExposureMaskImage
+        let oldPath = layoutManager.doubleExposureMaskImagePath
+        layoutManager.doubleExposureMaskImagePath = path
+        layoutManager.doubleExposureMaskImage = image
+        guard !isInitializing else { return }
+        if image == nil {
+            layoutManager.doubleExposureMaskImagePath = nil
+        }
+        registerUndo(oldValue: oldImage, actionName: "Change Mask Image") { target in
+            target.layoutManager.doubleExposureMaskImage = oldImage
+            target.layoutManager.doubleExposureMaskImagePath = oldPath
+        }
+        updatePreview()
     }
 
     var scrollSensitivity: CGFloat = 1.6
@@ -322,7 +339,7 @@ final class CollageViewModel {
     /// Intentionally NOT persisted — panel UUIDs change on every layout
     /// regeneration. The canonical persisted source is `customImageOrder`,
     /// which is used to rebuild panelAssignments in `regenerateLayout()`.
-    var panelAssignments: [UUID: Int] = [:]
+    var panelAssignments: [UUID: Int] { layoutManager.panelAssignments }
 
     var previewImage: NSImage? {
         get { previewManager.previewImage }
@@ -424,10 +441,10 @@ final class CollageViewModel {
 
         isInitializing = true
         let bundle = persistence.load()
-        self.layoutStyle = bundle.layoutStyle
+        layoutManager.layoutStyle = bundle.layoutStyle
         self.titleAttrString = bundle.titleAttrString
         self.titleStyle = bundle.titleStyle
-        self.gutter = bundle.gutter
+        layoutManager.gutter = bundle.gutter
         self.backgroundColor = bundle.backgroundColor
         self.exportQuality = bundle.exportQuality
         self.backgroundStyle = bundle.backgroundStyle
@@ -438,11 +455,11 @@ final class CollageViewModel {
         self.backgroundImage = bundle.backgroundImage
         self.backgroundOpacity = bundle.backgroundOpacity
         imageLibrary.customImageOrder = bundle.customImageOrder
-        self.doubleExposureMaskOpacity = bundle.doubleExposureMaskOpacity
-        self.doubleExposureMaskImagePath = bundle.doubleExposureMaskImagePath
-        self.doubleExposureMaskImage = bundle.doubleExposureMaskImage
-        self.diagonalSliceAngle = bundle.diagonalSliceAngle
-        self.hexagonalSpacing = bundle.hexagonalSpacing
+        layoutManager.doubleExposureMaskOpacity = bundle.doubleExposureMaskOpacity
+        layoutManager.doubleExposureMaskImagePath = bundle.doubleExposureMaskImagePath
+        layoutManager.doubleExposureMaskImage = bundle.doubleExposureMaskImage
+        layoutManager.diagonalSliceAngle = bundle.diagonalSliceAngle
+        layoutManager.hexagonalSpacing = bundle.hexagonalSpacing
         isInitializing = false
     }
 
@@ -456,11 +473,6 @@ final class CollageViewModel {
         undoManager.setActionName("Change Background Image")
         debouncedSave()
         updatePreview()
-    }
-
-    func setMaskImage(_ image: NSImage?, path: String?) {
-        doubleExposureMaskImagePath = path
-        doubleExposureMaskImage = image
     }
 
     // MARK: - Undo Helpers
@@ -510,7 +522,7 @@ final class CollageViewModel {
     func moveImages(from: IndexSet, to: Int) {
         let oldCustomOrder = customImageOrder
         imageLibrary.moveImages(from: from, to: to)
-        panelAssignments.removeAll()
+        layoutManager.panelAssignments.removeAll()
         undoManager.registerUndo(withTarget: self) { target in
             target.customImageOrder = oldCustomOrder
             target.regenerateLayout()
@@ -531,9 +543,10 @@ final class CollageViewModel {
         let oldBgImagePath = backgroundManager.backgroundImagePath
         backgroundManager.reset()
         titleManager.reset()
+        layoutManager.reset()
         undoManager.registerUndo(withTarget: self) { target in
             target.imageLibrary.images = oldImages
-            target.panels = oldPanels
+            target.layoutManager.panels = oldPanels
             target.cropMap = oldCropMap
             target.backgroundManager.backgroundImage = oldBgImage
             target.backgroundManager.backgroundImagePath = oldBgImagePath
@@ -541,14 +554,12 @@ final class CollageViewModel {
         }
         undoManager.setActionName("Clear All")
         exportManager.exportTask?.cancel()
-        panels.removeAll()
         cropManager.cropMap.removeAll()
         saliencyResults.removeAll()
         selectedPanelId = nil
         previewManager.clearAll()
         processingCount = 0
         errorMessage = nil
-        panelAssignments.removeAll()
     }
 
     // MARK: - Layout
@@ -560,65 +571,30 @@ final class CollageViewModel {
         let layoutStart = ContinuousClock.now
         defer { perfLogger.debug("Layout Regeneration completed in \(ContinuousClock.now - layoutStart)") }
 
-        if customImageOrder.isEmpty || customImageOrder.count != images.count {
-            customImageOrder = Array(0..<images.count)
-        }
-
-        let oldCropsBySlot = preserveCrops ? cropManager.cropsBySlot(panels) : nil
-        let oldRenderedBySlot = preserveCrops ? previewManager.panelRenderedImagesBySlot(panels) : nil
-        let oldSelectedId = selectedPanelId
-        panels = LayoutGenerator.generate(
-            numImages: images.count,
-            canvasSize: SizeConstants.defaultCanvasSize,
-            gutter: gutter,
-            style: layoutStyle,
-            imageOrder: customImageOrder,
-            options: LayoutOptions(sliceAngle: diagonalSliceAngle, hexSpacing: hexagonalSpacing)
+        layoutManager.regenerateLayout(
+            images: images,
+            customImageOrder: customImageOrder,
+            cropManager: cropManager,
+            previewManager: previewManager,
+            saliencyResults: saliencyResults,
+            preserveCrops: preserveCrops
         )
+
         let panelCount = panels.count
         let styleRaw = layoutStyle.rawValue
-        let selectedStr = oldSelectedId?.uuidString ?? "nil"
-        let foundInNew = oldSelectedId != nil && panels.contains { $0.id == oldSelectedId }
+        let selectedStr = selectedPanelId?.uuidString ?? "nil"
+        let foundInNew = selectedPanelId != nil && panels.contains { $0.id == selectedPanelId }
         logger.info("Regenerated layout: \(panelCount) panels, style=\(styleRaw, privacy: .public), selectedId=\(selectedStr, privacy: .public), foundInNew=\(foundInNew)")
-
-        panelAssignments.removeAll()
-        for (i, panel) in panels.enumerated() {
-            panelAssignments[panel.id] = customImageOrder[i]
-        }
-
-        if preserveCrops, let oldCropsBySlot, let oldRenderedBySlot {
-            cropManager.applyCropsBySlot(oldCropsBySlot, panels: panels)
-            previewManager.applyRenderedBySlot(oldRenderedBySlot, panels: panels)
-        } else {
-            previewManager.panelRenderedImages.removeAll()
-            if saliencyResults.isEmpty {
-                cropManager.computeInitialCrops(panels: panels, images: images)
-            } else {
-                cropManager.computeCropsFromSaliency(
-                    panels: panels,
-                    images: images,
-                    results: saliencyResults
-                )
-            }
-        }
 
         isLayeredMode = false
         updatePreview()
         updateAllPanelPreviews()
     }
 
-    func setLayoutStyle(_ style: LayoutStyle) {
-        layoutStyle = style
-    }
-
-    func updateGutter(_ value: CGFloat) {
-        gutter = value
-    }
-
     // MARK: - Panel Image Assignment
 
     func assignImage(_ imageIndex: Int, to panelId: UUID) {
-        panelAssignments[panelId] = imageIndex
+        layoutManager.panelAssignments[panelId] = imageIndex
         resetCrop(panelId: panelId)
         updatePanelPreview(panelId: panelId)
     }
@@ -649,8 +625,8 @@ final class CollageViewModel {
         }
         undoManager.setActionName("Swap Images")
         customImageOrder.swapAt(sourceSlot, targetSlot)
-        panelAssignments[sourceId] = customImageOrder[sourceSlot]
-        panelAssignments[targetId] = customImageOrder[targetSlot]
+        layoutManager.panelAssignments[sourceId] = customImageOrder[sourceSlot]
+        layoutManager.panelAssignments[targetId] = customImageOrder[targetSlot]
 
         if let cropA = cropMap[sourceId], let cropB = cropMap[targetId] {
             cropMap[sourceId] = CropInfo(panelId: sourceId, sourceRect: cropB.sourceRect, destination: cropA.destination)
@@ -859,24 +835,11 @@ final class CollageViewModel {
         let fontColor = titleManager.titleStyle.fontColor.cgColor
         let titleBgColor = titleManager.titleStyle.backgroundColor.cgColor
 
-        let overlay: OverlayConfig? = {
-            guard layoutStyle == .doubleExposure,
-                  let maskImage = doubleExposureMaskImage,
-                  let cgImage = maskImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-                return nil
-            }
-            return OverlayConfig(
-                maskImage: cgImage,
-                opacity: doubleExposureMaskOpacity,
-                blendMode: .multiply
-            )
-        }()
-
         return AssemblyConfig(
             layout: LayoutConfig(
-                panels: panels,
+                panels: layoutManager.panels,
                 crops: cropMap,
-                panelAssignments: panelAssignments
+                panelAssignments: layoutManager.panelAssignments
             ),
             title: TitleConfig(
                 textData: textData,
@@ -886,7 +849,7 @@ final class CollageViewModel {
             ),
             background: backgroundManager.buildConfig(),
             canvasSize: SizeConstants.defaultCanvasSize,
-            overlay: overlay
+            overlay: layoutManager.buildOverlayConfig()
         )
     }
 

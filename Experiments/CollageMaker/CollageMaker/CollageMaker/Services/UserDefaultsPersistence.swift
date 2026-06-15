@@ -79,12 +79,12 @@ final class UserDefaultsPersistence {
 
     /// Persists all 13 ViewModel properties to UserDefaults.
     func save(_ viewModel: CollageViewModel) {
-        defaults.set(viewModel.layoutStyle.rawValue, forKey: Keys.layoutStyle)
+        defaults.set(viewModel.layoutManager.layoutStyle.rawValue, forKey: Keys.layoutStyle)
         saveTitleAttrString(viewModel.titleAttrString)
         if let data = try? JSONEncoder().encode(viewModel.titleStyle) {
             defaults.set(data, forKey: Keys.titleStyle)
         }
-        defaults.set(Double(viewModel.gutter), forKey: Keys.gutter)
+        defaults.set(Double(viewModel.layoutManager.gutter), forKey: Keys.gutter)
         saveColor(viewModel.backgroundColor, key: Keys.backgroundColor)
         defaults.set(viewModel.exportQuality, forKey: Keys.exportQuality)
         defaults.set(viewModel.backgroundStyle.rawValue, forKey: Keys.backgroundStyle)
@@ -93,9 +93,9 @@ final class UserDefaultsPersistence {
         defaults.set(viewModel.gradientAngle, forKey: Keys.gradientAngle)
         defaults.set(viewModel.backgroundOpacity, forKey: Keys.backgroundOpacity)
         saveCustomImageOrder(viewModel.customImageOrder)
-        defaults.set(Double(viewModel.doubleExposureMaskOpacity), forKey: Keys.doubleExposureMaskOpacity)
-        defaults.set(Double(viewModel.diagonalSliceAngle), forKey: Keys.diagonalSliceAngle)
-        defaults.set(Double(viewModel.hexagonalSpacing), forKey: Keys.hexagonalSpacing)
+        defaults.set(Double(viewModel.layoutManager.doubleExposureMaskOpacity), forKey: Keys.doubleExposureMaskOpacity)
+        defaults.set(Double(viewModel.layoutManager.diagonalSliceAngle), forKey: Keys.diagonalSliceAngle)
+        defaults.set(Double(viewModel.layoutManager.hexagonalSpacing), forKey: Keys.hexagonalSpacing)
 
         if let path = viewModel.backgroundImagePath {
             defaults.set(path, forKey: Keys.backgroundImagePath)
@@ -103,7 +103,7 @@ final class UserDefaultsPersistence {
             defaults.removeObject(forKey: Keys.backgroundImagePath)
         }
 
-        if let path = viewModel.doubleExposureMaskImagePath {
+        if let path = viewModel.layoutManager.doubleExposureMaskImagePath {
             defaults.set(path, forKey: Keys.doubleExposureMaskImagePath)
         } else {
             defaults.removeObject(forKey: Keys.doubleExposureMaskImagePath)
