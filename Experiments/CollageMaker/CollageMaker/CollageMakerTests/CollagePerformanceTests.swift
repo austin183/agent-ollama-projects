@@ -35,6 +35,7 @@ import Testing
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         #expect(assembler.renderPanelCalls > initialPanelCalls)
+        vm.previewManager.cancelAll()
     }
 
     @Test func scrollPanMultipleIterations() async {
@@ -56,5 +57,6 @@ import Testing
 
         #expect(assembler.previewCalls > 0)
         #expect(vm.layoutManager.panels.count == 5)
+        vm.previewManager.cancelAll()
     }
 }

@@ -7,7 +7,9 @@ import Testing
 @Suite(.serialized) struct PreviewManagerTests {
     private let assembler = TestAssembler()
     private var manager: PreviewManager {
-        PreviewManager(assembler: assembler)
+        let mgr = PreviewManager(assembler: assembler)
+        mgr.clearAll()
+        return mgr
     }
 
     // MARK: - Initial state

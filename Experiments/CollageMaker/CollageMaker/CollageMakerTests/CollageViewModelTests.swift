@@ -192,6 +192,7 @@ import Testing
 
         await vm.awaitPendingTasks()
         #expect(assembler.titleRenderCalls > callsBefore)
+        vm.previewManager.cancelAll()
     }
 
     @Test func titleBackgroundColorChangeUpdatesPreview() async {
@@ -210,6 +211,7 @@ import Testing
 
         await vm.awaitPendingTasks()
         #expect(assembler.titleRenderCalls > callsBefore)
+        vm.previewManager.cancelAll()
     }
 
     @Test func titleShowBackgroundChangeUpdatesPreview() async {
@@ -228,6 +230,7 @@ import Testing
 
         await vm.awaitPendingTasks()
         #expect(assembler.titleRenderCalls > callsBefore)
+        vm.previewManager.cancelAll()
     }
 
     // MARK: - Title setter side effects (Phase 2)
@@ -248,6 +251,7 @@ import Testing
 
         await vm.awaitPendingTasks()
         #expect(assembler.titleRenderCalls > callsBefore)
+        vm.previewManager.cancelAll()
     }
 
     @Test func titleStyleSetterNotDraggingCallsUpdatePreview() async {
@@ -267,6 +271,7 @@ import Testing
 
         await vm.awaitPendingTasks()
         #expect(assembler.titleRenderCalls > callsBefore)
+        vm.previewManager.cancelAll()
     }
 
     @Test func titleStyleSetterDraggingCallsUpdateTitleImageLive() async {
@@ -288,6 +293,7 @@ import Testing
         await vm.awaitPendingTasks()
         try? await Task.sleep(nanoseconds: 200_000_000)
         #expect(assembler.titleRenderCalls > renderCallsBefore)
+        vm.previewManager.cancelAll()
     }
 
     @Test func titleStyleSetterDraggingSkipsUndo() async {
@@ -314,6 +320,7 @@ import Testing
             vm.undoManager.undo()
         }
         #expect(vm.titleStyle.positionX == 0.75)
+        vm.previewManager.cancelAll()
     }
 
     @Test func finishTitleDragRendersImmediately() async {
@@ -333,6 +340,7 @@ import Testing
 
         await vm.awaitPendingTasks()
         #expect(assembler.titleRenderCalls > renderCallsBefore)
+        vm.previewManager.cancelAll()
     }
 
     @Test func setTitleFontFamilyCallsUpdateTitleImageLive() async {
@@ -353,6 +361,7 @@ import Testing
         await vm.awaitPendingTasks()
         try? await Task.sleep(nanoseconds: 200_000_000)
         #expect(assembler.titleRenderCalls > renderCallsBefore)
+        vm.previewManager.cancelAll()
     }
 
     @Test func setTitleFontSizeCallsUpdateTitleImageDebounced() async {
@@ -373,6 +382,7 @@ import Testing
         await vm.awaitPendingTasks()
         try? await Task.sleep(nanoseconds: 200_000_000)
         #expect(assembler.titleRenderCalls > renderCallsBefore)
+        vm.previewManager.cancelAll()
     }
 
     // MARK: - Cached title layout (Phase 1)

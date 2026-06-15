@@ -506,6 +506,11 @@ final class CollageViewModel {
             preserveCrops: preserveCrops
         )
 
+        // Sync customImageOrder from panelAssignments so swapPanelImages has a valid array.
+        if imageLibrary.customImageOrder.isEmpty || imageLibrary.customImageOrder.count != images.count {
+            imageLibrary.customImageOrder = panels.compactMap { layoutManager.panelAssignments[$0.id] }
+        }
+
         let panelCount = panels.count
         let styleRaw = layoutStyle.rawValue
         let selectedStr = selectedPanelId?.uuidString ?? "nil"
