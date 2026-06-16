@@ -189,29 +189,29 @@ Already exists on VM: `images`, `panels`, `layoutStyle`, `gutter`, `customImageO
 
 ### New VM accessors needed
 
-| Accessor | Type | Manager Source |
-|----------|------|----------------|
-| `browseImages()` | method | `imageCoordinator.browseImages()` |
-| `getEffectiveImageIndex(for:)` | method | `imageCoordinator.getEffectiveImageIndex(for:)` |
-| `swapPanelImages(sourceId:targetId:)` | method | `imageCoordinator.swapPanelImages(...)` |
-| `removeImage(at:)` | method | `imageCoordinator.removeImage(at:)` + undo + saliency |
-| `moveImages(from:to:)` | method | `imageCoordinator.moveImages(from:to:)` + undo + saliency |
-| `selectPanelForImage(at:)` | method | `imageCoordinator.selectPanelForImage(at:)` |
-| `clearAll()` | method | Phase 3.2 |
-| `addImages(from:)` | method | `imageCoordinator.addImages(from:)` |
-| `scrollPanActivePanelId` | computed | `cropManager.scrollPanActivePanelId` |
+| Accessor | Type | Manager Source | Status |
+|----------|------|----------------|--------|
+| `browseImages()` | method | `imageCoordinator.browseImages()` | ✅ |
+| `getEffectiveImageIndex(for:)` | method | `imageCoordinator.getEffectiveImageIndex(for:)` | ✅ |
+| `swapPanelImages(sourceId:targetId:)` | method | `imageCoordinator.swapPanelImages(...)` | ✅ (pre-existing) |
+| `removeImage(at:)` | method | `imageCoordinator.removeImage(at:)` + undo + saliency | ✅ (pre-existing) |
+| `moveImages(from:to:)` | method | `imageCoordinator.moveImages(from:to:)` + undo + saliency | ✅ (pre-existing) |
+| `selectPanelForImage(at:)` | method | `imageCoordinator.selectPanelForImage(at:)` | ✅ |
+| `clearAll()` | method | Phase 3.2 | ✅ (pre-existing) |
+| `addImages(from:)` | method | `imageCoordinator.addImages(from:)` | |
+| `scrollPanActivePanelId` | computed | `cropManager.scrollPanActivePanelId` | |
 
 ### Sub-phases
 
 | Sub-phase | File | Replacements | Notes |
 |-----------|------|-------------|-------|
-| 4.1 | `CollageCommands.swift` | 1 | `imageCoordinator.browseImages()` |
-| 4.2 | `StatusSidebar.swift` | 4 | `exportManager.isExporting`, `imageLibrary.images.count`, `layoutManager.panels.count` |
-| 4.3 | `ImageLibrarySidebar.swift` | 7 | `imageLibrary.images`, `imageCoordinator.removeImage`, `selectPanelForImage`, `moveImages`, `browseImages` |
+| 4.1 | `CollageCommands.swift` | 1 | `imageCoordinator.browseImages()` | ✅ DONE |
+| 4.2 | `StatusSidebar.swift` | 4 | `exportManager.isExporting`, `imageLibrary.images.count`, `layoutManager.panels.count` | ✅ DONE |
+| 4.3 | `ImageLibrarySidebar.swift` | 7 | `imageLibrary.images`, `imageCoordinator.removeImage`, `selectPanelForImage`, `moveImages`, `browseImages` | ✅ DONE |
 | 4.4 | `ExportPanel.swift` | 6 | `exportManager.isExporting`, `successMessage`, `dismissSuccess()`, `imageLibrary.images.isEmpty` |
 | 4.5 | `ContentView.swift` | 8 | `imageLibrary.images`, `imageCoordinator.browseImages/clearAll/addImages`, `layoutManager.panels` |
 | 4.6 | `LayoutConfigSidebar.swift` | 16 | `layoutManager.layoutStyle`, `gutter`, `diagonalSliceAngle`, `hexagonalSpacing`, `doubleExposureMaskOpacity`, `doubleExposureMaskImage` |
-| 4.7 | `PanelCropEditor.swift` | 3 | `imageCoordinator.getEffectiveImageIndex`, `imageLibrary.images` |
+| 4.7 | `PanelCropEditor.swift` | 3 | `imageCoordinator.getEffectiveImageIndex`, `imageLibrary.images` | ✅ DONE |
 | 4.8 | `CollageEditorView.swift` | 14 | `layoutManager.panels`, `imageLibrary.images`, `imageCoordinator.getEffectiveImageIndex/swapPanelImages/removeImage`, `cropManager.scrollPanActivePanelId` |
 
 **4.9 — Fix C6: Persistence bundle**

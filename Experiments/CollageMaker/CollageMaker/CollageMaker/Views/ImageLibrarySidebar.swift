@@ -6,7 +6,7 @@ struct ImageLibrarySidebar: View {
     @Binding var isDetailCollapsed: Bool
 
     private var filteredImages: [(index: Int, item: ImageItem)] {
-        viewModel.imageLibrary.images.indexed(by: searchQuery)
+        viewModel.images.indexed(by: searchQuery)
     }
 
     var body: some View {
@@ -32,7 +32,7 @@ struct ImageLibrarySidebar: View {
         .clipShape(RoundedRectangle(cornerRadius: 6))
 
         Section("Images") {
-            if viewModel.imageLibrary.images.isEmpty {
+            if viewModel.images.isEmpty {
                 VStack(spacing: 8) {
                     Image(systemName: "photo.on.rectangle.angled")
                         .font(.system(size: 28))
@@ -68,7 +68,7 @@ struct ImageLibrarySidebar: View {
                         Spacer()
 
                         Button {
-                            viewModel.imageCoordinator.removeImage(at: index)
+                            viewModel.removeImage(at: index)
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(.secondary)
@@ -78,21 +78,21 @@ struct ImageLibrarySidebar: View {
                     .contentShape(Rectangle())
                     .contextMenu {
                         Button("Remove", role: .destructive) {
-                            viewModel.imageCoordinator.removeImage(at: index)
+                            viewModel.removeImage(at: index)
                         }
                     }
                     .onTapGesture {
-                        viewModel.imageCoordinator.selectPanelForImage(at: index)
+                        viewModel.selectPanelForImage(at: index)
                         isDetailCollapsed = false
                     }
                 }
                 .onMove { from, to in
-                    viewModel.imageCoordinator.moveImages(from: from, to: to)
+                    viewModel.moveImages(from: from, to: to)
                 }
             }
 
             Button {
-                viewModel.imageCoordinator.browseImages()
+                viewModel.browseImages()
             } label: {
                 Label("Add Images", systemImage: "plus.circle.fill")
             }

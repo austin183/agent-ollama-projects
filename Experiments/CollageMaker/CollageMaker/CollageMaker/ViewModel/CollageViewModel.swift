@@ -569,6 +569,18 @@ final class CollageViewModel {
         undoManager.setActionName("Swap Images")
     }
 
+    func browseImages() {
+        imageCoordinator.browseImages()
+    }
+
+    func getEffectiveImageIndex(for panelId: UUID) -> Int? {
+        imageCoordinator.getEffectiveImageIndex(for: panelId)
+    }
+
+    func selectPanelForImage(at imageIndex: Int) {
+        imageCoordinator.selectPanelForImage(at: imageIndex)
+    }
+
     // MARK: - Crop (delegated to CropManager)
 
     func beginPan(panelId: UUID) {

@@ -10,9 +10,9 @@ struct StatusSidebar: View {
                     ProgressView()
                         .frame(width: 16, height: 16)
                         .accessibilityHidden(true)
-                    Text(viewModel.exportManager.isExporting
+                    Text(viewModel.isExporting
                         ? "Exporting collage..."
-                        : "Analyzing \(viewModel.imageLibrary.images.count) image(s)...")
+                        : "Analyzing \(viewModel.images.count) image(s)...")
                         .foregroundStyle(.secondary)
                         .accessibilityLabel("Processing status")
                 } else {
@@ -26,10 +26,10 @@ struct StatusSidebar: View {
             }
         }
 
-        if viewModel.layoutManager.panels.count < viewModel.imageLibrary.images.count {
+        if viewModel.panels.count < viewModel.images.count {
             Section("Notice") {
                 Label(
-                    "Only \(viewModel.layoutManager.panels.count) of \(viewModel.imageLibrary.images.count) images are in the layout",
+                    "Only \(viewModel.panels.count) of \(viewModel.images.count) images are in the layout",
                     systemImage: "info.circle"
                 )
                 .foregroundStyle(.secondary)

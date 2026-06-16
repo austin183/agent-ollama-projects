@@ -8,7 +8,7 @@ struct CollageCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
             Button("Add Images…") {
-                viewModel.imageCoordinator.browseImages()
+                viewModel.browseImages()
             }
             .keyboardShortcut("o", modifiers: .command)
 
