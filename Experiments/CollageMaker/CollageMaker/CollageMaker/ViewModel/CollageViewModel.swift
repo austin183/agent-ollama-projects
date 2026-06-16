@@ -99,6 +99,8 @@ final class CollageViewModel {
         set { cropManager.cropMap = newValue }
     }
 
+    var scrollPanActivePanelId: UUID? { cropManager.scrollPanActivePanelId }
+
     var layoutStyle: LayoutStyle { layoutManager.layoutStyle }
 
     // Style-specific configuration (delegated to LayoutManager)

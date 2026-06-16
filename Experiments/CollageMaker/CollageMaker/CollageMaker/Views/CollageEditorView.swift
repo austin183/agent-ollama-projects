@@ -33,10 +33,10 @@ struct CollageEditorView: View {
     var body: some View {
         if viewModel.isLayeredMode || viewModel.previewImage != nil {
             GeometryReader { geometry in
-                let panelFrames = viewModel.layoutManager.panels.reduce(into: [UUID: CGRect]()) { dict, panel in
+                let panelFrames = viewModel.panels.reduce(into: [UUID: CGRect]()) { dict, panel in
                     dict[panel.id] = CoordinateConverter.canvasToPreviewFrame(panel.frame, in: geometry.size, canvasSize: SizeConstants.defaultCanvasSize)
                 }
-                let panelGeometries = Dictionary(uniqueKeysWithValues: viewModel.layoutManager.panels.map { ($0.id, $0.geometry) })
+                let panelGeometries = Dictionary(uniqueKeysWithValues: viewModel.panels.map { ($0.id, $0.geometry) })
                 let titleFrame = titleCanvasFrame.map { CoordinateConverter.canvasToPreviewFrame($0, in: geometry.size, canvasSize: SizeConstants.defaultCanvasSize) }
                 let canvasPreviewFrame = CoordinateConverter.canvasToPreviewFrame(CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize), in: geometry.size, canvasSize: SizeConstants.defaultCanvasSize)
 
@@ -49,7 +49,7 @@ struct CollageEditorView: View {
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                         }
 
-                        ForEach(viewModel.layoutManager.panels) { panel in
+                        ForEach(viewModel.panels) { panel in
                             PanelOverlay(
                                 panel: panel,
                                 scaledFrame: panelFrames[panel.id],
@@ -103,7 +103,7 @@ struct CollageEditorView: View {
 
                     if let sourceId = gestureCoordinator.dragSourcePanelId,
                         let scaledFrame = panelFrames[sourceId],
-                        let sourcePanel = viewModel.layoutManager.panels.first(where: { $0.id == sourceId }) {
+                        let sourcePanel = viewModel.panels.first(where: { $0.id == sourceId }) {
                         PanelShape(geometry: sourcePanel.geometry)
                             .fill(Color.clear)
                             .stroke(Color.cyan, lineWidth: 2.5)
@@ -114,7 +114,7 @@ struct CollageEditorView: View {
                     if let targetId = gestureCoordinator.dragTargetPanelId,
                         let scaledFrame = panelFrames[targetId],
                         targetId != gestureCoordinator.dragSourcePanelId,
-                        let targetPanel = viewModel.layoutManager.panels.first(where: { $0.id == targetId }) {
+                        let targetPanel = viewModel.panels.first(where: { $0.id == targetId }) {
                         PanelShape(geometry: targetPanel.geometry)
                             .fill(Color.clear)
                             .stroke(Color.green, lineWidth: 2.5)
@@ -124,8 +124,8 @@ struct CollageEditorView: View {
 
                     if let cursorLoc = gestureCoordinator.dragCursorLocation,
                        gestureCoordinator.dragSourcePanelId != nil,
-                        gestureCoordinator.dragSourceImageIndex < viewModel.imageLibrary.images.count {
-                        Image(nsImage: viewModel.imageLibrary.images[gestureCoordinator.dragSourceImageIndex].thumbnail)
+                        gestureCoordinator.dragSourceImageIndex < viewModel.images.count {
+                        Image(nsImage: viewModel.images[gestureCoordinator.dragSourceImageIndex].thumbnail)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 48, height: 48)
@@ -151,7 +151,7 @@ struct CollageEditorView: View {
                         onPanEnded: {
                             self.viewModel.isLiveGesturing = false
                             self.viewModel.endGestureUndo(actionName: "Adjust Crop")
-                            let panelId = self.viewModel.cropManager.scrollPanActivePanelId
+                            let panelId = self.viewModel.scrollPanActivePanelId
                             self.viewModel.endScrollPan()
                             if let panelId {
                                 self.viewModel.updatePanelPreview(panelId: panelId)
@@ -256,7 +256,7 @@ struct CollageEditorView: View {
                                 }
                                 if let id = hitPanel(at: value.startLocation, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size) {
                                     gestureCoordinator.dragSourcePanelId = id
-                                    if let imgIdx = viewModel.imageCoordinator.getEffectiveImageIndex(for: id) {
+                                    if let imgIdx = viewModel.getEffectiveImageIndex(for: id) {
                                         gestureCoordinator.dragSourceImageIndex = imgIdx
                                     }
                                 }
@@ -276,7 +276,7 @@ struct CollageEditorView: View {
                             if let sourceId = gestureCoordinator.dragSourcePanelId,
                                 let targetId = hitPanel(at: value.location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size),
                                sourceId != targetId {
-                                viewModel.imageCoordinator.swapPanelImages(sourceId: sourceId, targetId: targetId)
+                                viewModel.swapPanelImages(sourceId: sourceId, targetId: targetId)
                             }
                             gestureCoordinator.dragSourcePanelId = nil
                             gestureCoordinator.dragTargetPanelId = nil
@@ -314,7 +314,7 @@ struct CollageEditorView: View {
                     }
                     if let id = hitPanel(at: location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size) {
                         viewModel.selectedPanelId = id
-                        if let panel = viewModel.layoutManager.panels.first(where: { $0.id == id }),
+                        if let panel = viewModel.panels.first(where: { $0.id == id }),
                            let frame = panelFrames[id] {
                             logger.info("Selected panel idx=\(panel.imageIndex), canvas=\(DebugHelpers.rectStr(panel.frame)), scaled=\(DebugHelpers.rectStr(frame)), tap=\(DebugHelpers.pointStr(location)), contains=\(frame.contains(location))")
                         }
@@ -335,7 +335,7 @@ struct CollageEditorView: View {
 
     private func hitPanel(at location: CGPoint, panelFrames: [UUID: CGRect], panelGeometries: [UUID: PanelGeometry], previewSize: CGSize) -> UUID? {
         if let id = CoordinateConverter.hitTestPanel(at: location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: previewSize, canvasSize: SizeConstants.defaultCanvasSize),
-            let panel = viewModel.layoutManager.panels.first(where: { $0.id == id }),
+            let panel = viewModel.panels.first(where: { $0.id == id }),
            let frame = panelFrames[id] {
             logger.debug("hitPanel: idx=\(panel.imageIndex) frame=\(DebugHelpers.rectStr(frame)) tap=\(DebugHelpers.pointStr(location)) hits=true")
             return id
@@ -393,7 +393,7 @@ private struct PanelOverlay: View {
             }
 
             if let frame = scaledFrame {
-                let imageIndex = viewModel.imageCoordinator.getEffectiveImageIndex(for: panel.id)
+                let imageIndex = viewModel.getEffectiveImageIndex(for: panel.id)
                 PanelHitArea(
                     panel: panel,
                     frame: frame,
@@ -409,7 +409,7 @@ private struct PanelOverlay: View {
                     Divider()
                     if let idx = imageIndex {
                         Button("Remove Image", role: .destructive) {
-                            viewModel.imageCoordinator.removeImage(at: idx)
+                            viewModel.removeImage(at: idx)
                         }
                     }
                 }

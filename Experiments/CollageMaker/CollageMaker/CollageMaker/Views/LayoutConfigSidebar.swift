@@ -7,35 +7,35 @@ struct LayoutConfigSidebar: View {
 
     var layoutStyleBinding: Binding<LayoutStyle> {
         Binding(
-            get: { viewModel.layoutManager.layoutStyle },
+            get: { viewModel.layoutStyle },
             set: { viewModel.setLayoutStyle($0) }
         )
     }
 
     var gutterBinding: Binding<CGFloat> {
         Binding(
-            get: { viewModel.layoutManager.gutter },
+            get: { viewModel.gutter },
             set: { viewModel.setGutter($0) }
         )
     }
 
     var diagonalSliceAngleBinding: Binding<CGFloat> {
         Binding(
-            get: { viewModel.layoutManager.diagonalSliceAngle },
+            get: { viewModel.diagonalSliceAngle },
             set: { viewModel.setDiagonalSliceAngle($0) }
         )
     }
 
     var hexagonalSpacingBinding: Binding<CGFloat> {
         Binding(
-            get: { viewModel.layoutManager.hexagonalSpacing },
+            get: { viewModel.hexagonalSpacing },
             set: { viewModel.setHexagonalSpacing($0) }
         )
     }
 
     var doubleExposureMaskOpacityBinding: Binding<CGFloat> {
         Binding(
-            get: { viewModel.layoutManager.doubleExposureMaskOpacity },
+            get: { viewModel.doubleExposureMaskOpacity },
             set: { viewModel.setDoubleExposureMaskOpacity($0) }
         )
     }
@@ -53,55 +53,55 @@ struct LayoutConfigSidebar: View {
             }
             .pickerStyle(.inline)
             .accessibilityLabel("Layout style")
-            .accessibilityValue(viewModel.layoutManager.layoutStyle.title)
+            .accessibilityValue(viewModel.layoutStyle.title)
 
             VStack(alignment: .leading) {
                 HStack {
                     Text("Gutter")
                     Spacer()
-                    Text("\(Int(viewModel.layoutManager.gutter))pt")
+                    Text("\(Int(viewModel.gutter))pt")
                         .foregroundStyle(.secondary)
                 }
                 .font(.caption)
                 Slider(value: gutterBinding, in: 0...20, step: 1)
                     .accessibilityLabel("Gutter width")
-                    .accessibilityValue("\(Int(viewModel.layoutManager.gutter)) points")
+                    .accessibilityValue("\(Int(viewModel.gutter)) points")
             }
 
-            if viewModel.layoutManager.layoutStyle == .diagonalSlices {
+            if viewModel.layoutStyle == .diagonalSlices {
                 VStack(alignment: .leading) {
                     HStack {
                         Text("Slice Angle")
                         Spacer()
-                        Text("\(Int(viewModel.layoutManager.diagonalSliceAngle))°")
+                        Text("\(Int(viewModel.diagonalSliceAngle))°")
                             .foregroundStyle(.secondary)
                     }
                     .font(.caption)
                     Slider(value: diagonalSliceAngleBinding, in: 0...75, step: 1)
                         .accessibilityLabel("Diagonal slice angle")
-                        .accessibilityValue("\(Int(viewModel.layoutManager.diagonalSliceAngle)) degrees")
+                        .accessibilityValue("\(Int(viewModel.diagonalSliceAngle)) degrees")
                 }
             }
 
-            if viewModel.layoutManager.layoutStyle == .hexagonal {
+            if viewModel.layoutStyle == .hexagonal {
                 VStack(alignment: .leading) {
                     HStack {
                         Text("Hex Spacing")
                         Spacer()
-                        Text("\(Int(viewModel.layoutManager.hexagonalSpacing))pt")
+                        Text("\(Int(viewModel.hexagonalSpacing))pt")
                             .foregroundStyle(.secondary)
                     }
                     .font(.caption)
                     Slider(value: hexagonalSpacingBinding, in: 0...30, step: 1)
                         .accessibilityLabel("Hexagonal spacing")
-                        .accessibilityValue("\(Int(viewModel.layoutManager.hexagonalSpacing)) points")
+                        .accessibilityValue("\(Int(viewModel.hexagonalSpacing)) points")
                 }
             }
 
-            if viewModel.layoutManager.layoutStyle == .doubleExposure {
+            if viewModel.layoutStyle == .doubleExposure {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
-                        if let maskImg = viewModel.layoutManager.doubleExposureMaskImage {
+                        if let maskImg = viewModel.doubleExposureMaskImage {
                             Image(nsImage: maskImg)
                                 .resizable()
                                 .frame(width: 32, height: 32)
@@ -121,7 +121,7 @@ struct LayoutConfigSidebar: View {
 
                         Spacer()
 
-                        if viewModel.layoutManager.doubleExposureMaskImage != nil {
+                        if viewModel.doubleExposureMaskImage != nil {
                             Button {
                                 viewModel.setMaskImage(nil, path: nil)
                             } label: {
@@ -136,13 +136,13 @@ struct LayoutConfigSidebar: View {
                     HStack {
                         Text("Mask Opacity")
                         Spacer()
-                        Text("\(Int(viewModel.layoutManager.doubleExposureMaskOpacity * 100))%")
+                        Text("\(Int(viewModel.doubleExposureMaskOpacity * 100))%")
                             .foregroundStyle(.secondary)
                     }
                     .font(.caption)
                     Slider(value: doubleExposureMaskOpacityBinding, in: 0...1)
                         .accessibilityLabel("Mask opacity")
-                        .accessibilityValue("\(Int(viewModel.layoutManager.doubleExposureMaskOpacity * 100)) percent")
+                        .accessibilityValue("\(Int(viewModel.doubleExposureMaskOpacity * 100)) percent")
                 }
             }
         }
