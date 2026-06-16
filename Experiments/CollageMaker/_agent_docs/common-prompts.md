@@ -19,7 +19,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan for Phase 2 in @_agent_docs/plans/2026-06-14-vm-decomposition-round2.md using our macos skills for guidance.
+Please implement the plan for Phase 3 in @_agent_docs/plans/2026-06-15-srp-remediation-plan.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
@@ -51,7 +51,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/pinch-zoom-anchor-old-vs-new-bounds.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/undomanager-anyobject-protocol-target.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Researching

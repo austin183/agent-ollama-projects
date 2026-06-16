@@ -44,7 +44,7 @@ final class CollageViewModel {
             guard !old.isEqual(newValue) else { return }
             registerUndo(oldValue: old, actionName: "Edit Title") { $0.titleManager.titleAttrString = old }
             if isLayeredMode {
-                titleManager.updateImage(viewModel: self)
+                titleManager.updateImage(updater: self)
             } else {
                 updatePreview()
             }
@@ -60,7 +60,7 @@ final class CollageViewModel {
             titleManager.titleStyle = newValue
             guard !isInitializing else { return }
             if titleManager.isDraggingTitle {
-                titleManager.updateImage(viewModel: self)
+                titleManager.updateImage(updater: self)
                 return
             }
             undoManager.registerUndo(withTarget: self) { target in
@@ -69,7 +69,7 @@ final class CollageViewModel {
             undoManager.setActionName("Change Title Style")
             debouncedSave()
             if isLayeredMode {
-                titleManager.updateImage(viewModel: self)
+                titleManager.updateImage(updater: self)
             } else {
                 updatePreview()
             }
@@ -396,7 +396,7 @@ final class CollageViewModel {
         self.exportManager = ExportManager(assembler: assembler)
         self.undoManager.levelsOfUndo = 60
         self.imageCoordinator = ImageCoordinator(
-            viewModel: self,
+            target: self,
             imageLibrary: imageLibrary,
             layoutManager: layoutManager,
             cropManager: cropManager,
@@ -700,7 +700,7 @@ final class CollageViewModel {
     }
 
     func updateBackground() {
-        backgroundManager.updateBackground(viewModel: self)
+        backgroundManager.updateBackground(updater: self)
     }
 
     func updatePreviewDebounced() {
@@ -757,15 +757,15 @@ final class CollageViewModel {
     }
 
     func updateTitleImage() {
-        titleManager.updateImage(viewModel: self)
+        titleManager.updateImage(updater: self)
     }
 
     func updateTitleImageLive() {
-        titleManager.updateImage(viewModel: self)
+        titleManager.updateImage(updater: self)
     }
 
     func finishTitleDrag() {
-        titleManager.finishDrag(viewModel: self)
+        titleManager.finishDrag(updater: self)
     }
 
     private func applyTitleChange<Value>(
@@ -787,7 +787,7 @@ final class CollageViewModel {
         let oldValue = titleManager.titleStyle.fontFamily
         titleManager.titleStyle.fontFamily = family
         applyTitleChange(at: \.fontFamily, oldValue: oldValue, actionName: "Change Font Family") {
-            self.titleManager.updateImage(viewModel: self)
+            self.titleManager.updateImage(updater: self)
         }
     }
 
@@ -797,7 +797,7 @@ final class CollageViewModel {
         applyTitleChange(at: \.fontSize, oldValue: oldValue, actionName: "Change Font Size") {
             self.debouncer.debounce(id: "fontSize", delay: .milliseconds(150)) { [weak self] in
                 guard let self else { return }
-                self.titleManager.updateImage(viewModel: self)
+                self.titleManager.updateImage(updater: self)
             }
         }
     }
@@ -807,7 +807,7 @@ final class CollageViewModel {
         titleManager.titleStyle.backgroundColor = color
         applyTitleChange(at: \.backgroundColor, oldValue: oldValue, actionName: "Change Title BG Color") {
             if self.isLayeredMode {
-                self.titleManager.updateImage(viewModel: self)
+                self.titleManager.updateImage(updater: self)
             } else {
                 self.updatePreview()
             }
@@ -819,7 +819,7 @@ final class CollageViewModel {
         titleManager.titleStyle.fontColor = color
         applyTitleChange(at: \.fontColor, oldValue: oldValue, actionName: "Change Title Color") {
             if self.isLayeredMode {
-                self.titleManager.updateImage(viewModel: self)
+                self.titleManager.updateImage(updater: self)
             } else {
                 self.updatePreview()
             }
@@ -831,7 +831,7 @@ final class CollageViewModel {
         titleManager.titleStyle.alignment = alignment
         applyTitleChange(at: \.alignment, oldValue: oldValue, actionName: "Change Title Alignment") {
             if self.isLayeredMode {
-                self.titleManager.updateImage(viewModel: self)
+                self.titleManager.updateImage(updater: self)
             } else {
                 self.updatePreview()
             }
@@ -843,7 +843,7 @@ final class CollageViewModel {
         titleManager.titleStyle.showBackground = show
         applyTitleChange(at: \.showBackground, oldValue: oldValue, actionName: "Toggle Title BG") {
             if self.isLayeredMode {
-                self.titleManager.updateImage(viewModel: self)
+                self.titleManager.updateImage(updater: self)
             } else {
                 self.updatePreview()
             }
@@ -881,6 +881,34 @@ final class CollageViewModel {
     /// Used by tests to synchronize with debounced rendering work.
     func awaitPendingTasks() async {
         await previewManager.awaitPendingTasks()
+    }
+}
+
+// MARK: - PreviewUpdatable Conformance
+
+extension CollageViewModel: PreviewUpdatable {
+    func updateTitleImage(attrString: NSAttributedString, style: TitleStyle, canvasSize: CGSize) {
+        previewManager.updateTitleImage(titleAttrString: attrString, titleStyle: style, canvasSize: canvasSize)
+    }
+
+    func incrementTitleVersion() {
+        titleImageVersion += 1
+    }
+
+    func updateBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) {
+        previewManager.updateBackground(config: config, canvasSize: canvasSize, backgroundImage: backgroundImage, previewSize: previewSize)
+    }
+
+    func cancelDebouncer(id: String) {
+        debouncer.cancel(id: id)
+    }
+}
+
+// MARK: - ImageCoordinationTarget Conformance
+
+extension CollageViewModel: ImageCoordinationTarget {
+    func regenerateLayout() {
+        regenerateLayout(preserveCrops: false)
     }
 }
 

@@ -208,6 +208,42 @@ var gutter: CGFloat = 0 {
 
 **Order:** undo registration → persist → side effects. This ensures undo restores the old value, which triggers `didSet` again — re-persisting the old value and re-running side effects. Undo should fully reverse the action, including persistence.
 
+## Protocol Target Workaround
+
+`UndoManager.registerUndo(withTarget:handler:)` requires `TargetType: AnyObject`. A protocol-typed variable (`any ProtocolName`) fails even when the protocol inherits `AnyObject`, because the existential is not a concrete class type.
+
+**Two-part fix:**
+
+```swift
+// 1. Protocol must be a class protocol
+protocol ImageCoordinationTarget: AnyObject {
+    func regenerateLayout()
+}
+
+// 2. Use the coordinator (self) as the target, not the protocol existential
+final class ImageCoordinator {
+    private let target: ImageCoordinationTarget
+    private let undoManager: UndoManager
+
+    func removeImage(at index: Int) {
+        let removed = imageLibrary.images[index]
+        // WRONG: registerUndo(withTarget: target) — compile error
+        undoManager.registerUndo(withTarget: self) { _ in
+            self.imageLibrary.images.insert(removed, at: index)
+            self.target.regenerateLayout()
+        }
+        undoManager.setActionName("Remove Image")
+        imageLibrary.images.remove(at: index)
+    }
+}
+```
+
+**Why it works:** `self` is the concrete coordinator class (satisfies `AnyObject`). The closure captures `self`, which owns the `target` reference and routes mutations through it. The coordinator stays alive (owned by the ViewModel) when undo fires.
+
+**When this applies:** Any time you break a circular dependency with a protocol (DIP) and need undo actions that mutate state on the protocol target.
+
+**Alternative (not recommended):** Passing the concrete ViewModel as a second `undoTarget` parameter defeats the protocol abstraction — the coordinator would still import the concrete type.
+
 ## Collection Mutation Undo Patterns
 
 Three distinct patterns for undoing array mutations:

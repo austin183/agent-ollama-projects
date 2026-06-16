@@ -29,11 +29,11 @@ final class BackgroundManager {
         backgroundImage = image
     }
 
-    func updateBackground(viewModel: CollageViewModel) {
+    func updateBackground(updater: PreviewUpdatable) {
         let bgConfig = buildConfig()
         let backgroundImageCG = backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
 
-        viewModel.previewManager.updateBackground(
+        updater.updateBackground(
             config: bgConfig,
             canvasSize: SizeConstants.defaultCanvasSize,
             backgroundImage: backgroundImageCG,

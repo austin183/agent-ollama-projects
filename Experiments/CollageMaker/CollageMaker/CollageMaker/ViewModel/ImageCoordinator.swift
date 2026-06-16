@@ -13,7 +13,7 @@ private let logger = Logger(
 /// registration, layout regeneration, and preview updates.
 @MainActor
 final class ImageCoordinator {
-    private let viewModel: CollageViewModel
+    private let target: ImageCoordinationTarget
     let imageLibrary: ImageLibraryManager
     let layoutManager: LayoutManager
     let cropManager: CropManager
@@ -24,7 +24,7 @@ final class ImageCoordinator {
     var saliencyResults: [Int: SaliencyResult] = [:]
 
     init(
-        viewModel: CollageViewModel,
+        target: ImageCoordinationTarget,
         imageLibrary: ImageLibraryManager,
         layoutManager: LayoutManager,
         cropManager: CropManager,
@@ -32,7 +32,7 @@ final class ImageCoordinator {
         undoManager: UndoManager,
         saliencyAnalyzer: SaliencyAnalysis
     ) {
-        self.viewModel = viewModel
+        self.target = target
         self.imageLibrary = imageLibrary
         self.layoutManager = layoutManager
         self.cropManager = cropManager
@@ -49,7 +49,7 @@ final class ImageCoordinator {
 
     func addImages(from urls: [URL]) async {
         await imageLibrary.addImages(from: urls)
-        if !imageLibrary.images.isEmpty && !viewModel.isProcessing {
+        if !imageLibrary.images.isEmpty && !target.isProcessing {
             Task { [weak self] in
                 await self?.analyzeSaliency()
             }
@@ -58,9 +58,9 @@ final class ImageCoordinator {
 
     func removeImage(at index: Int) {
         guard let (removed, at) = imageLibrary.removeImage(at: index) else { return }
-        undoManager.registerUndo(withTarget: viewModel) { target in
-            target.imageLibrary.images.insert(removed, at: at)
-            target.regenerateLayout()
+        undoManager.registerUndo(withTarget: self) { _ in
+            self.imageLibrary.images.insert(removed, at: at)
+            self.target.regenerateLayout()
         }
         undoManager.setActionName("Remove Image")
 
@@ -73,9 +73,9 @@ final class ImageCoordinator {
         let oldCustomOrder = imageLibrary.customImageOrder
         imageLibrary.moveImages(from: from, to: to)
         layoutManager.panelAssignments.removeAll()
-        undoManager.registerUndo(withTarget: viewModel) { target in
-            target.customImageOrder = oldCustomOrder
-            target.regenerateLayout()
+        undoManager.registerUndo(withTarget: self) { _ in
+            self.target.customImageOrder = oldCustomOrder
+            self.target.regenerateLayout()
         }
         undoManager.setActionName("Reorder Images")
 
@@ -90,34 +90,33 @@ final class ImageCoordinator {
         let oldPanels = layoutManager.panels
         let oldCropMap = cropManager.cropMap
         let oldImages = imageLibrary.clearAll()
-        let oldBgImage = viewModel.backgroundManager.backgroundImage
-        let oldBgImagePath = viewModel.backgroundManager.backgroundImagePath
-        viewModel.backgroundManager.reset()
-        viewModel.titleManager.reset()
+
+        // Capture state from target before clearing
+        let oldSelectedPanelId = target.selectedPanelId
+        let oldErrorMessage = target.errorMessage
+
         layoutManager.reset()
-        undoManager.registerUndo(withTarget: viewModel) { target in
-            target.imageLibrary.images = oldImages
-            target.layoutManager.panels = oldPanels
-            target.cropMap = oldCropMap
-            target.backgroundManager.backgroundImage = oldBgImage
-            target.backgroundManager.backgroundImagePath = oldBgImagePath
-            target.regenerateLayout()
+        undoManager.registerUndo(withTarget: self) { _ in
+            self.imageLibrary.images = oldImages
+            self.layoutManager.panels = oldPanels
+            self.cropManager.cropMap = oldCropMap
+            self.target.regenerateLayout()
+            self.target.selectedPanelId = oldSelectedPanelId
         }
         undoManager.setActionName("Clear All")
-        viewModel.exportManager.exportTask?.cancel()
         cropManager.cropMap.removeAll()
         saliencyResults.removeAll()
-        viewModel.selectedPanelId = nil
+        target.selectedPanelId = nil
         previewManager.clearAll()
-        viewModel.errorMessage = nil
+        target.errorMessage = nil
     }
 
     // MARK: - Panel Assignment
 
     func assignImage(_ imageIndex: Int, to panelId: UUID) {
         layoutManager.panelAssignments[panelId] = imageIndex
-        viewModel.resetCrop(panelId: panelId)
-        viewModel.updatePanelPreview(panelId: panelId)
+        target.resetCrop(panelId: panelId)
+        target.updatePanelPreview(panelId: panelId)
     }
 
     func getEffectiveImageIndex(for panelId: UUID) -> Int? {
@@ -133,7 +132,7 @@ final class ImageCoordinator {
         if let panel = layoutManager.panels.first(where: {
             layoutManager.panelAssignments[$0.id] == imageIndex || $0.imageIndex == imageIndex
         }) {
-            viewModel.selectedPanelId = panel.id
+            target.selectedPanelId = panel.id
         }
     }
 
@@ -142,9 +141,9 @@ final class ImageCoordinator {
         guard let sourceSlot = layoutManager.panels.firstIndex(where: { $0.id == sourceId }),
               let targetSlot = layoutManager.panels.firstIndex(where: { $0.id == targetId }) else { return }
         let oldOrder = imageLibrary.customImageOrder
-        undoManager.registerUndo(withTarget: viewModel) { target in
-            target.customImageOrder = oldOrder
-            target.regenerateLayout()
+        undoManager.registerUndo(withTarget: self) { _ in
+            self.target.customImageOrder = oldOrder
+            self.target.regenerateLayout()
         }
         undoManager.setActionName("Swap Images")
         imageLibrary.customImageOrder.swapAt(sourceSlot, targetSlot)
@@ -156,8 +155,8 @@ final class ImageCoordinator {
             cropManager.cropMap[targetId] = CropInfo(panelId: targetId, sourceRect: cropA.sourceRect, destination: cropB.destination)
         }
 
-        viewModel.updatePanelPreview(panelId: sourceId)
-        viewModel.updatePanelPreview(panelId: targetId)
+        target.updatePanelPreview(panelId: sourceId)
+        target.updatePanelPreview(panelId: targetId)
     }
 
     // MARK: - Saliency
@@ -165,8 +164,8 @@ final class ImageCoordinator {
     func analyzeSaliency() async {
         guard !imageLibrary.images.isEmpty else { return }
         logger.info("Saliency analysis started for \(self.imageLibrary.images.count) image(s)")
-        viewModel.beginProcessing()
-        defer { viewModel.endProcessing() }
+        target.beginProcessing()
+        defer { target.endProcessing() }
 
         do {
             let cgImages = imageLibrary.images.map { $0.cgImage }
@@ -182,12 +181,12 @@ final class ImageCoordinator {
                 images: imageLibrary.images,
                 results: indexed
             )
-            viewModel.debouncer.cancel(id: "previewRender")
-            viewModel.updatePreview()
-            viewModel.updateAllPanelPreviews()
+            target.cancelDebouncer(id: "previewRender")
+            target.updatePreview()
+            target.updateAllPanelPreviews()
         } catch {
             logger.error("Saliency analysis failed: \(error.localizedDescription, privacy: .public)")
-            viewModel.errorMessage = error.localizedDescription
+            target.errorMessage = error.localizedDescription
         }
     }
 }

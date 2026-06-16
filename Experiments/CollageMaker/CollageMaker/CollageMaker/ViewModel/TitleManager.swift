@@ -66,19 +66,19 @@ final class TitleManager {
         return cachedBounds
     }
 
-    func updateImage(viewModel: CollageViewModel) {
-        viewModel.titleImageVersion += 1
-        viewModel.previewManager.updateTitleImage(
-            titleAttrString: titleAttrString,
-            titleStyle: titleStyle,
+    func updateImage(updater: PreviewUpdatable) {
+        updater.incrementTitleVersion()
+        updater.updateTitleImage(
+            attrString: titleAttrString,
+            style: titleStyle,
             canvasSize: SizeConstants.defaultCanvasSize
         )
     }
 
-    func finishDrag(viewModel: CollageViewModel) {
-        viewModel.debouncer.cancel(id: "titleImage")
-        updateImage(viewModel: viewModel)
-        viewModel.debouncedSave()
+    func finishDrag(updater: PreviewUpdatable) {
+        updater.cancelDebouncer(id: "titleImage")
+        updateImage(updater: updater)
+        updater.debouncedSave()
     }
 
     func reset() {
