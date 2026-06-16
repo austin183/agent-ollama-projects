@@ -208,8 +208,8 @@ Already exists on VM: `images`, `panels`, `layoutStyle`, `gutter`, `customImageO
 | 4.1 | `CollageCommands.swift` | 1 | `imageCoordinator.browseImages()` | ✅ DONE |
 | 4.2 | `StatusSidebar.swift` | 4 | `exportManager.isExporting`, `imageLibrary.images.count`, `layoutManager.panels.count` | ✅ DONE |
 | 4.3 | `ImageLibrarySidebar.swift` | 7 | `imageLibrary.images`, `imageCoordinator.removeImage`, `selectPanelForImage`, `moveImages`, `browseImages` | ✅ DONE |
-| 4.4 | `ExportPanel.swift` | 6 | `exportManager.isExporting`, `successMessage`, `dismissSuccess()`, `imageLibrary.images.isEmpty` |
-| 4.5 | `ContentView.swift` | 8 | `imageLibrary.images`, `imageCoordinator.browseImages/clearAll/addImages`, `layoutManager.panels` |
+| 4.4 | `ExportPanel.swift` | 6 | `exportManager.isExporting`, `successMessage`, `dismissSuccess()`, `imageLibrary.images.isEmpty` | ✅ DONE |
+| 4.5 | `ContentView.swift` | 8 | `imageLibrary.images`, `imageCoordinator.browseImages/clearAll/addImages`, `layoutManager.panels` | ✅ DONE |
 | 4.6 | `LayoutConfigSidebar.swift` | 16 | `layoutManager.layoutStyle`, `gutter`, `diagonalSliceAngle`, `hexagonalSpacing`, `doubleExposureMaskOpacity`, `doubleExposureMaskImage` |
 | 4.7 | `PanelCropEditor.swift` | 3 | `imageCoordinator.getEffectiveImageIndex`, `imageLibrary.images` | ✅ DONE |
 | 4.8 | `CollageEditorView.swift` | 14 | `layoutManager.panels`, `imageLibrary.images`, `imageCoordinator.getEffectiveImageIndex/swapPanelImages/removeImage`, `cropManager.scrollPanActivePanelId` |

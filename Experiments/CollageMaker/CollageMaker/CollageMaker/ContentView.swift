@@ -37,12 +37,12 @@ struct ContentView: View {
                     } label: {
                         Label("Export", systemImage: "arrowshape.down.circle.fill")
                     }
-                    .disabled(viewModel.isProcessing || viewModel.imageLibrary.images.isEmpty)
+                    .disabled(viewModel.isProcessing || viewModel.images.isEmpty)
                     .accessibilityLabel("Export collage as JPEG")
                     .accessibilityHint("Opens save dialog")
 
                     Button {
-                        viewModel.imageCoordinator.browseImages()
+                        viewModel.browseImages()
                     } label: {
                         Image(systemName: "plus.circle.fill")
                     }
@@ -74,7 +74,7 @@ struct ContentView: View {
         Form {
             ImageLibrarySidebar(viewModel: viewModel, searchQuery: $searchQuery, isDetailCollapsed: $isDetailCollapsed)
             LayoutConfigSidebar(viewModel: viewModel, chooseMaskImage: chooseMaskImage)
-            if !viewModel.imageLibrary.images.isEmpty {
+            if !viewModel.images.isEmpty {
                 StatusSidebar(viewModel: viewModel)
             }
         }
@@ -101,8 +101,8 @@ struct ContentView: View {
             return true
         }
         .onTapGesture {
-            if viewModel.imageLibrary.images.isEmpty {
-                viewModel.imageCoordinator.browseImages()
+            if viewModel.images.isEmpty {
+                viewModel.browseImages()
             }
         }
     }
@@ -132,7 +132,7 @@ struct ContentView: View {
 
         if !loadedUrls.isEmpty {
             logger.info("Loaded \(loadedUrls.count) image(s) from drop")
-            await viewModel.imageCoordinator.addImages(from: loadedUrls)
+            await viewModel.addImages(from: loadedUrls)
         }
     }
 
@@ -140,7 +140,7 @@ struct ContentView: View {
         ScrollView {
             VStack(spacing: 24) {
                 if let selectedId = viewModel.selectedPanelId,
-                    let panel = viewModel.layoutManager.panels.first(where: { $0.id == selectedId }) {
+                    let panel = viewModel.panels.first(where: { $0.id == selectedId }) {
                     PanelCropEditor(panel: panel, viewModel: viewModel)
                         .id(panel.id)
                 }

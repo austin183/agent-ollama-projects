@@ -573,6 +573,10 @@ final class CollageViewModel {
         imageCoordinator.browseImages()
     }
 
+    func addImages(from urls: [URL]) async {
+        await imageCoordinator.addImages(from: urls)
+    }
+
     func getEffectiveImageIndex(for panelId: UUID) -> Int? {
         imageCoordinator.getEffectiveImageIndex(for: panelId)
     }
