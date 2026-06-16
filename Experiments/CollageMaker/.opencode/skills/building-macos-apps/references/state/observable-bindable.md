@@ -260,7 +260,46 @@ final class CollageViewModel {
 - No premature side effects — `updatePreview()` won't run before panels/images are set up
 - Safe for undo replay — when undo restores a value, `isInitializing` is `false`, so `didSet` runs normally
 
-## @MainActor Init Default Parameter Trap
+## Circular Init — self Needed as Dependency
+
+When a class creates a sub-object that stores `self` (e.g., as a protocol target), Swift blocks the init: all stored properties must be set before `self` exists, but the sub-object needs `self` to construct.
+
+**Problem:**
+```swift
+@Observable final class CollageViewModel {
+    var coordinator: ImageCoordinator
+
+    init() {
+        self.coordinator = ImageCoordinator(target: self) // ERROR: self used before init
+    }
+}
+```
+
+**Fix: IUO on the dependency, not the owner** — put the IUO on the sub-object's back-reference, assign it after the owner's init completes:
+
+```swift
+final class ImageCoordinator {
+    var target: ImageCoordinationTarget!  // IUO here, not on the owner
+
+    init(imageLibrary: ImageLibrary) {
+        self.imageLibrary = imageLibrary
+        // No target parameter
+    }
+}
+
+@Observable final class CollageViewModel {
+    var coordinator: ImageCoordinator  // non-optional, safe
+
+    init() {
+        self.coordinator = ImageCoordinator(imageLibrary: library)
+        coordinator.target = self  // post-init assignment — safe, immediate
+    }
+}
+```
+
+**Why this is preferred over IUO on the owner:** `var coordinator: ImageCoordinator!` on the owner risks a runtime crash if any code path accesses it before init completes. Placing the IUO on the dependency confines the risk to a single, immediately-set property.
+
+**When to use:** The sub-object stores `self` as a protocol reference (DIP), and you want the owner property to be non-optional.
 
 When a dependency class is `@MainActor`, you cannot use it as a default parameter value in `init`:
 

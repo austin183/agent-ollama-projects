@@ -145,6 +145,7 @@ See [references/state/observable-bindable.md](references/state/observable-bindab
 - **`@Observable` cannot track computed properties** -- all properties driving UI must be stored. Use `didSet` for `UserDefaults` persistence
 - **Views must use `@Bindable var`** -- `let viewModel: MyViewModel` renders once and never updates
 - Side effects (e.g., `updatePreview()`) must be called in `didSet`, not computed setters
+- **Circular init (sub-object needs `self`)** — Put the IUO on the sub-object's back-reference, not the owner. Assign after init: `self.coordinator = Coordinator(); coordinator.target = self`. See [references/state/observable-bindable.md](references/state/observable-bindable.md) § "Circular Init"
 - **Three-way didSet decomposition** — When a `didSet` has cache invalidation, undo registration, and preview rendering, decompose into independent concerns with separate guards. A single `guard ... else { return }` that skips all side effects for "non-important" changes will silently break color/background/attribute updates:
 
 ```swift
@@ -219,6 +220,7 @@ See [references/state/swift-concurrency.md](references/state/swift-concurrency.m
 
 ## Swift Compilation Gotchas
 
+- **Circular init (`self` used before initialized):** When a class needs to pass `self` to a sub-object during init, Swift blocks it. Fix: put the IUO on the sub-object's back-reference property, not the owner. Assign after init: `self.coordinator = Coordinator(...); coordinator.target = self`. See [references/state/observable-bindable.md](references/state/observable-bindable.md) § "Circular Init"
 - **Same-file extension ordering:** Swift compiles each `.swift` file as a separate compilation unit. Within a single file, an `extension` on a type from another file cannot reference types defined later in the same file. Place the extension **after** any local types it references, or move the extension to the extended type's own file (cross-file references have no ordering constraint).
 
 ## Finder Drag Gotcha

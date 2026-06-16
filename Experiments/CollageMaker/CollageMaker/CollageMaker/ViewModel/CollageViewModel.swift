@@ -28,7 +28,7 @@ final class CollageViewModel {
     let imageLibrary = ImageLibraryManager()
     let backgroundManager = BackgroundManager()
     let titleManager = TitleManager()
-    var imageCoordinator: ImageCoordinator!
+    var imageCoordinator: ImageCoordinator
     private var isInitializing = false
     let debouncer = Debouncer()
     var titleImageVersion = 0
@@ -396,7 +396,6 @@ final class CollageViewModel {
         self.exportManager = ExportManager(assembler: assembler)
         self.undoManager.levelsOfUndo = 60
         self.imageCoordinator = ImageCoordinator(
-            target: self,
             imageLibrary: imageLibrary,
             layoutManager: layoutManager,
             cropManager: cropManager,
@@ -404,6 +403,7 @@ final class CollageViewModel {
             undoManager: undoManager,
             saliencyAnalyzer: saliencyAnalyzer
         )
+        imageCoordinator.target = self
 
         imageLibrary.onImagesChanged = { [weak self] in
             self?.regenerateLayout()
@@ -499,6 +499,74 @@ final class CollageViewModel {
 
     func analyzeSaliency() async {
         await imageCoordinator.analyzeSaliency()
+    }
+
+    // MARK: - Image Operations (undo + downstream effects)
+
+    func clearAll() {
+        guard !imageLibrary.images.isEmpty else { return }
+        let oldSaliency = imageCoordinator.saliencyResults
+        let oldDomain = imageCoordinator.clearDomain()
+
+        let oldBackgroundConfig = backgroundManager.buildConfig()
+        let oldTitleAttrString = titleManager.titleAttrString
+        let oldTitleStyle = titleManager.titleStyle
+        let oldSelectedPanelId = selectedPanelId
+
+        layoutManager.reset()
+        layoutManager.panels = []
+        layoutManager.panelAssignments.removeAll()
+        cropManager.cropMap.removeAll()
+        previewManager.clearAll()
+        backgroundManager.reset()
+        titleManager.reset()
+        selectedPanelId = nil
+        errorMessage = nil
+
+        undoManager.registerUndo(withTarget: self) { [oldBackgroundConfig, oldTitleAttrString, oldTitleStyle, oldSelectedPanelId, oldSaliency] target in
+            target.imageLibrary.images = oldDomain.images
+            target.layoutManager.panels = oldDomain.panels
+            target.cropManager.cropMap = oldDomain.cropMap
+            target.imageCoordinator.saliencyResults = oldSaliency
+            target.backgroundManager.backgroundColor = oldBackgroundConfig.color
+            target.backgroundManager.backgroundStyle = oldBackgroundConfig.style
+            target.titleManager.titleAttrString = oldTitleAttrString
+            target.titleManager.titleStyle = oldTitleStyle
+            target.selectedPanelId = oldSelectedPanelId
+            target.regenerateLayout()
+        }
+        undoManager.setActionName("Clear All")
+    }
+
+    func removeImage(at index: Int) {
+        guard let (removed, at) = imageCoordinator.removeImage(at: index) else { return }
+        undoManager.registerUndo(withTarget: self) { target in
+            target.imageLibrary.images.insert(removed, at: at)
+            target.regenerateLayout()
+        }
+        undoManager.setActionName("Remove Image")
+    }
+
+    func moveImages(from: IndexSet, to: Int) {
+        let oldOrder = imageCoordinator.moveImages(from: from, to: to)
+        undoManager.registerUndo(withTarget: self) { target in
+            target.customImageOrder = oldOrder
+            target.regenerateLayout()
+        }
+        undoManager.setActionName("Reorder Images")
+    }
+
+    func swapPanelImages(sourceId: UUID, targetId: UUID) {
+        guard let state = imageCoordinator.swapPanelImages(sourceId: sourceId, targetId: targetId) else { return }
+        undoManager.registerUndo(withTarget: self) { target in
+            target.customImageOrder = state.customOrder
+            target.cropManager.cropMap[sourceId] = state.sourceCrop
+            target.cropManager.cropMap[targetId] = state.targetCrop
+            target.layoutManager.panelAssignments[sourceId] = state.sourceAssign
+            target.layoutManager.panelAssignments[targetId] = state.targetAssign
+            target.regenerateLayout()
+        }
+        undoManager.setActionName("Swap Images")
     }
 
     // MARK: - Crop (delegated to CropManager)

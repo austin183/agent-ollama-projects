@@ -102,7 +102,7 @@ import Testing
         let sourceBefore = vm.imageCoordinator.getEffectiveImageIndex(for: sourceId)
         let targetBefore = vm.imageCoordinator.getEffectiveImageIndex(for: targetId)
 
-        vm.imageCoordinator.swapPanelImages(sourceId: sourceId, targetId: targetId)
+        vm.swapPanelImages(sourceId: sourceId, targetId: targetId)
 
         let sourceAfter = vm.imageCoordinator.getEffectiveImageIndex(for: sourceId)
         let targetAfter = vm.imageCoordinator.getEffectiveImageIndex(for: targetId)
@@ -122,7 +122,7 @@ import Testing
         let cropA = vm.cropMap[panels[0].id]?.sourceRect
         let cropB = vm.cropMap[panels[1].id]?.sourceRect
 
-        vm.imageCoordinator.swapPanelImages(sourceId: panels[0].id, targetId: panels[1].id)
+        vm.swapPanelImages(sourceId: panels[0].id, targetId: panels[1].id)
 
         #expect(vm.cropMap[panels[0].id]?.sourceRect == cropB)
         #expect(vm.cropMap[panels[1].id]?.sourceRect == cropA)
@@ -159,7 +159,7 @@ import Testing
         vm.imageLibrary.images = images
         vm.regenerateLayout()
 
-        vm.imageCoordinator.clearAll()
+        vm.clearAll()
 
         #expect(vm.imageLibrary.images.isEmpty)
         #expect(vm.layoutManager.panels.isEmpty)

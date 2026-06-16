@@ -55,7 +55,7 @@ import Testing
         let vm = makeViewModel()
         vm.titleAttrString = NSAttributedString(string: "Test")
         vm.setGutter(10)
-        vm.imageCoordinator.clearAll()
+        vm.clearAll()
         #expect(vm.imageLibrary.images.isEmpty)
         #expect(vm.layoutManager.panels.isEmpty)
         #expect(vm.cropMap.isEmpty)
@@ -140,7 +140,7 @@ import Testing
         vm.imageLibrary.images = images
         vm.customImageOrder = [0, 1, 2, 3, 4]
 
-        vm.imageCoordinator.moveImages(from: IndexSet(integer: 3), to: 0)
+        vm.moveImages(from: IndexSet(integer: 3), to: 0)
         #expect(vm.customImageOrder == [3, 0, 1, 2, 4])
     }
 
@@ -150,7 +150,7 @@ import Testing
         vm.imageLibrary.images = images
         vm.customImageOrder = [0, 1, 2, 3, 4]
 
-        vm.imageCoordinator.moveImages(from: IndexSet(integer: 0), to: 4)
+        vm.moveImages(from: IndexSet(integer: 0), to: 4)
         #expect(vm.customImageOrder == [1, 2, 3, 4, 0])
     }
 
@@ -160,7 +160,7 @@ import Testing
         vm.imageLibrary.images = images
         vm.customImageOrder = [0]
 
-        vm.imageCoordinator.moveImages(from: IndexSet(integer: 0), to: 0)
+        vm.moveImages(from: IndexSet(integer: 0), to: 0)
         #expect(vm.customImageOrder == [0])
     }
 
@@ -170,7 +170,7 @@ import Testing
         vm.imageLibrary.images = images
         vm.customImageOrder = []
 
-        vm.imageCoordinator.moveImages(from: IndexSet(integer: 0), to: 2)
+        vm.moveImages(from: IndexSet(integer: 0), to: 2)
         #expect(vm.imageLibrary.images.count == 3)
     }
 

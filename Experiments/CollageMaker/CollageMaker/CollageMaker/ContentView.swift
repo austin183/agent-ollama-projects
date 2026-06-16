@@ -62,7 +62,7 @@ struct ContentView: View {
         }
         .alert("Clear All Images?", isPresented: showingClearAlert) {
             Button("Clear All", role: .destructive) {
-                viewModel.imageCoordinator.clearAll()
+                viewModel.clearAll()
             }
             Button("Cancel", role: .cancel) {}
         } message: {

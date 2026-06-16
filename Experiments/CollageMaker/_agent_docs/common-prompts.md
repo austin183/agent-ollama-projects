@@ -51,7 +51,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/undomanager-anyobject-protocol-target.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/circular-init-post-init-assignment.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Researching

@@ -8,12 +8,27 @@ private let logger = Logger(
     category: "ImageCoordinator"
 )
 
+/// Snapshot of image-coordinator domain state for undo restoration.
+struct ImageDomainState {
+    let images: [ImageItem]
+    let panels: [ImagePanel]
+    let cropMap: [UUID: CropInfo]
+}
+
+/// Snapshot of swap state for undo restoration.
+struct SwapState {
+    let customOrder: [Int]
+    let sourceAssign: Int?
+    let targetAssign: Int?
+    let sourceCrop: CropInfo?
+    let targetCrop: CropInfo?
+}
+
 /// Coordinates image loading, reordering, removal, panel assignment,
-/// and saliency analysis. Wraps ImageLibraryManager calls with undo
-/// registration, layout regeneration, and preview updates.
+/// and saliency analysis. Returns data for undo; VM handles registration.
 @MainActor
 final class ImageCoordinator {
-    private let target: ImageCoordinationTarget
+    var target: ImageCoordinationTarget!
     let imageLibrary: ImageLibraryManager
     let layoutManager: LayoutManager
     let cropManager: CropManager
@@ -24,7 +39,6 @@ final class ImageCoordinator {
     var saliencyResults: [Int: SaliencyResult] = [:]
 
     init(
-        target: ImageCoordinationTarget,
         imageLibrary: ImageLibraryManager,
         layoutManager: LayoutManager,
         cropManager: CropManager,
@@ -32,7 +46,6 @@ final class ImageCoordinator {
         undoManager: UndoManager,
         saliencyAnalyzer: SaliencyAnalysis
     ) {
-        self.target = target
         self.imageLibrary = imageLibrary
         self.layoutManager = layoutManager
         self.cropManager = cropManager
@@ -56,59 +69,36 @@ final class ImageCoordinator {
         }
     }
 
-    func removeImage(at index: Int) {
-        guard let (removed, at) = imageLibrary.removeImage(at: index) else { return }
-        undoManager.registerUndo(withTarget: self) { _ in
-            self.imageLibrary.images.insert(removed, at: at)
-            self.target.regenerateLayout()
-        }
-        undoManager.setActionName("Remove Image")
+    func removeImage(at index: Int) -> (item: ImageItem, at: Int)? {
+        guard let (removed, at) = imageLibrary.removeImage(at: index) else { return nil }
 
         Task { [weak self] in
             await self?.analyzeSaliency()
         }
+        return (removed, at)
     }
 
-    func moveImages(from: IndexSet, to: Int) {
+    func moveImages(from: IndexSet, to: Int) -> [Int] {
         let oldCustomOrder = imageLibrary.customImageOrder
         imageLibrary.moveImages(from: from, to: to)
         layoutManager.panelAssignments.removeAll()
-        undoManager.registerUndo(withTarget: self) { _ in
-            self.target.customImageOrder = oldCustomOrder
-            self.target.regenerateLayout()
-        }
-        undoManager.setActionName("Reorder Images")
 
         Task { [weak self] in
             await self?.analyzeSaliency()
         }
+        return oldCustomOrder
     }
 
-    func clearAll() {
-        guard !imageLibrary.images.isEmpty else { return }
-        logger.info("Clear all images")
+    func clearDomain() -> ImageDomainState {
+        guard !imageLibrary.images.isEmpty else {
+            return ImageDomainState(images: [], panels: [], cropMap: [:])
+        }
+        logger.info("Clear image domain")
         let oldPanels = layoutManager.panels
         let oldCropMap = cropManager.cropMap
         let oldImages = imageLibrary.clearAll()
-
-        // Capture state from target before clearing
-        let oldSelectedPanelId = target.selectedPanelId
-        let oldErrorMessage = target.errorMessage
-
-        layoutManager.reset()
-        undoManager.registerUndo(withTarget: self) { _ in
-            self.imageLibrary.images = oldImages
-            self.layoutManager.panels = oldPanels
-            self.cropManager.cropMap = oldCropMap
-            self.target.regenerateLayout()
-            self.target.selectedPanelId = oldSelectedPanelId
-        }
-        undoManager.setActionName("Clear All")
-        cropManager.cropMap.removeAll()
         saliencyResults.removeAll()
-        target.selectedPanelId = nil
-        previewManager.clearAll()
-        target.errorMessage = nil
+        return ImageDomainState(images: oldImages, panels: oldPanels, cropMap: oldCropMap)
     }
 
     // MARK: - Panel Assignment
@@ -136,27 +126,31 @@ final class ImageCoordinator {
         }
     }
 
-    func swapPanelImages(sourceId: UUID, targetId: UUID) {
-        guard sourceId != targetId else { return }
+    func swapPanelImages(sourceId: UUID, targetId: UUID) -> SwapState? {
+        guard sourceId != targetId else { return nil }
         guard let sourceSlot = layoutManager.panels.firstIndex(where: { $0.id == sourceId }),
-              let targetSlot = layoutManager.panels.firstIndex(where: { $0.id == targetId }) else { return }
-        let oldOrder = imageLibrary.customImageOrder
-        undoManager.registerUndo(withTarget: self) { _ in
-            self.target.customImageOrder = oldOrder
-            self.target.regenerateLayout()
-        }
-        undoManager.setActionName("Swap Images")
+              let targetSlot = layoutManager.panels.firstIndex(where: { $0.id == targetId }) else { return nil }
+
+        let state = SwapState(
+            customOrder: imageLibrary.customImageOrder,
+            sourceAssign: layoutManager.panelAssignments[sourceId],
+            targetAssign: layoutManager.panelAssignments[targetId],
+            sourceCrop: cropManager.cropMap[sourceId],
+            targetCrop: cropManager.cropMap[targetId]
+        )
+
         imageLibrary.customImageOrder.swapAt(sourceSlot, targetSlot)
         layoutManager.panelAssignments[sourceId] = imageLibrary.customImageOrder[sourceSlot]
         layoutManager.panelAssignments[targetId] = imageLibrary.customImageOrder[targetSlot]
 
-        if let cropA = cropManager.cropMap[sourceId], let cropB = cropManager.cropMap[targetId] {
+        if let cropA = state.sourceCrop, let cropB = state.targetCrop {
             cropManager.cropMap[sourceId] = CropInfo(panelId: sourceId, sourceRect: cropB.sourceRect, destination: cropA.destination)
             cropManager.cropMap[targetId] = CropInfo(panelId: targetId, sourceRect: cropA.sourceRect, destination: cropB.destination)
         }
 
         target.updatePanelPreview(panelId: sourceId)
         target.updatePanelPreview(panelId: targetId)
+        return state
     }
 
     // MARK: - Saliency
