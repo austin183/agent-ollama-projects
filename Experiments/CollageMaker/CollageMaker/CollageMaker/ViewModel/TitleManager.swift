@@ -75,10 +75,6 @@ final class TitleManager {
         )
     }
 
-    func updateImageLive(viewModel: CollageViewModel) {
-        updateImage(viewModel: viewModel)
-    }
-
     func finishDrag(viewModel: CollageViewModel) {
         viewModel.debouncer.cancel(id: "titleImage")
         updateImage(viewModel: viewModel)

@@ -4,11 +4,9 @@ import UniformTypeIdentifiers
 
 struct ExportPanel: View {
     @Bindable var viewModel: CollageViewModel
-    let backgroundManager: BackgroundManager
-    let titleManager: TitleManager
 
     private var displayFamily: String {
-        titleManager.titleStyle.fontFamily.isEmpty ? "(System Default)" : titleManager.titleStyle.fontFamily
+        viewModel.titleStyle.fontFamily.isEmpty ? "(System Default)" : viewModel.titleStyle.fontFamily
     }
 
     var body: some View {

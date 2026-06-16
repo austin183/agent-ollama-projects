@@ -31,7 +31,6 @@ final class CollageViewModel {
     var imageCoordinator: ImageCoordinator!
     private var isInitializing = false
     let debouncer = Debouncer()
-    private var cropMapVersion = 0
     var titleImageVersion = 0
 
     // MARK: - Title computed properties (delegated to TitleManager)
@@ -61,7 +60,7 @@ final class CollageViewModel {
             titleManager.titleStyle = newValue
             guard !isInitializing else { return }
             if titleManager.isDraggingTitle {
-                titleManager.updateImageLive(viewModel: self)
+                titleManager.updateImage(viewModel: self)
                 return
             }
             undoManager.registerUndo(withTarget: self) { target in
@@ -95,35 +94,9 @@ final class CollageViewModel {
     var selectedPanelId: UUID?
 
     /// Single source of truth for crop state — delegated to CropManager.
-    /// The version counter establishes @Observable dependency so in-place
-    /// cropMap mutations fire change signals to views.
     var cropMap: [UUID: CropInfo] {
-        get {
-            let _ = cropMapVersion
-            return cropManager.cropMap
-        }
+        get { cropManager.cropMap }
         set { cropManager.cropMap = newValue }
-    }
-
-    private func notifyCropMapChanged() {
-        cropMapVersion += 1
-    }
-
-    /// Throttled notification — fires at most every ~30ms (~33fps) so the view
-    /// updates during active gestures without re-evaluating on every frame.
-    /// Scroll pan uses a slower 60ms interval since users are moving through
-    /// content rapidly and 16fps is visually indistinguishable.
-    private var lastCropNotifyTime: ContinuousClock.Instant = ContinuousClock.now
-    private let cropNotifyInterval: Duration = .milliseconds(30)
-    private let scrollCropNotifyInterval: Duration = .milliseconds(60)
-
-    private func throttledNotifyCropMapChanged(forScrollPan: Bool = false) {
-        let interval = forScrollPan ? scrollCropNotifyInterval : cropNotifyInterval
-        let now = ContinuousClock.now
-        if now - lastCropNotifyTime >= interval {
-            lastCropNotifyTime = now
-            notifyCropMapChanged()
-        }
     }
 
     var layoutStyle: LayoutStyle { layoutManager.layoutStyle }
@@ -550,7 +523,6 @@ final class CollageViewModel {
         defer { perfLogger.debug("Pan Application completed in \(ContinuousClock.now - panStart)") }
 
         cropManager.applyPan(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
-        throttledNotifyCropMapChanged()
 
         debouncer.debounce(id: "panPreview", delay: .milliseconds(150)) { [weak self] in
             if let panelId = self?.cropManager.activePanelId {
@@ -571,13 +543,11 @@ final class CollageViewModel {
         cropManager.applyPinch(panelId: panelId, panels: panels, images: images, panelAssignments: panelAssignments, finish: true)
         if let panelId {
             updatePanelPreview(panelId: panelId)
-            notifyCropMapChanged()
         }
     }
 
     func applyPinchLive() {
         cropManager.applyPinch(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
-        throttledNotifyCropMapChanged()
 
         if let panelId = cropManager.activePanelId {
             debouncer.debounce(id: "pinchPreview", delay: .milliseconds(0)) { [weak self] in
@@ -635,14 +605,12 @@ final class CollageViewModel {
             destination: crop.destination
         )
         cropManager.cropMap[panelId] = newCrop
-        throttledNotifyCropMapChanged()
         throttledOverlayRender(panelId: panelId)
     }
 
     func finishOverlayCrop(panelId: UUID) {
         debouncer.cancel(id: "overlayRender")
         updatePanelPreview(panelId: panelId)
-        notifyCropMapChanged()
     }
 
     func applyOverlayCrop(panelId: UUID, sourceRect: CGRect) {
@@ -677,14 +645,12 @@ final class CollageViewModel {
             panelAssignments: panelAssignments,
             finish: false
         )
-        throttledNotifyCropMapChanged(forScrollPan: true)
         throttledScrollPanRender()
     }
 
     func endScrollPan() {
         debouncer.cancel(id: "scrollPanPreview")
         cropManager.endScrollPan()
-        notifyCropMapChanged()
     }
 
     // MARK: - Config
@@ -795,7 +761,7 @@ final class CollageViewModel {
     }
 
     func updateTitleImageLive() {
-        titleManager.updateImageLive(viewModel: self)
+        titleManager.updateImage(viewModel: self)
     }
 
     func finishTitleDrag() {
@@ -821,7 +787,7 @@ final class CollageViewModel {
         let oldValue = titleManager.titleStyle.fontFamily
         titleManager.titleStyle.fontFamily = family
         applyTitleChange(at: \.fontFamily, oldValue: oldValue, actionName: "Change Font Family") {
-            self.titleManager.updateImageLive(viewModel: self)
+            self.titleManager.updateImage(viewModel: self)
         }
     }
 

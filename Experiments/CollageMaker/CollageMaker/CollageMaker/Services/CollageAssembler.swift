@@ -81,6 +81,10 @@ extension CollageAssembly {
 // MARK: - Assembler
 
 final class CollageAssembler: CollageAssembly, @unchecked Sendable {
+    // SAFETY: All mutable state (scheduler, RenderScheduler's internal NSLock-protected
+    // queues) is accessed exclusively on the rendering dispatch queue. The scheduler
+    // serializes all render calls, preventing concurrent mutation. No AppKit types
+    // escape the MainActor-isolated callers.
     private let scheduler = RenderScheduler()
 
     func assembleWithCGImages(

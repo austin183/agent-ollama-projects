@@ -88,7 +88,7 @@ struct BackgroundRenderer {
         }
 
         guard let cgImage = context.makeImage() else { return nil }
-        return NSImage(cgImage: cgImage, size: previewSize)
+        return NSImage(cgImage: cgImage, size: canvasSize)
     }
 
     private static func createContext(size: CGSize) -> CGContext? {

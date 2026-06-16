@@ -4,6 +4,7 @@ import Foundation
 import SwiftUI
 
 @MainActor
+@Observable
 final class CropManager {
     var cropMap: [UUID: CropInfo] = [:]
 

@@ -51,11 +51,11 @@ final class ExportManager {
     var isExporting: Bool = false
     var successMessage: String? = nil
 
-    private let assembler: any CollageAssembly
+    private let assembler: any CollageRenderer
     private let savePanelPresenter: any SavePanelPresenter
     var exportTask: Task<Void, Error>?
 
-    init(assembler: any CollageAssembly, savePanelPresenter: any SavePanelPresenter = DefaultSavePanelPresenter()) {
+    init(assembler: any CollageRenderer, savePanelPresenter: any SavePanelPresenter = DefaultSavePanelPresenter()) {
         self.assembler = assembler
         self.savePanelPresenter = savePanelPresenter
     }

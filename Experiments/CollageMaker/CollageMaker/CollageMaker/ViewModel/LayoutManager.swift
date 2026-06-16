@@ -72,14 +72,6 @@ final class LayoutManager {
         }
     }
 
-    func buildLayoutConfig() -> LayoutConfig {
-        LayoutConfig(
-            panels: panels,
-            crops: [:],
-            panelAssignments: panelAssignments
-        )
-    }
-
     func buildOverlayConfig() -> OverlayConfig? {
         guard layoutStyle == .doubleExposure,
               let maskImage = doubleExposureMaskImage,
