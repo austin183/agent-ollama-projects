@@ -149,4 +149,180 @@ import Testing
 
         #expect(hitId == panelId1 || hitId == panelId2)
     }
+
+    // MARK: - Vision to CG Point
+
+    @Test func visionToCGFlipsYAxis() {
+        let imageSize = CGSize(width: 1000, height: 2000)
+        let visionPoint = CGPoint(x: 0.5, y: 0.0)
+
+        let cgPoint = CoordinateConverter.visionToCG(visionPoint, imageSize: imageSize)
+
+        #expect(cgPoint.x == 500)
+        #expect(cgPoint.y == 2000)
+    }
+
+    @Test func visionToCGLeavesXUnchanged() {
+        let imageSize = CGSize(width: 1000, height: 2000)
+        let visionPoint = CGPoint(x: 0.75, y: 0.5)
+
+        let cgPoint = CoordinateConverter.visionToCG(visionPoint, imageSize: imageSize)
+
+        #expect(cgPoint.x == 750)
+        #expect(cgPoint.y == 1000)
+    }
+
+    @Test func visionToCGOriginBottomLeft() {
+        let imageSize = CGSize(width: 100, height: 200)
+        let visionPoint = CGPoint(x: 0, y: 0)
+
+        let cgPoint = CoordinateConverter.visionToCG(visionPoint, imageSize: imageSize)
+
+        #expect(cgPoint.x == 0)
+        #expect(cgPoint.y == 200)
+    }
+
+    @Test func visionToCGTopRight() {
+        let imageSize = CGSize(width: 100, height: 200)
+        let visionPoint = CGPoint(x: 1, y: 1)
+
+        let cgPoint = CoordinateConverter.visionToCG(visionPoint, imageSize: imageSize)
+
+        #expect(cgPoint.x == 100)
+        #expect(cgPoint.y == 0)
+    }
+
+    @Test func visionToCGCenter() {
+        let imageSize = CGSize(width: 1000, height: 2000)
+        let visionPoint = CGPoint(x: 0.5, y: 0.5)
+
+        let cgPoint = CoordinateConverter.visionToCG(visionPoint, imageSize: imageSize)
+
+        #expect(cgPoint.x == 500)
+        #expect(cgPoint.y == 1000)
+    }
+
+    // MARK: - Vision to CG Rect
+
+    @Test func visionRectToCGFlipsYAxis() {
+        let imageSize = CGSize(width: 1000, height: 1000)
+        let visionRect = CGRect(x: 0, y: 0, width: 0.5, height: 0.5)
+
+        let cgRect = CoordinateConverter.visionRectToCG(visionRect, imageSize: imageSize)
+
+        #expect(cgRect.origin.x == 0)
+        #expect(cgRect.origin.y == 500)
+        #expect(cgRect.size.width == 500)
+        #expect(cgRect.size.height == 500)
+    }
+
+    @Test func visionRectToCGPreservesWidthAndHeight() {
+        let imageSize = CGSize(width: 2000, height: 1000)
+        let visionRect = CGRect(x: 0.25, y: 0.25, width: 0.5, height: 0.5)
+
+        let cgRect = CoordinateConverter.visionRectToCG(visionRect, imageSize: imageSize)
+
+        #expect(cgRect.size.width == 1000)
+        #expect(cgRect.size.height == 500)
+    }
+
+    @Test func visionRectToCGFullImage() {
+        let imageSize = CGSize(width: 800, height: 600)
+        let visionRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+
+        let cgRect = CoordinateConverter.visionRectToCG(visionRect, imageSize: imageSize)
+
+        #expect(cgRect.origin.x == 0)
+        #expect(cgRect.origin.y == 0)
+        #expect(cgRect.size.width == 800)
+        #expect(cgRect.size.height == 600)
+    }
+
+    @Test func visionRectToCGTopRightCorner() {
+        let imageSize = CGSize(width: 100, height: 100)
+        let visionRect = CGRect(x: 0.5, y: 0.5, width: 0.5, height: 0.5)
+
+        let cgRect = CoordinateConverter.visionRectToCG(visionRect, imageSize: imageSize)
+
+        #expect(cgRect.origin.x == 50)
+        #expect(cgRect.origin.y == 0)
+        #expect(cgRect.size.width == 50)
+        #expect(cgRect.size.height == 50)
+    }
+
+    // MARK: - Portrait Swap
+
+    @Test func applyPortraitSwapSwapsAxesForPortrait() {
+        let cgPoint = CGPoint(x: 300, y: 600)
+        let imageSize = CGSize(width: 1000, height: 2000)
+
+        let swapped = CoordinateConverter.applyPortraitSwap(cgPoint, imageSize: imageSize)
+
+        #expect(swapped.x == 600)
+        #expect(swapped.y == 300)
+    }
+
+    @Test func applyPortraitSwapNoOpForLandscape() {
+        let cgPoint = CGPoint(x: 300, y: 200)
+        let imageSize = CGSize(width: 1920, height: 1080)
+
+        let swapped = CoordinateConverter.applyPortraitSwap(cgPoint, imageSize: imageSize)
+
+        #expect(swapped.x == cgPoint.x)
+        #expect(swapped.y == cgPoint.y)
+    }
+
+    @Test func applyPortraitSwapNoOpForSquare() {
+        let cgPoint = CGPoint(x: 500, y: 300)
+        let imageSize = CGSize(width: 1000, height: 1000)
+
+        let swapped = CoordinateConverter.applyPortraitSwap(cgPoint, imageSize: imageSize)
+
+        #expect(swapped.x == cgPoint.x)
+        #expect(swapped.y == cgPoint.y)
+    }
+
+    // MARK: - Vision to CG with Portrait
+
+    @Test func visionToCGWithPortraitLandscapeNoSwap() {
+        let visionPoint = CGPoint(x: 0.5, y: 0.5)
+        let imageSize = CGSize(width: 1920, height: 1080)
+
+        let cgPoint = CoordinateConverter.visionToCGWithPortrait(visionPoint, imageSize: imageSize)
+
+        #expect(cgPoint.x == 960)
+        #expect(cgPoint.y == 540)
+    }
+
+    @Test func visionToCGWithPortraitPortraitSwaps() {
+        let visionPoint = CGPoint(x: 0.5, y: 0.5)
+        let imageSize = CGSize(width: 1080, height: 1920)
+
+        let cgPoint = CoordinateConverter.visionToCGWithPortrait(visionPoint, imageSize: imageSize)
+
+        let expectedCG = CoordinateConverter.visionToCG(visionPoint, imageSize: imageSize)
+        #expect(cgPoint.x == expectedCG.y)
+        #expect(cgPoint.y == expectedCG.x)
+    }
+
+    @Test func visionToCGWithPortraitBottomLeftOrigin() {
+        let visionPoint = CGPoint(x: 0, y: 0)
+        let imageSize = CGSize(width: 1000, height: 2000)
+
+        let cgPoint = CoordinateConverter.visionToCGWithPortrait(visionPoint, imageSize: imageSize)
+
+        let cgOnly = CoordinateConverter.visionToCG(visionPoint, imageSize: imageSize)
+        #expect(cgPoint.x == cgOnly.y)
+        #expect(cgPoint.y == cgOnly.x)
+    }
+
+    @Test func visionToCGWithPortraitCenterPoint() {
+        let visionPoint = CGPoint(x: 0.5, y: 0.5)
+        let imageSize = CGSize(width: 1000, height: 2000)
+
+        let cgPoint = CoordinateConverter.visionToCGWithPortrait(visionPoint, imageSize: imageSize)
+
+        #expect(cgPoint.x == 1000)
+        #expect(cgPoint.y == 500)
+    }
 }

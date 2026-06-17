@@ -568,4 +568,51 @@ struct CoordinateConverter {
 
         return candidates.first?.key
     }
+
+    /// Converts a point from Vision normalized coordinates (bottom-left origin, 0-1) to
+    /// CoreGraphics pixel coordinates (top-left origin, 0-imageSize).
+    /// - Parameters:
+    ///   - visionPoint: Normalized point in Vision coordinate space (bottom-left origin).
+    ///   - imageSize: Pixel dimensions of the source image.
+    /// - Returns: Point in CG pixel coordinates (top-left origin).
+    static func visionToCG(_ visionPoint: CGPoint, imageSize: CGSize) -> CGPoint {
+        let cgX = visionPoint.x * imageSize.width
+        let cgY = (1.0 - visionPoint.y) * imageSize.height
+        return CGPoint(x: cgX, y: cgY)
+    }
+
+    /// Converts a rectangle from Vision normalized coordinates (bottom-left origin, 0-1) to
+    /// CoreGraphics pixel coordinates (top-left origin, 0-imageSize).
+    /// - Parameters:
+    ///   - visionRect: Normalized rectangle in Vision coordinate space (bottom-left origin).
+    ///   - imageSize: Pixel dimensions of the source image.
+    /// - Returns: Rectangle in CG pixel coordinates (top-left origin).
+    static func visionRectToCG(_ visionRect: CGRect, imageSize: CGSize) -> CGRect {
+        let cgX = visionRect.origin.x * imageSize.width
+        let cgY = (1.0 - visionRect.origin.y - visionRect.height) * imageSize.height
+        let cgW = visionRect.width * imageSize.width
+        let cgH = visionRect.height * imageSize.height
+        return CGRect(x: cgX, y: cgY, width: cgW, height: cgH)
+    }
+
+    /// Swaps x/y axes of a CG pixel point to compensate for VNImageRequestHandler's
+    /// 90-degree buffer rotation on portrait images.
+    /// - Parameters:
+    ///   - cgPoint: Point in CG pixel coordinates (top-left origin).
+    ///   - imageSize: Pixel dimensions of the source image.
+    /// - Returns: Swapped point, or the original if the image is not portrait.
+    static func applyPortraitSwap(_ cgPoint: CGPoint, imageSize: CGSize) -> CGPoint {
+        guard imageSize.width < imageSize.height else { return cgPoint }
+        return CGPoint(x: cgPoint.y, y: cgPoint.x)
+    }
+
+    /// Full conversion: Vision normalized point → CG pixel coordinates with portrait swap.
+    /// - Parameters:
+    ///   - visionPoint: Normalized point in Vision coordinate space (bottom-left origin).
+    ///   - imageSize: Pixel dimensions of the source image.
+    /// - Returns: Point in CG pixel coordinates (top-left origin), with portrait axis swap applied.
+    static func visionToCGWithPortrait(_ visionPoint: CGPoint, imageSize: CGSize) -> CGPoint {
+        let cgPoint = visionToCG(visionPoint, imageSize: imageSize)
+        return applyPortraitSwap(cgPoint, imageSize: imageSize)
+    }
 }
