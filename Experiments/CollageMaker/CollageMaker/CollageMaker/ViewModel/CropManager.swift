@@ -3,6 +3,10 @@ import CoreGraphics
 import Foundation
 import SwiftUI
 
+enum CropResizeEdge: String {
+    case topLeft, topRight, bottomLeft, bottomRight
+}
+
 @MainActor
 @Observable
 final class CropManager {
@@ -294,6 +298,124 @@ final class CropManager {
 
     func resetAllCrops(panels: [ImagePanel], images: [ImageItem]) {
         computeInitialCrops(panels: panels, images: images)
+    }
+
+    // MARK: - Overlay Crop Adjustments (Static, Pure)
+
+    /// Adjusts the crop source rectangle during a drag gesture in the overlay preview.
+    /// Converts the container-space translation to image-space, applies it to the crop origin,
+    /// and clamps to image bounds. Supports path panels via visible offset/size parameters.
+    /// - Returns: The updated source rectangle in image coordinates.
+    static func adjustCropDuringDrag(
+        translation: CGSize,
+        image: CGSize,
+        crop: CGRect,
+        container: CGSize,
+        visOffset: CGPoint,
+        visSize: CGSize
+    ) -> CGRect {
+        let (fittedSize, _) = FitMath.fit(image, into: container)
+        let scaleX = image.width / fittedSize.width
+        let scaleY = image.height / fittedSize.height
+
+        let transX = translation.width * scaleX
+        let transY = translation.height * scaleY
+
+        let effectiveBaseX = crop.origin.x + visOffset.x
+        let effectiveBaseY = crop.origin.y + visOffset.y
+
+        let maxEffX = max(0, image.width - visSize.width)
+        let maxEffY = max(0, image.height - visSize.height)
+
+        let newEffX = max(0, min(effectiveBaseX + transX, maxEffX))
+        let newEffY = max(0, min(effectiveBaseY + transY, maxEffY))
+
+        let newOX = newEffX - visOffset.x
+        let newOY = newEffY - visOffset.y
+
+        return CGRect(x: newOX, y: newOY, width: crop.width, height: crop.height)
+    }
+
+    /// Handles a corner resize drag in the overlay preview.
+    /// Computes the new crop rectangle based on the drag delta from the anchor corner,
+    /// enforces panel aspect ratio, and clamps to image bounds.
+    /// - Returns: The updated source rectangle in image coordinates.
+    static func handleResize(
+        cropBounds: CGRect,
+        edge: CropResizeEdge,
+        delta: CGSize,
+        image: CGSize,
+        crop: CGRect,
+        container: CGSize,
+        panelSize: CGSize
+    ) -> CGRect {
+        let anchor: CGPoint
+        switch edge {
+        case .bottomRight:
+            anchor = cropBounds.origin
+        case .topRight:
+            anchor = CGPoint(x: cropBounds.minX, y: cropBounds.maxY)
+        case .bottomLeft:
+            anchor = CGPoint(x: cropBounds.maxX, y: cropBounds.minY)
+        case .topLeft:
+            anchor = CGPoint(x: cropBounds.maxX, y: cropBounds.maxY)
+        }
+
+        let panelAspect = panelSize.width / panelSize.height
+
+        let rawW = abs(delta.width)
+        let rawH = abs(delta.height)
+
+        var newW: CGFloat
+        var newH: CGFloat
+        if rawW > panelAspect * rawH {
+            newW = max(1, rawW)
+            newH = newW / panelAspect
+        } else {
+            newH = max(1, rawH)
+            newW = newH * panelAspect
+        }
+
+        var ox = anchor.x
+        var oy = anchor.y
+
+        switch edge {
+        case .bottomRight:
+            break
+        case .topRight:
+            oy = anchor.y - newH
+        case .bottomLeft:
+            ox = anchor.x - newW
+        case .topLeft:
+            ox = anchor.x - newW
+            oy = anchor.y - newH
+        }
+
+        let clampedOX = max(0, min(ox, container.width - newW))
+        let clampedOY = max(0, min(oy, container.height - newH))
+
+        let (fittedSize, fitOffset) = FitMath.fit(image, into: container)
+
+        let sourceOrigin = CGPoint(
+            x: (clampedOX - fitOffset.x) / fittedSize.width * image.width,
+            y: (clampedOY - fitOffset.y) / fittedSize.height * image.height
+        )
+        var sourceSize = CGSize(
+            width: newW / fittedSize.width * image.width,
+            height: newH / fittedSize.height * image.height
+        )
+
+        let maxSourceRect = FitMath.sourceRect(imageSize: image, panelSize: panelSize)
+        let minSourceW = panelSize.width / 2
+        let minSourceH = panelSize.height / 2
+
+        sourceSize.width = Swift.max(minSourceW, Swift.min(maxSourceRect.width, sourceSize.width))
+        sourceSize.height = Swift.max(minSourceH, Swift.min(maxSourceRect.height, sourceSize.height))
+
+        let clampedOriginX = Swift.max(0, Swift.min(sourceOrigin.x, max(0, image.width - sourceSize.width)))
+        let clampedOriginY = Swift.max(0, Swift.min(sourceOrigin.y, max(0, image.height - sourceSize.height)))
+
+        return CGRect(x: clampedOriginX, y: clampedOriginY, width: sourceSize.width, height: sourceSize.height)
     }
 
     // MARK: - Coordinate Conversion (Static)

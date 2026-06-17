@@ -490,4 +490,343 @@ import Testing
         #expect(crop.sourceRect.origin.x + crop.sourceRect.width <= image.size.width + 1)
         #expect(crop.sourceRect.origin.y + crop.sourceRect.height <= image.size.height + 1)
     }
+
+    // MARK: - adjustCropDuringDrag (Pure Function)
+
+    @Test func adjustCropDuringDragBasicDrag() {
+        let image = CGSize(width: 1000, height: 1000)
+        let crop = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let container = CGSize(width: 500, height: 500)
+        let translation = CGSize(width: 50, height: 50)
+
+        let result = CropManager.adjustCropDuringDrag(
+            translation: translation,
+            image: image,
+            crop: crop,
+            container: container,
+            visOffset: .zero,
+            visSize: crop.size
+        )
+
+        #expect(result.origin.x == 200)
+        #expect(result.origin.y == 200)
+        #expect(result.size == crop.size)
+    }
+
+    @Test func adjustCropDuringDragClampsToImageBounds() {
+        let image = CGSize(width: 1000, height: 1000)
+        let crop = CGRect(x: 800, y: 800, width: 200, height: 200)
+        let container = CGSize(width: 500, height: 500)
+        let translation = CGSize(width: 500, height: 500)
+
+        let result = CropManager.adjustCropDuringDrag(
+            translation: translation,
+            image: image,
+            crop: crop,
+            container: container,
+            visOffset: .zero,
+            visSize: crop.size
+        )
+
+        #expect(result.origin.x == 800)
+        #expect(result.origin.y == 800)
+    }
+
+    @Test func adjustCropDuringDragClampsToZeroBounds() {
+        let image = CGSize(width: 1000, height: 1000)
+        let crop = CGRect(x: 50, y: 50, width: 200, height: 200)
+        let container = CGSize(width: 500, height: 500)
+        let translation = CGSize(width: -100, height: -100)
+
+        let result = CropManager.adjustCropDuringDrag(
+            translation: translation,
+            image: image,
+            crop: crop,
+            container: container,
+            visOffset: .zero,
+            visSize: crop.size
+        )
+
+        #expect(result.origin.x == 0)
+        #expect(result.origin.y == 0)
+    }
+
+    @Test func adjustCropDuringDragCoordinateTransformLandscape() {
+        let image = CGSize(width: 2000, height: 1000)
+        let crop = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let container = CGSize(width: 500, height: 500)
+        let translation = CGSize(width: 10, height: 10)
+
+        let result = CropManager.adjustCropDuringDrag(
+            translation: translation,
+            image: image,
+            crop: crop,
+            container: container,
+            visOffset: .zero,
+            visSize: crop.size
+        )
+
+        // Fit: 500x250, offset: (0, 125). ScaleX=4, ScaleY=4.
+        // transX = 10*4 = 40, transY = 10*4 = 40
+        #expect(result.origin.x == 140)
+        #expect(result.origin.y == 140)
+    }
+
+    @Test func adjustCropDuringDragPathPanelVisOffset() {
+        let image = CGSize(width: 1000, height: 1000)
+        let crop = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let container = CGSize(width: 500, height: 500)
+        let translation = CGSize(width: 50, height: 50)
+        let visOffset = CGPoint(x: 50, y: 50)
+        let visSize = CGSize(width: 200, height: 200)
+
+        let result = CropManager.adjustCropDuringDrag(
+            translation: translation,
+            image: image,
+            crop: crop,
+            container: container,
+            visOffset: visOffset,
+            visSize: visSize
+        )
+
+        // Scale 1:1. trans = (100, 100).
+        // effectiveBase = (150, 150). maxEff = (800, 800).
+        // newEff = (250, 250). newOX = 250-50 = 200.
+        #expect(result.origin.x == 200)
+        #expect(result.origin.y == 200)
+    }
+
+    @Test func adjustCropDuringDragIdentityForZeroTranslation() {
+        let image = CGSize(width: 1000, height: 1000)
+        let crop = CGRect(x: 100, y: 200, width: 300, height: 250)
+        let container = CGSize(width: 500, height: 500)
+
+        let result = CropManager.adjustCropDuringDrag(
+            translation: .zero,
+            image: image,
+            crop: crop,
+            container: container,
+            visOffset: .zero,
+            visSize: crop.size
+        )
+
+        #expect(result == crop)
+    }
+
+    @Test func adjustCropDuringDragPreservesCropSize() {
+        let image = CGSize(width: 4000, height: 3000)
+        let crop = CGRect(x: 500, y: 300, width: 800, height: 600)
+        let container = CGSize(width: 1000, height: 800)
+        let translation = CGSize(width: 100, height: -50)
+
+        let result = CropManager.adjustCropDuringDrag(
+            translation: translation,
+            image: image,
+            crop: crop,
+            container: container,
+            visOffset: .zero,
+            visSize: crop.size
+        )
+
+        #expect(result.size == crop.size)
+    }
+
+    @Test func adjustCropDuringDragClampWithVisOffset() {
+        let image = CGSize(width: 1000, height: 1000)
+        let crop = CGRect(x: 700, y: 700, width: 200, height: 200)
+        let container = CGSize(width: 500, height: 500)
+        let translation = CGSize(width: 500, height: 500)
+        let visOffset = CGPoint(x: 100, y: 100)
+        let visSize = CGSize(width: 200, height: 200)
+
+        let result = CropManager.adjustCropDuringDrag(
+            translation: translation,
+            image: image,
+            crop: crop,
+            container: container,
+            visOffset: visOffset,
+            visSize: visSize
+        )
+
+        // Scale 1:1. trans = (1000, 1000).
+        // effectiveBase = (800, 800). maxEff = (800, 800).
+        // newEff clamped to (800, 800). newOX = 800-100 = 700.
+        #expect(result.origin.x == 700)
+        #expect(result.origin.y == 700)
+    }
+
+    // MARK: - handleResize (Pure Function)
+
+    @Test func handleResizeCornerProportionalScaling() {
+        let cropBounds = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let delta = CGSize(width: 50, height: 50)
+        let image = CGSize(width: 1000, height: 1000)
+        let crop = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let container = CGSize(width: 500, height: 500)
+        let panelSize = CGSize(width: 400, height: 400)
+
+        let result = CropManager.handleResize(
+            cropBounds: cropBounds,
+            edge: .bottomRight,
+            delta: delta,
+            image: image,
+            crop: crop,
+            container: container,
+            panelSize: panelSize
+        )
+
+        // Anchor = (100, 100). rawW=50, rawH=50. Panel aspect = 1:1.
+        // newW=50, newH=50. clampedOX=50, clampedOY=50.
+        // Scale 2:1 (image:container). sourceSize = (100, 100).
+        // minSource = (200, 200) → clamped up to (200, 200).
+        #expect(result.width == 200)
+        #expect(result.height == 200)
+    }
+
+    @Test func handleResizeEdgeDominantDimension() {
+        let cropBounds = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let delta = CGSize(width: 80, height: 20)
+        let image = CGSize(width: 1000, height: 500)
+        let crop = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let container = CGSize(width: 500, height: 250)
+        let panelSize = CGSize(width: 800, height: 400)
+
+        let result = CropManager.handleResize(
+            cropBounds: cropBounds,
+            edge: .bottomRight,
+            delta: delta,
+            image: image,
+            crop: crop,
+            container: container,
+            panelSize: panelSize
+        )
+
+        // Panel aspect = 2:1. rawW=80, rawH=20. rawW/rawH = 4 > 2.
+        // Width-dominant: newW=80, newH=40.
+        // Scale 2:1. sourceSize = (160, 80).
+        // minSourceW = 400, minSourceH = 200.
+        // Clamped: sourceSize = (400, 200).
+        #expect(result.width == 400)
+        #expect(result.height == 200)
+    }
+
+    @Test func handleResizeMinimumCropSizeEnforcement() {
+        let cropBounds = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let delta = CGSize(width: 1, height: 1)
+        let image = CGSize(width: 1000, height: 1000)
+        let crop = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let container = CGSize(width: 500, height: 500)
+        let panelSize = CGSize(width: 400, height: 400)
+
+        let result = CropManager.handleResize(
+            cropBounds: cropBounds,
+            edge: .bottomRight,
+            delta: delta,
+            image: image,
+            crop: crop,
+            container: container,
+            panelSize: panelSize
+        )
+
+        // minSource = (200, 200). Tiny delta gets clamped up to minimum.
+        #expect(result.width == 200)
+        #expect(result.height == 200)
+    }
+
+    @Test func handleResizeClampsToContainerBounds() {
+        let cropBounds = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let delta = CGSize(width: 500, height: 500)
+        let image = CGSize(width: 1000, height: 1000)
+        let crop = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let container = CGSize(width: 500, height: 500)
+        let panelSize = CGSize(width: 400, height: 400)
+
+        let result = CropManager.handleResize(
+            cropBounds: cropBounds,
+            edge: .bottomRight,
+            delta: delta,
+            image: image,
+            crop: crop,
+            container: container,
+            panelSize: panelSize
+        )
+
+        // newW = 500, newH = 500. clampedOX = 0, clampedOY = 0.
+        // sourceSize = (1000, 1000). minSource = (200, 200), maxSource = (1000, 1000).
+        #expect(result.width == 1000)
+        #expect(result.height == 1000)
+        #expect(result.origin.x >= 0)
+        #expect(result.origin.y >= 0)
+    }
+
+    @Test func handleResizeTopLeftCorner() {
+        let cropBounds = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let delta = CGSize(width: -50, height: -50)
+        let image = CGSize(width: 1000, height: 1000)
+        let crop = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let container = CGSize(width: 500, height: 500)
+        let panelSize = CGSize(width: 400, height: 400)
+
+        let result = CropManager.handleResize(
+            cropBounds: cropBounds,
+            edge: .topLeft,
+            delta: delta,
+            image: image,
+            crop: crop,
+            container: container,
+            panelSize: panelSize
+        )
+
+        #expect(result.width == 200)
+        #expect(result.height == 200)
+        #expect(result.origin.x == 500)
+        #expect(result.origin.y == 500)
+    }
+
+    @Test func handleResizePreservesAspectRatio() {
+        let cropBounds = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let delta = CGSize(width: 100, height: 30)
+        let image = CGSize(width: 1920, height: 1080)
+        let crop = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let container = CGSize(width: 960, height: 540)
+        let panelSize = CGSize(width: 960, height: 540)
+
+        let result = CropManager.handleResize(
+            cropBounds: cropBounds,
+            edge: .bottomRight,
+            delta: delta,
+            image: image,
+            crop: crop,
+            container: container,
+            panelSize: panelSize
+        )
+
+        let panelAspect = panelSize.width / panelSize.height
+        let resultAspect = result.width / result.height
+        #expect(abs(resultAspect - panelAspect) < 0.01, "Aspect ratio should be preserved (expected \(panelAspect), got \(resultAspect))")
+    }
+
+    @Test func handleResizeSourceClampedToImageBounds() {
+        let cropBounds = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let delta = CGSize(width: 100, height: 100)
+        let image = CGSize(width: 500, height: 500)
+        let crop = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let container = CGSize(width: 500, height: 500)
+        let panelSize = CGSize(width: 400, height: 400)
+
+        let result = CropManager.handleResize(
+            cropBounds: cropBounds,
+            edge: .bottomRight,
+            delta: delta,
+            image: image,
+            crop: crop,
+            container: container,
+            panelSize: panelSize
+        )
+
+        #expect(result.origin.x >= 0)
+        #expect(result.origin.y >= 0)
+        #expect(result.origin.x + result.width <= image.width)
+        #expect(result.origin.y + result.height <= image.height)
+    }
 }
