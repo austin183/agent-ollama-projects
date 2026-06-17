@@ -198,7 +198,7 @@ Already exists on VM: `images`, `panels`, `layoutStyle`, `gutter`, `customImageO
 | `moveImages(from:to:)` | method | `imageCoordinator.moveImages(from:to:)` + undo + saliency | ✅ (pre-existing) |
 | `selectPanelForImage(at:)` | method | `imageCoordinator.selectPanelForImage(at:)` | ✅ |
 | `clearAll()` | method | Phase 3.2 | ✅ (pre-existing) |
-| `addImages(from:)` | method | `imageCoordinator.addImages(from:)` | |
+| `addImages(from:)` | method | `imageCoordinator.addImages(from:)` | ✅ |
 | `scrollPanActivePanelId` | computed | `cropManager.scrollPanActivePanelId` | ✅ |
 
 ### Sub-phases
