@@ -15,6 +15,12 @@ private let perfLogger = Logger(
 )
 
 
+private class PanelFrameCache {
+    var version: Int = -1
+    var size: CGSize = .zero
+    var result: [UUID: CGRect] = [:]
+}
+
 @MainActor
 @Observable
 final class CollageViewModel {
@@ -101,6 +107,28 @@ final class CollageViewModel {
     }
 
     var scrollPanActivePanelId: UUID? { cropManager.scrollPanActivePanelId }
+
+    /// Cached preview-space panel frames. Invalidates when layout version or
+    /// preview size changes. Moves the O(N) canvas→preview coordinate transform
+    /// out of the SwiftUI body evaluation path (R4 fix).
+    private let frameCache = PanelFrameCache()
+
+    func computePanelFrames(previewSize: CGSize) -> [UUID: CGRect] {
+        if frameCache.version == layoutManager.layoutVersion,
+           frameCache.size == previewSize {
+            return frameCache.result
+        }
+        frameCache.version = layoutManager.layoutVersion
+        frameCache.size = previewSize
+        frameCache.result = panels.reduce(into: [UUID: CGRect]()) { dict, panel in
+            dict[panel.id] = CoordinateConverter.canvasToPreviewFrame(
+                panel.frame,
+                in: previewSize,
+                canvasSize: SizeConstants.defaultCanvasSize
+            )
+        }
+        return frameCache.result
+    }
 
     var layoutStyle: LayoutStyle { layoutManager.layoutStyle }
 

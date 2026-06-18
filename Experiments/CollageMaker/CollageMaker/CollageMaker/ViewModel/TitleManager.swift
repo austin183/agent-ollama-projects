@@ -21,7 +21,17 @@ final class TitleManager {
 
     var title: String { titleAttrString.string }
 
+    /// Test-only override for canvasFrame. When set, interaction methods use this
+    /// instead of computing from title bounds.
+    internal var testCanvasFrameOverride: CGRect? = nil
+
+    /// Test-only override for minWidth. When set, resize methods use this value.
+    internal var testMinWidthOverride: CGFloat? = nil
+
     var canvasFrame: CGRect? {
+        if let override = testCanvasFrameOverride {
+            return override
+        }
         let _ = boundsVersion
         guard let cache = ensureTitleBounds() else { return nil }
         let bounds = cache.bounds
@@ -37,6 +47,9 @@ final class TitleManager {
     }
 
     var minWidth: CGFloat {
+        if let override = testMinWidthOverride {
+            return override
+        }
         let _ = boundsVersion
         guard let cache = ensureTitleBounds() else { return 0 }
         let bounds = cache.bounds

@@ -18,6 +18,10 @@ final class LayoutManager {
     var panels: [ImagePanel] = []
     var panelAssignments: [UUID: Int] = [:]
 
+    /// Incremented whenever panels are regenerated. Used by the VM to invalidate
+    /// cached derived values (e.g., panelFrames) without exposing LayoutManager internals.
+    var layoutVersion: Int = 0
+
     // Double exposure
     var doubleExposureMaskImage: NSImage?
     var doubleExposureMaskImagePath: String?
@@ -32,6 +36,7 @@ final class LayoutManager {
         preserveCrops: Bool
     ) {
         guard !images.isEmpty else { return }
+        layoutVersion += 1
 
         var order = customImageOrder
         if order.isEmpty || order.count != images.count {
@@ -86,6 +91,7 @@ final class LayoutManager {
     }
 
     func reset() {
+        layoutVersion += 1
         layoutStyle = .hero
         gutter = 0
         diagonalSliceAngle = 45.0

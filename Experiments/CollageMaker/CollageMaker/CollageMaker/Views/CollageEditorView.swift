@@ -29,9 +29,7 @@ struct CollageEditorView: View {
     var body: some View {
         if viewModel.isLayeredMode || viewModel.previewImage != nil {
             GeometryReader { geometry in
-                let panelFrames = viewModel.panels.reduce(into: [UUID: CGRect]()) { dict, panel in
-                    dict[panel.id] = CoordinateConverter.canvasToPreviewFrame(panel.frame, in: geometry.size, canvasSize: SizeConstants.defaultCanvasSize)
-                }
+                let panelFrames = viewModel.computePanelFrames(previewSize: geometry.size)
                 let panelGeometries = Dictionary(uniqueKeysWithValues: viewModel.panels.map { ($0.id, $0.geometry) })
                 let titleFrame = titleCanvasFrame.map { CoordinateConverter.canvasToPreviewFrame($0, in: geometry.size, canvasSize: SizeConstants.defaultCanvasSize) }
                 let canvasPreviewFrame = CoordinateConverter.canvasToPreviewFrame(CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize), in: geometry.size, canvasSize: SizeConstants.defaultCanvasSize)
