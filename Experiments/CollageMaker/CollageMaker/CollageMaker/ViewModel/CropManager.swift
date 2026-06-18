@@ -347,7 +347,9 @@ final class CropManager {
         image: CGSize,
         crop: CGRect,
         container: CGSize,
-        panelSize: CGSize
+        panelSize: CGSize,
+        destRect: CGRect,
+        isPathPanel: Bool = false
     ) -> CGRect {
         let anchor: CGPoint
         switch edge {
@@ -396,7 +398,7 @@ final class CropManager {
 
         let (fittedSize, fitOffset) = FitMath.fit(image, into: container)
 
-        let sourceOrigin = CGPoint(
+        var sourceOrigin = CGPoint(
             x: (clampedOX - fitOffset.x) / fittedSize.width * image.width,
             y: (clampedOY - fitOffset.y) / fittedSize.height * image.height
         )
@@ -411,6 +413,25 @@ final class CropManager {
 
         sourceSize.width = Swift.max(minSourceW, Swift.min(maxSourceRect.width, sourceSize.width))
         sourceSize.height = Swift.max(minSourceH, Swift.min(maxSourceRect.height, sourceSize.height))
+
+        // Path-panel compensation: adjust source origin to keep the non-dragged
+        // parallelogram edge stable when source size changes.
+        if isPathPanel, destRect.width > 0, destRect.height > 0 {
+            let deltaW = sourceSize.width - crop.width
+            let deltaH = sourceSize.height - crop.height
+
+            if anchor.x <= cropBounds.minX + CGFloat.ulpOfOne {
+                sourceOrigin.x += deltaW * (-destRect.minX) / destRect.width
+            } else {
+                sourceOrigin.x += deltaW * (destRect.minX + destRect.width) / destRect.width - deltaW
+            }
+
+            if anchor.y <= cropBounds.minY + CGFloat.ulpOfOne {
+                sourceOrigin.y += deltaH * (-destRect.minY) / destRect.height
+            } else {
+                sourceOrigin.y += deltaH * (destRect.minY + destRect.height) / destRect.height - deltaH
+            }
+        }
 
         let clampedOriginX = Swift.max(0, Swift.min(sourceOrigin.x, max(0, image.width - sourceSize.width)))
         let clampedOriginY = Swift.max(0, Swift.min(sourceOrigin.y, max(0, image.height - sourceSize.height)))

@@ -672,7 +672,8 @@ import Testing
             image: image,
             crop: crop,
             container: container,
-            panelSize: panelSize
+            panelSize: panelSize,
+            destRect: .zero
         )
 
         // Anchor = (100, 100). rawW=50, rawH=50. Panel aspect = 1:1.
@@ -698,7 +699,8 @@ import Testing
             image: image,
             crop: crop,
             container: container,
-            panelSize: panelSize
+            panelSize: panelSize,
+            destRect: .zero
         )
 
         // Panel aspect = 2:1. rawW=80, rawH=20. rawW/rawH = 4 > 2.
@@ -725,7 +727,8 @@ import Testing
             image: image,
             crop: crop,
             container: container,
-            panelSize: panelSize
+            panelSize: panelSize,
+            destRect: .zero
         )
 
         // minSource = (200, 200). Tiny delta gets clamped up to minimum.
@@ -748,7 +751,8 @@ import Testing
             image: image,
             crop: crop,
             container: container,
-            panelSize: panelSize
+            panelSize: panelSize,
+            destRect: .zero
         )
 
         // newW = 500, newH = 500. clampedOX = 0, clampedOY = 0.
@@ -774,7 +778,8 @@ import Testing
             image: image,
             crop: crop,
             container: container,
-            panelSize: panelSize
+            panelSize: panelSize,
+            destRect: .zero
         )
 
         #expect(result.width == 200)
@@ -798,7 +803,8 @@ import Testing
             image: image,
             crop: crop,
             container: container,
-            panelSize: panelSize
+            panelSize: panelSize,
+            destRect: .zero
         )
 
         let panelAspect = panelSize.width / panelSize.height
@@ -821,7 +827,8 @@ import Testing
             image: image,
             crop: crop,
             container: container,
-            panelSize: panelSize
+            panelSize: panelSize,
+            destRect: .zero
         )
 
         #expect(result.origin.x >= 0)

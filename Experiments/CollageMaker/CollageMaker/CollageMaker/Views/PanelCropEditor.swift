@@ -168,7 +168,7 @@ struct PanelCropEditor: View {
         .id(panel.id)
     }
 
-    // MARK: - Coordinate Conversion
+    // MARK: - Crop Adjustments (Delegate to CropManager)
 
     private func adjustCropDuringDrag(
         value: DragGesture.Value,
@@ -176,184 +176,62 @@ struct PanelCropEditor: View {
         crop: CropInfo,
         container: CGSize
     ) {
-        let (fittedSize, fitOffset) = FitMath.fit(image.size, into: container)
-
-        let fittedW = fittedSize.width
-        let fittedH = fittedSize.height
-
-        let scaleX = image.size.width / fittedW
-        let scaleY = image.size.height / fittedH
-
         switch overlayDragMode {
         case .drag:
-            let transX = value.translation.width * scaleX
-            let transY = value.translation.height * scaleY
-
-            // For path panels, the visible portion of the sourceRect is offset
-            // by the off-canvas portion of the parallelogram. Adjust clamping
-            // so the visible triangle can reach image edges.
             let visOffset = panel.geometry.isRect ? CGPoint.zero : dragVisibleOffset
             let visSize = panel.geometry.isRect ? crop.sourceRect.size : dragVisibleSize
 
-            let effectiveBaseX = dragBaseSourceRect.origin.x + visOffset.x
-            let effectiveBaseY = dragBaseSourceRect.origin.y + visOffset.y
-
-            let maxEffX = max(0, image.size.width - visSize.width)
-            let maxEffY = max(0, image.size.height - visSize.height)
-
-            let newEffX = max(0, min(effectiveBaseX + transX, maxEffX))
-            let newEffY = max(0, min(effectiveBaseY + transY, maxEffY))
-
-            let newOX = newEffX - visOffset.x
-            let newOY = newEffY - visOffset.y
-
-            viewModel.applyOverlayCropLive(
-                panelId: panel.id,
-                sourceRect: CGRect(x: newOX, y: newOY, width: crop.sourceRect.width, height: crop.sourceRect.height)
-            )
-
-        case .resizeBottomRight:
-            handleResize(
-                value: value,
-                anchor: dragBaseOrigin,
-                image: image,
-                crop: crop,
+            let newSourceRect = CropManager.adjustCropDuringDrag(
+                translation: value.translation,
+                image: image.size,
+                crop: dragBaseSourceRect,
                 container: container,
-                fittedW: fittedW,
-                fittedH: fittedH,
-                fitOffset: fitOffset,
-                destRect: crop.destinationRect
+                visOffset: visOffset,
+                visSize: visSize
+            )
+            viewModel.applyOverlayCropLive(panelId: panel.id, sourceRect: newSourceRect)
+
+        case .resizeBottomRight, .resizeTopRight, .resizeBottomLeft, .resizeTopLeft:
+            let edge: CropResizeEdge
+            let anchor: CGPoint
+            switch overlayDragMode {
+            case .resizeBottomRight:
+                edge = .bottomRight
+                anchor = dragBaseOrigin
+            case .resizeTopRight:
+                edge = .topRight
+                anchor = CGPoint(x: dragBaseOrigin.x, y: dragBaseOrigin.y + dragBaseSize.height)
+            case .resizeBottomLeft:
+                edge = .bottomLeft
+                anchor = CGPoint(x: dragBaseOrigin.x + dragBaseSize.width, y: dragBaseOrigin.y)
+            case .resizeTopLeft:
+                edge = .topLeft
+                anchor = CGPoint(x: dragBaseOrigin.x + dragBaseSize.width, y: dragBaseOrigin.y + dragBaseSize.height)
+            default: return
+            }
+
+            let cropBounds = CGRect(origin: dragBaseOrigin, size: dragBaseSize)
+            let delta = CGSize(
+                width: value.location.x - anchor.x,
+                height: value.location.y - anchor.y
             )
 
-        case .resizeTopRight:
-            handleResize(
-                value: value,
-                anchor: CGPoint(x: dragBaseOrigin.x, y: dragBaseOrigin.y + dragBaseSize.height),
-                image: image,
-                crop: crop,
+            let newSourceRect = CropManager.handleResize(
+                cropBounds: cropBounds,
+                edge: edge,
+                delta: delta,
+                image: image.size,
+                crop: crop.sourceRect,
                 container: container,
-                fittedW: fittedW,
-                fittedH: fittedH,
-                fitOffset: fitOffset,
-                destRect: crop.destinationRect
+                panelSize: panel.frame.size,
+                destRect: crop.destinationRect,
+                isPathPanel: !panel.geometry.isRect
             )
-
-        case .resizeBottomLeft:
-            handleResize(
-                value: value,
-                anchor: CGPoint(x: dragBaseOrigin.x + dragBaseSize.width, y: dragBaseOrigin.y),
-                image: image,
-                crop: crop,
-                container: container,
-                fittedW: fittedW,
-                fittedH: fittedH,
-                fitOffset: fitOffset,
-                destRect: crop.destinationRect
-            )
-
-        case .resizeTopLeft:
-            handleResize(
-                value: value,
-                anchor: CGPoint(x: dragBaseOrigin.x + dragBaseSize.width, y: dragBaseOrigin.y + dragBaseSize.height),
-                image: image,
-                crop: crop,
-                container: container,
-                fittedW: fittedW,
-                fittedH: fittedH,
-                fitOffset: fitOffset,
-                destRect: crop.destinationRect
-            )
+            viewModel.applyOverlayCropLive(panelId: panel.id, sourceRect: newSourceRect)
 
         case .none:
             break
         }
-    }
-
-    private func handleResize(
-        value: DragGesture.Value,
-        anchor: CGPoint,
-        image: ImageItem,
-        crop: CropInfo,
-        container: CGSize,
-        fittedW: CGFloat,
-        fittedH: CGFloat,
-        fitOffset: CGPoint,
-        destRect: CGRect
-    ) {
-        let panelAspect = panel.frame.width / panel.frame.height
-
-        let rawW = abs(value.location.x - anchor.x)
-        let rawH = abs(value.location.y - anchor.y)
-
-        var newW: CGFloat
-        var newH: CGFloat
-        if rawW / rawH > panelAspect {
-            newW = max(1, rawW)
-            newH = newW / panelAspect
-        } else {
-            newH = max(1, rawH)
-            newW = newH * panelAspect
-        }
-
-        let newMinX = min(anchor.x, value.location.x)
-        let newMinY = min(anchor.y, value.location.y)
-
-        var clampedOX = max(0, min(newMinX, container.width - newW))
-        var clampedOY = max(0, min(newMinY, container.height - newH))
-
-        if clampedOX + newW > container.width {
-            clampedOX = container.width - newW
-        }
-        if clampedOY + newH > container.height {
-            clampedOY = container.height - newH
-        }
-
-        var sourceOrigin = CGPoint(
-            x: (clampedOX - fitOffset.x) / fittedW * image.size.width,
-            y: (clampedOY - fitOffset.y) / fittedH * image.size.height
-        )
-        var sourceSize = CGSize(
-            width: newW / fittedW * image.size.width,
-            height: newH / fittedH * image.size.height
-        )
-
-        let maxSourceRect = FitMath.sourceRect(imageSize: image.size, panelSize: panel.frame.size)
-        let maxSourceW = maxSourceRect.width
-        let maxSourceH = maxSourceRect.height
-        let minSourceW = panel.frame.width / 2
-        let minSourceH = panel.frame.height / 2
-
-        sourceSize.width = Swift.max(minSourceW, Swift.min(maxSourceW, sourceSize.width))
-        sourceSize.height = Swift.max(minSourceH, Swift.min(maxSourceH, sourceSize.height))
-
-        // For .path panels, adjust source origin to keep the non-dragged
-        // parallelogram edge stable. When sourceSize changes, the parallelogram
-        // edges shift because the source rect maps to the parallelogram bounding
-        // box. Compensate by shifting the origin proportionally.
-        if !panel.geometry.isRect, destRect.width > 0, destRect.height > 0 {
-            let deltaW = sourceSize.width - crop.sourceRect.width
-            let deltaH = sourceSize.height - crop.sourceRect.height
-
-            if anchor.x <= dragBaseOrigin.x + CGFloat.ulpOfOne {
-                sourceOrigin.x += deltaW * (-destRect.minX) / destRect.width
-            } else {
-                sourceOrigin.x += deltaW * (destRect.minX + destRect.width) / destRect.width - deltaW
-            }
-
-            if anchor.y <= dragBaseOrigin.y + CGFloat.ulpOfOne {
-                sourceOrigin.y += deltaH * (-destRect.minY) / destRect.height
-            } else {
-                sourceOrigin.y += deltaH * (destRect.minY + destRect.height) / destRect.height - deltaH
-            }
-        }
-
-        let clampedOriginX = Swift.max(0, Swift.min(sourceOrigin.x, max(0, image.size.width - sourceSize.width)))
-        let clampedOriginY = Swift.max(0, Swift.min(sourceOrigin.y, max(0, image.size.height - sourceSize.height)))
-
-        viewModel.applyOverlayCropLive(
-            panelId: panel.id,
-            sourceRect: CGRect(x: clampedOriginX, y: clampedOriginY, width: sourceSize.width, height: sourceSize.height)
-        )
     }
 }
 

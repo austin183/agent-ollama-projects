@@ -2,11 +2,12 @@
 
 # Things to Avoid
 - **Do not ask agents to return full file contents** - Agents should return clues and references, but it is more efficient to read files directly than to ask an agent to read it and return its contents.
-- **Your home folder is `~/Users/austin~/workspace/agent-ollama-projects/Experiments/CollageMaker`** - That is `agent-ollama-projects`
+
+# Our Home Folder
+- **Our home folder is `~/Users/austin~/workspace/agent-ollama-projects/Experiments/CollageMaker`** - That is `agent-ollama-projects`.
+  - **Tell subagents is it `~/workspace/agent-ollama-projects/Experiments/CollageMaker`, because they often want to go to another folder instead**
 
 ## Project at a glance
-**We are in `~/workspace/agent-ollama-projects/`**
-
 macOS SwiftUI desktop app that assembles photo collages with Vision-based saliency analysis. Single Xcode project, no SPM or CocoaPods.
 
 - **Xcode project**: `CollageMaker/CollageMaker/CollageMaker.xcodeproj`
