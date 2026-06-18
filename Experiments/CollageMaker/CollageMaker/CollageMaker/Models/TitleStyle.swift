@@ -1,5 +1,14 @@
 import AppKit
+import CoreGraphics
 import Foundation
+
+enum TitleResizeEdge: Equatable {
+    case none, left, right
+}
+
+enum TitleHitResult: Equatable {
+    case none, drag, resize(TitleResizeEdge)
+}
 
 struct TitleStyle: Codable, Equatable, @unchecked Sendable {
 

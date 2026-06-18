@@ -81,6 +81,83 @@ final class TitleManager {
         updater.debouncedSave()
     }
 
+    // MARK: - Title Interaction Methods
+
+    static let resizeHandleWidth: CGFloat = 8
+    static let handleThreshold: CGFloat = 10  // resizeHandleWidth + 2
+
+    /// Hit-tests a screen location against the title's canvas frame.
+    func hitTestTitle(location: CGPoint, previewSize: CGSize) -> TitleHitResult {
+        guard let canvas = canvasFrame else { return .none }
+        let tf = CoordinateConverter.canvasToPreviewFrame(canvas, in: previewSize, canvasSize: SizeConstants.defaultCanvasSize)
+        let threshold = Self.handleThreshold
+
+        if tf.minX - threshold <= location.x,
+           location.x <= tf.minX + threshold,
+           tf.minY <= location.y, location.y <= tf.maxY {
+            return .resize(.left)
+        }
+        if tf.maxX - threshold <= location.x,
+           location.x <= tf.maxX + threshold,
+           tf.minY <= location.y, location.y <= tf.maxY {
+            return .resize(.right)
+        }
+        if tf.contains(location) {
+            return .drag
+        }
+        return .none
+    }
+
+    /// Computes the offset from the title center to the drag start point (in canvas coordinates).
+    func computeTitleDragOffset(startLocation: CGPoint, previewSize: CGSize) -> CGPoint {
+        guard let canvas = canvasFrame else { return .zero }
+        let canvasSize = SizeConstants.defaultCanvasSize
+        let startCanvas = CoordinateConverter.screenToCanvasPoint(startLocation, in: previewSize, canvasSize: canvasSize)
+        let titleCenterCanvasY = canvas.minY + canvas.height / 2
+        return CGPoint(
+            x: canvas.midX - startCanvas.x,
+            y: titleCenterCanvasY - startCanvas.y
+        )
+    }
+
+    /// Computes the normalized title position from a screen location and drag offset.
+    func computeTitleDragPosition(
+        screenLocation: CGPoint,
+        offset: CGPoint,
+        previewSize: CGSize
+    ) -> (positionX: CGFloat, positionY: CGFloat) {
+        let canvasSize = SizeConstants.defaultCanvasSize
+        let canvasPoint = CoordinateConverter.screenToCanvasPoint(screenLocation, in: previewSize, canvasSize: canvasSize)
+        let positionX = (canvasPoint.x + offset.x) / canvasSize.width
+        let positionY = 1.0 - (canvasPoint.y + offset.y) / canvasSize.height
+        return (positionX, positionY)
+    }
+
+    /// Computes the new title width and position delta for a resize drag.
+    func computeTitleResize(
+        screenLocation: CGPoint,
+        edge: TitleResizeEdge,
+        previewSize: CGSize
+    ) -> (newWidth: CGFloat, positionDelta: CGFloat) {
+        guard let canvas = canvasFrame else { return (0, 0) }
+        let canvasSize = SizeConstants.defaultCanvasSize
+        let canvasPoint = CoordinateConverter.screenToCanvasPoint(screenLocation, in: previewSize, canvasSize: canvasSize)
+        let canvasX = canvasPoint.x
+        let minW = minWidth
+
+        switch edge {
+        case .right:
+            let newWidth = max(minW, canvasX - canvas.minX)
+            return (newWidth, 0)
+        case .left:
+            let newWidth = max(minW, canvas.maxX - canvasX)
+            let dx = (canvas.width - newWidth) / 2
+            return (newWidth, dx / canvasSize.width)
+        case .none:
+            return (0, 0)
+        }
+    }
+
     func reset() {
         titleAttrString = NSAttributedString(string: "")
         titleStyle = .default

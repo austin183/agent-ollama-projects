@@ -8,10 +8,6 @@ private let logger = Logger(
     category: "Editor"
 )
 
-enum TitleResizeEdge: Equatable {
-    case none, left, right
-}
-
 struct CollageEditorView: View {
     @Bindable var viewModel: CollageViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -162,47 +158,38 @@ struct CollageEditorView: View {
                 .simultaneousGesture(
                     DragGesture(minimumDistance: 5)
                         .onChanged { value in
-                            if !gestureCoordinator.dragTitleLocked {
-                                guard let titleCanvas = titleCanvasFrame else { return }
-                                let handler = TitleDragHandler(
-                                    titleCanvasFrame: titleCanvas,
-                                    previewSize: geometry.size
-                                )
-                                switch handler.hitTest(at: value.startLocation) {
-                                case .resize(let edge):
-                                    gestureCoordinator.dragTitleLocked = true
-                                    gestureCoordinator.titleResizeEdge = edge
-                                    viewModel.isDraggingTitle = true
-                                    gestureCoordinator.oldTitleStyle = viewModel.titleStyle
-                                    return
-                                case .drag:
-                                    gestureCoordinator.dragTitleOffset = handler.computeDragOffset(
-                                        startLocation: value.startLocation
-                                    )
-                                    gestureCoordinator.dragTitleLocked = true
-                                    gestureCoordinator.titleResizeEdge = .none
-                                    viewModel.isDraggingTitle = true
-                                    gestureCoordinator.oldTitleStyle = viewModel.titleStyle
-                                    return
-                                case .none:
-                                    break
-                                }
-                                return
-                            }
+                                 if !gestureCoordinator.dragTitleLocked {
+                                     guard let titleCanvas = titleCanvasFrame else { return }
+                                     switch viewModel.titleManager.hitTestTitle(location: value.startLocation, previewSize: geometry.size) {
+                                     case .resize(let edge):
+                                      gestureCoordinator.dragTitleLocked = true
+                                      gestureCoordinator.titleResizeEdge = edge
+                                      viewModel.isDraggingTitle = true
+                                      gestureCoordinator.oldTitleStyle = viewModel.titleStyle
+                                      return
+                                     case .drag:
+                                      gestureCoordinator.dragTitleOffset = viewModel.titleManager.computeTitleDragOffset(
+                                          startLocation: value.startLocation,
+                                          previewSize: geometry.size
+                                      )
+                                      gestureCoordinator.dragTitleLocked = true
+                                      gestureCoordinator.titleResizeEdge = .none
+                                      viewModel.isDraggingTitle = true
+                                      gestureCoordinator.oldTitleStyle = viewModel.titleStyle
+                                      return
+                                     case .none:
+                                      break
+                                     }
+                                     return
+                                 }
 
                             let canvasSize = SizeConstants.defaultCanvasSize
                             if gestureCoordinator.titleResizeEdge != .none,
-                               let tf = titleCanvasFrame {
-                                let handler = TitleDragHandler(
-                                    titleCanvasFrame: tf,
-                                    previewSize: geometry.size
-                                )
-                                let (newWidth, posDelta) = handler.computeResizeWidth(
+                                let tf = titleCanvasFrame {
+                                let (newWidth, posDelta) = viewModel.titleManager.computeTitleResize(
                                     screenLocation: value.location,
                                     edge: gestureCoordinator.titleResizeEdge,
-                                    currentFrame: tf,
-                                    minWidth: titleMinWidth,
-                                    canvasSize: canvasSize
+                                    previewSize: geometry.size
                                 )
                                 var style = viewModel.titleStyle
                                 style.width = newWidth
@@ -210,14 +197,10 @@ struct CollageEditorView: View {
                                 viewModel.titleStyle = style
                             } else {
                                 guard let tf = titleCanvasFrame else { return }
-                                let handler = TitleDragHandler(
-                                    titleCanvasFrame: tf,
-                                    previewSize: geometry.size
-                                )
-                                let (positionX, positionY) = handler.computeDragPosition(
+                                let (positionX, positionY) = viewModel.titleManager.computeTitleDragPosition(
                                     screenLocation: value.location,
                                     offset: gestureCoordinator.dragTitleOffset,
-                                    canvasSize: canvasSize
+                                    previewSize: geometry.size
                                 )
                                 var style = viewModel.titleStyle
                                 style.positionX = positionX
@@ -246,13 +229,10 @@ struct CollageEditorView: View {
 
                             if gestureCoordinator.dragSourcePanelId == nil {
                                 if let tc = titleCanvasFrame {
-                                    let handler = TitleDragHandler(
-                                        titleCanvasFrame: tc,
-                                        previewSize: geometry.size
-                                    )
-                                    if handler.hitTest(at: value.startLocation) != .none {
+                                    if viewModel.titleManager.hitTestTitle(location: value.startLocation, previewSize: geometry.size) == .none {
                                         return
                                     }
+                                    return
                                 }
                                 if let id = hitPanel(at: value.startLocation, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size) {
                                     gestureCoordinator.dragSourcePanelId = id
