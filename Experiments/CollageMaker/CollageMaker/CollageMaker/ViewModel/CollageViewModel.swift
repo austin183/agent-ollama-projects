@@ -21,6 +21,7 @@ final class CollageViewModel {
     private let saliencyAnalyzer: SaliencyAnalysis
     private let assembler: any CollageAssembly
     private let persistence: any ViewModelPersistence
+    private let imagePicker: ImagePicker
     let layoutManager = LayoutManager()
     let cropManager = CropManager()
     let previewManager: PreviewManager
@@ -371,7 +372,8 @@ final class CollageViewModel {
         self.init(
             saliencyAnalyzer: SaliencyAnalyzer(),
             assembler: assembler,
-            persistence: UserDefaultsPersistence()
+            persistence: UserDefaultsPersistence(),
+            imagePicker: DefaultImagePicker()
         )
     }
 
@@ -382,18 +384,21 @@ final class CollageViewModel {
         self.init(
             saliencyAnalyzer: saliencyAnalyzer,
             assembler: assembler,
-            persistence: UserDefaultsPersistence()
+            persistence: UserDefaultsPersistence(),
+            imagePicker: DefaultImagePicker()
         )
     }
 
     init(
         saliencyAnalyzer: SaliencyAnalysis,
         assembler: CollageAssembly,
-        persistence: any ViewModelPersistence
+        persistence: any ViewModelPersistence,
+        imagePicker: ImagePicker = DefaultImagePicker()
     ) {
         self.saliencyAnalyzer = saliencyAnalyzer
         self.assembler = assembler
         self.persistence = persistence
+        self.imagePicker = imagePicker
         self.previewManager = PreviewManager(assembler: assembler)
         self.exportManager = ExportManager(assembler: assembler)
         self.undoManager.levelsOfUndo = 60
@@ -445,6 +450,22 @@ final class CollageViewModel {
         undoManager.setActionName("Change Background Image")
         debouncedSave()
         updatePreview()
+    }
+
+    // MARK: - Image Picker
+
+    func chooseMaskImage() async {
+        let result = await imagePicker.pickImage(allowedTypes: [.jpeg, .png, .tiff, .heic, .heif])
+        if let image = result.image {
+            setMaskImage(image, path: result.path)
+        }
+    }
+
+    func chooseBackgroundImage() async {
+        let result = await imagePicker.pickImage(allowedTypes: [.jpeg, .png, .tiff, .heic, .heif])
+        if let image = result.image {
+            setBackgroundImage(image, path: result.path)
+        }
     }
 
     // MARK: - Undo Helpers

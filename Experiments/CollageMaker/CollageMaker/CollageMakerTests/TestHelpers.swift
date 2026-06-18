@@ -1,6 +1,7 @@
 import AppKit
 import CoreGraphics
 import Testing
+import UniformTypeIdentifiers
 @testable import CollageMaker
 
 @Suite struct AppKitInit {
@@ -219,4 +220,14 @@ func makeAssemblyConfig(
         ),
         canvasSize: canvasSize
     )
+}
+
+// MARK: - Mock Image Picker
+
+final class MockImagePicker: ImagePicker, @unchecked Sendable {
+    var pickResult: (image: NSImage?, path: String?) = (nil, nil)
+
+    func pickImage(allowedTypes: [UTType]) async -> (image: NSImage?, path: String?) {
+        pickResult
+    }
 }

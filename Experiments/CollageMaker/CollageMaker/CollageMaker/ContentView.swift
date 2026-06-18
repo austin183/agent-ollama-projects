@@ -73,7 +73,9 @@ struct ContentView: View {
     private var sidebar: some View {
         Form {
             ImageLibrarySidebar(viewModel: viewModel, searchQuery: $searchQuery, isDetailCollapsed: $isDetailCollapsed)
-            LayoutConfigSidebar(viewModel: viewModel, chooseMaskImage: chooseMaskImage)
+            LayoutConfigSidebar(viewModel: viewModel, chooseMaskImage: { [weak viewModel] in
+                Task { await viewModel?.chooseMaskImage() }
+            })
             if !viewModel.images.isEmpty {
                 StatusSidebar(viewModel: viewModel)
             }
@@ -103,23 +105,6 @@ struct ContentView: View {
         .onTapGesture {
             if viewModel.images.isEmpty {
                 viewModel.browseImages()
-            }
-        }
-    }
-
-    private func chooseMaskImage() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.allowedContentTypes = [.jpeg, .png, .tiff, .heic, .heif]
-
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        panel.begin { [weak viewModel] response in
-            if response == .OK, let url = panel.url,
-                let data = try? Data(contentsOf: url),
-                let image = NSImage(data: data) {
-                viewModel?.setMaskImage(image, path: url.path)
             }
         }
     }

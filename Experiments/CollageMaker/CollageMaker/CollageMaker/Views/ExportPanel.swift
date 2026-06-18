@@ -1,6 +1,5 @@
 import AppKit
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct ExportPanel: View {
     @Bindable var viewModel: CollageViewModel
@@ -87,7 +86,9 @@ struct ExportPanel: View {
                         }
 
                         Button("Choose Background") {
-                            chooseBackgroundImage()
+                            Task { [weak viewModel] in
+                                await viewModel?.chooseBackgroundImage()
+                            }
                         }
                         .buttonStyle(.bordered)
                         .accessibilityLabel("Choose background image")
@@ -260,23 +261,6 @@ struct ExportPanel: View {
             if viewModel.exportSuccessMessage != nil {
                 try? await Task.sleep(for: .seconds(3))
                 viewModel.dismissExportSuccess()
-            }
-        }
-    }
-
-    private func chooseBackgroundImage() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.allowedContentTypes = [.jpeg, .png, .tiff, .heic, .heif]
-
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        panel.begin { [weak viewModel] response in
-            if response == .OK, let url = panel.url,
-                let data = try? Data(contentsOf: url),
-                let image = NSImage(data: data) {
-                viewModel?.setBackgroundImage(image, path: url.path)
             }
         }
     }
