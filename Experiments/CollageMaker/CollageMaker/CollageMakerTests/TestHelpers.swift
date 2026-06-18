@@ -231,3 +231,56 @@ final class MockImagePicker: ImagePicker, @unchecked Sendable {
         pickResult
     }
 }
+
+// MARK: - Mock ImageCoordinationTarget
+
+@MainActor
+final class MockCoordinationTarget: ImageCoordinationTarget {
+    var isProcessing = false
+    var selectedPanelId: UUID?
+    var errorMessage: String?
+    var customImageOrder: [Int] = []
+
+    var beginProcessingCalls = 0
+    var endProcessingCalls = 0
+    var updatePreviewCalls = 0
+    var updateAllPanelPreviewsCalls = 0
+    var updatePanelPreviewCalls: [UUID] = []
+    var resetCropCalls: [UUID] = []
+    var regenerateLayoutCalls = 0
+    var cancelDebouncerCalls: [String] = []
+
+    func beginProcessing() {
+        beginProcessingCalls += 1
+        isProcessing = true
+    }
+
+    func endProcessing() {
+        endProcessingCalls += 1
+        isProcessing = false
+    }
+
+    func updatePreview() {
+        updatePreviewCalls += 1
+    }
+
+    func updateAllPanelPreviews() {
+        updateAllPanelPreviewsCalls += 1
+    }
+
+    func updatePanelPreview(panelId: UUID) {
+        updatePanelPreviewCalls.append(panelId)
+    }
+
+    func resetCrop(panelId: UUID) {
+        resetCropCalls.append(panelId)
+    }
+
+    func regenerateLayout() {
+        regenerateLayoutCalls += 1
+    }
+
+    func cancelDebouncer(id: String) {
+        cancelDebouncerCalls.append(id)
+    }
+}

@@ -19,7 +19,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan for Phase 6.3 in @_agent_docs/plans/2026-06-15-srp-remediation-plan.md using our macos skills for guidance.
+Please implement the plan for Phase 7.1 in @_agent_docs/plans/2026-06-15-srp-remediation-plan.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
