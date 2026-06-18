@@ -1,4 +1,6 @@
+import AppKit
 import CoreGraphics
+import Foundation
 import Testing
 @testable import CollageMaker
 
@@ -414,5 +416,236 @@ import Testing
         // canvasPoint = (960, 540). posX = (960+100)/1920. posY = 1-(540+50)/1080
         #expect(posX == (960 + 100) / SizeConstants.defaultCanvasSize.width)
         #expect(posY == 1.0 - (540 + 50) / SizeConstants.defaultCanvasSize.height)
+    }
+
+    // MARK: - Bounds Caching
+
+    @Test func boundsCacheHitOnPositionChange() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Hello")
+        manager.titleStyle = .default
+
+        _ = manager.canvasFrame  // compute and cache
+        let frame1 = manager.canvasFrame
+
+        // Position-only change should hit the bounds cache
+        manager.titleStyle.positionX = 0.75
+        let frame2 = manager.canvasFrame
+
+        // Frame origin should differ (position changed)
+        #expect(frame1?.origin.x != frame2?.origin.x, "position change should shift frame")
+        // But frame size should be the same (bounds cached)
+        #expect(frame1?.size == frame2?.size, "cached bounds should produce same size")
+    }
+
+    @Test func boundsCacheInvalidateOnFontChange() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Hello")
+        manager.titleStyle = .default
+
+        _ = manager.canvasFrame  // compute and cache
+        let size1 = manager.canvasFrame?.size
+
+        // Font change should invalidate the bounds cache
+        manager.titleStyle.fontSize = 72
+        let size2 = manager.canvasFrame?.size
+
+        // Size should differ (bounds recomputed)
+        #expect(size1 != size2, "font change should invalidate bounds cache and change size")
+    }
+
+    @Test func boundsCacheInvalidateOnWidthChange() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Hello")
+        manager.titleStyle = .default
+
+        _ = manager.canvasFrame  // compute and cache
+        let frame1 = manager.canvasFrame
+
+        // Width change should invalidate the bounds cache
+        manager.titleStyle.width = 600
+        let frame2 = manager.canvasFrame
+
+        #expect(frame1?.width != frame2?.width, "width change should invalidate bounds cache")
+    }
+
+    @Test func boundsCacheMissOnEmptyTitle() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Hello")
+        manager.titleStyle = .default
+
+        _ = manager.canvasFrame  // compute and cache
+        #expect(manager.canvasFrame != nil)
+
+        // Clearing title should invalidate cache and return nil
+        manager.titleAttrString = NSAttributedString(string: "")
+        #expect(manager.canvasFrame == nil)
+    }
+
+    // MARK: - reset()
+
+    @Test func resetClearsTitleState() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Hello")
+        manager.titleStyle.positionX = 0.3
+        manager.titleStyle.fontSize = 64
+        manager.isDraggingTitle = true
+
+        manager.reset()
+
+        #expect(manager.title == "")
+        #expect(manager.titleStyle == .default)
+        #expect(manager.isDraggingTitle == false)
+    }
+
+    @Test func resetClearsCanvasFrame() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Hello")
+        manager.titleStyle = .default
+
+        #expect(manager.canvasFrame != nil)
+
+        manager.reset()
+
+        #expect(manager.canvasFrame == nil)
+    }
+
+    @Test func resetClearsMinWidth() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Hello")
+        manager.titleStyle = .default
+
+        #expect(manager.minWidth > 0)
+
+        manager.reset()
+
+        #expect(manager.minWidth == 0)
+    }
+
+    @Test func resetAllowsNewTitle() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "First")
+        manager.titleStyle = .default
+        _ = manager.canvasFrame
+
+        manager.reset()
+        #expect(manager.canvasFrame == nil)
+
+        manager.titleAttrString = NSAttributedString(string: "Second")
+        #expect(manager.canvasFrame != nil)
+    }
+
+    // MARK: - canvasFrame
+
+    @Test func canvasFrameNilForEmptyTitle() {
+        let manager = TitleManager()
+        #expect(manager.canvasFrame == nil)
+    }
+
+    @Test func canvasFrameNotNilWithTitle() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Hello")
+        manager.titleStyle = .default
+
+        let frame = manager.canvasFrame
+        #expect(frame != nil)
+        #expect(frame!.width > 0)
+        #expect(frame!.height > 0)
+    }
+
+    @Test func canvasFrameReflectsPosition() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Hello")
+        manager.titleStyle = .default
+
+        manager.titleStyle.positionX = 0.1
+        let frameLeft = manager.canvasFrame
+
+        manager.titleStyle.positionX = 0.9
+        let frameRight = manager.canvasFrame
+
+        #expect(frameLeft!.minX < frameRight!.minX, "positionX 0.9 should be to the right of 0.1")
+    }
+
+    @Test func canvasFrameUsesOverride() {
+        let (manager, _) = makeManager(titleCanvasFrame: CGRect(x: 100, y: 200, width: 300, height: 50))
+        // With override set directly, canvasFrame returns the override
+        #expect(manager.canvasFrame == CGRect(x: 100, y: 200, width: 300, height: 50))
+    }
+
+    // MARK: - Protocol-based updateImage / finishDrag
+
+    private final class TrackingPreviewUpdatable: PreviewUpdatable {
+        var updateTitleImageCalls = 0
+        var lastAttrString: NSAttributedString?
+        var lastStyle: TitleStyle?
+        var lastCanvasSize: CGSize = .zero
+        var incrementTitleVersionCalls = 0
+        var cancelDebouncerCalls: [String] = []
+        var debouncedSaveCalls = 0
+
+        func updateTitleImage(attrString: NSAttributedString, style: TitleStyle, canvasSize: CGSize) {
+            updateTitleImageCalls += 1
+            lastAttrString = attrString
+            lastStyle = style
+            lastCanvasSize = canvasSize
+        }
+
+        func incrementTitleVersion() {
+            incrementTitleVersionCalls += 1
+        }
+
+        func updateBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) {
+            // Not used by TitleManager
+        }
+
+        func cancelDebouncer(id: String) {
+            cancelDebouncerCalls.append(id)
+        }
+
+        func debouncedSave() {
+            debouncedSaveCalls += 1
+        }
+    }
+
+    @Test func updateImageCallsUpdaterMethods() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Hello")
+        manager.titleStyle = .default
+
+        let updater = TrackingPreviewUpdatable()
+        manager.updateImage(updater: updater)
+
+        #expect(updater.incrementTitleVersionCalls == 1)
+        #expect(updater.updateTitleImageCalls == 1)
+        #expect(updater.lastAttrString?.string == "Hello")
+        #expect(updater.lastCanvasSize == SizeConstants.defaultCanvasSize)
+    }
+
+    @Test func finishDragCancelsDebouncerAndSaves() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Hello")
+        manager.titleStyle = .default
+
+        let updater = TrackingPreviewUpdatable()
+        manager.finishDrag(updater: updater)
+
+        #expect(updater.cancelDebouncerCalls == ["titleImage"])
+        #expect(updater.incrementTitleVersionCalls == 1)
+        #expect(updater.updateTitleImageCalls == 1)
+        #expect(updater.debouncedSaveCalls == 1)
+    }
+
+    @Test func finishDragPassesCurrentStyleToUpdater() {
+        let manager = TitleManager()
+        manager.titleAttrString = NSAttributedString(string: "Test")
+        manager.titleStyle.fontSize = 72
+        manager.titleStyle.positionX = 0.3
+
+        let updater = TrackingPreviewUpdatable()
+        manager.finishDrag(updater: updater)
+
+        #expect(updater.lastStyle?.fontSize == 72)
+        #expect(updater.lastStyle?.positionX == 0.3)
     }
 }
