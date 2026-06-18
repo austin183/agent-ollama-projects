@@ -122,3 +122,4 @@
 | 111 | 2026-06-18 | SRP remediation Phase 7.1: ImageCoordinatorTests — 20 tests, MockCoordinationTarget mock in TestHelpers, diff-review clean ([details](sessions/session-111.md)) |
 | 112 | 2026-06-18 | SRP remediation Phase 7.2: LayoutManagerTests — 28 tests, diff-review-g31 caught 3 test quality issues (missing import, weak `===` assertion, loose `>=`), all fixed ([details](sessions/session-112.md)) |
 | 113 | 2026-06-18 | SRP remediation Phase 7.3: TitleManagerTests extended — 16 new tests (bounds caching, reset, canvasFrame, protocol-based updateImage/finishDrag), TrackingPreviewUpdatable mock, diff-review-g31 clean ([details](sessions/session-113.md)) |
+| 114 | 2026-06-18 | SRP remediation Phase 7.4: BackgroundManagerTests — 16 tests (buildConfig, setBackgroundImage, reset, protocol-based updateBackground), TrackingPreviewUpdatable mock, diff-review-g31 clean ([details](sessions/session-114.md)) |

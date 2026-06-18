@@ -4,7 +4,7 @@
 - **Do not ask agents to return full file contents** - Agents should return clues and references, but it is more efficient to read files directly than to ask an agent to read it and return its contents.
 
 # Our Home Folder
-- **Our home folder is `~/Users/austin~/workspace/agent-ollama-projects/Experiments/CollageMaker`** - That is `agent-ollama-projects`.
+- **Our home folder is `~/workspace/agent-ollama-projects/Experiments/CollageMaker`** - That is `agent-ollama-projects`.
   - **Tell subagents is it `~/workspace/agent-ollama-projects/Experiments/CollageMaker`, because they often want to go to another folder instead**
 
 ## Project at a glance
