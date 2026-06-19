@@ -37,10 +37,11 @@ case "$MODE" in
     sleep 1
     /usr/bin/log stream --predicate 'process == "CollageMaker" or subsystem == "austin183.indie.CollageMaker"' --style compact
     ;;
-  --telemetry|telemetry)
-    open "$APP_PATH"
+  --test|test)
+    TEST_IMAGES_DIR="$(cd "$SCRIPT_DIR/TestImages" && pwd)"
+    COLLAGEMAKER_TEST_IMAGES_DIR="$TEST_IMAGES_DIR" open "$APP_PATH"
     sleep 1
-    /usr/bin/log stream --predicate 'process == "CollageMaker" or subsystem == "austin183.indie.CollageMaker"' --style compact
+    pgrep -x "$APP_NAME" >/dev/null
     ;;
   --verify|verify)
     open "$APP_PATH"
@@ -48,7 +49,7 @@ case "$MODE" in
     pgrep -x "$APP_NAME" >/dev/null
     ;;
   *)
-    echo "usage: $0 [run|--logs|--telemetry|--verify]" >&2
+    echo "usage: $0 [run|--logs|--telemetry|--test|--verify]" >&2
     exit 2
     ;;
 esac

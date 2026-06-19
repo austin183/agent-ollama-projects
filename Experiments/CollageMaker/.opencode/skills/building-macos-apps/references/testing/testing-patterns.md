@@ -538,6 +538,32 @@ private func makeViewModel() -> CollageViewModel {
 
 The UUID ensures each ViewModel gets a fresh, empty `UserDefaults` that no other test can access. No cleanup needed — the suite is abandoned after the test completes.
 
+## App Sandbox Blocks Test File Access
+
+A sandboxed macOS app (`ENABLE_APP_SANDBOX = YES`) cannot read arbitrary directories via `FileManager`, even when the path is valid. The call silently returns `nil` with no error or crash. This blocks test infrastructure that loads fixtures from environment variables (e.g., `COLLAGEMAKER_TEST_IMAGES_DIR=/path/to/TestImages`).
+
+**Fix:** Disable the sandbox for Debug builds in `project.pbxproj`:
+```
+/* Debug */ = {
+    isa = XCBuildConfiguration;
+    buildSettings = {
+        ENABLE_APP_SANDBOX = NO;
+        ...
+    }
+};
+```
+Release builds retain the sandbox for production safety.
+
+**Debugging clues:**
+- `FileManager.default.contentsOfDirectory(at:)` returns `nil` for a verified path
+- No crash, no exception — just silent `nil`
+- `os_sandbox` subsystem in `log stream` may show access denied events
+
+**Prevention:**
+- Disable sandbox for Debug builds when test infrastructure reads files from arbitrary paths
+- Use absolute paths in environment variables — `open` launches with `~` as the working directory
+- Add `OSLog` at the file discovery boundary to distinguish "path wrong" from "path correct but sandbox blocked"
+
 ## Pitfalls
 
 - **`CGPathApply` compiler crash** — `CGPath.apply(info:)` with a closure accessing `element.pointee.type` can crash swift-frontend in test targets. Test transforms via `CGPoint.applying(_:)` instead.

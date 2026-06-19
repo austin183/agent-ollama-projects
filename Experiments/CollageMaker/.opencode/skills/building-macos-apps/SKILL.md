@@ -380,10 +380,14 @@ xcodebuild -project "App.xcodeproj" -scheme AppName \
 
 # Launch (use glob for DerivedData hash)
 open "$HOME/Library/Developer/Xcode/DerivedData/AppName-*/Build/Products/Debug/AppName.app"
+
+# Launch with env var (use absolute paths — `open` sets ~ as cwd)
+TEST_DIR=/absolute/path open "$HOME/Library/Developer/Xcode/DerivedData/AppName-*/Build/Products/Debug/AppName.app"
 ```
 
 - `NSUnbufferedIO=YES open ...` does not produce useful stdout for SwiftUI apps
 - When debugging GUI behavior without app visibility, write ViewModel integration tests with real data
+- **Sandbox blocks arbitrary file reads** — `FileManager` silently returns `nil` for paths outside the sandbox. If test infrastructure reads fixtures from env vars, set `ENABLE_APP_SANDBOX = NO` in the Debug config. See [references/testing/testing-patterns.md](references/testing/testing-patterns.md) § "App Sandbox Blocks Test File Access"
 
 ## HIG Quick Reference
 

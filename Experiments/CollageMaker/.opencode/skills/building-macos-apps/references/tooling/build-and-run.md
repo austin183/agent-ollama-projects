@@ -76,6 +76,14 @@ esac
 - When debugging GUI behavior without app visibility, write ViewModel integration tests
 - For SwiftPM GUI apps: if window doesn't come forward, check `NSApp.setActivationPolicy(.regular)` + `NSApp.activate(ignoringOtherApps: true)`
 
+## Sandboxed App File Access
+
+If `FileManager` calls silently return `nil` for paths you can verify exist, the app sandbox is blocking the access. This commonly affects test infrastructure that reads fixture directories from environment variables.
+
+**Fix:** Set `ENABLE_APP_SANDBOX = NO` in the Debug build configuration of `project.pbxproj`. Keep `YES` for Release builds.
+
+**Passing env vars to a launched app:** `MY_VAR=value open App.app` passes the variable to the launched process. Use absolute paths — `open` sets `~` as the working directory, not the project root.
+
 ## Classifying Build Failures
 
 | Category | Signs |

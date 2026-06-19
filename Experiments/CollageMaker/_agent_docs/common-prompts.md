@@ -2,7 +2,7 @@
 ## Big Change Requests
 (In Plan Mode (Tab Key to change Modes))
 ```
-Can you please help me think through how we can address the change request in @_agent_docs/change-requests/round-18.md using our macos skills for guidance?
+Can you please help me think through how we can address the change request in @_agent_docs/change-requests/round-101.md using our macos skills for guidance?
 ```
 
 or with input from multiple models
@@ -19,7 +19,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan for Phase 8 in @_agent_docs/plans/2026-06-15-srp-remediation-plan.md using our macos skills for guidance.
+Please implement the plan for Phase 1 in @_agent_docs/plans/2026-06-19-ui-automation-cli-loading.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
@@ -51,7 +51,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/polygon-clip-y-axis-flip-visible-bounds.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/sandbox-file-access-test-bootstrap.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Researching

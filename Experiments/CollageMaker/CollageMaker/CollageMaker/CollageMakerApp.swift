@@ -19,6 +19,13 @@ struct CollageMakerApp: App {
         WindowGroup {
             ContentView(viewModel: viewModel)
                 .environment(\.showingClearAlert, $showingClearAlert)
+                .task {
+                    if let urls = TestBootstrap.loadTestImageURLs() {
+                        logger.info("Test bootstrap: loading \(urls.count) image(s)")
+                        viewModel.clearAll()
+                        await viewModel.addImages(from: urls)
+                    }
+                }
         }
         .defaultSize(width: 1200, height: 750)
         .commands {
