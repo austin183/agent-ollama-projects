@@ -92,11 +92,11 @@ struct PanelCropEditor: View {
                                                 dragBaseOrigin = CGPoint(x: minX, y: minY)
                                                 dragBaseSize = CGSize(width: maxX - minX, height: maxY - minY)
                                             }
-                                             let visBounds = CropManager.computeVisibleSourceBounds(
-                                                 destRect: crop.destinationRect,
-                                                 sourceW: crop.sourceRect.width,
-                                                 sourceH: crop.sourceRect.height
-                                             )
+                                        let visBounds = CropManager.computeVisibleSourceBounds(
+                                                  destination: crop.destination,
+                                                  sourceW: crop.sourceRect.width,
+                                                  sourceH: crop.sourceRect.height
+                                              )
                                              dragVisibleOffset = CGPoint(x: visBounds.offsetX, y: visBounds.offsetY)
                                              dragVisibleSize = CGSize(width: visBounds.visibleW, height: visBounds.visibleH)
                                         }

@@ -836,4 +836,190 @@ import Testing
         #expect(result.origin.x + result.width <= image.width)
         #expect(result.origin.y + result.height <= image.height)
     }
+
+    // MARK: - Polygon-Aware Visible Source Bounds
+
+    @Test func computeVisibleSourceBoundsRectDelegatesToRectLogic() {
+        let destRect = CGRect(x: 100, y: 50, width: 400, height: 300)
+        let geometry: PanelGeometry = .rect(destRect)
+        let sourceW: CGFloat = 800
+        let sourceH: CGFloat = 600
+
+        let bounds = CropManager.computeVisibleSourceBounds(destination: geometry, sourceW: sourceW, sourceH: sourceH)
+        let rectBounds = CropManager.computeVisibleSourceBounds(destRect: destRect, sourceW: sourceW, sourceH: sourceH)
+
+        #expect(bounds.offsetX == rectBounds.offsetX)
+        #expect(bounds.offsetY == rectBounds.offsetY)
+        #expect(bounds.visibleW == rectBounds.visibleW)
+        #expect(bounds.visibleH == rectBounds.visibleH)
+    }
+
+    @Test func computeVisibleSourceBoundsFullyOnCanvasRect() {
+        let canvasSize = SizeConstants.defaultCanvasSize
+        let destRect = CGRect(x: 200, y: 100, width: 500, height: 400)
+        let geometry: PanelGeometry = .rect(destRect)
+        let sourceW: CGFloat = 1000
+        let sourceH: CGFloat = 800
+
+        let bounds = CropManager.computeVisibleSourceBounds(destination: geometry, sourceW: sourceW, sourceH: sourceH)
+
+        #expect(bounds.offsetX == 0)
+        #expect(bounds.offsetY == 0)
+        #expect(bounds.visibleW == sourceW)
+        #expect(bounds.visibleH == sourceH)
+    }
+
+    @Test func computeVisibleSourceBoundsDiagonalSlicesLeftmostPanel() {
+        // Simulate the leftmost panel of a 3-image diagonal slices layout at 45°.
+        // Canvas: 1920x1080, shear = tan(45°) = 1.0, shearOffset = 1080
+        // colWidth = (1920 + 1080) / 3 = 1000, centerOffset = -1080
+        // i=0: unshearedX = -1080
+        // Parallelogram corners (canvas coords, bottom-left origin):
+        //   (-1080, 0), (-80, 0), (1000, 1080), (0, 1080)
+        let corners: [CGPoint] = [
+            CGPoint(x: -1080, y: 0),
+            CGPoint(x: -80, y: 0),
+            CGPoint(x: 1000, y: 1080),
+            CGPoint(x: 0, y: 1080)
+        ]
+
+        let mutablePath = CGMutablePath()
+        mutablePath.move(to: corners[0])
+        mutablePath.addLine(to: corners[1])
+        mutablePath.addLine(to: corners[2])
+        mutablePath.addLine(to: corners[3])
+        mutablePath.closeSubpath()
+
+        let boundingRect = CGRect(x: -1080, y: 0, width: 2080, height: 1080)
+        let geometry: PanelGeometry = .path(cgPath: mutablePath, boundingRect: boundingRect)
+        let sourceW: CGFloat = 2080
+        let sourceH: CGFloat = 1080
+
+        let bounds = CropManager.computeVisibleSourceBounds(destination: geometry, sourceW: sourceW, sourceH: sourceH)
+
+        // The clipped triangle has vertices at (0, 80), (0, 1080), (1000, 1080)
+        // Clipped Y extent: 80 to 1080, so visibleH = 1000/1080 * sourceH = 1000
+        // Canvas top is NOT clipped (clippedMaxY == boundingRect.maxY == 1080),
+        // so offsetY = 0. The bottom 80 canvas pixels are clipped, which maps to
+        // the source TOP (due to Y flip), but the clamping logic handles this
+        // by keeping the source origin at 0 when panned up.
+        let expectedVisibleH = 1000.0 / 1080.0 * sourceH
+
+        #expect(abs(bounds.visibleH - expectedVisibleH) < 0.01, "visibleH should match clipped polygon extent (got \(bounds.visibleH), expected \(expectedVisibleH))")
+        #expect(bounds.offsetY == 0, "offsetY should be 0 since canvas top is not clipped")
+        // visibleH should be less than full sourceH (the key fix)
+        #expect(bounds.visibleH < sourceH)
+    }
+
+    @Test func computeVisibleSourceBoundsDiagonalSlicesRightmostPanel() {
+        // Simulate the rightmost panel of a 3-image diagonal slices layout at 45°.
+        // colWidth = 1000, centerOffset = -1080
+        // i=2: unshearedX = -1080 + 2*1000 = 920
+        // Parallelogram corners (canvas coords, bottom-left origin):
+        //   (920, 0), (1920, 0), (3000, 1080), (2000, 1080)
+        let corners: [CGPoint] = [
+            CGPoint(x: 920, y: 0),
+            CGPoint(x: 1920, y: 0),
+            CGPoint(x: 3000, y: 1080),
+            CGPoint(x: 2000, y: 1080)
+        ]
+
+        let mutablePath = CGMutablePath()
+        mutablePath.move(to: corners[0])
+        mutablePath.addLine(to: corners[1])
+        mutablePath.addLine(to: corners[2])
+        mutablePath.addLine(to: corners[3])
+        mutablePath.closeSubpath()
+
+        let boundingRect = CGRect(x: 920, y: 0, width: 2080, height: 1080)
+        let geometry: PanelGeometry = .path(cgPath: mutablePath, boundingRect: boundingRect)
+        let sourceW: CGFloat = 2080
+        let sourceH: CGFloat = 1080
+
+        let bounds = CropManager.computeVisibleSourceBounds(destination: geometry, sourceW: sourceW, sourceH: sourceH)
+
+        // The clipped triangle has vertices at (920, 0), (1920, 0), (1920, 1000)
+        // Clipped Y extent: 0 to 1000, so visibleH = 1000/1080 * sourceH = 1000
+        // Canvas top IS clipped: boundingRect.maxY(1080) - clippedMaxY(1000) = 80
+        // offsetY = 80/1080 * sourceH = 80
+        // Canvas top maps to source bottom (Y flip), so the bottom 80 source pixels
+        // are permanently hidden — this is geometrically unavoidable.
+        let expectedVisibleH = 1000.0 / 1080.0 * sourceH
+        let expectedOffsetY = 80.0 / 1080.0 * sourceH
+
+        #expect(abs(bounds.visibleH - expectedVisibleH) < 0.01, "visibleH should match clipped polygon extent (got \(bounds.visibleH), expected \(expectedVisibleH))")
+        #expect(abs(bounds.offsetY - expectedOffsetY) < 0.01, "offsetY should reflect canvas top clip (got \(bounds.offsetY), expected \(expectedOffsetY))")
+        // visibleH should be less than full sourceH (the key fix)
+        #expect(bounds.visibleH < sourceH)
+        // offsetY > 0 because canvas top is clipped (maps to source bottom)
+        #expect(bounds.offsetY > 0)
+    }
+
+    @Test func computeVisibleSourceBoundsDiagonalSlicesMiddlePanel() {
+        // Simulate the middle panel of a 3-image diagonal slices layout at 45°.
+        // i=1: unshearedX = -1080 + 1*1000 = -80
+        // Parallelogram corners (canvas coords, bottom-left origin):
+        //   (-80, 0), (920, 0), (2000, 1080), (1000, 1080)
+        let corners: [CGPoint] = [
+            CGPoint(x: -80, y: 0),
+            CGPoint(x: 920, y: 0),
+            CGPoint(x: 2000, y: 1080),
+            CGPoint(x: 1000, y: 1080)
+        ]
+
+        let mutablePath = CGMutablePath()
+        mutablePath.move(to: corners[0])
+        mutablePath.addLine(to: corners[1])
+        mutablePath.addLine(to: corners[2])
+        mutablePath.addLine(to: corners[3])
+        mutablePath.closeSubpath()
+
+        let boundingRect = CGRect(x: -80, y: 0, width: 2080, height: 1080)
+        let geometry: PanelGeometry = .path(cgPath: mutablePath, boundingRect: boundingRect)
+        let sourceW: CGFloat = 2080
+        let sourceH: CGFloat = 1080
+
+        let bounds = CropManager.computeVisibleSourceBounds(destination: geometry, sourceW: sourceW, sourceH: sourceH)
+
+        // This panel spans the full height of the canvas (Y: 0 to 1080)
+        // but extends off-canvas on both left and right sides
+        // The clipped polygon should have full height
+        #expect(abs(bounds.visibleH - sourceH) < 0.01, "middle panel should have full visible height")
+        #expect(bounds.offsetY == 0, "middle panel should have zero Y offset")
+        // X extent is clipped: left edge at x=0, right edge at x=1920
+        // visibleW = 1920/2080 * sourceW
+        let expectedVisibleW = 1920.0 / 2080.0 * sourceW
+        #expect(abs(bounds.visibleW - expectedVisibleW) < 0.01, "visibleW should match clipped X extent")
+    }
+
+    @Test func computeVisibleSourceBoundsPathPanelFullyOnCanvas() {
+        // A .path panel that is fully within the canvas should behave like a rect
+        let canvasSize = SizeConstants.defaultCanvasSize
+        let rect = CGRect(x: 200, y: 100, width: 500, height: 400)
+        let path = CGPath(rect: rect, transform: nil)
+        let geometry: PanelGeometry = .path(cgPath: path, boundingRect: rect)
+        let sourceW: CGFloat = 1000
+        let sourceH: CGFloat = 800
+
+        let bounds = CropManager.computeVisibleSourceBounds(destination: geometry, sourceW: sourceW, sourceH: sourceH)
+
+        #expect(bounds.offsetX == 0)
+        #expect(bounds.offsetY == 0)
+        #expect(bounds.visibleW == sourceW)
+        #expect(bounds.visibleH == sourceH)
+    }
+
+    @Test func computeVisibleSourceBoundsPathPanelFullyOffCanvas() {
+        // A .path panel entirely outside the canvas should return zero bounds
+        let rect = CGRect(x: -5000, y: -5000, width: 100, height: 100)
+        let path = CGPath(rect: rect, transform: nil)
+        let geometry: PanelGeometry = .path(cgPath: path, boundingRect: rect)
+        let sourceW: CGFloat = 1000
+        let sourceH: CGFloat = 800
+
+        let bounds = CropManager.computeVisibleSourceBounds(destination: geometry, sourceW: sourceW, sourceH: sourceH)
+
+        #expect(bounds.visibleW == 0)
+        #expect(bounds.visibleH == 0)
+    }
 }

@@ -24,7 +24,7 @@ Please implement the plan for Phase 8 in @_agent_docs/plans/2026-06-15-srp-remed
 
 # Small Change Requests
 ```
-Please work on the change request in @_agent_docs/change-requests/round-21.md using our macos skills for guidance. 
+Please work on the change request in @_agent_docs/change-requests/round-100.md using our macos skills for guidance. 
 ```
 
 # Review

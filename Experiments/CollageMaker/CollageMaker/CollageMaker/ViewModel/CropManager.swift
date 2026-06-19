@@ -166,7 +166,7 @@ final class CropManager {
         let scaledW = panelSize.width * zoom
         let scaledH = panelSize.height * zoom
 
-        let visBounds = Self.computeVisibleSourceBounds(destRect: crop.destinationRect, sourceW: scaledW, sourceH: scaledH)
+        let visBounds = Self.computeVisibleSourceBounds(destination: crop.destination, sourceW: scaledW, sourceH: scaledH)
 
         let effectiveBaseX = baseOrigin.x + visBounds.offsetX
         let effectiveBaseY = baseOrigin.y + visBounds.offsetY
@@ -225,8 +225,8 @@ final class CropManager {
         let scaledW = panelSize.width * newZoom
         let scaledH = panelSize.height * newZoom
 
-        let visBounds = Self.computeVisibleSourceBounds(destRect: crop.destinationRect, sourceW: scaledW, sourceH: scaledH)
-        let oldVisBounds = Self.computeVisibleSourceBounds(destRect: crop.destinationRect, sourceW: crop.sourceRect.width, sourceH: crop.sourceRect.height)
+        let visBounds = Self.computeVisibleSourceBounds(destination: crop.destination, sourceW: scaledW, sourceH: scaledH)
+        let oldVisBounds = Self.computeVisibleSourceBounds(destination: crop.destination, sourceW: crop.sourceRect.width, sourceH: crop.sourceRect.height)
 
         // Determine the zoom anchor point. The anchor's effective source
         // coordinate is computed from the OLD crop, and the offset subtracted
@@ -509,6 +509,55 @@ final class CropManager {
             visibleW: dw > 0 ? (visMaxX - visMinX) / dw * sourceW : sourceW,
             visibleH: dh > 0 ? (visMaxY - visMinY) / dh * sourceH : sourceH
         )
+    }
+
+    /// Computes visible source bounds from the actual panel geometry.
+    /// For `.rect` panels, delegates to the bounding-rect implementation.
+    /// For `.path` panels, clips the polygon to canvas bounds first, producing
+    /// accurate visible extents for edge panels whose parallelogram extends
+    /// beyond the canvas (e.g., diagonal slices, hexagonal layouts).
+    static func computeVisibleSourceBounds(destination: PanelGeometry, sourceW: CGFloat, sourceH: CGFloat) -> VisibleSourceBounds {
+        switch destination {
+        case .rect:
+            return computeVisibleSourceBounds(destRect: destination.boundingRect, sourceW: sourceW, sourceH: sourceH)
+
+        case .path(let cgPath, let boundingRect):
+            let canvasSize = SizeConstants.defaultCanvasSize
+            let canvasClipRect = CGRect(origin: .zero, size: canvasSize)
+
+            var vertices = PanelGeometry.extractPathPoints(cgPath)
+            vertices = PolygonClipper.clip(vertices, to: canvasClipRect)
+
+            if vertices.isEmpty {
+                return VisibleSourceBounds(offsetX: 0, offsetY: 0, visibleW: 0, visibleH: 0)
+            }
+
+            let clippedMinX = vertices.map { $0.x }.min()!
+            let clippedMaxX = vertices.map { $0.x }.max()!
+            let clippedMinY = vertices.map { $0.y }.min()!
+            let clippedMaxY = vertices.map { $0.y }.max()!
+
+            let dw = boundingRect.width
+            let dh = boundingRect.height
+
+            let offCanvasLeft = Swift.max(0, clippedMinX - boundingRect.minX)
+            // Canvas Y is bottom-left origin; source Y is top-left origin.
+            // The rendering pipeline flips Y: canvas bottom → source top,
+            // canvas top → source bottom. The clamping logic treats offsetY
+            // as "pixels to skip at the source top." A clip at the canvas
+            // bottom (source top) must be expressed as a clip at the canvas
+            // top to produce the correct source-top offset after the flip.
+            let offCanvasTop = Swift.max(0, boundingRect.maxY - clippedMaxY)
+            let clippedW = clippedMaxX - clippedMinX
+            let clippedH = clippedMaxY - clippedMinY
+
+            return VisibleSourceBounds(
+                offsetX: dw > 0 ? offCanvasLeft / dw * sourceW : 0,
+                offsetY: dh > 0 ? offCanvasTop / dh * sourceH : 0,
+                visibleW: dw > 0 ? clippedW / dw * sourceW : sourceW,
+                visibleH: dh > 0 ? clippedH / dh * sourceH : sourceH
+            )
+        }
     }
 
     private func endGesture() {
