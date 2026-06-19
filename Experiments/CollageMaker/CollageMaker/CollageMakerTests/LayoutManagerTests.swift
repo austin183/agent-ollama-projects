@@ -530,18 +530,8 @@ import Testing
 
     // MARK: - Build Overlay Config
 
-    @Test func buildOverlayConfigReturnsNilForNonDoubleExposure() {
-        let manager = LayoutManager()
-        manager.layoutStyle = .hero
-
-        let config = manager.buildOverlayConfig()
-
-        #expect(config == nil)
-    }
-
     @Test func buildOverlayConfigReturnsNilForMissingMaskImage() {
         let manager = LayoutManager()
-        manager.layoutStyle = .doubleExposure
 
         let config = manager.buildOverlayConfig()
 
@@ -550,7 +540,6 @@ import Testing
 
     @Test func buildOverlayConfigReturnsConfigWithMaskImage() {
         let manager = LayoutManager()
-        manager.layoutStyle = .doubleExposure
         manager.doubleExposureMaskImage = createTestNSImage(color: .white, size: CGSize(width: 100, height: 100))
         manager.doubleExposureMaskOpacity = 0.75
 

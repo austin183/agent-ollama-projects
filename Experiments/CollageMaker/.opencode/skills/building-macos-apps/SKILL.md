@@ -338,6 +338,16 @@ See [references/ui/swiftui-overlays.md](references/ui/swiftui-overlays.md) for e
 - **Background preview rendering** -- Move heavy CoreGraphics work to `Task.detached` with captured values, dispatch results back with `Task { @MainActor in self?.previewImage = result }`. Cancel stale tasks before starting new ones.
 - **No computed NSImage in body** -- Never create `NSImage(cgImage:size:)` in a computed property accessed from `body`. SwiftUI calls `body` frequently during layout, allocating a new `NSImage` per render cycle. Pass as a stored `let` parameter from the parent view.
 - **Never clear rendered state before async replacement** -- If a view depends on `someDict.isEmpty` to choose between rendering modes, clearing that dict before the async replacement arrives creates a blank frame. Keep stale content visible during the gap, then repopulate.
+- **Conditional rendering needs symmetric cleanup** -- When a rendering method only updates state inside a conditional (`if let overlay = config.overlay { ... }`), removing the input leaves previously rendered state visible. Add an `else` branch that explicitly clears it. This applies to overlays, backgrounds, titles, per-panel renders, and any conditionally produced output. This is about the *existence* of clear paths, distinct from the timing rule above:
+
+```swift
+if let overlay = config.overlay {
+    previewManager.updateOverlay(overlay: overlay, canvasSize: ...)
+} else {
+    previewManager.overlayImage = nil
+    previewManager.overlayBlendMode = nil
+}
+```
 - **Multiple async rendering tasks race** -- When `updatePreview()`, `updateBackground()`, and `updatePanelPreview()` all run on separate `Task.detached` tasks, there's no ordering guarantee. If rendering mode depends on which task completed first, the mode can flip unpredictably during rapid interactions.
 - **Composite-to-layered rendering transition** -- When splitting a full composite into individual layers, every element baked into the composite needs its own rendering path. Elements without a dedicated layer become invisible in layered mode. Render each element (title, panels, effects) separately and compose in a ZStack.
 - **Property-level debounce for rapid controls** -- Slider and color picker `didSet` observers fire 30-60x/sec during drag. Use a debounced render method (cancel previous task, sleep 150ms, render) for continuous controls. Discrete controls (typing, enum picker, image selection) render immediately. Rule of thumb: >10 events/sec = debounce. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md) for cross-boundary cancellation pattern.

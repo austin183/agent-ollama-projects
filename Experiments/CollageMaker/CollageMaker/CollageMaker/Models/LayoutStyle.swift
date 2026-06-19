@@ -20,7 +20,6 @@ enum LayoutStyle: String, CaseIterable, Identifiable, Codable {
     case uniform
     case hero
     case mosaic
-    case doubleExposure
     case diagonalSlices
     case hexagonal
 
@@ -31,7 +30,6 @@ enum LayoutStyle: String, CaseIterable, Identifiable, Codable {
         case .uniform: "Uniform"
         case .hero: "Hero"
         case .mosaic: "Mosaic"
-        case .doubleExposure: "Double Exposure"
         case .diagonalSlices: "Diagonal Slices"
         case .hexagonal: "Hexagonal"
         }
@@ -42,9 +40,19 @@ enum LayoutStyle: String, CaseIterable, Identifiable, Codable {
         case .uniform: "square.grid.2x2.fill"
         case .hero: "rectangle.stack.fill"
         case .mosaic: "photo.on.rectangle.angled"
-        case .doubleExposure: "person.crop.circle.fill"
         case .diagonalSlices: "line.3.horizontal.decrease"
         case .hexagonal: "hexagon.fill"
         }
+    }
+}
+
+extension LayoutStyle {
+    /// Migrates legacy raw values to current cases.
+    static func migrate(rawValue: String?) -> LayoutStyle {
+        guard let rawValue = rawValue else { return .hero }
+        if rawValue == "doubleExposure" {
+            return .uniform
+        }
+        return LayoutStyle(rawValue: rawValue) ?? .hero
     }
 }

@@ -868,6 +868,9 @@ final class CollageViewModel {
                     overlay: overlay,
                     canvasSize: SizeConstants.defaultCanvasSize
                 )
+            } else {
+                previewManager.overlayImage = nil
+                previewManager.overlayBlendMode = nil
             }
             updateTitleImage()
         }
@@ -887,6 +890,9 @@ final class CollageViewModel {
                 overlay: overlay,
                 canvasSize: SizeConstants.defaultCanvasSize
             )
+        } else {
+            previewManager.overlayImage = nil
+            previewManager.overlayBlendMode = nil
         }
         updateTitleImage()
     }

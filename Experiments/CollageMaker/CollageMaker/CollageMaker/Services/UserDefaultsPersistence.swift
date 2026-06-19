@@ -114,9 +114,9 @@ final class UserDefaultsPersistence {
 
     /// Loads all persisted values from UserDefaults, returning defaults for missing keys.
     func load() -> PersistenceBundle {
-        let layoutStyle = LayoutStyle(
-            rawValue: defaults.string(forKey: Keys.layoutStyle) ?? "hero"
-        ) ?? .hero
+        let layoutStyle = LayoutStyle.migrate(
+            rawValue: defaults.string(forKey: Keys.layoutStyle)
+        )
 
         let titleAttrString = loadTitleAttrString()
         let titleStyle: TitleStyle

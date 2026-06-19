@@ -1,0 +1,2 @@
+# Change Double Exposure from Layout to Option for all Layouts
+Right now, the Double Exposure option is a Layout, but adding Double Exposure does not actually affect the layout.  We need to remove it as a Layout option and make the Double Exposure file picker available for all the other layouts.

@@ -78,8 +78,7 @@ final class LayoutManager {
     }
 
     func buildOverlayConfig() -> OverlayConfig? {
-        guard layoutStyle == .doubleExposure,
-              let maskImage = doubleExposureMaskImage,
+        guard let maskImage = doubleExposureMaskImage,
               let cgImage = maskImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return nil
         }

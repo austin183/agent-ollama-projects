@@ -97,8 +97,10 @@ struct LayoutConfigSidebar: View {
                         .accessibilityValue("\(Int(viewModel.hexagonalSpacing)) points")
                 }
             }
+        }
 
-            if viewModel.layoutStyle == .doubleExposure {
+        if !viewModel.images.isEmpty {
+            Section("Overlay") {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
                         if let maskImg = viewModel.doubleExposureMaskImage {
@@ -133,16 +135,18 @@ struct LayoutConfigSidebar: View {
                         }
                     }
 
-                    HStack {
-                        Text("Mask Opacity")
-                        Spacer()
-                        Text("\(Int(viewModel.doubleExposureMaskOpacity * 100))%")
-                            .foregroundStyle(.secondary)
+                    if viewModel.doubleExposureMaskImage != nil {
+                        HStack {
+                            Text("Mask Opacity")
+                            Spacer()
+                            Text("\(Int(viewModel.doubleExposureMaskOpacity * 100))%")
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.caption)
+                        Slider(value: doubleExposureMaskOpacityBinding, in: 0...1)
+                            .accessibilityLabel("Mask opacity")
+                            .accessibilityValue("\(Int(viewModel.doubleExposureMaskOpacity * 100)) percent")
                     }
-                    .font(.caption)
-                    Slider(value: doubleExposureMaskOpacityBinding, in: 0...1)
-                        .accessibilityLabel("Mask opacity")
-                        .accessibilityValue("\(Int(viewModel.doubleExposureMaskOpacity * 100)) percent")
                 }
             }
         }
