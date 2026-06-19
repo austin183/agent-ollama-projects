@@ -1,5 +1,42 @@
 # Testing Patterns
 
+## Contents
+- CGImage Test Fixtures — Use NSBitmapImageRep
+- AppKit Initialization in Tests
+- CGContext in Headless Test Environments
+- CGPathApply Compiler Crash in Test Targets
+- Transform Extraction for Testability
+- Shadow Implementation Anti-Pattern
+- Testing @Published State Changes
+- Testing Gesture Operations
+- Testing Timer/Debounce Chains
+- Testing @MainActor ObservableObject
+- Testing actor Services
+- Protocol-Based Mocking
+- Static Method Pattern for Testability
+- TrackingAssembler Mock Pattern
+- CoordinateConverter Pure Struct Pattern
+- Eliminate Computed NSImage in SwiftUI Views
+- Swift Testing Framework
+- Running Tests via xcodebuild
+- Testing `Task.detached` in ViewModel Tests
+- Mock Method Symmetry
+- Testing Extracted Pure-Math Utilities
+- Aspect Ratio Math in Coordinate Tests
+- Swift Testing Parallelism and `@Suite(.serialized)`
+- 0.000s Cascade Failure Diagnostic
+- Closed Range `(a+1)...b` Fatal Error
+- Performance Tests with XCTClockMetric and XCTCPUMetric
+- OSSignpost Markers for Profiling
+- UserDefaults Test Suite Stability
+- UserDefaults Test Isolation with UUID Suite Names
+- App Sandbox Blocks Test File Access
+- Pitfalls
+- Identity-Based Cache Testing
+- Behavioral Cache Testing (Preferred)
+- Testing Synchronous DispatchQueue Closures
+- XCUIAutomation macOS API Gotchas
+
 ## CGImage Test Fixtures — Use NSBitmapImageRep
 
 `CGContext.makeImage()` returns `nil` in the test environment with `[.byteOrder32Big]` (no alpha) bitmap info, even for small images. Use `NSBitmapImageRep` with RGBA instead:
@@ -583,6 +620,7 @@ Release builds retain the sandbox for production safety.
 - **`sed` for bulk test fixes** — When Swift Testing version doesn't support `tolerance:`, `find -exec sed -i '' 's/, tolerance: 0\.01//g' {} +'` across the test directory is the fastest way to fix many occurrences
 - **UserDefaults test suite instability** — A computed property that creates `UserDefaults(suiteName: UUID())` each access generates a different suite per read, so save/load go to different suites. Store as a stable instance property initialized in `init`.
 - **Identity-based cache tests are fragile** — `===` on cached `@Observable` objects can fail due to macro re-creation or test ordering. Prefer behavioral tests: compare computed values (e.g., `minWidth`, `frame.origin.x`) to verify cache hit/miss outcomes.
+- **XCUIAutomation macOS APIs differ from iOS** — `setEnvironment`, `menuItem`, `typeKeyword`, `focus()`, and `wait(for:)` return type all behave differently or don't exist. See § "XCUIAutomation macOS API Gotchas"
 
 ## Identity-Based Cache Testing
 
@@ -662,3 +700,72 @@ final class ThreadSafeArray<Element: Sendable>: @unchecked Sendable {
 - `@MainActor` — queue runs on background thread
 
 See [references/state/swift-concurrency.md](../state/swift-concurrency.md) § "Synchronous Closures Inside withCheckedContinuation".
+
+## XCUIAutomation macOS API Gotchas
+
+Several XCUIAutomation APIs referenced in Apple documentation and online examples do not exist in the macOS SDK. Verify API availability against the actual SDK — iOS APIs differ.
+
+### Passing Configuration to the Test Target
+
+`XCUIApplication.setEnvironment(_:forVariable:)` does not exist. Use `launchArguments`:
+
+```swift
+app.launchArguments = ["COLLAGEMAKER_TEST_IMAGES_DIR=/path/to/TestImages"]
+```
+
+Read from `CommandLine.arguments` in the app:
+
+```swift
+let dirPath = ProcessInfo.processInfo.environment["COLLAGEMAKER_TEST_IMAGES_DIR"]
+    ?? CommandLine.arguments.first(where: { $0.hasPrefix("COLLAGEMAKER_TEST_IMAGES_DIR=") })?
+    .components(separatedBy: "=").last
+```
+
+### Querying Menu Items
+
+`app.menus.menuItem["Item Name"]` is a compile error. Use `app.menuItems` directly:
+
+```swift
+let uniformItem = app.menuItems["Uniform"]
+XCTAssertTrue(uniformItem.exists)
+```
+
+### Text Input
+
+`element.typeKeyword(.a)` does not exist. Use `typeText(_:)`:
+
+```swift
+element.typeText("Test Title")
+```
+
+### Focus
+
+`element.focus()` does not exist. `typeText(_:)` works without an explicit focus call — XCUIAutomation handles focus automatically.
+
+### Waiting for Conditions
+
+`wait(for:timeout:)` on `XCTestCase` returns `Void` in some SDK versions, not `DispatchTimeoutResult`. Comparing against `.timedOut` is a compile error. Use a polling loop:
+
+```swift
+private func waitForImagesLoaded(timeout: TimeInterval = 60) {
+    let deadline = Date().addingTimeInterval(timeout)
+    let exportButton = app.buttons["Export collage as JPEG"]
+
+    while Date() < deadline {
+        if exportButton.exists && exportButton.isEnabled {
+            return
+        }
+        RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+    }
+
+    XCTFail("Timed out waiting for images to load")
+}
+```
+
+### Compiler Error Quick Reference
+
+| Error | Fix |
+|---|---|
+| `'XCUIApplication' has no member 'setEnvironment'` | Use `launchArguments` |
+| `'XCUIElementQuery' has no member 'menuItem'` | Use `app.menuItems[]` |
+| `cannot convert 'Void' to 'DispatchTimeoutResult'` | Use `RunLoop` polling loop |

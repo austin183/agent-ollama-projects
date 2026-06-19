@@ -10,8 +10,11 @@ enum TestBootstrap {
     private static let imageExtensions = ["jpg", "jpeg", "png", "tiff", "heic", "heif"]
 
     static func loadTestImageURLs() -> [URL]? {
-        guard let dirPath = ProcessInfo.processInfo.environment["COLLAGEMAKER_TEST_IMAGES_DIR"] else {
-            logger.info("COLLAGEMAKER_TEST_IMAGES_DIR not set, skipping test bootstrap")
+        let dirPath = ProcessInfo.processInfo.environment["COLLAGEMAKER_TEST_IMAGES_DIR"]
+            ?? CommandLine.arguments.first(where: { $0.hasPrefix("COLLAGEMAKER_TEST_IMAGES_DIR=") })?
+            .components(separatedBy: "=").last
+        guard let dirPath else {
+            logger.info("Test images dir not configured, skipping test bootstrap")
             return nil
         }
         logger.info("Test images dir: \(dirPath, privacy: .public)")

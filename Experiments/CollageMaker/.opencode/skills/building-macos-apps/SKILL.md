@@ -62,7 +62,8 @@ Guidance for building macOS SwiftUI desktop applications with image processing, 
 
 | Topic | Reference |
 |-------|-----------|
-| **Testing Patterns** | [references/testing/testing-patterns.md](references/testing/testing-patterns.md) |
+| **Unit Testing Patterns** | [references/testing/testing-patterns.md](references/testing/testing-patterns.md) |
+| **XCUIAutomation macOS Gotchas** | [references/testing/testing-patterns.md § XCUIAutomation](references/testing/testing-patterns.md) |
 
 ### Desktop Conventions and HIG
 
