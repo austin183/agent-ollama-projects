@@ -1,5 +1,22 @@
 # Coordinate System Traps
 
+## Contents
+- Vision to NSImage Y flip
+- CGContext top-left flip
+- EXIF Coordinate Mismatch
+- Canvas-to-Preview Coordinate Conversion
+- Preview-to-Canvas Inverse Conversion
+- Fit Math Branch Direction Gotcha
+- Source Rect to Fitted Container Mapping
+- Inverse Transform Pitfall: Never Use `* scaleX` with Letterboxing
+- Normalized Position Coordinates
+- Verify Data Flow Before Adding Conversions
+- CGPath Construction
+- Hexagonal Grid Layout (Pointy-Top)
+- Per-Panel Path Clipping
+- Polygon Clipping to Canvas Bounds
+- Visible Source Bounds from Clipped Polygon
+
 Vision, CoreGraphics, and NSImage use different origins:
 
 | Framework | Origin | Notes |
@@ -338,6 +355,51 @@ let clipInPanelCoords = CGRect(
 - Hexagonal panels at canvas edges
 - Any polygon that needs rectangular bounds before coordinate transformation
 - When `.clipped()` clips to the wrong rectangle (container vs canvas)
+
+## Visible Source Bounds from Clipped Polygon
+
+When a panel polygon extends beyond the canvas, compute visible source bounds from the clipped polygon's AABB. The canvas uses a bottom-left origin (CoreGraphics), but the source image uses a top-left origin. This Y-axis flip determines which clipped edge maps to which source edge.
+
+### The offCanvasTop Y-Flip Trap
+
+Canvas Y is flipped relative to source Y: canvas top maps to source bottom, canvas bottom maps to source top. The clamping logic treats `offsetY` as "pixels to skip at the source top." Therefore, `offCanvasTop` must measure the **canvas top clip**, not the canvas bottom clip.
+
+```swift
+// WRONG — measures canvas bottom clip (maps to source top after flip),
+// but source-top clamping is already handled by the effective Y bound.
+// This allows the source origin to go negative, exposing hidden pixels.
+let offCanvasTop = Swift.max(0, clippedMinY - boundingRect.minY)
+
+// RIGHT — measures canvas top clip (maps to source bottom after flip)
+let offCanvasTop = Swift.max(0, boundingRect.maxY - clippedMaxY)
+```
+
+### Complete Pattern
+
+```swift
+// 1. Clip polygon to canvas rect (both in canvas coords, bottom-left origin)
+let clipped = PolygonClipper.clipPolygon(vertices, to: canvasRect)
+
+// 2. AABB of clipped polygon
+let clippedMinX = clipped.min { $0.x < $1.x }.x
+let clippedMaxX = clipped.max { $0.x < $1.x }.x
+let clippedMinY = clipped.min { $0.y < $1.y }.y
+let clippedMaxY = clipped.max { $0.y < $1.y }.y
+
+// 3. Off-canvas measurements
+let offCanvasLeft = Swift.max(0, clippedMinX - boundingRect.minX)
+let offCanvasTop = Swift.max(0, boundingRect.maxY - clippedMaxY) // canvas top, NOT bottom
+
+// 4. Scale to source-space offsets
+let offsetX = offCanvasLeft / boundingRect.width * sourceWidth
+let offsetY = offCanvasTop / boundingRect.height * sourceHeight
+let visibleW = (clippedMaxX - clippedMinX) / boundingRect.width * sourceWidth
+let visibleH = (clippedMaxY - clippedMinY) / boundingRect.height * sourceHeight
+```
+
+**Mnemonic:** `offCanvasTop` measures what is clipped off the **top of the canvas** (`boundingRect.maxY - clippedMaxY`), not the bottom. X has no flip, so `offCanvasLeft` measures the left edge normally.
+
+**When to use:** Computing visible source bounds for pan boundaries, crop overlays, or any clamping logic that needs to know which portion of the source image is visible through a clipped polygon.
 
 A horizontal shear `x' = x + y·tan(θ)` displaces different y-levels by different amounts: top edge (y=0) has zero displacement, bottom edge (y=H) is displaced by `H·tan(θ)`.
 

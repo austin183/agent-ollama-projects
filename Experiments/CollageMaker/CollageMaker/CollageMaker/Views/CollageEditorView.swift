@@ -153,10 +153,9 @@ struct CollageEditorView: View {
 
                             if gestureCoordinator.dragSourcePanelId == nil {
                                 if let tc = titleCanvasFrame {
-                                    if viewModel.titleManager.hitTestTitle(location: value.startLocation, previewSize: geometry.size) == .none {
+                                    if viewModel.titleManager.hitTestTitle(location: value.startLocation, previewSize: geometry.size) != .none {
                                         return
                                     }
-                                    return
                                 }
                                 if let id = hitPanel(at: value.startLocation, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size) {
                                     gestureCoordinator.dragSourcePanelId = id
