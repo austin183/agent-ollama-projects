@@ -140,7 +140,6 @@ struct MosaicLayoutStrategy: LayoutStrategy {
             }
 
             let isWide = w > h
-            var splitRatio: CGFloat
 
             let rand: Float
             if var seeded = rng {
@@ -151,13 +150,7 @@ struct MosaicLayoutStrategy: LayoutStrategy {
                 rand = Float.random(in: 0..<1)
             }
 
-            if rand < 0.3 && panels.count > 0 {
-                splitRatio = 0.25
-            } else if rand < 0.6 {
-                splitRatio = 0.33
-            } else {
-                splitRatio = 0.4
-            }
+            let splitRatio = MosaicConfig.default.splitRatio(for: rand, hasPanels: panels.count > 0)
 
             if isWide {
                 let splitW = w * splitRatio
@@ -379,21 +372,38 @@ private func createHexagonPath(center: CGPoint, radius: CGFloat) -> (path: CGPat
     return (mutablePath, bounds)
 }
 
-// MARK: - Seeded PRNG
+// MARK: - Mosaic Config
 
-/// Deterministic PRNG for reproducible mosaic layouts.
-struct SeededPRNG {
-    var state: UInt64
+/// Configurable ratios and thresholds for mosaic layout splits.
+struct MosaicConfig {
+    /// Probability threshold for narrow split (25%).
+    let narrowThreshold: CGFloat
+    /// Probability threshold for balanced split (33%).
+    let balancedThreshold: CGFloat
+    /// Narrow split ratio.
+    let narrowRatio: CGFloat
+    /// Balanced split ratio.
+    let balancedRatio: CGFloat
+    /// Wide (default) split ratio.
+    let wideRatio: CGFloat
 
-    init(seed: UInt64) {
-        self.state = seed
+    static let `default` = MosaicConfig()
+
+    init() {
+        self.narrowThreshold = 0.3
+        self.balancedThreshold = 0.6
+        self.narrowRatio = 0.25
+        self.balancedRatio = 0.33
+        self.wideRatio = 0.4
     }
 
-    mutating func next() -> UInt64 {
-        state &+= 0x9e37_79b9_7f4a_7c15
-        var z = state
-        z = (z ^ (z &>> 30)) &* 0xbf58_476d_1ce4_e5b9
-        z = (z ^ (z &>> 27)) &* 0x94d0_49bb_1331_11eb
-        return z ^ (z &>> 31)
+    func splitRatio(for rand: Float, hasPanels: Bool) -> CGFloat {
+        if rand < Float(narrowThreshold) && hasPanels {
+            return narrowRatio
+        } else if rand < Float(balancedThreshold) {
+            return balancedRatio
+        } else {
+            return wideRatio
+        }
     }
 }

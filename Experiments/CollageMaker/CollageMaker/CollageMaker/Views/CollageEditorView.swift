@@ -35,97 +35,23 @@ struct CollageEditorView: View {
                 let canvasPreviewFrame = CoordinateConverter.canvasToPreviewFrame(CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize), in: geometry.size, canvasSize: SizeConstants.defaultCanvasSize)
 
                 ZStack {
-                    if viewModel.isLayeredMode {
-                        if let bg = viewModel.previewBackgroundImage {
-                            Image(nsImage: bg)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: geometry.size.width, height: geometry.size.height)
-                        }
+                    CanvasBackgroundView(viewModel: viewModel, geometrySize: geometry.size)
 
-                        ForEach(viewModel.panels) { panel in
-                            PanelOverlay(
-                                panel: panel,
-                                scaledFrame: panelFrames[panel.id],
-                                viewModel: viewModel
-                            )
-                        }
+                    PanelsOverlayView(viewModel: viewModel, panelFrames: panelFrames, geometrySize: geometry.size)
 
-                        if let overlayImg = viewModel.overlayImage {
-                            Image(nsImage: overlayImg)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: geometry.size.width, height: geometry.size.height)
-                                .blendMode(overlayBlendMode(from: viewModel.overlayBlendMode))
-                        }
-
-                        if let titleImg = viewModel.titleImage {
-                            Image(nsImage: titleImg)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: geometry.size.width, height: geometry.size.height)
-                        }
-                    } else if let previewImage = viewModel.previewImage {
-                        Image(nsImage: previewImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: geometry.size.width, height: geometry.size.height)
-                            .id("preview")
+                    if let scaled = titleFrame, !viewModel.title.isEmpty {
+                        TitleInteractionOverlay(
+                            scaledFrame: scaled,
+                            isLiveGesturing: viewModel.isLiveGesturing
+                        )
                     }
 
-                    if !viewModel.isLiveGesturing, let scaled = titleFrame, !viewModel.title.isEmpty {
-                        Rectangle()
-                            .fill(Color.clear)
-                            .stroke(Color.orange, lineWidth: 1.5)
-                            .frame(width: scaled.width, height: scaled.height)
-                            .position(x: scaled.midX, y: scaled.midY)
-                            .contentShape(Rectangle())
-                            .help("Drag to reposition title")
-
-                        Rectangle()
-                            .fill(Color.orange.opacity(0.3))
-                            .frame(width: 8, height: scaled.height)
-                            .position(x: scaled.minX, y: scaled.midY)
-                            .help("Drag to resize title width")
-
-                        Rectangle()
-                            .fill(Color.orange.opacity(0.3))
-                            .frame(width: 8, height: scaled.height)
-                            .position(x: scaled.maxX, y: scaled.midY)
-                            .help("Drag to resize title width")
-                    }
-
-                    if let sourceId = gestureCoordinator.dragSourcePanelId,
-                        let scaledFrame = panelFrames[sourceId],
-                        let sourcePanel = viewModel.panels.first(where: { $0.id == sourceId }) {
-                        PanelShape(geometry: sourcePanel.geometry)
-                            .fill(Color.clear)
-                            .stroke(Color.cyan, lineWidth: 2.5)
-                            .frame(width: scaledFrame.width, height: scaledFrame.height)
-                            .position(x: scaledFrame.midX, y: scaledFrame.midY)
-                    }
-
-                    if let targetId = gestureCoordinator.dragTargetPanelId,
-                        let scaledFrame = panelFrames[targetId],
-                        targetId != gestureCoordinator.dragSourcePanelId,
-                        let targetPanel = viewModel.panels.first(where: { $0.id == targetId }) {
-                        PanelShape(geometry: targetPanel.geometry)
-                            .fill(Color.clear)
-                            .stroke(Color.green, lineWidth: 2.5)
-                            .frame(width: scaledFrame.width, height: scaledFrame.height)
-                            .position(x: scaledFrame.midX, y: scaledFrame.midY)
-                    }
-
-                    if let cursorLoc = gestureCoordinator.dragCursorLocation,
-                       gestureCoordinator.dragSourcePanelId != nil,
-                        gestureCoordinator.dragSourceImageIndex < viewModel.images.count {
-                        Image(nsImage: viewModel.images[gestureCoordinator.dragSourceImageIndex].thumbnail)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 48, height: 48)
-                            .opacity(0.7)
-                            .position(cursorLoc)
-                    }
+                    DropPreviewView(
+                        gestureCoordinator: gestureCoordinator,
+                        viewModel: viewModel,
+                        panelFrames: panelFrames,
+                        panelGeometries: panelGeometries
+                    )
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 0))
                 .frame(width: canvasPreviewFrame.width, height: canvasPreviewFrame.height)
@@ -353,7 +279,7 @@ private struct PanelHitArea: View {
     }
 }
 
-private struct PanelOverlay: View {
+struct PanelOverlay: View {
     let panel: ImagePanel
     let scaledFrame: CGRect?
     let viewModel: CollageViewModel
@@ -404,7 +330,7 @@ private struct PanelOverlay: View {
     }
 }
 
-private func overlayBlendMode(from cgBlendMode: CGBlendMode?) -> BlendMode {
+func overlayBlendMode(from cgBlendMode: CGBlendMode?) -> BlendMode {
     guard let mode = cgBlendMode else { return .multiply }
     switch mode {
     case .multiply: return .multiply

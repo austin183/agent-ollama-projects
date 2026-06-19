@@ -62,19 +62,12 @@ final class ImageCoordinator {
 
     func addImages(from urls: [URL]) async {
         await imageLibrary.addImages(from: urls)
-        if !imageLibrary.images.isEmpty && !target.isProcessing {
-            Task { [weak self] in
-                await self?.analyzeSaliency()
-            }
-        }
+        scheduleSaliencyAnalysis()
     }
 
     func removeImage(at index: Int) -> (item: ImageItem, at: Int)? {
         guard let (removed, at) = imageLibrary.removeImage(at: index) else { return nil }
-
-        Task { [weak self] in
-            await self?.analyzeSaliency()
-        }
+        scheduleSaliencyAnalysis()
         return (removed, at)
     }
 
@@ -82,11 +75,15 @@ final class ImageCoordinator {
         let oldCustomOrder = imageLibrary.customImageOrder
         imageLibrary.moveImages(from: from, to: to)
         layoutManager.panelAssignments.removeAll()
+        scheduleSaliencyAnalysis()
+        return oldCustomOrder
+    }
 
+    private func scheduleSaliencyAnalysis() {
+        guard !imageLibrary.images.isEmpty && !target.isProcessing else { return }
         Task { [weak self] in
             await self?.analyzeSaliency()
         }
-        return oldCustomOrder
     }
 
     func clearDomain() -> ImageDomainState {

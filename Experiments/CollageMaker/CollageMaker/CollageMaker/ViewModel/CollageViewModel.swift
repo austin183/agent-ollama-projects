@@ -469,11 +469,11 @@ final class CollageViewModel {
     }
 
     func setBackgroundImage(_ image: NSImage?, path: String?) {
-        let oldImage = backgroundManager.backgroundImage
-        backgroundManager.setBackgroundImage(image, path: path)
+        let (oldImage, oldPath) = backgroundManager.setBackgroundImage(image, path: path)
         guard !isInitializing else { return }
         undoManager.registerUndo(withTarget: self) { target in
             target.backgroundManager.backgroundImage = oldImage
+            target.backgroundManager.backgroundImagePath = oldPath
         }
         undoManager.setActionName("Change Background Image")
         debouncedSave()

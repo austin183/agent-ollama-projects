@@ -24,9 +24,12 @@ final class BackgroundManager {
         )
     }
 
-    func setBackgroundImage(_ image: NSImage?, path: String?) {
+    func setBackgroundImage(_ image: NSImage?, path: String?) -> (NSImage?, String?) {
+        let oldImage = backgroundImage
+        let oldPath = backgroundImagePath
         backgroundImagePath = path
         backgroundImage = image
+        return (oldImage, oldPath)
     }
 
     func updateBackground(updater: PreviewUpdatable) {
