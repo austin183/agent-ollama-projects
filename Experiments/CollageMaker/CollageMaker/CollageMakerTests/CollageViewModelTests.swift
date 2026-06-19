@@ -254,6 +254,32 @@ import Testing
         vm.previewManager.cancelAll()
     }
 
+    @Test func titleAttrStringSetterInLayeredModeCallsUpdateTitleImage() async {
+        let assembler = TestAssembler()
+        assembler.trackCalls = true
+        let vm = makeViewModel(assembler: assembler)
+
+        let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
+        vm.imageLibrary.images = images
+        vm.regenerateLayout()
+
+        await vm.awaitPendingTasks()
+        vm.isLayeredMode = true
+
+        vm.titleAttrString = NSAttributedString(string: "Initial Title")
+        await vm.awaitPendingTasks()
+
+        let titleRenderCallsBefore = assembler.titleRenderCalls
+        let previewCallsBefore = assembler.previewCalls
+
+        vm.titleAttrString = NSAttributedString(string: "Changed Title")
+
+        await vm.awaitPendingTasks()
+        #expect(assembler.titleRenderCalls > titleRenderCallsBefore, "layered mode should call updateTitleImage")
+        #expect(assembler.previewCalls == previewCallsBefore, "layered mode should NOT call updatePreview")
+        vm.previewManager.cancelAll()
+    }
+
     @Test func titleStyleSetterNotDraggingCallsUpdatePreview() async {
         let assembler = TestAssembler()
         assembler.trackCalls = true
