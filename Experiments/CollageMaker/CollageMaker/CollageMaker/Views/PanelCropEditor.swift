@@ -21,6 +21,11 @@ struct PanelCropEditor: View {
         viewModel.cropMap[panel.id]
     }
 
+    private var currentSaliency: SaliencyResult? {
+        guard let idx = viewModel.getEffectiveImageIndex(for: panel.id) else { return nil }
+        return viewModel.imageCoordinator.saliencyResults[idx]
+    }
+
     var body: some View {
         // Establish @Observable dependency at top of body so crop map
         // changes from canvas gestures trigger re-evaluation.
@@ -41,7 +46,8 @@ struct PanelCropEditor: View {
                                 crop: crop,
                                 containerSize: geo.size,
                                 panelGeometry: panel.geometry,
-                                panelFrame: panel.frame
+                                panelFrame: panel.frame,
+                                saliency: currentSaliency
                             )
                             .accessibilityLabel("Crop preview")
                             .accessibilityHint("Shows the portion of the image visible in the panel")
@@ -251,6 +257,7 @@ struct CropPreviewView: View {
     let containerSize: CGSize
     let panelGeometry: PanelGeometry
     let panelFrame: CGRect
+    let saliency: SaliencyResult?
 
     var body: some View {
         ZStack {
@@ -270,6 +277,13 @@ struct CropPreviewView: View {
                 .frame(width: containerSize.width, height: containerSize.height)
                 .clipped()
             }
+
+            #if DEBUG
+            if let saliency {
+                saliencyDebugOverlay(saliency: saliency)
+                    .allowsHitTesting(false)
+            }
+            #endif
         }
     }
 
@@ -350,6 +364,34 @@ struct CropPreviewView: View {
         }
         .allowsHitTesting(false)
     }
+
+    // MARK: - Saliency Debug Overlay
+
+    #if DEBUG
+    private func saliencyDebugOverlay(saliency: SaliencyResult) -> some View {
+        guard containerSize.width > 0, containerSize.height > 0 else {
+            return AnyView(EmptyView())
+        }
+        let (fittedSize, fitOffset) = FitMath.fit(imageSize, into: containerSize)
+        let previewCenter = CGPoint(
+            x: fitOffset.x + saliency.center.x / imageSize.width * fittedSize.width,
+            y: fitOffset.y + saliency.center.y / imageSize.height * fittedSize.height
+        )
+        let previewRadius = saliency.radius / imageSize.width * fittedSize.width
+
+        return AnyView(ZStack {
+            Circle()
+                .stroke(Color.green.opacity(0.5), lineWidth: 1.5)
+                .frame(width: previewRadius * 2, height: previewRadius * 2)
+                .position(previewCenter)
+
+            Circle()
+                .fill(Color.red)
+                .frame(width: 8, height: 8)
+                .position(previewCenter)
+        })
+    }
+    #endif
 
     // MARK: - Static Helpers
 

@@ -11,6 +11,7 @@
 - Inverse Transform Pitfall: Never Use `* scaleX` with Letterboxing
 - Normalized Position Coordinates
 - Verify Data Flow Before Adding Conversions
+- Visual Debug Overlay
 - CGPath Construction
 - Hexagonal Grid Layout (Pointy-Top)
 - Per-Panel Path Clipping
@@ -186,6 +187,27 @@ When adding a coordinate conversion method, **trace the value to its producer fi
 4. Only then write the conversion method
 
 **Failure mode:** If the producer already outputs pixel coordinates and the conversion multiplies by image size again, the result overflows and clamps to edges — crops appear anchored at corners instead of centered.
+
+## Visual Debug Overlay
+
+When a computed coordinate (center, origin, bounding box) should align with visible content but doesn't, draw it on the preview instead of logging. Misalignment is instantly visible; logging requires mental conversion between coordinate spaces.
+
+```swift
+#if DEBUG
+if let debugPoint {
+    let (fittedSize, fitOffset) = FitMath.fit(imageSize, into: containerSize)
+    let previewPoint = CGPoint(
+        x: fitOffset.x + debugPoint.x / imageSize.width * fittedSize.width,
+        y: fitOffset.y + debugPoint.y / imageSize.height * fittedSize.height
+    )
+    Circle().fill(Color.red).frame(width: 8, height: 8).position(previewPoint)
+}
+#endif
+```
+
+**Key:** Map the internal coordinate through the same transform chain as the rendered content (fit math, offsets, Y-flips). The overlay and content share the same coordinate space, so any offset between them is a bug in the conversion — not the eye.
+
+**When to use:** Debugging crop origins, saliency centers, face detection boxes, panel positions — any value that should land on visible content.
 
 ## CGPath Construction
 

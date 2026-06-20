@@ -35,6 +35,8 @@ actor SaliencyAnalyzer: SaliencyAnalysis {
             throw SaliencyError.invalidImage
         }
 
+        logger.debug("Saliency image: \(width)x\(height) orientation=.up (EXIF stripped, always .up)")
+
         let saliencyRequest = VNGenerateAttentionBasedSaliencyImageRequest()
         let faceRequest = VNDetectFaceRectanglesRequest()
 
@@ -48,6 +50,18 @@ actor SaliencyAnalyzer: SaliencyAnalysis {
 
         let salientObjects = (saliencyRequest.results?.first as? VNSaliencyImageObservation)?.salientObjects ?? []
         let faces = faceRequest.results ?? []
+
+        logger.debug("  Faces detected: \(faces.count)")
+        for (i, face) in faces.enumerated() {
+            let box = face.boundingBox
+            let cgX = box.midX * CGFloat(width)
+            let cgY = (1.0 - box.midY) * CGFloat(height)
+            let boxStr = String(format: "[%.3f,%.3f %.3fx%.3f]", box.minX, box.minY, box.width, box.height)
+            let cgStr = String(format: "[%.0f,%.0f]", cgX, cgY)
+            let confStr = String(format: "%.3f", face.confidence)
+            logger.debug("  Face #\(i): box=\(boxStr) cg=\(cgStr) conf=\(confStr)")
+        }
+        logger.debug("  Salient objects: \(salientObjects.count)")
 
         var points: [(x: CGFloat, y: CGFloat, weight: Float)] = []
 
@@ -89,6 +103,11 @@ actor SaliencyAnalyzer: SaliencyAnalysis {
         }
 
         let radius = max(maxDim, min(CGFloat(width), CGFloat(height)) / 6)
+
+        let centerStr = String(format: "[%.0f,%.0f]", centerX, centerY)
+        let radiusStr = String(format: "%.0f", radius)
+        let confStr = String(format: "%.3f", maxConf)
+        logger.debug("  Result: center=\(centerStr) radius=\(radiusStr) conf=\(confStr)")
 
         return SaliencyResult(
             center: CGPoint(x: centerX, y: centerY),
