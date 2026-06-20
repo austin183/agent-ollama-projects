@@ -737,3 +737,7 @@ func process() async {
     }
 }
 ```
+
+## Swift Compilation Gotchas
+
+- **Same-file extension ordering:** Swift compiles each `.swift` file as a separate compilation unit. Within a single file, an `extension` on a type from another file cannot reference types defined later in the same file. Place the extension **after** any local types it references, or move the extension to the extended type's own file (cross-file references have no ordering constraint).

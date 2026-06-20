@@ -132,3 +132,65 @@ When investigating a performance regression:
 3. **Time Profiler** — What code is running on the main thread during the slow interaction?
 4. **Thread Performance Checker** — Is non-UI work blocking the main thread?
 5. **CPU Counters** — Is the CPU bottlenecked by instruction fetch/decode stalls?
+
+## Performance Budgets and Rules
+
+### Operation Timing
+
+- Vision analysis: 50-200ms per image (faster on Apple Silicon with Neural Engine)
+- CGContext drawing at 1920x1080: < 100ms per element
+- JPEG export at 0.92 quality: ~500KB-2MB
+- Process images concurrently with `withThrowingTaskGroup`
+
+### Main Thread Timing Budgets
+
+| Interaction type | Budget | Exceeding causes |
+|---|---|---|
+| Discrete (tap, key press) | < 50ms main thread work | Hang (>100ms noticeable) |
+| Continuous (scroll, drag, animation) at 60Hz | < 5ms per frame | Hitch (frame drop) |
+| Continuous at 120Hz | < 5ms per frame | Hitch (frame drop) |
+
+**Rule:** Main thread = UI work only. All computation, I/O, and networking goes to background.
+
+### Rendering Performance Rules
+
+- **CGImage caching** -- Extract `CGImage` from `NSImage` once at load time. Repeated `nsImage.cgImage(forProposedRect:)` calls are expensive
+- **Background preview rendering** -- Move heavy CoreGraphics work to `Task.detached` with captured values, dispatch results back with `Task { @MainActor in self?.previewImage = result }`. Cancel stale tasks before starting new ones.
+- **No computed NSImage in body** -- Never create `NSImage(cgImage:size:)` in a computed property accessed from `body`. SwiftUI calls `body` frequently during layout, allocating a new `NSImage` per render cycle. Pass as a stored `let` parameter from the parent view.
+- **Never clear rendered state before async replacement** -- If a view depends on `someDict.isEmpty` to choose between rendering modes, clearing that dict before the async replacement arrives creates a blank frame. Keep stale content visible during the gap, then repopulate.
+- **Conditional rendering needs symmetric cleanup** -- When a rendering method only updates state inside a conditional (`if let overlay = config.overlay { ... }`), removing the input leaves previously rendered state visible. Add an `else` branch that explicitly clears it. This applies to overlays, backgrounds, titles, per-panel renders, and any conditionally produced output:
+
+```swift
+if let overlay = config.overlay {
+    previewManager.updateOverlay(overlay: overlay, canvasSize: ...)
+} else {
+    previewManager.overlayImage = nil
+    previewManager.overlayBlendMode = nil
+}
+```
+
+- **Multiple async rendering tasks race** -- When `updatePreview()`, `updateBackground()`, and `updatePanelPreview()` all run on separate `Task.detached` tasks, there's no ordering guarantee. If rendering mode depends on which task completed first, the mode can flip unpredictably during rapid interactions.
+- **Composite-to-layered rendering transition** -- When splitting a full composite into individual layers, every element baked into the composite needs its own rendering path. Elements without a dedicated layer become invisible in layered mode. Render each element (title, panels, effects) separately and compose in a ZStack.
+- **Property-level debounce for rapid controls** -- Slider and color picker `didSet` observers fire 30-60x/sec during drag. Use a debounced render method (cancel previous task, sleep 150ms, render) for continuous controls. Discrete controls (typing, enum picker, image selection) render immediately. Rule of thumb: >10 events/sec = debounce. See [../state/swift-concurrency.md](../state/swift-concurrency.md) for cross-boundary cancellation pattern.
+- **Throttled `@Observable` invalidation** -- When a version counter triggers full view re-evaluation, throttle its increments during high-rate input (pan/zoom gestures). Throttle fires immediately on first event, then skips until interval elapses — preserving live feedback unlike debounce. Use `ContinuousClock` + `Duration`, never `mach_absolute_time()` (returns ticks, not nanoseconds):
+
+```swift
+private var lastNotifyTime: ContinuousClock.Instant = .now
+private let notifyInterval: Duration = .milliseconds(30) // ~33fps
+
+private func throttledNotify() {
+    let now = ContinuousClock.now
+    if now - lastNotifyTime >= notifyInterval {
+        lastNotifyTime = now
+        versionCounter += 1
+    }
+}
+```
+
+- **Gesture-end notification gap** -- When per-frame notification is deferred to a debounce callback, gesture-end paths (e.g., `onEnded`, `finish*`) that cancel the debounce task will never fire the notification. Add explicit notification calls in gesture-end methods to ensure final state is visible.
+- **Dual-responsibility timer/task cleanup** -- When removing a timer or background task for performance, audit what else it did beyond its primary purpose. A timer that both commits accumulated state AND calls `endGesture()` (clearing `gestureActivePanelId`, etc.) will leave stale gesture state if only the commit is replaced. Move cleanup to the explicit gesture-end path.
+- **Gesture-end task cancellation** -- When a gesture uses a background render task (e.g., `previewDebounceTask`), cancel it in `endGesture()`. A pending render can fire after gesture end and overwrite a subsequent gesture's result. Different gesture types use different task variables and won't cancel each other automatically.
+
+### Timing API
+
+Use `ContinuousClock.now` + `Duration` for time-based logic. `ContinuousClock.Instant` survives sleep/wake and `Duration.milliseconds(30)` is self-documenting. `mach_absolute_time()` returns clock **ticks** (not nanoseconds) — the tick-to-nanos ratio varies on Apple Silicon. Comparing against hardcoded nanosecond thresholds produces incorrect throttling.

@@ -89,6 +89,13 @@ Guidance for building macOS SwiftUI desktop applications with image processing, 
 | **Menu Bar Extras** | [references/tooling/menu-bar-extra.md](references/tooling/menu-bar-extra.md) |
 | **Build, Run, Debug Scripts** | [references/tooling/build-and-run.md](references/tooling/build-and-run.md) |
 | **Performance Debugging** | [references/tooling/performance-debugging.md](references/tooling/performance-debugging.md) |
+| **Logging Quality** | [references/tooling/logging-quality.md](references/tooling/logging-quality.md) |
+
+### Debugging
+
+| Topic | Reference |
+|-------|-----------|
+| **Debugging Strategy** | [references/debugging/debugging-strategy.md](references/debugging/debugging-strategy.md) |
 
 ## Project Structure
 
@@ -125,16 +132,7 @@ AppTarget/
 
 ## Coordinate System Traps
 
-Vision, CoreGraphics, and NSImage use different origins. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) for conversion functions, EXIF mismatch fixes, canvas-to-preview mapping, normalized position storage, the producer-tracing verification pattern, hexagonal grid layout with axial coordinates, per-panel CGContext path clipping, and shear transform asymmetric coverage math.
-
-**Critical mismatches:**
-- Vision: bottom-left (0,0), normalized 0-1
-- CoreGraphics CGContext: bottom-left (0,0)
-- NSImage / SwiftUI: top-left (0,0)
-- EXIF orientation corrections shift CGImage coordinates -- strip EXIF with `NSImage(cgImage:cgImage, size: .zero)`
-- Hexagonal grid layout requires axial `(q, r)` coordinates — polar angles produce elliptical, overlapping rings. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) § "Hexagonal Grid Layout"
-
-**Before writing a coordinate conversion:** Trace the value to its producer. The producer's arithmetic is the source of truth — plan descriptions and variable names can be wrong about coordinate space. See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) § "Verify Data Flow Before Adding Conversions".
+See [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md).
 
 ## State Management
 
@@ -203,26 +201,10 @@ Several AppKit types don't conform to `Codable`. See [references/appkit/codable-
 
 See [references/state/swift-concurrency.md](references/state/swift-concurrency.md).
 
-**Key patterns:**
-- `Task { [weak self] }` -- inherits MainActor, use for ViewModel updates
-- `Task.detached` -- off MainActor, use for heavy computation
-- **`Task { [weak self] in let result = await Task.detached { ... }.value; self.prop = result }`** -- preferred pattern for @Observable state updates from background work. Cancellation propagates, no manual actor hop needed. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
-- **`withCheckedContinuation` + `queue.async`** -- when a serial `DispatchQueue` is needed for thread safety (e.g., `NSGraphicsContext.current`), expose `async` protocol methods that bridge the queue. Non-blocking, simpler callers. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
-- `defer { isProcessing = false }` -- always reset processing state
-- Cancel previous `Task` before starting new one
-- **Extract `CGImage`/`CGColor` on main thread before `Task.detached`** -- AppKit types are not thread-safe
-- **Capture `NSAttributedString` as `let` before `Task.detached`** -- not `Sendable`, same pattern as `NSColor`
-- **Computed properties on structs crossing actor boundaries evaluate on the destination thread** -- A computed `var cgColor: CGColor { nsColor.cgColor }` on a struct captured by `Task.detached` will call `.cgColor` on the background thread. Store the derived value at init time instead: `let cgColor: CGColor` assigned in `init` on MainActor. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
-- **`NSGraphicsContext.current` is NOT thread-safe** -- concurrent `Task.detached` rendering tasks can clobber each other's context. Mitigate with a serial `DispatchQueue`. See [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md)
-- **Background thread text rendering** — `NSAttributedString`/`NSMutableAttributedString` require AppKit and are not thread-safe. For `CTFrameDraw` on a background thread, use CoreFoundation C API (`CFAttributedStringCreateMutable`, `CFAttributedStringSetAttribute` with `kCTFontAttributeName`, etc.). See [references/graphics/coretext-background-rendering.md](references/graphics/coretext-background-rendering.md)
-- **`@unchecked Sendable` on model types** -- safe when non-Sendable AppKit properties (NSColor, NSAttributedString) are only accessed on a known thread. Document the justification. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
-- **Synchronous dispatch closures can't `await`** -- `RenderScheduler.render { }` takes a synchronous closure. `await` is a compile error. Mutating captured `var` fails Swift 6. Use `ThreadSafeArray` with `NSLock` + `@unchecked Sendable` for mutable state. Use `Thread.sleep(forTimeInterval:)` not `Task.sleep`. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md)
-- **Actor methods in `withThrowingTaskGroup` serialize** -- `await self.method()` hops through the actor's single-threaded executor, eliminating parallelism. Mark pure-computation methods `nonisolated` (no `self.` access, only locals/params/external APIs). See [references/state/swift-concurrency.md](references/state/swift-concurrency.md) § "`nonisolated` Actor Methods"
-
 ## Swift Compilation Gotchas
 
-- **Circular init (`self` used before initialized):** When a class needs to pass `self` to a sub-object during init, Swift blocks it. Fix: put the IUO on the sub-object's back-reference property, not the owner. Assign after init: `self.coordinator = Coordinator(...); coordinator.target = self`. See [references/state/observable-bindable.md](references/state/observable-bindable.md) § "Circular Init"
-- **Same-file extension ordering:** Swift compiles each `.swift` file as a separate compilation unit. Within a single file, an `extension` on a type from another file cannot reference types defined later in the same file. Place the extension **after** any local types it references, or move the extension to the extended type's own file (cross-file references have no ordering constraint).
+- **Circular init (`self` used before initialized):** Put the IUO on the sub-object's back-reference, not the owner. Assign after init: `self.coordinator = Coordinator(); coordinator.target = self`. See [references/state/observable-bindable.md](references/state/observable-bindable.md) § "Circular Init"
+- **Same-file extension ordering:** See [references/state/swift-concurrency.md](references/state/swift-concurrency.md) § "Swift Compilation Gotchas"
 
 ## Finder Drag Gotcha
 
@@ -330,57 +312,7 @@ See [references/ui/swiftui-overlays.md](references/ui/swiftui-overlays.md) for e
 
 ## Performance Notes
 
-- Vision analysis: 50-200ms per image (faster on Apple Silicon with Neural Engine)
-- CGContext drawing at 1920x1080: < 100ms per element
-- JPEG export at 0.92 quality: ~500KB-2MB
-- Process images concurrently with `withThrowingTaskGroup`
-- **CGImage caching** -- Extract `CGImage` from `NSImage` once at load time. Repeated `nsImage.cgImage(forProposedRect:)` calls are expensive
-- **Background preview rendering** -- Move heavy CoreGraphics work to `Task.detached` with captured values, dispatch results back with `Task { @MainActor in self?.previewImage = result }`. Cancel stale tasks before starting new ones.
-- **No computed NSImage in body** -- Never create `NSImage(cgImage:size:)` in a computed property accessed from `body`. SwiftUI calls `body` frequently during layout, allocating a new `NSImage` per render cycle. Pass as a stored `let` parameter from the parent view.
-- **Never clear rendered state before async replacement** -- If a view depends on `someDict.isEmpty` to choose between rendering modes, clearing that dict before the async replacement arrives creates a blank frame. Keep stale content visible during the gap, then repopulate.
-- **Conditional rendering needs symmetric cleanup** -- When a rendering method only updates state inside a conditional (`if let overlay = config.overlay { ... }`), removing the input leaves previously rendered state visible. Add an `else` branch that explicitly clears it. This applies to overlays, backgrounds, titles, per-panel renders, and any conditionally produced output. This is about the *existence* of clear paths, distinct from the timing rule above:
-
-```swift
-if let overlay = config.overlay {
-    previewManager.updateOverlay(overlay: overlay, canvasSize: ...)
-} else {
-    previewManager.overlayImage = nil
-    previewManager.overlayBlendMode = nil
-}
-```
-- **Multiple async rendering tasks race** -- When `updatePreview()`, `updateBackground()`, and `updatePanelPreview()` all run on separate `Task.detached` tasks, there's no ordering guarantee. If rendering mode depends on which task completed first, the mode can flip unpredictably during rapid interactions.
-- **Composite-to-layered rendering transition** -- When splitting a full composite into individual layers, every element baked into the composite needs its own rendering path. Elements without a dedicated layer become invisible in layered mode. Render each element (title, panels, effects) separately and compose in a ZStack.
-- **Property-level debounce for rapid controls** -- Slider and color picker `didSet` observers fire 30-60x/sec during drag. Use a debounced render method (cancel previous task, sleep 150ms, render) for continuous controls. Discrete controls (typing, enum picker, image selection) render immediately. Rule of thumb: >10 events/sec = debounce. See [references/state/swift-concurrency.md](references/state/swift-concurrency.md) for cross-boundary cancellation pattern.
-- **Throttled `@Observable` invalidation** -- When a version counter triggers full view re-evaluation, throttle its increments during high-rate input (pan/zoom gestures). Throttle fires immediately on first event, then skips until interval elapses — preserving live feedback unlike debounce. Use `ContinuousClock` + `Duration`, never `mach_absolute_time()` (returns ticks, not nanoseconds):
-
-```swift
-private var lastNotifyTime: ContinuousClock.Instant = .now
-private let notifyInterval: Duration = .milliseconds(30) // ~33fps
-
-private func throttledNotify() {
-    let now = ContinuousClock.now
-    if now - lastNotifyTime >= notifyInterval {
-        lastNotifyTime = now
-        versionCounter += 1
-    }
-}
-```
-
-- **Gesture-end notification gap** -- When per-frame notification is deferred to a debounce callback, gesture-end paths (e.g., `onEnded`, `finish*`) that cancel the debounce task will never fire the notification. Add explicit notification calls in gesture-end methods to ensure final state is visible.
-- **Dual-responsibility timer/task cleanup** -- When removing a timer or background task for performance, audit what else it did beyond its primary purpose. A timer that both commits accumulated state AND calls `endGesture()` (clearing `gestureActivePanelId`, etc.) will leave stale gesture state if only the commit is replaced. Move cleanup to the explicit gesture-end path.
-- **Gesture-end task cancellation** -- When a gesture uses a background render task (e.g., `previewDebounceTask`), cancel it in `endGesture()`. A pending render can fire after gesture end and overwrite a subsequent gesture's result. Different gesture types use different task variables and won't cancel each other automatically.
-
-### Main Thread Timing Budgets
-
-| Interaction type | Budget | Exceeding causes |
-|---|---|---|
-| Discrete (tap, key press) | < 50ms main thread work | Hang (>100ms noticeable) |
-| Continuous (scroll, drag, animation) at 60Hz | < 5ms per frame | Hitch (frame drop) |
-| Continuous at 120Hz | < 5ms per frame | Hitch (frame drop) |
-
-**Rule:** Main thread = UI work only. All computation, I/O, and networking goes to background. See [references/tooling/performance-debugging.md](references/tooling/performance-debugging.md) for Instruments templates, sanitizers, OSSignpost, and profiling workflows.
-
-**Timing API:** Use `ContinuousClock.now` + `Duration` for time-based logic. `ContinuousClock.Instant` survives sleep/wake and `Duration.milliseconds(30)` is self-documenting. `mach_absolute_time()` returns clock **ticks** (not nanoseconds) — the tick-to-nanos ratio varies on Apple Silicon. Comparing against hardcoded nanosecond thresholds produces incorrect throttling.
+See [references/tooling/performance-debugging.md](references/tooling/performance-debugging.md) for budgets, rendering rules, timing APIs, Instruments templates, and sanitizers.
 
 ## CLI Build and Launch
 
@@ -400,18 +332,6 @@ TEST_DIR=/absolute/path open "$HOME/Library/Developer/Xcode/DerivedData/AppName-
 - When debugging GUI behavior without app visibility, write ViewModel integration tests with real data
 - **Sandbox blocks arbitrary file reads** — `FileManager` silently returns `nil` for paths outside the sandbox. If test infrastructure reads fixtures from env vars, set `ENABLE_APP_SANDBOX = NO` in the Debug config. See [references/testing/testing-patterns.md](references/testing/testing-patterns.md) § "App Sandbox Blocks Test File Access"
 
-## HIG Quick Reference
-
-| Topic | Reference |
-|-------|-----------|
-| Accessibility | [references/conventions/hig-accessibility.md](references/conventions/hig-accessibility.md) |
-| Alerts and Feedback | [references/conventions/hig-alerts-feedback.md](references/conventions/hig-alerts-feedback.md) |
-| Keyboard Shortcuts | [references/conventions/hig-keyboard-shortcuts.md](references/conventions/hig-keyboard-shortcuts.md) |
-| Context Menus | [references/conventions/hig-context-menus.md](references/conventions/hig-context-menus.md) |
-| Progress Indicators | [references/conventions/hig-progress-indicators.md](references/conventions/hig-progress-indicators.md) |
-| Undo and Redo | [references/conventions/hig-undo-redo.md](references/conventions/hig-undo-redo.md) |
-| Sidebars | [references/conventions/hig-sidebars.md](references/conventions/hig-sidebars.md) |
-
 ## Implementation Phases
 
 1. **Models** -- Define data structs first (Identifiable, Equatable, Codable). Include `id: UUID` in layout items
@@ -425,35 +345,8 @@ TEST_DIR=/absolute/path open "$HOME/Library/Developer/Xcode/DerivedData/AppName-
 
 ## Debugging Strategy
 
-When GUI behavior is unclear (agent cannot observe running app):
-
-1. **Write ViewModel integration tests** with real data exercising the same code paths. If tests pass, the bug is in the view layer.
-2. **Check state wrapper choices** -- `@State` with reference types, `@ObservedObject` stored properties, and missing `@EnvironmentObject` injection are the most common culprits
-3. **Check @Observable property types** -- computed properties are invisible to `@Observable`. If a binding "works locally" but dependent views don't update, the property is likely computed. Also check that the view uses `@Bindable var`, not `let`
-4. **Check @Observable delegation chains** -- If a computed property delegates to a sub-manager (e.g., `var cropMap { cropManager.cropMap }`), SwiftUI won't observe changes. Fix: make the delegate `@Observable` AND have views read the delegate directly (`vm.cropManager.cropMap`, not `vm.cropMap`). Both parts are required. Alternative: use a **version counter** -- private `Int` read in the computed getter, incremented at mutation sites -- to preserve abstraction.
-5. **Check @Bindable nested struct mutations** -- If a binding like `$viewModel.titleStyle.backgroundColor` "works" (value changes) but side effects in `didSet` don't fire, the binding is likely bypassing the parent setter via `withMutation`. Fix: use explicit setter methods with `Binding(get:set:)`.
-6. **Check for spurious undo entries at launch** -- `didSet` fires during `init` property assignment, registering unwanted undo actions and triggering redundant persistence. Use an `isInitializing` guard. See [references/state/observable-bindable.md](references/state/observable-bindable.md)
-7. **Check `.onChange` vs `.onReceive`** -- `.onChange(of:)` loses its previous-value tracker when SwiftUI recreates view struct. Use `.onReceive(viewModel.$property.dropFirst())` for reliable reaction to `@Published` changes.
-8. **Check `@State` UUID-cache staleness** -- If hit-testing, overlays, or gesture highlights fail intermittently after operations that regenerate collections (layout changes, image swaps), the `@State [UUID: CGRect]` cache may be stale for one render cycle. Fix: compute frames on-the-fly in `GeometryReader` closure instead of caching in `@State`. See [references/state/observable-bindable.md](references/state/observable-bindable.md)
-9. **Check CGRect equality** -- lookups by `frame == targetRect` may fail due to `CGFloat` precision errors. Use `id`-based lookup instead.
-10. **Extract view-local mutable state** to `@MainActor final class` + `@StateObject` when the view needs timers, debouncers, or other reference-type members
-11. **Runtime debugging:** `print()` goes to stdout (not visible in `log stream`). Use `os_log` for unified log, or run app from terminal to see `print()` output.
-12. **Visual element "doesn't appear" diagnostic:** When rendering code looks correct but nothing shows up:
-     a. Add `Logger` at pipeline boundaries -- file load, CGImage extraction, style branch, draw call
-     b. Log actual values, not just nil/non-nil -- dimensions, opacity, color components
-     c. Check `UserDefaults` defaults -- typed getters (`.double`, `.integer`, `.bool`) return zero for missing keys
-     d. Check thread affinity -- AppKit methods (`NSImage.cgImage`, `NSColor.cgColor`) called on background threads may silently return `nil`
-15. **Check computed properties on structs crossing actor boundaries** — A computed `var cgColor: CGColor { nsColor.cgColor }` on a struct captured by `Task.detached` evaluates on the background thread. If colors are corrupted or crashes occur in rendering, verify that `CGColor` values are stored at init time on MainActor, not computed lazily.
-16. **NSColorWell color stale** -- `NSColor ==` compares `CGColor` values, which differ across color spaces. Never guard `updateNSView` with `!=`. Always assign `well.color = color` unconditionally. See [references/appkit/nscolorwell.md](references/appkit/nscolorwell.md)
-17. **NSColorWell target/action lost** -- `NSColorWell` may reset `target`/`action` during view hierarchy reconfiguration. Re-set both in `updateNSView` every cycle. See [references/appkit/nscolorwell.md](references/appkit/nscolorwell.md)
-18. **NSTextView re-entrancy loop** -- If `textDidChange` normalizes text into a binding, the SwiftUI re-render may call `updateNSView`, which mutates `typingAttributes`, firing another `textDidChange`. Fix with coordinator guard flag + early return in `updateNSView`. See [references/appkit/nstextview-binding.md](references/appkit/nstextview-binding.md)
-19. **Cross-view `updateNSView` cascade** -- ANY `@Observable` property change calls `updateNSView` on ALL `NSViewRepresentable`s in the tree. If an unrelated text view's `updateNSView` performs unconditional mutations (e.g., `typingAttributes` assignment), it can trigger `textDidChange` → binding write → re-render loop. Symptom: color picker frozen on white/full opacity after editing text. Fix: guard ALL mutations in `updateNSView` with change-detection, not just the self-referential path. See [references/appkit/nstextview-binding.md](references/appkit/nstextview-binding.md) § "Cross-View `updateNSView` Cascade"
-20. **Text overlay size doesn't match rendered text** -- SwiftUI `Text` and `NSAttributedString.draw` use different font engines. Even with the same font family and point size, the rendered size will differ. If a gesture overlay appears misaligned or wrong-sized compared to CG-rendered text, the fix is not to tweak the SwiftUI font — it's to use a debounced CG render of the same layer. See [references/gestures/swiftui-gestures.md](references/gestures/swiftui-gestures.md)
-21. **Cached value is `nil` despite populated input** -- Multi-field cache (result + key + input) only cleared the result field, leaving keys stale. On restore, keys match and return stale `nil`. Fix: clear ALL fields, or use defensive guard (`if let cachedResult = cachedResult, ...`).
-22. **Vertex-count guard propagation** -- A `guard vertices.count == N` in rendering code (e.g., `computeQuadInContainer`) will have the same constraint in hit-testing (`detectDragMode`), gesture handles (`visibleRegionHandles`), and overlay code. Fixing the guard in one place without searching all four categories leaves non-quad panels rendering correctly but rejecting all gestures. Search for the guard pattern across all files, not just the one mentioned in the plan.
+See [references/debugging/debugging-strategy.md](references/debugging/debugging-strategy.md).
 
 ## Logging Quality
 
-- **Logging utility extraction** -- Private string formatting helpers (`rectStr`, `pointStr`, `sizeStr`) defined in view files should be moved to a shared `LoggingExtensions.swift` file as `internal` functions. Avoids duplication across files that need debug logging.
-- **Error logging for silent failures** -- Always add `logger.error` before returning `nil` from rendering methods (e.g., `createBitmapContext` returning `nil`). Silent failures are invisible in production.
-- **Redundant `privacy: .public`** -- `"\("\(value)", privacy: .public)"` has no effect — the outer string interpolation swallows the OSLog privacy annotation. Use `"\(value)"` directly or `"\(value, privacy: .public)"` at the top level.
+See [references/tooling/logging-quality.md](references/tooling/logging-quality.md).
