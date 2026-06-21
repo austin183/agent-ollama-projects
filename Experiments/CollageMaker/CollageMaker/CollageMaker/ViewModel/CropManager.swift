@@ -97,7 +97,9 @@ final class CropManager {
             var sourceRect: CGRect
             if let sal = saliency {
                 let origin = sal.cropOrigin(for: image.size, cropSize: panelSize)
-                sourceRect = CGRect(origin: origin, size: panelSize)
+                var rect = CGRect(origin: origin, size: panelSize)
+                rect = rect.intersection(CGRect(origin: .zero, size: image.size))
+                sourceRect = rect
             } else {
                 sourceRect = computeBestFitSource(imageSize: image.size, panelSize: panelSize)
             }
@@ -665,24 +667,4 @@ struct CoordinateConverter {
         return CGRect(x: cgX, y: cgY, width: cgW, height: cgH)
     }
 
-    /// Swaps x/y axes of a CG pixel point to compensate for VNImageRequestHandler's
-    /// 90-degree buffer rotation on portrait images.
-    /// - Parameters:
-    ///   - cgPoint: Point in CG pixel coordinates (top-left origin).
-    ///   - imageSize: Pixel dimensions of the source image.
-    /// - Returns: Swapped point, or the original if the image is not portrait.
-    static func applyPortraitSwap(_ cgPoint: CGPoint, imageSize: CGSize) -> CGPoint {
-        guard imageSize.width < imageSize.height else { return cgPoint }
-        return CGPoint(x: cgPoint.y, y: cgPoint.x)
-    }
-
-    /// Full conversion: Vision normalized point → CG pixel coordinates with portrait swap.
-    /// - Parameters:
-    ///   - visionPoint: Normalized point in Vision coordinate space (bottom-left origin).
-    ///   - imageSize: Pixel dimensions of the source image.
-    /// - Returns: Point in CG pixel coordinates (top-left origin), with portrait axis swap applied.
-    static func visionToCGWithPortrait(_ visionPoint: CGPoint, imageSize: CGSize) -> CGPoint {
-        let cgPoint = visionToCG(visionPoint, imageSize: imageSize)
-        return applyPortraitSwap(cgPoint, imageSize: imageSize)
-    }
 }

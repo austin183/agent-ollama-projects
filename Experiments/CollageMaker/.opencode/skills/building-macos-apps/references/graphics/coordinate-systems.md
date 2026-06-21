@@ -17,6 +17,7 @@
 - Per-Panel Path Clipping
 - Polygon Clipping to Canvas Bounds
 - Visible Source Bounds from Clipped Polygon
+- Source Rect Bounds Clamping
 
 Vision, CoreGraphics, and NSImage use different origins:
 
@@ -430,3 +431,23 @@ To cover the full canvas `[0, W]` at every y-level, the unsheared left edge of t
 **Verification:** At y=H, sheared left edge = `centerOffset + H·tan(θ)`. For this to equal 0: `centerOffset = -H·tan(θ)`.
 
 **Common pitfall:** Plan reviews may claim `centerOffset = -shearOffset/2` is correct by reasoning about the "bottom-left canvas corner." But they confuse the top-left sheared corner (`centerOffset + H·s`) with the bottom-left (`centerOffset` at y=0, no shear). In CGContext bottom-left coords, y=H is the bottom edge, which is the one that needs to reach x=0.
+
+## Source Rect Bounds Clamping
+
+When constructing a source rect from a panel size, **always clamp to image bounds**. Panel sizes come from layout math and canvas dimensions, not from the image. A large panel on a small image produces an oversized source rect.
+
+```swift
+var sourceRect = CGRect(origin: origin, size: panelSize)
+sourceRect = sourceRect.intersection(CGRect(origin: .zero, size: image.size))
+```
+
+`CGRect.intersection` clamps all four edges in one call. If the rect is fully within bounds, it is unchanged. If it extends beyond, the intersection shrinks it to fit.
+
+**Why manual clamping fails:** Clamping only the origin with `max(0, min(origin, imageSize - cropSize))` sets the origin to `0` when `cropSize > imageSize`, but leaves the size oversized. The rect still extends beyond the image.
+
+**When to apply:**
+- `computeCropsFromSaliency` — saliency-based crop initialization
+- Any code path that creates a `sourceRect` from a panel size
+- **Already safe:** `FitMath.sourceRect` and `computeBestFitSource` clamp internally
+
+**Testing:** Use images smaller than the panel size to expose missing clamping. The default 100x100 test image catches this; larger images mask the bug.

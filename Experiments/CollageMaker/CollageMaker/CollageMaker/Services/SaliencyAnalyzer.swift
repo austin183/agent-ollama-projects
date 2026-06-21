@@ -50,14 +50,14 @@ actor SaliencyAnalyzer: SaliencyAnalysis {
 
         let salientObjects = (saliencyRequest.results?.first as? VNSaliencyImageObservation)?.salientObjects ?? []
         let faces = faceRequest.results ?? []
+        let imageSize = CGSize(width: width, height: height)
 
         logger.debug("  Faces detected: \(faces.count)")
         for (i, face) in faces.enumerated() {
             let box = face.boundingBox
-            let cgX = box.midX * CGFloat(width)
-            let cgY = (1.0 - box.midY) * CGFloat(height)
+            let cg = CoordinateConverter.visionToCG(CGPoint(x: box.midX, y: box.midY), imageSize: imageSize)
             let boxStr = String(format: "[%.3f,%.3f %.3fx%.3f]", box.minX, box.minY, box.width, box.height)
-            let cgStr = String(format: "[%.0f,%.0f]", cgX, cgY)
+            let cgStr = String(format: "[%.0f,%.0f]", cg.x, cg.y)
             let confStr = String(format: "%.3f", face.confidence)
             logger.debug("  Face #\(i): box=\(boxStr) cg=\(cgStr) conf=\(confStr)")
         }
@@ -67,16 +67,14 @@ actor SaliencyAnalyzer: SaliencyAnalysis {
 
         for obj in salientObjects {
             let box = obj.boundingBox
-            let cx = box.midX * CGFloat(width)
-            let cy = (1.0 - box.midY) * CGFloat(height)
-            points.append((cx, cy, obj.confidence))
+            let cg = CoordinateConverter.visionToCG(CGPoint(x: box.midX, y: box.midY), imageSize: imageSize)
+            points.append((cg.x, cg.y, obj.confidence))
         }
 
         for face in faces {
             let box = face.boundingBox
-            let cx = box.midX * CGFloat(width)
-            let cy = (1.0 - box.midY) * CGFloat(height)
-            points.append((cx, cy, max(face.confidence, 0.9)))
+            let cg = CoordinateConverter.visionToCG(CGPoint(x: box.midX, y: box.midY), imageSize: imageSize)
+            points.append((cg.x, cg.y, max(face.confidence, 0.9)))
         }
 
         if points.isEmpty {

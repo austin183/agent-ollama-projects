@@ -27,11 +27,11 @@ import Testing
         #expect(origin.y <= 120)
     }
 
-    @Test func cropOriginPortraitSwap() {
-        let result = SaliencyResult(center: CGPoint(x: 150, y: 100), radius: 30, confidence: 0.9)
+    @Test func cropOriginPortraitNoSwap() {
+        let result = SaliencyResult(center: CGPoint(x: 30, y: 100), radius: 30, confidence: 0.9)
         let origin = result.cropOrigin(for: CGSize(width: 100, height: 200), cropSize: CGSize(width: 80, height: 80))
-        #expect(origin.x >= 0)
-        #expect(origin.y >= 0)
+        #expect(origin.x == 0)
+        #expect(origin.y == 60)
     }
 
     @Test func cropOriginWithLandscapeImage() {
