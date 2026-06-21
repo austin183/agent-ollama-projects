@@ -540,6 +540,7 @@ When migrating from `ObservableObject` to `@Observable`:
 10. **@Bindable nested struct mutations bypass `didSet`** — Bindings to nested struct properties (e.g., `$viewModel.titleStyle.backgroundColor`) may use `withMutation` internally, skipping the parent property's `didSet`. Use explicit setter methods with manual `Binding(get:set:)` when side effects are required.
 11. **Multi-field cache invalidation** — Every code path that clears a multi-field cache (result + key + input) must clear ALL fields. Leaving key fields stale causes the cache to return stale `nil` on restore. Prefer the defensive guard pattern: `if let cachedResult = cachedResult, ...` — if the result is `nil`, the cache always misses.
 12. **Gesture hot path caching** — Move expensive computation (CoreText, image processing) to a cached ViewModel method. Keep cheap math in a computed property that reads the cache. Position changes during drag recompute the cheap math but reuse the cached expensive result.
+13. **Body re-evaluation cascades** — High-frequency gesture state (e.g., `DragGesture.onChanged`) invalidates all `@Observable` observers or the parent's body if using `@State`. Fix: extract the state into a self-contained sibling struct with local `@State`, sync to ViewModel once on `onEnded`. Only the isolated struct's body re-evaluates.
 
 ## Extracting Managers from @Observable ViewModels
 
@@ -670,6 +671,92 @@ private var titleFrame: CGRect? { viewModel.cachedFrame }
 
 **Key insight:** Position changes during drag recompute the `CGRect` (cheap math) but reuse the cached expensive result. Layout/style changes invalidate the cache and trigger fresh computation.
 
+## Body Re-evaluation Cascades During Gestures
+
+When a gesture updates state at high frequency (~60 fps), every state mutation triggers SwiftUI body re-evaluations. The scope of those re-evaluations depends on where the state lives.
+
+### The Problem
+
+Writing to an `@Observable` property on every `DragGesture.onChanged` tick fires `objectWillChange` each time. All `@Bindable` observers re-render, including sibling views that don't depend on the changed property. An expensive sibling (e.g., a `GeometryReader` with a panel overlay tree) re-evaluates ~60 times per drag, causing visible flicker.
+
+### State Location vs. Re-evaluation Scope
+
+| State Location | Invalidates | Sibling Re-evaluates? |
+|---|---|---|
+| `@Observable` property | All `@Bindable` observers | Yes |
+| `@State` on parent view | Parent's body | Yes |
+| `@State` on isolated struct | Only that struct's body | **No** |
+| AppKit layout (e.g., `NSSplitView`) | Layout pass only | No |
+
+**Why `@State` on the parent doesn't help:** `@State` mutations invalidate the view struct they're declared on. If that struct's body includes a sibling view, the sibling re-evaluates regardless of whether it reads the changed `@State`.
+
+### The Fix — Struct Isolation + Sync-on-Release
+
+Extract the gesture-driven state into a self-contained struct. During the gesture, state lives in local `@State`. On `onEnded`, sync the final value to the `@Observable` ViewModel once.
+
+```swift
+// Parent view — never re-evaluates during drag
+struct ContentView: View {
+    var body: some View {
+        HStack(spacing: 0) {
+            ExpensiveEditorView(viewModel: viewModel)  // not re-evaluated
+            if !isCollapsed {
+                ResizableDrawer(viewModel: viewModel)   // isolated
+            }
+        }
+    }
+}
+
+// Isolated struct — only this body re-evaluates per drag tick
+struct ResizableDrawer: View {
+    @Bindable var viewModel: CollageViewModel
+    @State private var drawerWidth: CGFloat = 300
+
+    var body: some View {
+        HStack(spacing: 0) {
+            resizeHandle
+            detailPanel.frame(width: drawerWidth)
+        }
+    }
+
+    private var resizeHandle: some View {
+        Rectangle()
+            .gesture(
+                DragGesture()
+                    .onChanged { _ in drawerWidth = ... }  // only ResizableDrawer.body invalidates
+                    .onEnded { _ in viewModel.drawerWidth = drawerWidth }  // sync once on release
+            )
+    }
+}
+```
+
+### When to Use Struct Isolation
+
+Extract a self-contained struct when all of the following are true:
+1. A gesture or animation updates state at high frequency (~60 fps)
+2. The state change triggers `@Observable` or `@State` invalidations
+3. A sibling view has an expensive body (e.g., `GeometryReader`, complex overlays)
+4. The sibling doesn't depend on the changing state
+
+### Diagnostic Clues for Cascade Flicker
+
+If a view flickers during a gesture but the gesture target itself looks fine:
+1. The flickering view is re-evaluating its body unnecessarily
+2. Check if the gesture updates `@Observable` state — every mutation invalidates all observers
+3. Check if the gesture updates `@State` on a parent view — all children re-evaluate
+4. The fix is struct isolation: move the state to a sibling struct
+
+### Cursor Feedback (macOS-specific)
+
+`.cursor()` modifier is **unavailable** in macOS SwiftUI. Use `NSCursor.push()` / `NSCursor.pop()` in `onHover`:
+
+```swift
+.onHover { hovering in
+    if hovering { NSCursor.resizeLeftRight.push() }
+    else { NSCursor.pop() }
+}
+```
+
 ## @State Cache Staleness with UUID Collections
 
 When a view caches derived data in `@State` keyed by UUIDs (e.g., `[UUID: CGRect]` for panel frames), and the source collection can be regenerated with **new UUIDs**, the cache becomes stale for one render cycle. The `.onChange` that updates the cache fires *after* the first re-render body evaluation.
@@ -709,3 +796,4 @@ GeometryReader { geometry in
 - **@Bindable nested struct mutations bypass `didSet`** — Bindings like `$viewModel.titleStyle.backgroundColor` may use `withMutation` internally, skipping the parent property's `didSet`. Side effects (e.g., `updatePreview()`) won't fire. Fix: use explicit setter methods with `Binding(get:set:)`.
 - **Multi-field cache partial clear** — Clearing only the result field of a multi-field cache (result + key + input) leaves keys stale. On restore, the keys match and the cache returns stale `nil`. Fix: clear ALL fields, or use defensive guard (`if let cachedResult = cachedResult, ...`).
 - **Expensive computed in gesture hot path** — `@Observable` has no path-based granularity — any tracked property change triggers full body re-evaluation. During 33fps gesture loops, expensive computation in computed properties causes hitching. Fix: cache expensive work in a ViewModel method, expose cheap math via computed property.
+- **Gesture-driven body re-evaluation cascade** — Updating `@Observable` state on every `DragGesture.onChanged` tick (~60fps) invalidates all `@Bindable` observers, causing sibling views to re-render unnecessarily. Using `@State` on the parent view has the same problem — the parent's body re-evaluates, including all children. Fix: extract the gesture state into a self-contained sibling struct with local `@State`, sync to ViewModel once on `onEnded`.

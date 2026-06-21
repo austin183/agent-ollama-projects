@@ -24,7 +24,7 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 if !isDetailCollapsed {
-                    detail
+                    ResizableDrawer(viewModel: viewModel)
                 }
             }
             .frame(minWidth: 400, minHeight: 300)
@@ -121,6 +121,27 @@ struct ContentView: View {
         }
     }
 
+}
+
+struct ResizableDrawer: View {
+    @Bindable var viewModel: CollageViewModel
+    @State private var drawerWidth: CGFloat = 300
+    @State private var rightDrawerStartWidth: CGFloat = 0
+    @State private var isHandleHovered = false
+
+    init(viewModel: CollageViewModel) {
+        self.viewModel = viewModel
+        _drawerWidth = State(initialValue: viewModel.rightDrawerWidth)
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            resizeHandle
+            detail
+                .frame(width: drawerWidth)
+        }
+    }
+
     private var detail: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -134,5 +155,37 @@ struct ContentView: View {
             }
             .frame(maxWidth: .infinity, alignment: .top)
         }
+    }
+
+    private var resizeHandle: some View {
+        Rectangle()
+            .fill(isHandleHovered
+                  ? Color.secondary.opacity(0.6)
+                  : Color.secondary.opacity(0.3))
+            .frame(width: 4)
+            .contentShape(Rectangle())
+            .onHover { hovering in
+                isHandleHovered = hovering
+                if hovering {
+                    NSCursor.resizeLeftRight.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        if rightDrawerStartWidth == 0 {
+                            rightDrawerStartWidth = drawerWidth
+                        }
+                        let newWidth = rightDrawerStartWidth - value.translation.width
+                        drawerWidth = max(200, min(800, newWidth))
+                    }
+                    .onEnded { _ in
+                        viewModel.rightDrawerWidth = drawerWidth
+                        viewModel.debouncedSave()
+                        rightDrawerStartWidth = 0
+                    }
+            )
     }
 }

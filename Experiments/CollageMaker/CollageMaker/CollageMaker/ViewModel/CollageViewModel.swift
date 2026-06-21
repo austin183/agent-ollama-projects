@@ -223,6 +223,8 @@ final class CollageViewModel {
         }
     }
 
+    var rightDrawerWidth: CGFloat = 300
+
     var exportQuality: Double = 0.92 {
         didSet {
             registerUndo(oldValue: oldValue, actionName: "Change Export Quality") { $0.exportQuality = oldValue }
@@ -466,6 +468,7 @@ final class CollageViewModel {
         layoutManager.doubleExposureMaskImage = bundle.doubleExposureMaskImage
         layoutManager.diagonalSliceAngle = bundle.diagonalSliceAngle
         layoutManager.hexagonalSpacing = bundle.hexagonalSpacing
+        self.rightDrawerWidth = bundle.rightDrawerWidth
         isInitializing = false
     }
 

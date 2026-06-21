@@ -174,6 +174,7 @@ var titleStyle: TitleStyle = .default {
 - **`NSAttributedString.isEqual(_:)`** — When caching on attributed string content, use `isEqual(_:)` instead of comparing `.string`. The latter misses attribute changes (bold, italic, font swap)
 - **Multi-field cache invalidation** — Every code path that clears a multi-field cache (result + key + input) must clear ALL fields. Leaving keys stale causes the cache to return stale `nil` on restore. Prefer defensive guard: `if let cachedResult = cachedResult, ...`. See [references/state/observable-bindable.md](references/state/observable-bindable.md)
 - **Gesture hot path caching** — `@Observable` has no path-based granularity for computed properties. Cache expensive computation (CoreText layout) in ViewModel method; keep cheap math (frame from position) in computed property. Position changes during drag reuse cached result. See [references/state/observable-bindable.md](references/state/observable-bindable.md)
+- **Body re-evaluation cascades** — High-frequency gesture state (e.g., `DragGesture.onChanged`) invalidates all `@Bindable` observers. Fix: extract state into a self-contained sibling struct with local `@State`, sync to ViewModel once on `onEnded`. Only the isolated struct re-evaluates. See [references/state/observable-bindable.md](references/state/observable-bindable.md) § "Body Re-evaluation Cascades During Gestures"
 
 ### @ObservableObject (legacy, still valid)
 

@@ -30,6 +30,7 @@ struct PersistenceBundle {
     var doubleExposureMaskImagePath: String?
     var diagonalSliceAngle: CGFloat
     var hexagonalSpacing: CGFloat
+    var rightDrawerWidth: CGFloat
 }
 
 /// Centralized UserDefaults persistence for CollageViewModel.
@@ -58,6 +59,7 @@ final class UserDefaultsPersistence {
         static let doubleExposureMaskImagePath = "doubleExposureMaskImagePath"
         static let diagonalSliceAngle = "diagonalSliceAngle"
         static let hexagonalSpacing = "hexagonalSpacing"
+        static let rightDrawerWidth = "rightDrawerWidth"
 
         // Export
         static let defaultExportFolder = "defaultExportFolder"
@@ -96,6 +98,7 @@ final class UserDefaultsPersistence {
         defaults.set(Double(viewModel.doubleExposureMaskOpacity), forKey: Keys.doubleExposureMaskOpacity)
         defaults.set(Double(viewModel.diagonalSliceAngle), forKey: Keys.diagonalSliceAngle)
         defaults.set(Double(viewModel.hexagonalSpacing), forKey: Keys.hexagonalSpacing)
+        defaults.set(Double(viewModel.rightDrawerWidth), forKey: Keys.rightDrawerWidth)
 
         if let path = viewModel.backgroundImagePath {
             defaults.set(path, forKey: Keys.backgroundImagePath)
@@ -147,6 +150,12 @@ final class UserDefaultsPersistence {
         let (doubleExposureMaskImage, doubleExposureMaskImagePath) = loadDoubleExposureMaskImage()
         let diagonalSliceAngle = CGFloat(defaults.double(forKey: Keys.diagonalSliceAngle))
         let hexagonalSpacing = CGFloat(defaults.double(forKey: Keys.hexagonalSpacing))
+        let rightDrawerWidth: CGFloat
+        if defaults.object(forKey: Keys.rightDrawerWidth) != nil {
+            rightDrawerWidth = CGFloat(defaults.double(forKey: Keys.rightDrawerWidth))
+        } else {
+            rightDrawerWidth = 300
+        }
 
         return PersistenceBundle(
             layoutStyle: layoutStyle,
@@ -167,7 +176,8 @@ final class UserDefaultsPersistence {
             doubleExposureMaskImage: doubleExposureMaskImage,
             doubleExposureMaskImagePath: doubleExposureMaskImagePath,
             diagonalSliceAngle: diagonalSliceAngle,
-            hexagonalSpacing: hexagonalSpacing
+            hexagonalSpacing: hexagonalSpacing,
+            rightDrawerWidth: rightDrawerWidth
         )
     }
 

@@ -140,3 +140,4 @@ Track active mode with a single `@State` enum (e.g., `enum ResizeMode { case mov
 
 - **`CGFloat.greatestFiniteMagnitude` requires explicit type** — `.greatestFiniteMagnitude` alone is ambiguous between `Float` and `Double`. Always use `CGFloat.greatestFiniteMagnitude`.
 - **Contraction/expansion branch breaks corner resize** — Branching on `delta.width <= 0 && delta.height <= 0` to distinguish shrinking from expanding doesn't work for bottom-left and top-right corners, where one delta is positive and the other negative. Use `min(anchor, cursor)` + `abs(cursor - anchor)` for a uniform bounding box across all four corners.
+- **`.cursor()` modifier unavailable in macOS** — macOS SwiftUI has no `.cursor()` modifier. Use `NSCursor.push()` / `NSCursor.pop()` in `onHover` instead: `.onHover { hovering in if hovering { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() } }`
