@@ -8,11 +8,12 @@ struct PanelsOverlayView: View {
 
     var body: some View {
         if viewModel.isLayeredMode {
-            ForEach(viewModel.panels) { panel in
+            ForEach(Array(viewModel.panels.enumerated()), id: \.element.id) { index, panel in
                 PanelOverlay(
                     panel: panel,
                     scaledFrame: panelFrames[panel.id],
-                    viewModel: viewModel
+                    viewModel: viewModel,
+                    panelIndex: index
                 )
             }
 

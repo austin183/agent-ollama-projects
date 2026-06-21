@@ -382,6 +382,10 @@ final class CollageViewModel {
         exportManager.dismissSuccess()
     }
 
+    func cancelExport() {
+        exportManager.exportTask?.cancel()
+    }
+
     func debouncedSave() {
         debouncer.debounce(id: "save", delay: .milliseconds(300)) { [weak self] in
             guard let self else { return }

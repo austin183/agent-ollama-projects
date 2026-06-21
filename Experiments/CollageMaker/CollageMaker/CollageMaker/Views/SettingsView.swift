@@ -101,6 +101,7 @@ struct SettingsView: View {
                         Text(style.title).tag(style.rawValue)
                     }
                 }
+                .accessibilityLabel("Default layout")
 
                 VStack(alignment: .leading) {
                     HStack {
@@ -111,6 +112,8 @@ struct SettingsView: View {
                     }
                     .font(.caption)
                     Slider(value: $defaultGutter, in: 0...20, step: 1)
+                        .accessibilityLabel("Default gutter")
+                        .accessibilityValue("\(Int(defaultGutter)) points")
                 }
             }
         }
@@ -127,6 +130,7 @@ struct SettingsView: View {
                     Text("Gradient").tag("gradient")
                 }
                 .pickerStyle(.segmented)
+                .accessibilityLabel("Background style")
 
                 if backgroundStyleRaw == .solid {
                     HStack {
@@ -134,6 +138,7 @@ struct SettingsView: View {
                         Spacer()
                         UserDefaultsColorView(color: $solidColor, key: UserDefaultsPersistence.Keys.backgroundColor, defaultValue: .black)
                             .frame(width: 32, height: 22)
+                            .accessibilityLabel("Background color")
                     }
                 } else if backgroundStyleRaw == .gradient {
                     HStack {
@@ -141,6 +146,7 @@ struct SettingsView: View {
                         Spacer()
                         UserDefaultsColorView(color: $gradientStart, key: UserDefaultsPersistence.Keys.gradientStartColor, defaultValue: .black)
                             .frame(width: 32, height: 22)
+                            .accessibilityLabel("Gradient start color")
                     }
 
                     HStack {
@@ -148,6 +154,7 @@ struct SettingsView: View {
                         Spacer()
                         UserDefaultsColorView(color: $gradientEnd, key: UserDefaultsPersistence.Keys.gradientEndColor, defaultValue: .darkGray)
                             .frame(width: 32, height: 22)
+                            .accessibilityLabel("Gradient end color")
                     }
 
                     VStack(alignment: .leading) {
@@ -159,6 +166,8 @@ struct SettingsView: View {
                         }
                         .font(.caption)
                         Slider(value: $gradientAngleValue, in: 0...360, step: 1)
+                            .accessibilityLabel("Gradient angle")
+                            .accessibilityValue("\(Int(gradientAngleValue)) degrees")
                             .onChange(of: gradientAngleValue) { _, newValue in
                                 UserDefaults.standard.set(newValue, forKey: UserDefaultsPersistence.Keys.gradientAngle)
                             }
@@ -179,6 +188,7 @@ struct SettingsView: View {
             Section("Title Defaults") {
                 TextEditor(text: $defaultTitle)
                     .frame(minHeight: 80)
+                    .accessibilityLabel("Default title text")
 
                 displayFontPicker
 
@@ -191,6 +201,8 @@ struct SettingsView: View {
                     }
                     .font(.caption)
                     Slider(value: $defaultFontSize, in: 12...120, step: 1)
+                        .accessibilityLabel("Default font size")
+                        .accessibilityValue("\(Int(defaultFontSize)) points")
                 }
             }
         }
@@ -208,6 +220,7 @@ struct SettingsView: View {
                 defaultFontFamily = $0 == "(System Default)" ? "" : $0
             }
         ))
+        .accessibilityLabel("Default font family")
     }
 
     // MARK: - Export Tab
@@ -228,6 +241,7 @@ struct SettingsView: View {
                             }
                         }
                     }
+                    .accessibilityLabel("Choose default export folder")
                 }
 
                 if !defaultExportFolder.isEmpty {
@@ -246,6 +260,8 @@ struct SettingsView: View {
                     }
                     .font(.caption)
                     Slider(value: $defaultQuality, in: 0.5...1.0, step: 0.01)
+                        .accessibilityLabel("Default export quality")
+                        .accessibilityValue("\(Int(defaultQuality * 100)) percent")
                 }
             }
         }

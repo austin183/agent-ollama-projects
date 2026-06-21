@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ExportPanel: View {
     @Bindable var viewModel: CollageViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var displayFamily: String {
         viewModel.titleStyle.fontFamily.isEmpty ? "(System Default)" : viewModel.titleStyle.fontFamily
@@ -217,8 +218,12 @@ struct ExportPanel: View {
             }
 
             Button(action: {
-                Task { [weak viewModel] in
-                    await viewModel?.exportCollage()
+                if viewModel.isExporting {
+                    viewModel.cancelExport()
+                } else {
+                    Task { [weak viewModel] in
+                        await viewModel?.exportCollage()
+                    }
                 }
             }) {
                 HStack {
@@ -228,14 +233,14 @@ struct ExportPanel: View {
                     } else {
                         Image(systemName: "arrowshape.down.circle.fill")
                     }
-                    Text(viewModel.isExporting ? "Exporting collage..." : "Export JPEG")
+                    Text(viewModel.isExporting ? "Cancel" : "Export JPEG")
                 }
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(viewModel.isProcessing || viewModel.images.isEmpty)
-            .accessibilityLabel("Export collage as JPEG")
-            .accessibilityHint("Opens save dialog")
+            .disabled(viewModel.isProcessing && !viewModel.isExporting || viewModel.images.isEmpty)
+            .accessibilityLabel(viewModel.isExporting ? "Cancel export" : "Export collage as JPEG")
+            .accessibilityHint(viewModel.isExporting ? "Cancels the current export" : "Opens save dialog")
 
             if let success = viewModel.exportSuccessMessage {
                 HStack {
@@ -246,7 +251,7 @@ struct ExportPanel: View {
                 }
                 .font(.caption)
                 .padding(.vertical, 4)
-                .transition(.opacity)
+                .transition(reduceMotion ? .identity : .opacity)
             }
 
             if let error = viewModel.errorMessage {

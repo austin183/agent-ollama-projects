@@ -282,6 +282,7 @@ struct PanelOverlay: View {
     let panel: ImagePanel
     let scaledFrame: CGRect?
     let viewModel: CollageViewModel
+    var panelIndex: Int?
 
     var body: some View {
         ZStack {
@@ -303,7 +304,16 @@ struct PanelOverlay: View {
                     viewModel: viewModel,
                     imageIndex: imageIndex
                 )
-                .accessibilityLabel("Image panel")
+                .accessibilityLabel({
+                    var label = "Image panel"
+                    if let idx = panelIndex {
+                        label = "Panel \(idx + 1)"
+                        if let imageIndex, imageIndex < viewModel.images.count {
+                            label += ", \(viewModel.images[imageIndex].filename)"
+                        }
+                    }
+                    return label
+                }())
                 .accessibilityAddTraits(viewModel.selectedPanelId == panel.id ? [.isSelected] : [])
                 .contextMenu {
                     Button("Reset Crop") {

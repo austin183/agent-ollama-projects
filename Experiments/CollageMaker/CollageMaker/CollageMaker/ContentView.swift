@@ -60,6 +60,7 @@ struct ContentView: View {
                 }
             }
         }
+        .frame(minWidth: 750, minHeight: 500)
         .alert("Clear All Images?", isPresented: showingClearAlert) {
             Button("Clear All", role: .destructive) {
                 viewModel.clearAll()
