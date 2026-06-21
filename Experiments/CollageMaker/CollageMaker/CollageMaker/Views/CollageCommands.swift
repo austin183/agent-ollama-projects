@@ -26,6 +26,14 @@ struct CollageCommands: Commands {
             .keyboardShortcut("s", modifiers: .command)
         }
 
+        CommandMenu("View") {
+            Toggle("Show Saliency Overlay", isOn: Binding(
+                get: { viewModel.showSaliencyOverlay },
+                set: { viewModel.showSaliencyOverlay = $0 }
+            ))
+            .keyboardShortcut("h", modifiers: [.command, .shift])
+        }
+
         CommandMenu("Layout") {
             Button("Uniform") {
                 viewModel.setLayoutStyle(.uniform)

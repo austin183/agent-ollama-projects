@@ -47,7 +47,8 @@ struct PanelCropEditor: View {
                                 containerSize: geo.size,
                                 panelGeometry: panel.geometry,
                                 panelFrame: panel.frame,
-                                saliency: currentSaliency
+                                saliency: currentSaliency,
+                                showSaliencyOverlay: viewModel.showSaliencyOverlay
                             )
                             .accessibilityLabel("Crop preview")
                             .accessibilityHint("Shows the portion of the image visible in the panel")
@@ -258,6 +259,7 @@ struct CropPreviewView: View {
     let panelGeometry: PanelGeometry
     let panelFrame: CGRect
     let saliency: SaliencyResult?
+    let showSaliencyOverlay: Bool
 
     var body: some View {
         ZStack {
@@ -278,12 +280,10 @@ struct CropPreviewView: View {
                 .clipped()
             }
 
-            #if DEBUG
-            if let saliency {
+            if showSaliencyOverlay, let saliency {
                 saliencyDebugOverlay(saliency: saliency)
                     .allowsHitTesting(false)
             }
-            #endif
         }
     }
 
@@ -367,7 +367,6 @@ struct CropPreviewView: View {
 
     // MARK: - Saliency Debug Overlay
 
-    #if DEBUG
     private func saliencyDebugOverlay(saliency: SaliencyResult) -> some View {
         guard containerSize.width > 0, containerSize.height > 0 else {
             return AnyView(EmptyView())
@@ -391,7 +390,6 @@ struct CropPreviewView: View {
                 .position(previewCenter)
         })
     }
-    #endif
 
     // MARK: - Static Helpers
 

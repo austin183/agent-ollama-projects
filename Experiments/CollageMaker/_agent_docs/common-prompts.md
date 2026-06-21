@@ -2,7 +2,7 @@
 ## Big Change Requests
 (In Plan Mode (Tab Key to change Modes))
 ```
-Can you please help me think through how we can address the change request in @_agent_docs/change-requests/round-103.md using our macos skills for guidance?  You can get a second perspective by running @planner-g31 
+Can you please help me think through how we can address the change request in @_agent_docs/change-requests/round-104.md using our macos skills for guidance?  You can get a second perspective by running @planner-g31 
 ```
 
 or with input from multiple models
@@ -24,7 +24,7 @@ Please implement the plan for Phase 3 in @_agent_docs/plans/2026-06-20-round-103
 
 # Small Change Requests
 ```
-Please work on the change request in @_agent_docs/change-requests/round-100.md using our macos skills for guidance. 
+Please work on the change request in @_agent_docs/change-requests/round-104.md using our macos skills for guidance. 
 ```
 
 # Review

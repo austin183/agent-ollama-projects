@@ -362,6 +362,7 @@ final class CollageViewModel {
     }
     var isLayeredMode: Bool = false
     var isLiveGesturing: Bool = false
+    var showSaliencyOverlay: Bool = false
     private var processingCount = 0
     var isProcessing: Bool { processingCount > 0 }
 
