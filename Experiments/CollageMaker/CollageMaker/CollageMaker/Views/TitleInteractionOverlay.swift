@@ -6,7 +6,7 @@ struct TitleInteractionOverlay: View {
     let isLiveGesturing: Bool
 
     var body: some View {
-        if !isLiveGesturing {
+        Group {
             Rectangle()
                 .fill(Color.clear)
                 .stroke(Color.orange, lineWidth: 1.5)
@@ -31,5 +31,8 @@ struct TitleInteractionOverlay: View {
                 .accessibilityLabel("Resize title right edge")
                 .accessibilityAddTraits(.isButton)
         }
+        .opacity(isLiveGesturing ? 0 : 1)
+        .allowsHitTesting(!isLiveGesturing)
+        .accessibilityHidden(isLiveGesturing)
     }
 }

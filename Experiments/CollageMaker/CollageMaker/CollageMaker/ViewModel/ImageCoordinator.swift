@@ -13,6 +13,7 @@ struct ImageDomainState {
     let images: [ImageItem]
     let panels: [ImagePanel]
     let cropMap: [UUID: CropInfo]
+    let cropVersions: [UUID: Int]
 }
 
 /// Snapshot of swap state for undo restoration.
@@ -88,14 +89,15 @@ final class ImageCoordinator {
 
     func clearDomain() -> ImageDomainState {
         guard !imageLibrary.images.isEmpty else {
-            return ImageDomainState(images: [], panels: [], cropMap: [:])
+            return ImageDomainState(images: [], panels: [], cropMap: [:], cropVersions: [:])
         }
         logger.info("Clear image domain")
         let oldPanels = layoutManager.panels
         let oldCropMap = cropManager.cropMap
+        let oldCropVersions = cropManager.cropVersions
         let oldImages = imageLibrary.clearAll()
         saliencyResults.removeAll()
-        return ImageDomainState(images: oldImages, panels: oldPanels, cropMap: oldCropMap)
+        return ImageDomainState(images: oldImages, panels: oldPanels, cropMap: oldCropMap, cropVersions: oldCropVersions)
     }
 
     // MARK: - Panel Assignment
@@ -142,7 +144,9 @@ final class ImageCoordinator {
 
         if let cropA = state.sourceCrop, let cropB = state.targetCrop {
             cropManager.cropMap[sourceId] = CropInfo(panelId: sourceId, sourceRect: cropB.sourceRect, destination: cropA.destination)
+            cropManager.cropVersions[sourceId, default: 0] += 1
             cropManager.cropMap[targetId] = CropInfo(panelId: targetId, sourceRect: cropA.sourceRect, destination: cropB.destination)
+            cropManager.cropVersions[targetId, default: 0] += 1
         }
 
         target.updatePanelPreview(panelId: sourceId)

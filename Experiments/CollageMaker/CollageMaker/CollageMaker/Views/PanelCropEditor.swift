@@ -10,6 +10,8 @@ struct PanelCropEditor: View {
     @State private var dragVisibleOffset: CGPoint = .zero
     @State private var dragVisibleSize: CGSize = .zero
     @State private var containerSize: CGSize = .zero
+    @State private var localCrop: CropInfo?
+    @State private var lastVersion: Int = 0
 
     private var currentImage: ImageItem? {
         guard let idx = viewModel.getEffectiveImageIndex(for: panel.id),
@@ -18,7 +20,7 @@ struct PanelCropEditor: View {
     }
 
     private var currentCrop: CropInfo? {
-        viewModel.cropMap[panel.id]
+        localCrop
     }
 
     private var currentSaliency: SaliencyResult? {
@@ -27,9 +29,7 @@ struct PanelCropEditor: View {
     }
 
     var body: some View {
-        // Establish @Observable dependency at top of body so crop map
-        // changes from canvas gestures trigger re-evaluation.
-        let crop = viewModel.cropMap[panel.id]
+        let crop = localCrop
 
         VStack(alignment: .leading, spacing: 12) {
             Text("Panel Editor")
@@ -172,6 +172,15 @@ struct PanelCropEditor: View {
             }
         }
         .padding()
+        .task(id: panel.id) {
+            localCrop = viewModel.cropMap[panel.id]
+            lastVersion = viewModel.getCropVersion(for: panel.id)
+        }
+        .onChange(of: viewModel.getCropVersion(for: panel.id)) { newVersion in
+            guard newVersion != lastVersion else { return }
+            lastVersion = newVersion
+            localCrop = viewModel.cropMap[panel.id]
+        }
         .id(panel.id)
     }
 

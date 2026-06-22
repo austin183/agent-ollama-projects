@@ -23,7 +23,7 @@ enum FrameTempo {
 
     // MARK: Gesture Preview Debounces
     static let panPreviewDebounce: Duration = .milliseconds(20)
-    static let pinchPreviewDebounce: Duration = .milliseconds(10)
+    static let pinchPreviewDebounce: Duration = .milliseconds(13)
     static let overlayRenderDebounce: Duration = .milliseconds(20)
     static let scrollPanPreviewDebounce: Duration = .milliseconds(20)
 

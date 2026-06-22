@@ -11,6 +11,7 @@ enum CropResizeEdge: String {
 @Observable
 final class CropManager {
     var cropMap: [UUID: CropInfo] = [:]
+    var cropVersions: [UUID: Int] = [:]
 
     private var gestureActivePanelId: UUID?
     private var gestureBaseOrigin: CGPoint?
@@ -67,18 +68,28 @@ final class CropManager {
         scrollPanAccumulator
     }
 
+    private func setCropInfo(_ info: CropInfo, panelId: UUID) {
+        cropMap[panelId] = info
+        cropVersions[panelId, default: 0] += 1
+    }
+
+    func getCropVersion(panelId: UUID) -> Int {
+        cropVersions[panelId, default: 0]
+    }
+
     func computeInitialCrops(panels: [ImagePanel], images: [ImageItem]) {
         cropMap.removeAll()
+        cropVersions.removeAll()
         for panel in panels {
             guard panel.imageIndex < images.count else { continue }
             let image = images[panel.imageIndex]
             let panelSize = panel.frame.size
             let cropRect = computeBestFitSource(imageSize: image.size, panelSize: panelSize)
-            cropMap[panel.id] = CropInfo(
+            setCropInfo(CropInfo(
                 panelId: panel.id,
                 sourceRect: cropRect,
                 destination: panel.geometry
-            )
+            ), panelId: panel.id)
         }
     }
 
@@ -88,6 +99,7 @@ final class CropManager {
         results: [Int: SaliencyResult]
     ) {
         cropMap.removeAll()
+        cropVersions.removeAll()
         for panel in panels {
             guard panel.imageIndex < images.count else { continue }
             let image = images[panel.imageIndex]
@@ -104,11 +116,11 @@ final class CropManager {
                 sourceRect = computeBestFitSource(imageSize: image.size, panelSize: panelSize)
             }
 
-            cropMap[panel.id] = CropInfo(
+            setCropInfo(CropInfo(
                 panelId: panel.id,
                 sourceRect: sourceRect,
                 destination: panel.geometry
-            )
+            ), panelId: panel.id)
         }
     }
 
@@ -120,14 +132,15 @@ final class CropManager {
     /// Applies previously extracted sourceRect values to new panels by slot index.
     func applyCropsBySlot(_ sourceRects: [CGRect], panels: [ImagePanel]) {
         cropMap.removeAll()
+        cropVersions.removeAll()
         for (index, panel) in panels.enumerated() {
             let sourceRect = index < sourceRects.count ? sourceRects[index] :
                 CGRect(origin: .zero, size: panel.frame.size)
-            cropMap[panel.id] = CropInfo(
+            setCropInfo(CropInfo(
                 panelId: panel.id,
                 sourceRect: sourceRect,
                 destination: panel.geometry
-            )
+            ), panelId: panel.id)
         }
     }
 
@@ -181,11 +194,11 @@ final class CropManager {
         let newOX = newEffX - visBounds.offsetX
         let newOY = newEffY - visBounds.offsetY
 
-        cropMap[id] = CropInfo(
+        setCropInfo(CropInfo(
             panelId: id,
             sourceRect: CGRect(x: newOX, y: newOY, width: scaledW, height: scaledH),
             destination: crop.destination
-        )
+        ), panelId: id)
 
         if finish { endGesture() }
     }
@@ -272,11 +285,11 @@ final class CropManager {
         let newOX = newEffX - visBounds.offsetX
         let newOY = newEffY - visBounds.offsetY
 
-        cropMap[id] = CropInfo(
+        setCropInfo(CropInfo(
             panelId: id,
             sourceRect: CGRect(x: newOX, y: newOY, width: scaledW, height: scaledH),
             destination: crop.destination
-        )
+        ), panelId: id)
 
         if finish { endGesture() }
     }
@@ -291,11 +304,11 @@ final class CropManager {
         let panelSize = panel.frame.size
         let cropRect = computeBestFitSource(imageSize: image.size, panelSize: panelSize)
 
-        cropMap[panelId] = CropInfo(
+        setCropInfo(CropInfo(
             panelId: panelId,
             sourceRect: cropRect,
             destination: panel.geometry
-        )
+        ), panelId: panelId)
     }
 
     func resetAllCrops(panels: [ImagePanel], images: [ImageItem]) {

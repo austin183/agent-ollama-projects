@@ -104,6 +104,10 @@ final class CollageViewModel {
         set { cropManager.cropMap = newValue }
     }
 
+    func getCropVersion(for panelId: UUID) -> Int {
+        cropManager.getCropVersion(panelId: panelId)
+    }
+
     var scrollPanActivePanelId: UUID? { cropManager.scrollPanActivePanelId }
 
     /// Cached preview-space panel frames. Invalidates when layout version or
@@ -562,6 +566,7 @@ final class CollageViewModel {
         layoutManager.panels = []
         layoutManager.panelAssignments.removeAll()
         cropManager.cropMap.removeAll()
+        cropManager.cropVersions.removeAll()
         previewManager.clearAll()
         backgroundManager.reset()
         titleManager.reset()
@@ -572,6 +577,7 @@ final class CollageViewModel {
             target.imageLibrary.images = oldDomain.images
             target.layoutManager.panels = oldDomain.panels
             target.cropManager.cropMap = oldDomain.cropMap
+            target.cropManager.cropVersions = oldDomain.cropVersions
             target.imageCoordinator.saliencyResults = oldSaliency
             target.backgroundManager.backgroundColor = oldBackgroundConfig.color
             target.backgroundManager.backgroundStyle = oldBackgroundConfig.style
@@ -606,7 +612,9 @@ final class CollageViewModel {
         undoManager.registerUndo(withTarget: self) { target in
             target.customImageOrder = state.customOrder
             target.cropManager.cropMap[sourceId] = state.sourceCrop
+            target.cropManager.cropVersions[sourceId, default: 0] += 1
             target.cropManager.cropMap[targetId] = state.targetCrop
+            target.cropManager.cropVersions[targetId, default: 0] += 1
             target.layoutManager.panelAssignments[sourceId] = state.sourceAssign
             target.layoutManager.panelAssignments[targetId] = state.targetAssign
             target.regenerateLayout()
@@ -690,6 +698,7 @@ final class CollageViewModel {
         if let oldCrop = cropMap[panelId] {
             undoManager.registerUndo(withTarget: self) { target in
                 target.cropMap[panelId] = oldCrop
+                target.cropManager.cropVersions[panelId, default: 0] += 1
                 target.updatePanelPreview(panelId: panelId)
             }
             undoManager.setActionName("Reset Crop")
@@ -705,6 +714,7 @@ final class CollageViewModel {
         undoManager.beginUndoGrouping()
         undoManager.registerUndo(withTarget: self) { target in
             target.cropMap[panelId] = oldCrop
+            target.cropManager.cropVersions[panelId, default: 0] += 1
             target.updatePanelPreview(panelId: panelId)
         }
     }
@@ -733,6 +743,7 @@ final class CollageViewModel {
             destination: crop.destination
         )
         cropManager.cropMap[panelId] = newCrop
+        cropManager.cropVersions[panelId, default: 0] += 1
         throttledOverlayRender(panelId: panelId)
     }
 
