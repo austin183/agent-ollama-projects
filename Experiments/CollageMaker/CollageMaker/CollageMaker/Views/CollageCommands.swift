@@ -49,6 +49,16 @@ struct CollageCommands: Commands {
                 viewModel.setLayoutStyle(.mosaic)
             }
             .keyboardShortcut("3", modifiers: .command)
+
+            Button("Diagonal Slices") {
+                viewModel.setLayoutStyle(.diagonalSlices)
+            }
+            .keyboardShortcut("4", modifiers: .command)
+
+            Button("Hexagonal") {
+                viewModel.setLayoutStyle(.hexagonal)
+            }
+            .keyboardShortcut("5", modifiers: .command)
         }
     }
 }
