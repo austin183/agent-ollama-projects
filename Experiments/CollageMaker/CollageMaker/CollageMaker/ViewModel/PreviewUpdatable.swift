@@ -9,5 +9,4 @@ protocol PreviewUpdatable {
     func incrementTitleVersion()
     func updateBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize)
     func cancelDebouncer(id: String)
-    func debouncedSave()
 }

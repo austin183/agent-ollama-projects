@@ -19,7 +19,7 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan for Phase 3 in @_agent_docs/plans/2026-06-21-hig-fixes.md using our macos skills for guidance.
+Please implement the plan for Phase 1 in @_agent_docs/plans/2026-06-21-animation-fps-consistency.md using our macos skills for guidance.
 ```
 
 # Small Change Requests

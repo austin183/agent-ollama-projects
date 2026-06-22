@@ -61,6 +61,17 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 750, minHeight: 500)
+        .task {
+            let handle = NotificationCenter.default.addObserver(
+                forName: NSApplication.willTerminateNotification,
+                object: nil,
+                queue: .main
+            ) { _ in
+                viewModel.saveSettings()
+            }
+            try? await Task.sleep(nanoseconds: .max)
+            NotificationCenter.default.removeObserver(handle)
+        }
         .alert("Clear All Images?", isPresented: showingClearAlert) {
             Button("Clear All", role: .destructive) {
                 viewModel.clearAll()
@@ -184,7 +195,6 @@ struct ResizableDrawer: View {
                     }
                     .onEnded { _ in
                         viewModel.rightDrawerWidth = drawerWidth
-                        viewModel.debouncedSave()
                         rightDrawerStartWidth = 0
                     }
             )

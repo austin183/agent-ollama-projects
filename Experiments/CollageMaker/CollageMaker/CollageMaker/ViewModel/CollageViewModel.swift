@@ -74,7 +74,6 @@ final class CollageViewModel {
                 target.titleManager.titleStyle = old
             }
             undoManager.setActionName("Change Title Style")
-            debouncedSave()
             if isLayeredMode {
                 titleManager.updateImage(updater: self)
             } else {
@@ -94,7 +93,6 @@ final class CollageViewModel {
         set {
             guard !isInitializing else { return }
             imageLibrary.customImageOrder = newValue
-            debouncedSave()
         }
     }
     var panels: [ImagePanel] { layoutManager.panels }
@@ -155,13 +153,12 @@ final class CollageViewModel {
     func setGutter(_ value: CGFloat) {
         let old = layoutManager.setGutter(value)
         guard !isInitializing else { return }
-        debouncer.debounce(id: "gutter", delay: .milliseconds(150)) { [weak self] in
+        debouncer.debounce(id: "gutter", delay: FrameTempo.layoutChangeDebounce) { [weak self] in
             guard let self else { return }
             self.undoManager.registerUndo(withTarget: self) { target in
                 target.layoutManager.gutter = old
             }
             self.undoManager.setActionName("Change Gutter")
-            self.debouncedSave()
             self.regenerateLayout(preserveCrops: true)
         }
     }
@@ -211,13 +208,12 @@ final class CollageViewModel {
             let old = backgroundManager.backgroundColor
             backgroundManager.backgroundColor = newValue
             guard !isInitializing else { return }
-            debouncer.debounce(id: "backgroundColor", delay: .milliseconds(150)) { [weak self] in
+            debouncer.debounce(id: "backgroundColor", delay: FrameTempo.backgroundColorDebounce) { [weak self] in
                 guard let self else { return }
                 self.undoManager.registerUndo(withTarget: self) { target in
                     target.backgroundManager.backgroundColor = old
                 }
                 self.undoManager.setActionName("Change Background Color")
-                self.debouncedSave()
                 self.updatePreview()
             }
         }
@@ -241,7 +237,6 @@ final class CollageViewModel {
                 target.backgroundManager.backgroundStyle = old
             }
             undoManager.setActionName("Change Background Style")
-            debouncedSave()
             updatePreview()
         }
     }
@@ -256,7 +251,6 @@ final class CollageViewModel {
                 target.backgroundManager.gradientStartColor = old
             }
             undoManager.setActionName("Change Gradient Start Color")
-            debouncedSave()
             updatePreviewDebounced()
         }
     }
@@ -271,7 +265,6 @@ final class CollageViewModel {
                 target.backgroundManager.gradientEndColor = old
             }
             undoManager.setActionName("Change Gradient End Color")
-            debouncedSave()
             updatePreviewDebounced()
         }
     }
@@ -286,7 +279,6 @@ final class CollageViewModel {
                 target.backgroundManager.gradientAngle = old
             }
             undoManager.setActionName("Change Gradient Angle")
-            debouncedSave()
             updatePreviewDebounced()
         }
     }
@@ -301,7 +293,6 @@ final class CollageViewModel {
                 target.backgroundManager.backgroundImage = old
             }
             undoManager.setActionName("Change Background Image")
-            debouncedSave()
             if newValue == nil {
                 backgroundManager.backgroundImagePath = nil
             }
@@ -324,7 +315,6 @@ final class CollageViewModel {
                 target.backgroundManager.backgroundOpacity = old
             }
             undoManager.setActionName("Change Background Opacity")
-            debouncedSave()
             updatePreviewDebounced()
         }
     }
@@ -386,11 +376,9 @@ final class CollageViewModel {
         exportManager.exportTask?.cancel()
     }
 
-    func debouncedSave() {
-        debouncer.debounce(id: "save", delay: .milliseconds(300)) { [weak self] in
-            guard let self else { return }
-            self.persistence.save(self)
-        }
+    /// Persists current settings to UserDefaults. Called on app quit.
+    func saveSettings() {
+        persistence.save(self)
     }
 
     private func registerUndo<Value>(oldValue: Value, actionName: String, restore: @escaping (CollageViewModel) -> Void) {
@@ -399,7 +387,6 @@ final class CollageViewModel {
             restore(target)
         }
         undoManager.setActionName(actionName)
-        debouncedSave()
     }
 
     convenience init() {
@@ -484,7 +471,6 @@ final class CollageViewModel {
             target.backgroundManager.backgroundImagePath = oldPath
         }
         undoManager.setActionName("Change Background Image")
-        debouncedSave()
         updatePreview()
     }
 
@@ -667,7 +653,7 @@ final class CollageViewModel {
 
         cropManager.applyPan(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
 
-        debouncer.debounce(id: "panPreview", delay: .milliseconds(150)) { [weak self] in
+        debouncer.debounce(id: "panPreview", delay: FrameTempo.panPreviewDebounce) { [weak self] in
             if let panelId = self?.cropManager.activePanelId {
                 self?.updatePanelPreview(panelId: panelId)
             }
@@ -693,7 +679,7 @@ final class CollageViewModel {
         cropManager.applyPinch(panelId: nil, panels: panels, images: images, panelAssignments: panelAssignments, finish: false)
 
         if let panelId = cropManager.activePanelId {
-            debouncer.debounce(id: "pinchPreview", delay: .milliseconds(0)) { [weak self] in
+            debouncer.debounce(id: "pinchPreview", delay: FrameTempo.pinchPreviewDebounce) { [weak self] in
                 self?.updatePanelPreview(panelId: panelId)
             }
         }
@@ -729,13 +715,12 @@ final class CollageViewModel {
     }
 
     private var lastOverlayRenderTime: ContinuousClock.Instant = ContinuousClock.now
-    private let overlayRenderInterval: Duration = .milliseconds(50)
 
     private func throttledOverlayRender(panelId: UUID) {
         let now = ContinuousClock.now
-        guard now - lastOverlayRenderTime >= overlayRenderInterval else { return }
+        guard now - lastOverlayRenderTime >= FrameTempo.overlayRenderInterval else { return }
         lastOverlayRenderTime = now
-        debouncer.debounce(id: "overlayRender", delay: .milliseconds(0)) { [weak self] in
+        debouncer.debounce(id: "overlayRender", delay: FrameTempo.overlayRenderDebounce) { [weak self] in
             self?.updatePanelPreview(panelId: panelId)
         }
     }
@@ -768,14 +753,13 @@ final class CollageViewModel {
     }
 
     private var lastScrollRenderTime: ContinuousClock.Instant = ContinuousClock.now
-    private let scrollRenderInterval: Duration = .milliseconds(60)
 
     private func throttledScrollPanRender() {
         let now = ContinuousClock.now
-        guard now - lastScrollRenderTime >= scrollRenderInterval,
+        guard now - lastScrollRenderTime >= FrameTempo.scrollRenderInterval,
               let panelId = cropManager.scrollPanActivePanelId else { return }
         lastScrollRenderTime = now
-        debouncer.debounce(id: "scrollPanPreview", delay: .milliseconds(0)) { [weak self] in
+        debouncer.debounce(id: "scrollPanPreview", delay: FrameTempo.scrollPanPreviewDebounce) { [weak self] in
             self?.updatePanelPreview(panelId: panelId)
         }
     }
@@ -847,7 +831,7 @@ final class CollageViewModel {
     }
 
     func updatePreviewDebounced() {
-        debouncer.debounce(id: "previewRender", delay: .milliseconds(150)) { [weak self] in
+        debouncer.debounce(id: "previewRender", delay: FrameTempo.previewRenderDebounce) { [weak self] in
             self?.updatePreview()
         }
     }
@@ -928,7 +912,6 @@ final class CollageViewModel {
             target.titleManager.titleStyle[keyPath: keyPath] = oldValue
         }
         undoManager.setActionName(actionName)
-        debouncedSave()
         sideEffect()
     }
 
@@ -944,7 +927,7 @@ final class CollageViewModel {
         let oldValue = titleManager.titleStyle.fontSize
         titleManager.titleStyle.fontSize = size
         applyTitleChange(at: \.fontSize, oldValue: oldValue, actionName: "Change Font Size") {
-            self.debouncer.debounce(id: "fontSize", delay: .milliseconds(150)) { [weak self] in
+            self.debouncer.debounce(id: "fontSize", delay: FrameTempo.fontSizeDebounce) { [weak self] in
                 guard let self else { return }
                 self.titleManager.updateImage(updater: self)
             }

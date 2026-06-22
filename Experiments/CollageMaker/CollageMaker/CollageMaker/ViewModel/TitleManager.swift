@@ -91,7 +91,6 @@ final class TitleManager {
     func finishDrag(updater: PreviewUpdatable) {
         updater.cancelDebouncer(id: "titleImage")
         updateImage(updater: updater)
-        updater.debouncedSave()
     }
 
     // MARK: - Title Interaction Methods
