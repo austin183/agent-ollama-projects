@@ -172,15 +172,14 @@ if let overlay = config.overlay {
 - **Multiple async rendering tasks race** -- When `updatePreview()`, `updateBackground()`, and `updatePanelPreview()` all run on separate `Task.detached` tasks, there's no ordering guarantee. If rendering mode depends on which task completed first, the mode can flip unpredictably during rapid interactions.
 - **Composite-to-layered rendering transition** -- When splitting a full composite into individual layers, every element baked into the composite needs its own rendering path. Elements without a dedicated layer become invisible in layered mode. Render each element (title, panels, effects) separately and compose in a ZStack.
 - **Property-level debounce for rapid controls** -- Slider and color picker `didSet` observers fire 30-60x/sec during drag. Use a debounced render method (cancel previous task, sleep 150ms, render) for continuous controls. Discrete controls (typing, enum picker, image selection) render immediately. Rule of thumb: >10 events/sec = debounce. See [../state/swift-concurrency.md](../state/swift-concurrency.md) for cross-boundary cancellation pattern.
-- **Throttled `@Observable` invalidation** -- When a version counter triggers full view re-evaluation, throttle its increments during high-rate input (pan/zoom gestures). Throttle fires immediately on first event, then skips until interval elapses — preserving live feedback unlike debounce. Use `ContinuousClock` + `Duration`, never `mach_absolute_time()` (returns ticks, not nanoseconds):
+- **Throttled `@Observable` invalidation** -- When a version counter triggers full view re-evaluation, throttle its increments during high-rate input (pan/zoom gestures). Throttle fires immediately on first event, then skips until interval elapses — preserving live feedback unlike debounce. Use `ContinuousClock` + `Duration`, never `mach_absolute_time()` (returns ticks, not nanoseconds). Source the interval from a centralized timing enum (see § "Centralized Timing Constants"):
 
 ```swift
 private var lastNotifyTime: ContinuousClock.Instant = .now
-private let notifyInterval: Duration = .milliseconds(30) // ~33fps
 
 private func throttledNotify() {
     let now = ContinuousClock.now
-    if now - lastNotifyTime >= notifyInterval {
+    if now - lastNotifyTime >= FrameTempo.scrollRenderInterval {
         lastNotifyTime = now
         versionCounter += 1
     }
@@ -194,3 +193,40 @@ private func throttledNotify() {
 ### Timing API
 
 Use `ContinuousClock.now` + `Duration` for time-based logic. `ContinuousClock.Instant` survives sleep/wake and `Duration.milliseconds(30)` is self-documenting. `mach_absolute_time()` returns clock **ticks** (not nanoseconds) — the tick-to-nanos ratio varies on Apple Silicon. Comparing against hardcoded nanosecond thresholds produces incorrect throttling.
+
+### Centralized Timing Constants
+
+Scattered `.milliseconds(N)` literals across gesture handlers make it impossible to reason about the overall FPS profile. Centralize all render throttle and debounce intervals in a single `enum`:
+
+```swift
+/// Central timing constants for render throttles and preview debounces.
+///
+/// Reference table (fps = 1000 / ms):
+///
+/// | ms  | fps  | Typical use                              |
+/// |-----|------|------------------------------------------|
+/// | 16  | ~60  | Display-native refresh rate              |
+/// | 20  | ~50  | Smooth with reduced CPU load             |
+/// | 33  | ~30  | Video-rate, noticeable vs 60fps          |
+/// | 150 | ~7   | Post-interaction settle                  |
+/// | 300 | ~3   | Disk write throttle                      |
+enum FrameTempo {
+    // MARK: Gesture Render Throttles
+    static let scrollRenderInterval: Duration = .milliseconds(20)
+    static let overlayRenderInterval: Duration = .milliseconds(20)
+
+    // MARK: Gesture Preview Debounces
+    static let panPreviewDebounce: Duration = .milliseconds(20)
+    static let pinchPreviewDebounce: Duration = .milliseconds(10)
+
+    // MARK: Post-Interaction Debounces
+    static let fontSizeDebounce: Duration = .milliseconds(150)
+    static let previewRenderDebounce: Duration = .milliseconds(20)
+}
+```
+
+**Why this pattern:**
+- **`enum` over `struct`** — prevents meaningless instantiation (`FrameTempo()`)
+- **Group by concern, not caller** — organize as gesture throttles, gesture debounces, post-interaction debounces. Readable as a tuning document, not an API reference
+- **Reference table in header** — the ms-to-fps mapping lives in the doc comment, not as inline comments on each constant. Inline comments go stale when values change; a decoupled table stays correct
+- **Single file to adjust** — global FPS tuning requires editing one file instead of hunting across 10+ call sites

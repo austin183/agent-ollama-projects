@@ -213,11 +213,10 @@ The cancel-previous-task pattern above works for low-frequency gestures. For hig
 
 ```swift
 private var lastScrollRenderTime: ContinuousClock.Instant = .now
-private let scrollRenderInterval: Duration = .milliseconds(60)
 
 private func throttledScrollPanRender() {
     let now = ContinuousClock.now
-    guard now - lastScrollRenderTime >= scrollRenderInterval else { return }
+    guard now - lastScrollRenderTime >= FrameTempo.scrollRenderInterval else { return }
     lastScrollRenderTime = now
 
     previewDebounceTask?.cancel()
@@ -231,7 +230,7 @@ private func throttledScrollPanRender() {
 **Debounce vs throttle choice:**
 - **Debounce** (sleep N ms, render after quiet period) — good for final-quality render after user stops interacting. Bad for live feedback.
 - **Throttle** (fire every N ms during active input) — gives responsive feedback during gesture. Use `Task.detached` + `await MainActor.run` for offloading rendering while safely mutating `@Observable` state.
-- For scroll pan (moving through content), ~16fps (60ms) throttle is sufficient. For pinch zoom (precise framing), render on every throttled gesture event.
+- For scroll pan (moving through content), ~16fps (60ms) throttle is sufficient. For pinch zoom (precise framing), render on every throttled gesture event. Source intervals from a centralized timing enum rather than inline literals — see [references/tooling/performance-debugging.md](references/tooling/performance-debugging.md) § "Centralized Timing Constants".
 
 **Non-layered mode feedback:** In rendering modes where the preview is a static composite (not per-layer), crop changes don't affect pixel content. `cropMapVersion`-driven frame updates only affect overlays visible in layered mode. Throttled render of the full composite is required for live feedback in non-layered mode.
 
