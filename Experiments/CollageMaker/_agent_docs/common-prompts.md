@@ -14,12 +14,12 @@ Can you please run the @planner and @planner-g31 agents to create draft plans fo
 ## Review
 (In Plan Mode (Tab Key to change Modes))
 ```
-Please use our macos skills to help me address the review changes received in @_agent_docs/reviews/2026-06-04-full-architectural-review.md
+Please use our macos skills to help me address the review changes received in @_agent_docs/reviews/2026-06-22-review-marcos.md and @_agent_docs/reviews/2026-06-22-review-victoria.md
 ```
 
 # Implement
 ```
-Please implement the plan for Phase 3 in @_agent_docs/plans/2026-06-21-animation-fps-consistency.md using our macos skills for guidance.
+Please implement the plan for Phase 1 in @_agent_docs/plans/2026-06-23-review-fixes-plan.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
@@ -51,7 +51,7 @@ Please use the /capturing-learnings and add any new learnings to a new document 
 
 ## Apply Learnings to Skills
 ```
-Please use the learnings in @_agent_docs/learnings/conditional-rendering-state-cleanup.md to refine our macos skills using /skills-best-practice for guidance.
+Please use the learnings in @_agent_docs/learnings/deinit-outside-actor-isolation-learnings.md to refine our macos skills using /skills-best-practice for guidance.
 ```
 
 ## Researching

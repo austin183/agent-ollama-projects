@@ -20,6 +20,36 @@ class ViewModel: ObservableObject {
 }
 ```
 
+## `deinit` Runs Outside Actor Isolation
+
+`deinit` always executes in a nonisolated context, even on `@MainActor` classes. You cannot call actor-isolated methods from `deinit`.
+
+```swift
+@MainActor
+final class Debouncer {
+    private var tasks: [String: Task<Void, Never>] = [:]
+
+    func cancelAll() {
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
+    }
+
+    deinit {
+        cancelAll()  // ERROR: actor-isolated method in nonisolated context
+    }
+}
+```
+
+**Fix — inline the `Sendable` operations:**
+```swift
+    deinit {
+        tasks.values.forEach { $0.cancel() }
+        // No need for tasks.removeAll() — object is being deallocated
+    }
+```
+
+**Rule:** Only `Sendable` operations and `nonisolated` methods are safe in `deinit`. Read your own stored properties directly, then perform `Sendable` actions (e.g., `Task.cancel()`).
+
 ## `Task` vs `Task.detached`
 
 ### `Task { }` — Inherits Actor Context
@@ -665,6 +695,7 @@ actor SaliencyAnalyzer {
 17. **Debounce only continuous controls** — Slider and color picker `didSet` observers fire 30-60x/sec during drag and need 150ms debounced render. Discrete controls (typing, enum picker, image selection) render immediately. Rule of thumb: >10 events/sec = debounce
 18. **Synchronous closures can't use `await`** — `RenderScheduler.render { }` takes a synchronous closure. To collect mutable state from concurrent closures, use a `ThreadSafeArray<Element>` backed by `NSLock` + `@unchecked Sendable`. Use `Thread.sleep(forTimeInterval:)` instead of `Task.sleep`
 19. **Actor methods in `withThrowingTaskGroup` serialize through actor executor** — `await self.method()` on an actor hops through the actor's single-threaded executor, eliminating parallelism. Mark pure-computation methods `nonisolated` to bypass the actor executor. Verify: no `self.` access, only locals/params/external APIs.
+20. **`deinit` runs outside actor isolation** — Even on `@MainActor` classes, `deinit` is nonisolated. Cannot call actor-isolated methods. Inline `Sendable` operations directly (e.g., `tasks.values.forEach { $0.cancel() }`).
 
 ## Pitfalls
 
@@ -675,6 +706,7 @@ actor SaliencyAnalyzer {
 - **Computed properties on `@unchecked Sendable` structs** — A computed property that accesses a MainActor-only type (e.g., `var cgColor: CGColor { nsColor.cgColor }`) evaluates on the *destination* thread, not the construction thread. Store the derived value in `init` instead.
 - **Synchronous dispatch closures can't `await`** — `RenderScheduler.render { }` closures are synchronous. `await` is a compile error. Mutating captured `var` is a Swift 6 error. Use `ThreadSafeArray` with `NSLock` for mutable state collection.
 - **Actor method in `withThrowingTaskGroup` serializes all work** — Even though `withThrowingTaskGroup` creates concurrent tasks, `await self.method()` on an actor serializes through the actor executor. Mark the method `nonisolated` if it doesn't access actor state.
+- **`deinit` on `@MainActor` class is nonisolated** — Cannot call actor-isolated methods from `deinit`. Inline `Sendable` operations (e.g., `Task.cancel()`) directly.
 
 ## Task vs Task.detached
 

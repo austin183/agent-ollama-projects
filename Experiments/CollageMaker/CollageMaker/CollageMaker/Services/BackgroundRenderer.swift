@@ -61,7 +61,9 @@ struct BackgroundRenderer {
         backgroundImage: CGImage?,
         previewSize: CGSize
     ) -> NSImage? {
-        guard let context = createContext(size: canvasSize) else { return nil }
+        guard let context = createContext(size: previewSize) else { return nil }
+        context.scaleBy(x: previewSize.width / canvasSize.width,
+                        y: previewSize.height / canvasSize.height)
 
         switch config.style {
         case .solid:
@@ -88,7 +90,7 @@ struct BackgroundRenderer {
         }
 
         guard let cgImage = context.makeImage() else { return nil }
-        return NSImage(cgImage: cgImage, size: canvasSize)
+        return NSImage(cgImage: cgImage, size: previewSize)
     }
 
     private static func createContext(size: CGSize) -> CGContext? {

@@ -85,7 +85,7 @@ final class CollageViewModel {
     var cachedTitleCanvasFrame: CGRect? { titleManager.canvasFrame }
     var cachedTitleMinWidth: CGFloat { titleManager.minWidth }
 
-    var exportManager: ExportManager!
+    private let exportManager: ExportManager
 
     var images: [ImageItem] { imageLibrary.images }
     var customImageOrder: [Int] {

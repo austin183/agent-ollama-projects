@@ -22,4 +22,8 @@ final class Debouncer {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
     }
+
+    deinit {
+        tasks.values.forEach { $0.cancel() }
+    }
 }

@@ -19,6 +19,7 @@ struct TitleTextData: Sendable {
 
     /// Extract text and font run information from an NSAttributedString.
     /// Must be called on the main actor.
+    @MainActor
     static func extract(from attrString: NSAttributedString) -> TitleTextData {
         var runs: [TitleTextRun] = []
         attrString.enumerateAttribute(.font, in: NSRange(location: 0, length: attrString.length), options: []) { value, range, _ in
