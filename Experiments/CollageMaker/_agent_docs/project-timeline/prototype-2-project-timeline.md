@@ -134,3 +134,4 @@
 | 123 | 2026-06-21 | Round 105: resizable right drawer — visible resize handle, `DragGesture`, `UserDefaults` persistence, struct isolation to eliminate drag flicker ([details](sessions/session-123.md)) |
 | 124 | 2026-06-21 | FPS consistency Phase 1: aligned gesture render intervals to ~60fps, extracted `FrameTempo` centralized timing enum, removed continuous auto-save in favor of save-on-quit via `NSApplication.willTerminateNotification` ([details](sessions/session-124.md)) |
 | 125 | 2026-06-23 | Review fixes Phase 1: `BackgroundRenderer` previewSize scaling, `Debouncer` deinit (deinit outside @MainActor isolation), `@MainActor` on `TitleTextData.extract`, `exportManager` IUO elimination ([details](sessions/session-125.md)) |
+| 126 | 2026-06-23 | Review fixes Phase 2: C0 saliency index mismatch fallback, C1 CropInfo Codable path vertex preservation, diff-review caught shadow implementation test + unsafe array access ([details](sessions/session-126.md)) |

@@ -28,6 +28,26 @@ enum PanelGeometry: @unchecked Sendable {
         }
     }
 
+    /// Extracts vertices from the path, or nil for .rect.
+    var pathVertices: [CGPoint]? {
+        switch self {
+        case .rect: return nil
+        case .path(let cgPath, _): return PanelGeometry.extractPathPoints(cgPath)
+        }
+    }
+
+    /// Reconstructs a .path geometry from serialized vertices.
+    static func path(fromVertices vertices: [CGPoint], boundingRect: CGRect) -> PanelGeometry {
+        guard !vertices.isEmpty else { return .rect(boundingRect) }
+        let mutablePath = CGMutablePath()
+        mutablePath.move(to: vertices[0])
+        for i in 1..<vertices.count {
+            mutablePath.addLine(to: vertices[i])
+        }
+        mutablePath.closeSubpath()
+        return .path(cgPath: mutablePath, boundingRect: boundingRect)
+    }
+
     /// Computes the CGAffineTransform to convert a CGPath from canvas coordinates
     /// (CoreGraphics, origin=bottom-left) to SwiftUI view coordinates (origin=top-left).
     static func transformForPanel(boundingRect: CGRect, targetRect: CGRect) -> CGAffineTransform {

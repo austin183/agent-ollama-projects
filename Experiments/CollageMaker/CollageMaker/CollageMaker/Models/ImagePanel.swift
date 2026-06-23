@@ -47,7 +47,7 @@ struct CropInfo: Codable, Equatable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case panelId, sourceRect, destinationType, destinationRect
+        case panelId, sourceRect, destinationType, destinationRect, destinationPathVertices
     }
 
     func encode(to encoder: Encoder) throws {
@@ -57,10 +57,14 @@ struct CropInfo: Codable, Equatable {
         switch destination {
         case .rect:
             try container.encode("rect" as String, forKey: .destinationType)
+            try container.encode(destination.boundingRect, forKey: .destinationRect)
         case .path:
             try container.encode("path" as String, forKey: .destinationType)
+            try container.encode(destination.boundingRect, forKey: .destinationRect)
+            if let vertices = destination.pathVertices {
+                try container.encode(vertices, forKey: .destinationPathVertices)
+            }
         }
-        try container.encode(destination.boundingRect, forKey: .destinationRect)
     }
 
     init(from decoder: Decoder) throws {
@@ -70,7 +74,12 @@ struct CropInfo: Codable, Equatable {
         let destRect = try container.decode(CGRect.self, forKey: .destinationRect)
         let destType = try container.decodeIfPresent(String.self, forKey: .destinationType) ?? "rect"
         if destType == "path" {
-            destination = .path(cgPath: CGPath(rect: destRect, transform: nil), boundingRect: destRect)
+            let vertices = try container.decodeIfPresent([CGPoint].self, forKey: .destinationPathVertices)
+            if let vertices, vertices.count >= 3 {
+                destination = PanelGeometry.path(fromVertices: vertices, boundingRect: destRect)
+            } else {
+                destination = .path(cgPath: CGPath(rect: destRect, transform: nil), boundingRect: destRect)
+            }
         } else {
             destination = .rect(destRect)
         }

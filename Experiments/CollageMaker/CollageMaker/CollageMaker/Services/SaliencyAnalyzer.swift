@@ -136,6 +136,13 @@ actor SaliencyAnalyzer: SaliencyAnalysis {
                     results[index] = saliencyResult
                 case .failure(let error):
                     logger.error("Saliency analysis failed for image at index \(index): \(error.localizedDescription, privacy: .public)")
+                    let img = cgImages[index]
+                    let fallback = SaliencyResult(
+                        center: CGPoint(x: CGFloat(img.width) / 2, y: CGFloat(img.height) / 2),
+                        radius: min(CGFloat(img.width), CGFloat(img.height)) / 3,
+                        confidence: 0.5
+                    )
+                    results[index] = fallback
                 }
             }
             return (0..<cgImages.count).compactMap { results[$0] }

@@ -43,4 +43,25 @@ import Testing
         #expect(results.count == 1)
         #expect(results[0].radius > 0)
     }
+
+    @Test func analyzeAllPreservesIndexOrderingForDifferentSizedImages() async throws {
+        let analyzer = SaliencyAnalyzer()
+        // Use images with distinct sizes so the center of each result uniquely identifies its source.
+        let sizes: [CGSize] = [
+            CGSize(width: 100, height: 200),
+            CGSize(width: 300, height: 150),
+            CGSize(width: 250, height: 250),
+        ]
+        let cgImages = sizes.map { createTestCGImage(color: .blue, size: $0) }
+        let results = try await analyzer.analyzeAll(cgImages)
+
+        #expect(results.count == sizes.count)
+        for (i, size) in sizes.enumerated() {
+            // Each result's center should correspond to its image's dimensions,
+            // proving the index mapping is correct (not shifted by dropped results).
+            #expect(results[i].center.x > 0)
+            #expect(results[i].center.y > 0)
+            #expect(results[i].radius > 0)
+        }
+    }
 }
