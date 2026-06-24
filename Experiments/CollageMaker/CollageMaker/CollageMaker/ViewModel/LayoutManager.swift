@@ -145,4 +145,5 @@ final class LayoutManager {
         }
         return (oldImage, oldPath)
     }
+
 }

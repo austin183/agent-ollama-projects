@@ -7,7 +7,11 @@ private let logger = Logger(
     category: "DropHandler"
 )
 
-struct DropHandler {
+protocol DropHandling {
+    func loadImageURLs(from itemProviders: [NSItemProvider]) async -> [URL]
+}
+
+struct DropHandler: DropHandling {
     private let imageTypes: [UTType]
 
     init() {

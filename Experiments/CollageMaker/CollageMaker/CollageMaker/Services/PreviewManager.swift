@@ -8,8 +8,30 @@ private let logger = Logger(
 )
 
 @MainActor
+protocol PreviewManagement {
+    var previewImage: NSImage? { get }
+    var previewBackgroundImage: NSImage? { get }
+    var overlayImage: NSImage? { get }
+    var overlayBlendMode: CGBlendMode? { get }
+    var panelRenderedImages: [UUID: NSImage] { get }
+    var titleImage: NSImage? { get }
+
+    func updatePreview(config: AssemblyConfig, cgImages: [CGImage], backgroundImage: CGImage?, previewSize: CGSize)
+    func updateBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize)
+    func updateOverlay(overlay: OverlayConfig, canvasSize: CGSize)
+    func updatePanelPreview(crop: CropInfo, cgImage: CGImage, panelSize: CGSize, geometry: PanelGeometry, panelId: UUID)
+    func updateAllPanelPreviews(panels: [ImagePanel], crops: [UUID: CropInfo], images: [ImageItem], panelAssignments: [UUID: Int])
+    func updateTitleImage(titleAttrString: NSAttributedString, titleStyle: TitleStyle, canvasSize: CGSize)
+    func panelRenderedImagesBySlot(_ panels: [ImagePanel]) -> [NSImage?]
+    func applyRenderedBySlot(_ images: [NSImage?], panels: [ImagePanel])
+    func clearAll()
+    func cancelAll()
+    func awaitPendingTasks() async
+}
+
+@MainActor
 @Observable
-final class PreviewManager {
+final class PreviewManager: PreviewManagement {
     var previewImage: NSImage?
     var previewBackgroundImage: NSImage?
     var overlayImage: NSImage?

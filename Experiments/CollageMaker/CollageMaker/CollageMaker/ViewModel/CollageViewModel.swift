@@ -100,6 +100,9 @@ final class CollageViewModel {
         }
     }
     var panels: [ImagePanel] { layoutManager.panels }
+    var panelGeometries: [UUID: PanelGeometry] {
+        Dictionary(uniqueKeysWithValues: panels.map { ($0.id, $0.geometry) })
+    }
     var selectedPanelId: UUID?
 
     /// Single source of truth for crop state — delegated to CropManager.
@@ -134,6 +137,18 @@ final class CollageViewModel {
             )
         }
         return frameCache.result
+    }
+
+    /// Hit-tests a preview-space location against panels and returns the matching panel ID.
+    func hitPanel(at location: CGPoint, previewSize: CGSize) -> UUID? {
+        let panelFrames = computePanelFrames(previewSize: previewSize)
+        return CoordinateConverter.hitTestPanel(
+            at: location,
+            panelFrames: panelFrames,
+            panelGeometries: panelGeometries,
+            previewSize: previewSize,
+            canvasSize: SizeConstants.defaultCanvasSize
+        )
     }
 
     var layoutStyle: LayoutStyle { layoutManager.layoutStyle }
@@ -602,7 +617,7 @@ final class CollageViewModel {
             target.cropManager.cropMap = oldDomain.cropMap
             target.cropManager.cropVersions = oldDomain.cropVersions
             target.imageCoordinator.saliencyResults = oldSaliency
-            target.backgroundManager.backgroundColor = oldBackgroundConfig.color
+            target.backgroundManager.backgroundColor = oldBackgroundConfig.color.nsColor
             target.backgroundManager.backgroundStyle = oldBackgroundConfig.style
             target.titleManager.titleAttrString = oldTitleAttrString
             target.titleManager.titleStyle = oldTitleStyle

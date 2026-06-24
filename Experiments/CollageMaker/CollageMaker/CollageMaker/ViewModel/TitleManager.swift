@@ -7,6 +7,14 @@ private let logger = Logger(
     category: "TitleManager"
 )
 
+enum TitleResizeEdge: Equatable {
+    case none, left, right
+}
+
+enum TitleHitResult: Equatable {
+    case none, drag, resize(TitleResizeEdge)
+}
+
 @MainActor
 @Observable
 final class TitleManager {

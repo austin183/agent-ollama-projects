@@ -30,10 +30,9 @@ The script kills any running instance before building and locates the `.app` in 
 ## Tests
 
 Unit tests use **Swift Testing** (`@Test`, `@Suite`, `#expect`). UI tests use **XCTest**.
-
+ 
 ```bash
-# Run all unit tests
-xcodebuild test -project CollageMaker/CollageMaker.xcodeproj -scheme CollageMaker -destination 'platform=macOS,arch=arm64' -only-testing:CollageMakerTests
+bash script/run_tests.sh
 ```
 
 Test fixture helpers are in `CollageMakerTests/TestHelpers.swift`. See `CollageViewModelTests.swift` for the mocking pattern. See the `building-macos-apps` skill → `references/testing/testing-patterns.md` for AppKit init, CGImage fixtures, concurrency races, serialization, and diagnostic patterns.

@@ -582,7 +582,6 @@ import Testing
         var lastCanvasSize: CGSize = .zero
         var incrementTitleVersionCalls = 0
         var cancelDebouncerCalls: [String] = []
-        var debouncedSaveCalls = 0
 
         func updateTitleImage(attrString: NSAttributedString, style: TitleStyle, canvasSize: CGSize) {
             updateTitleImageCalls += 1
@@ -601,10 +600,6 @@ import Testing
 
         func cancelDebouncer(id: String) {
             cancelDebouncerCalls.append(id)
-        }
-
-        func debouncedSave() {
-            debouncedSaveCalls += 1
         }
     }
 
@@ -633,7 +628,6 @@ import Testing
         #expect(updater.cancelDebouncerCalls == ["titleImage"])
         #expect(updater.incrementTitleVersionCalls == 1)
         #expect(updater.updateTitleImageCalls == 1)
-        #expect(updater.debouncedSaveCalls == 1)
     }
 
     @Test func finishDragPassesCurrentStyleToUpdater() {

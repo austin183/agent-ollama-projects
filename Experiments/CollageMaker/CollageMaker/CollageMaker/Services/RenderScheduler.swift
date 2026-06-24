@@ -1,8 +1,12 @@
 import Foundation
 
+protocol RenderScheduling {
+    func render<T: Sendable>(_ work: @escaping @Sendable () -> T) async -> T
+}
+
 /// Serializes CoreGraphics rendering operations to protect NSGraphicsContext.current
 /// from concurrent corruption, while yielding non-blockingly to the caller.
-actor RenderScheduler {
+actor RenderScheduler: RenderScheduling {
     private let queue = DispatchQueue(label: "austin183.indie.CollageMaker.render")
 
     /// Submit rendering work to the serial queue. Returns non-blockingly.

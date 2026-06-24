@@ -16,7 +16,6 @@ import Testing
         var lastBackgroundImage: CGImage?
         var lastPreviewSize: CGSize = .zero
         var cancelDebouncerCalls: [String] = []
-        var debouncedSaveCalls = 0
 
         func updateBackground(config: BackgroundConfig, canvasSize: CGSize, backgroundImage: CGImage?, previewSize: CGSize) {
             updateBackgroundCalls += 1
@@ -29,7 +28,6 @@ import Testing
         func updateTitleImage(attrString: NSAttributedString, style: TitleStyle, canvasSize: CGSize) {}
         func incrementTitleVersion() {}
         func cancelDebouncer(id: String) { cancelDebouncerCalls.append(id) }
-        func debouncedSave() { debouncedSaveCalls += 1 }
     }
 
     // MARK: - Initial state
@@ -61,9 +59,9 @@ import Testing
         let config = manager.buildConfig()
 
         #expect(config.style == .gradient)
-        #expect(config.color == .systemBlue)
-        #expect(config.gradientStartColor == .red)
-        #expect(config.gradientEndColor == .blue)
+        #expect(config.color.nsColor == .systemBlue)
+        #expect(config.gradientStartColor.nsColor == .red)
+        #expect(config.gradientEndColor.nsColor == .blue)
         #expect(config.gradientAngle == 45)
         #expect(config.opacity == 0.8)
     }
@@ -76,9 +74,9 @@ import Testing
 
         let config = manager.buildConfig()
 
-        #expect(config.backgroundColor == manager.backgroundColor.cgColor)
-        #expect(config.gradientStartCGColor == manager.gradientStartColor.cgColor)
-        #expect(config.gradientEndCGColor == manager.gradientEndColor.cgColor)
+        #expect(config.color.cgColor == manager.backgroundColor.cgColor)
+        #expect(config.gradientStartColor.cgColor == manager.gradientStartColor.cgColor)
+        #expect(config.gradientEndColor.cgColor == manager.gradientEndColor.cgColor)
     }
 
     @Test func buildConfigReflectsSolidStyle() {

@@ -67,15 +67,15 @@ struct BackgroundRenderer {
 
         switch config.style {
         case .solid:
-            context.setFillColor(config.backgroundColor)
+            context.setFillColor(config.color.cgColor)
             context.fill(CGRect(x: 0, y: 0, width: canvasSize.width, height: canvasSize.height))
 
         case .gradient:
             drawGradient(
                 into: context,
                 size: canvasSize,
-                startColor: config.gradientStartCGColor,
-                endColor: config.gradientEndCGColor,
+                startColor: config.gradientStartColor.cgColor,
+                endColor: config.gradientEndColor.cgColor,
                 angle: config.gradientAngle
             )
 
@@ -83,7 +83,7 @@ struct BackgroundRenderer {
             drawImageBackground(
                 into: context,
                 size: canvasSize,
-                backgroundColor: config.backgroundColor,
+                backgroundColor: config.color.cgColor,
                 backgroundImage: backgroundImage,
                 opacity: config.opacity
             )

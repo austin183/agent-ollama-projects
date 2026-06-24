@@ -216,14 +216,14 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
     private func drawBackground(into context: CGContext, config: BackgroundConfig, size: CGSize, backgroundImage: CGImage?) {
         switch config.style {
         case .solid:
-            BackgroundRenderer.drawSolidBackground(into: context, size: size, color: config.backgroundColor)
+            BackgroundRenderer.drawSolidBackground(into: context, size: size, color: config.color.cgColor)
 
         case .gradient:
             BackgroundRenderer.drawGradient(
                 into: context,
                 size: size,
-                startColor: config.gradientStartCGColor,
-                endColor: config.gradientEndCGColor,
+                startColor: config.gradientStartColor.cgColor,
+                endColor: config.gradientEndColor.cgColor,
                 angle: config.gradientAngle
             )
 
@@ -231,7 +231,7 @@ final class CollageAssembler: CollageAssembly, @unchecked Sendable {
             BackgroundRenderer.drawImageBackground(
                 into: context,
                 size: size,
-                backgroundColor: config.backgroundColor,
+                backgroundColor: config.color.cgColor,
                 backgroundImage: backgroundImage,
                 opacity: config.opacity
             )

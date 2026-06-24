@@ -13,24 +13,14 @@ struct CollageEditorView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var gestureCoordinator = GestureCoordinator()
 
-
     private var titleCanvasFrame: CGRect? {
         viewModel.cachedTitleCanvasFrame
-    }
-
-    private var titleMinWidth: CGFloat {
-        viewModel.cachedTitleMinWidth
-    }
-
-    private var layoutTitleFrame: CGRect {
-        titleCanvasFrame ?? CGRect.zero
     }
 
     var body: some View {
         if viewModel.isLayeredMode || viewModel.previewImage != nil {
             GeometryReader { geometry in
                 let panelFrames = viewModel.computePanelFrames(previewSize: geometry.size)
-                let panelGeometries = Dictionary(uniqueKeysWithValues: viewModel.panels.map { ($0.id, $0.geometry) })
                 let titleFrame = titleCanvasFrame.map { CoordinateConverter.canvasToPreviewFrame($0, in: geometry.size, canvasSize: SizeConstants.defaultCanvasSize) }
                 let canvasPreviewFrame = CoordinateConverter.canvasToPreviewFrame(CGRect(origin: .zero, size: SizeConstants.defaultCanvasSize), in: geometry.size, canvasSize: SizeConstants.defaultCanvasSize)
 
@@ -50,7 +40,7 @@ struct CollageEditorView: View {
                         gestureCoordinator: gestureCoordinator,
                         viewModel: viewModel,
                         panelFrames: panelFrames,
-                        panelGeometries: panelGeometries
+                        panelGeometries: viewModel.panelGeometries
                     )
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 0))
@@ -80,142 +70,32 @@ struct CollageEditorView: View {
                     )
                 }
                 .simultaneousGesture(
-                    DragGesture(minimumDistance: 5)
-                        .onChanged { value in
-                                 if !gestureCoordinator.dragTitleLocked {
-                                     guard let titleCanvas = titleCanvasFrame else { return }
-                                     switch viewModel.titleManager.hitTestTitle(location: value.startLocation, previewSize: geometry.size) {
-                                     case .resize(let edge):
-                                      gestureCoordinator.dragTitleLocked = true
-                                      gestureCoordinator.titleResizeEdge = edge
-                                      viewModel.isDraggingTitle = true
-                                      gestureCoordinator.oldTitleStyle = viewModel.titleStyle
-                                      return
-                                     case .drag:
-                                      gestureCoordinator.dragTitleOffset = viewModel.titleManager.computeTitleDragOffset(
-                                          startLocation: value.startLocation,
-                                          previewSize: geometry.size
-                                      )
-                                      gestureCoordinator.dragTitleLocked = true
-                                      gestureCoordinator.titleResizeEdge = .none
-                                      viewModel.isDraggingTitle = true
-                                      gestureCoordinator.oldTitleStyle = viewModel.titleStyle
-                                      return
-                                     case .none:
-                                      break
-                                     }
-                                     return
-                                 }
-
-                            let canvasSize = SizeConstants.defaultCanvasSize
-                            if gestureCoordinator.titleResizeEdge != .none,
-                                let tf = titleCanvasFrame {
-                                let (newWidth, posDelta) = viewModel.titleManager.computeTitleResize(
-                                    screenLocation: value.location,
-                                    edge: gestureCoordinator.titleResizeEdge,
-                                    previewSize: geometry.size
-                                )
-                                var style = viewModel.titleStyle
-                                style.width = newWidth
-                                style.positionX = style.positionX + posDelta
-                                viewModel.titleStyle = style
-                            } else {
-                                guard let tf = titleCanvasFrame else { return }
-                                let (positionX, positionY) = viewModel.titleManager.computeTitleDragPosition(
-                                    screenLocation: value.location,
-                                    offset: gestureCoordinator.dragTitleOffset,
-                                    previewSize: geometry.size
-                                )
-                                var style = viewModel.titleStyle
-                                style.positionX = positionX
-                                style.positionY = positionY
-                                viewModel.titleStyle = style
-                            }
-                        }
-                        .onEnded { _ in
-                            if gestureCoordinator.dragTitleLocked {
-                                if let oldStyle = gestureCoordinator.oldTitleStyle {
-                                    viewModel.registerTitleStyleUndo(oldStyle: oldStyle)
-                                }
-                                gestureCoordinator.oldTitleStyle = nil
-                                viewModel.isDraggingTitle = false
-                                gestureCoordinator.dragTitleLocked = false
-                                gestureCoordinator.titleResizeEdge = .none
-                                gestureCoordinator.dragTitleOffset = .zero
-                                viewModel.finishTitleDrag()
-                            }
-                        }
+                    TitleDragGestureBuilder(
+                        coordinator: gestureCoordinator,
+                        viewModel: viewModel,
+                        titleCanvasFrame: titleCanvasFrame,
+                        previewSize: geometry.size
+                    ).build()
                 )
                 .simultaneousGesture(
-                    DragGesture(minimumDistance: 5)
-                        .onChanged { value in
-                            guard !viewModel.isDraggingTitle else { return }
-
-                            if gestureCoordinator.dragSourcePanelId == nil {
-                                if let tc = titleCanvasFrame {
-                                    if viewModel.titleManager.hitTestTitle(location: value.startLocation, previewSize: geometry.size) != .none {
-                                        return
-                                    }
-                                }
-                                if let id = hitPanel(at: value.startLocation, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size) {
-                                    gestureCoordinator.dragSourcePanelId = id
-                                    if let imgIdx = viewModel.getEffectiveImageIndex(for: id) {
-                                        gestureCoordinator.dragSourceImageIndex = imgIdx
-                                    }
-                                }
-                            }
-                            if gestureCoordinator.dragSourcePanelId != nil {
-                                gestureCoordinator.dragTargetPanelId = hitPanel(at: value.location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size)
-                                gestureCoordinator.dragCursorLocation = value.location
-                            }
-                        }
-                        .onEnded { value in
-                            guard !viewModel.isDraggingTitle else {
-                                gestureCoordinator.dragSourcePanelId = nil
-                                gestureCoordinator.dragTargetPanelId = nil
-                                gestureCoordinator.dragCursorLocation = nil
-                                return
-                            }
-                            if let sourceId = gestureCoordinator.dragSourcePanelId,
-                                let targetId = hitPanel(at: value.location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size),
-                               sourceId != targetId {
-                                viewModel.swapPanelImages(sourceId: sourceId, targetId: targetId)
-                            }
-                            gestureCoordinator.dragSourcePanelId = nil
-                            gestureCoordinator.dragTargetPanelId = nil
-                            gestureCoordinator.dragCursorLocation = nil
-                        }
+                    PanelSwapGestureBuilder(
+                        coordinator: gestureCoordinator,
+                        viewModel: viewModel,
+                        titleCanvasFrame: titleCanvasFrame,
+                        previewSize: geometry.size
+                    ).build()
                 )
                 .simultaneousGesture(
-                    MagnificationGesture()
-                        .onChanged { value in
-                            if gestureCoordinator.pinchPanelId == nil, let id = viewModel.selectedPanelId {
-                                gestureCoordinator.pinchPanelId = id
-                                viewModel.beginPinch(panelId: id)
-                                viewModel.beginGestureUndo()
-                                viewModel.isLiveGesturing = true
-                            }
-                            if gestureCoordinator.pinchPanelId != nil {
-                                viewModel.pinch(magnification: value)
-                                if gestureCoordinator.shouldProcessPinch() {
-                                    viewModel.applyPinchLive()
-                                }
-                            }
-                        }
-                        .onEnded { _ in
-                            viewModel.isLiveGesturing = false
-                            if let id = gestureCoordinator.pinchPanelId {
-                                viewModel.applyPinch(panelId: id)
-                                viewModel.endGestureUndo(actionName: "Adjust Crop")
-                            }
-                            gestureCoordinator.pinchPanelId = nil
-                        }
+                    PinchGestureBuilder(
+                        coordinator: gestureCoordinator,
+                        viewModel: viewModel
+                    ).build()
                 )
                 .onTapGesture { location in
                     if let titleFrame, titleFrame.contains(location) {
                         return
                     }
-                    if let id = hitPanel(at: location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: geometry.size) {
+                    if let id = viewModel.hitPanel(at: location, previewSize: geometry.size) {
                         viewModel.selectedPanelId = id
                         if let panel = viewModel.panels.first(where: { $0.id == id }),
                            let frame = panelFrames[id] {
@@ -234,16 +114,6 @@ struct CollageEditorView: View {
                 description: Text("Add images to get started")
             )
         }
-    }
-
-    private func hitPanel(at location: CGPoint, panelFrames: [UUID: CGRect], panelGeometries: [UUID: PanelGeometry], previewSize: CGSize) -> UUID? {
-        if let id = CoordinateConverter.hitTestPanel(at: location, panelFrames: panelFrames, panelGeometries: panelGeometries, previewSize: previewSize, canvasSize: SizeConstants.defaultCanvasSize),
-            let panel = viewModel.panels.first(where: { $0.id == id }),
-           let frame = panelFrames[id] {
-            logger.debug("hitPanel: idx=\(panel.imageIndex) frame=\(DebugHelpers.rectStr(frame)) tap=\(DebugHelpers.pointStr(location)) hits=true")
-            return id
-        }
-        return nil
     }
 }
 
