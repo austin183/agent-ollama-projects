@@ -55,17 +55,19 @@ struct LayoutConfigSidebar: View {
             .accessibilityLabel("Layout style")
             .accessibilityValue(viewModel.layoutStyle.title)
 
-            VStack(alignment: .leading) {
-                HStack {
-                    Text("Gutter")
-                    Spacer()
-                    Text("\(Int(viewModel.gutter))pt")
-                        .foregroundStyle(.secondary)
+            if viewModel.layoutStyle != .hexagonal {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text("Gutter")
+                        Spacer()
+                        Text("\(Int(viewModel.gutter))pt")
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.caption)
+                    Slider(value: gutterBinding, in: 0...20, step: 1)
+                        .accessibilityLabel("Gutter width")
+                        .accessibilityValue("\(Int(viewModel.gutter)) points")
                 }
-                .font(.caption)
-                Slider(value: gutterBinding, in: 0...20, step: 1)
-                    .accessibilityLabel("Gutter width")
-                    .accessibilityValue("\(Int(viewModel.gutter)) points")
             }
 
             if viewModel.layoutStyle == .diagonalSlices {
