@@ -41,17 +41,19 @@ struct TitleStyle: Codable, Equatable, @unchecked Sendable {
         )
     }
 
-    static let `default` = TitleStyle(
-        fontFamily: "",
-        fontSize: 48,
-        fontColor: NSColor.white.withAlphaComponent(0.8),
-        backgroundColor: NSColor.black.withAlphaComponent(0.4),
-        alignment: .center,
-        showBackground: true,
-        positionX: 0.5,
-        positionY: 0.88,
-        width: 0
-    )
+    static func defaultStyle() -> TitleStyle {
+        TitleStyle(
+            fontFamily: "",
+            fontSize: 48,
+            fontColor: NSColor.white.withAlphaComponent(0.8),
+            backgroundColor: NSColor.black.withAlphaComponent(0.4),
+            alignment: .center,
+            showBackground: true,
+            positionX: 0.5,
+            positionY: 0.88,
+            width: 0
+        )
+    }
 
     func effectiveWidth(canvasWidth: CGFloat) -> CGFloat {
         if width > 0 {
@@ -85,22 +87,23 @@ extension TitleStyle {
         fontSize = try container.decode(CGFloat.self, forKey: .fontSize)
         alignment = NSTextAlignment(rawValue: try container.decode(Int.self, forKey: .alignment)) ?? .center
         showBackground = try container.decode(Bool.self, forKey: .showBackground)
-        positionX = try container.decodeIfPresent(CGFloat.self, forKey: .positionX) ?? TitleStyle.default.positionX
-        positionY = try container.decodeIfPresent(CGFloat.self, forKey: .positionY) ?? TitleStyle.default.positionY
-        width = try container.decodeIfPresent(CGFloat.self, forKey: .width) ?? TitleStyle.default.width
+        let defaults = Self.defaultStyle()
+        positionX = try container.decodeIfPresent(CGFloat.self, forKey: .positionX) ?? defaults.positionX
+        positionY = try container.decodeIfPresent(CGFloat.self, forKey: .positionY) ?? defaults.positionY
+        width = try container.decodeIfPresent(CGFloat.self, forKey: .width) ?? defaults.width
 
         if let hex = try? container.decode(String.self, forKey: .fontColorHex),
            let color = NSColor(rgbaHex: hex) {
             fontColor = color
         } else {
-            fontColor = TitleStyle.default.fontColor
+            fontColor = defaults.fontColor
         }
 
         if let hex = try? container.decode(String.self, forKey: .backgroundColorHex),
            let color = NSColor(rgbaHex: hex) {
             backgroundColor = color
         } else {
-            backgroundColor = TitleStyle.default.backgroundColor
+            backgroundColor = defaults.backgroundColor
         }
     }
 }

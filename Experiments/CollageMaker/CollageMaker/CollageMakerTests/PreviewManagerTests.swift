@@ -102,7 +102,7 @@ import Testing
 
         mgr.updateTitleImage(
             titleAttrString: NSAttributedString(string: "Test Title"),
-            titleStyle: TitleStyle.default,
+            titleStyle: TitleStyle.defaultStyle(),
             canvasSize: SizeConstants.defaultCanvasSize
         )
 
@@ -115,7 +115,7 @@ import Testing
 
         mgr.updateTitleImage(
             titleAttrString: NSAttributedString(string: ""),
-            titleStyle: TitleStyle.default,
+            titleStyle: TitleStyle.defaultStyle(),
             canvasSize: SizeConstants.defaultCanvasSize
         )
 

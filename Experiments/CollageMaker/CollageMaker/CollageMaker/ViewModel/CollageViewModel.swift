@@ -91,7 +91,11 @@ final class CollageViewModel {
     var customImageOrder: [Int] {
         get { imageLibrary.customImageOrder }
         set {
-            guard !isInitializing else { return }
+            guard !isInitializing else { imageLibrary.customImageOrder = newValue; return }
+            let old = imageLibrary.customImageOrder
+            registerUndo(oldValue: old, actionName: "Reorder Images") {
+                $0.imageLibrary.customImageOrder = old
+            }
             imageLibrary.customImageOrder = newValue
         }
     }
@@ -455,16 +459,35 @@ final class CollageViewModel {
         self.gradientEndColor = bundle.gradientEndColor
         self.gradientAngle = bundle.gradientAngle
         self.backgroundImagePath = bundle.backgroundImagePath
-        self.backgroundImage = bundle.backgroundImage
         self.backgroundOpacity = bundle.backgroundOpacity
         imageLibrary.customImageOrder = bundle.customImageOrder
         layoutManager.doubleExposureMaskOpacity = bundle.doubleExposureMaskOpacity
         layoutManager.doubleExposureMaskImagePath = bundle.doubleExposureMaskImagePath
-        layoutManager.doubleExposureMaskImage = bundle.doubleExposureMaskImage
         layoutManager.diagonalSliceAngle = bundle.diagonalSliceAngle
         layoutManager.hexagonalSpacing = bundle.hexagonalSpacing
         self.rightDrawerWidth = bundle.rightDrawerWidth
         isInitializing = false
+
+        // Load background image off the main thread to avoid launch jank.
+        if let bgPath = bundle.backgroundImagePath {
+            Task {
+                guard let image = NSImage(contentsOf: URL(fileURLWithPath: bgPath)) else { return }
+                await MainActor.run {
+                    self.backgroundManager.backgroundImage = image
+                    self.updatePreview()
+                }
+            }
+        }
+
+        // Load double exposure mask image off the main thread.
+        if let maskPath = bundle.doubleExposureMaskImagePath {
+            Task {
+                guard let image = NSImage(contentsOf: URL(fileURLWithPath: maskPath)) else { return }
+                await MainActor.run {
+                    self.layoutManager.doubleExposureMaskImage = image
+                }
+            }
+        }
     }
 
     func setBackgroundImage(_ image: NSImage?, path: String?) {

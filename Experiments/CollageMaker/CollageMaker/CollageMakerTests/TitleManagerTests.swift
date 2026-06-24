@@ -423,7 +423,7 @@ import Testing
     @Test func boundsCacheHitOnPositionChange() {
         let manager = TitleManager()
         manager.titleAttrString = NSAttributedString(string: "Hello")
-        manager.titleStyle = .default
+        manager.titleStyle = .defaultStyle()
 
         _ = manager.canvasFrame  // compute and cache
         let frame1 = manager.canvasFrame
@@ -441,7 +441,7 @@ import Testing
     @Test func boundsCacheInvalidateOnFontChange() {
         let manager = TitleManager()
         manager.titleAttrString = NSAttributedString(string: "Hello")
-        manager.titleStyle = .default
+        manager.titleStyle = .defaultStyle()
 
         _ = manager.canvasFrame  // compute and cache
         let size1 = manager.canvasFrame?.size
@@ -457,7 +457,7 @@ import Testing
     @Test func boundsCacheInvalidateOnWidthChange() {
         let manager = TitleManager()
         manager.titleAttrString = NSAttributedString(string: "Hello")
-        manager.titleStyle = .default
+        manager.titleStyle = .defaultStyle()
 
         _ = manager.canvasFrame  // compute and cache
         let frame1 = manager.canvasFrame
@@ -472,7 +472,7 @@ import Testing
     @Test func boundsCacheMissOnEmptyTitle() {
         let manager = TitleManager()
         manager.titleAttrString = NSAttributedString(string: "Hello")
-        manager.titleStyle = .default
+        manager.titleStyle = .defaultStyle()
 
         _ = manager.canvasFrame  // compute and cache
         #expect(manager.canvasFrame != nil)
@@ -494,14 +494,14 @@ import Testing
         manager.reset()
 
         #expect(manager.title == "")
-        #expect(manager.titleStyle == .default)
+        #expect(manager.titleStyle == .defaultStyle())
         #expect(manager.isDraggingTitle == false)
     }
 
     @Test func resetClearsCanvasFrame() {
         let manager = TitleManager()
         manager.titleAttrString = NSAttributedString(string: "Hello")
-        manager.titleStyle = .default
+        manager.titleStyle = .defaultStyle()
 
         #expect(manager.canvasFrame != nil)
 
@@ -513,7 +513,7 @@ import Testing
     @Test func resetClearsMinWidth() {
         let manager = TitleManager()
         manager.titleAttrString = NSAttributedString(string: "Hello")
-        manager.titleStyle = .default
+        manager.titleStyle = .defaultStyle()
 
         #expect(manager.minWidth > 0)
 
@@ -525,7 +525,7 @@ import Testing
     @Test func resetAllowsNewTitle() {
         let manager = TitleManager()
         manager.titleAttrString = NSAttributedString(string: "First")
-        manager.titleStyle = .default
+        manager.titleStyle = .defaultStyle()
         _ = manager.canvasFrame
 
         manager.reset()
@@ -545,7 +545,7 @@ import Testing
     @Test func canvasFrameNotNilWithTitle() {
         let manager = TitleManager()
         manager.titleAttrString = NSAttributedString(string: "Hello")
-        manager.titleStyle = .default
+        manager.titleStyle = .defaultStyle()
 
         let frame = manager.canvasFrame
         #expect(frame != nil)
@@ -556,7 +556,7 @@ import Testing
     @Test func canvasFrameReflectsPosition() {
         let manager = TitleManager()
         manager.titleAttrString = NSAttributedString(string: "Hello")
-        manager.titleStyle = .default
+        manager.titleStyle = .defaultStyle()
 
         manager.titleStyle.positionX = 0.1
         let frameLeft = manager.canvasFrame
@@ -611,7 +611,7 @@ import Testing
     @Test func updateImageCallsUpdaterMethods() {
         let manager = TitleManager()
         manager.titleAttrString = NSAttributedString(string: "Hello")
-        manager.titleStyle = .default
+        manager.titleStyle = .defaultStyle()
 
         let updater = TrackingPreviewUpdatable()
         manager.updateImage(updater: updater)
@@ -625,7 +625,7 @@ import Testing
     @Test func finishDragCancelsDebouncerAndSaves() {
         let manager = TitleManager()
         manager.titleAttrString = NSAttributedString(string: "Hello")
-        manager.titleStyle = .default
+        manager.titleStyle = .defaultStyle()
 
         let updater = TrackingPreviewUpdatable()
         manager.finishDrag(updater: updater)

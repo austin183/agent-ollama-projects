@@ -99,7 +99,7 @@ final class TestAssembler: CollageAssembly {
     var lastAssembleCrops: [UUID: CropInfo] = [:]
     var lastAssembleAssignments: [UUID: Int] = [:]
     var lastAssembleTitle: String = ""
-    var lastAssembleTitleStyle: TitleStyle = .default
+    var lastAssembleTitleStyle: TitleStyle = .defaultStyle()
     var lastAssembleCanvasSize: CGSize = .zero
     var lastPreviewConfig: AssemblyConfig?
     var lastPreviewSize: CGSize = .zero
@@ -187,7 +187,7 @@ func makeAssemblyConfig(
     crops: [UUID: CropInfo] = [:],
     panelAssignments: [UUID: Int] = [:],
     titleText: String = "",
-    titleStyle: TitleStyle = .default,
+    titleStyle: TitleStyle = .defaultStyle(),
     backgroundColor: NSColor = .black,
     backgroundStyle: BackgroundStyle = .solid,
     gradientStartColor: NSColor = .black,

@@ -11,7 +11,7 @@ import Testing
     @Test func prepareWithSimpleText() {
         let attrString = NSAttributedString(string: "Hello World")
         let textData = TitleTextData.extract(from: attrString)
-        let style = TitleStyle.default
+        let style = TitleStyle.defaultStyle()
 
         let metrics = TitleMetricsCT.prepare(
             textData: textData,
@@ -26,7 +26,7 @@ import Testing
     @Test func prepareWithEmptyText() {
         let attrString = NSAttributedString(string: "")
         let textData = TitleTextData.extract(from: attrString)
-        let style = TitleStyle.default
+        let style = TitleStyle.defaultStyle()
 
         let metrics = TitleMetricsCT.prepare(
             textData: textData,
@@ -43,7 +43,7 @@ import Testing
     @Test func boundingBoxHasPositiveDimensions() {
         let attrString = NSAttributedString(string: "Test Title")
         let textData = TitleTextData.extract(from: attrString)
-        let style = TitleStyle.default
+        let style = TitleStyle.defaultStyle()
 
         let metrics = TitleMetricsCT.prepare(
             textData: textData,
@@ -62,7 +62,7 @@ import Testing
     @Test func boundingBoxWidthIncreasesWithLongerText() {
         let shortText = TitleTextData.extract(from: NSAttributedString(string: "Hi"))
         let longText = TitleTextData.extract(from: NSAttributedString(string: "This is a much longer title text"))
-        let style = TitleStyle.default
+        let style = TitleStyle.defaultStyle()
 
         let shortMetrics = TitleMetricsCT.prepare(
             textData: shortText,
@@ -87,7 +87,7 @@ import Testing
     @Test func boundingBoxConstrainedByEffectiveWidth() {
         let attrString = NSAttributedString(string: "A very long title that should wrap within the effective width constraint")
         let textData = TitleTextData.extract(from: attrString)
-        var style = TitleStyle.default
+        var style = TitleStyle.defaultStyle()
         style.positionX = 0.5
         style.positionY = 0.88
 
@@ -108,7 +108,7 @@ import Testing
     @Test func boundingBoxYIsNegativeDescent() {
         let attrString = NSAttributedString(string: "Test")
         let textData = TitleTextData.extract(from: attrString)
-        let style = TitleStyle.default
+        let style = TitleStyle.defaultStyle()
 
         let metrics = TitleMetricsCT.prepare(
             textData: textData,
@@ -128,7 +128,7 @@ import Testing
     @Test func minNaturalWidthGreaterThanZero() {
         let attrString = NSAttributedString(string: "Hello")
         let textData = TitleTextData.extract(from: attrString)
-        let style = TitleStyle.default
+        let style = TitleStyle.defaultStyle()
 
         let metrics = TitleMetricsCT.prepare(
             textData: textData,
@@ -144,7 +144,7 @@ import Testing
     @Test func minNaturalWidthUnconstrained() {
         let attrString = NSAttributedString(string: "A very long title that should not be constrained by canvas width")
         let textData = TitleTextData.extract(from: attrString)
-        var style = TitleStyle.default
+        var style = TitleStyle.defaultStyle()
         style.width = 200
 
         let metrics = TitleMetricsCT.prepare(
@@ -167,7 +167,7 @@ import Testing
     @Test func drawTitleProducesNonEmptyImage() {
         let attrString = NSAttributedString(string: "Test Title")
         let textData = TitleTextData.extract(from: attrString)
-        let style = TitleStyle.default
+        let style = TitleStyle.defaultStyle()
 
         let metrics = TitleMetricsCT.prepare(
             textData: textData,
@@ -213,7 +213,7 @@ import Testing
     @Test func drawTitleWithBackgroundDrawsPill() {
         let attrString = NSAttributedString(string: "Title")
         let textData = TitleTextData.extract(from: attrString)
-        var style = TitleStyle.default
+        var style = TitleStyle.defaultStyle()
         style.showBackground = true
         style.backgroundColor = NSColor.systemRed
 
@@ -261,7 +261,7 @@ import Testing
     @Test func drawTitleWithoutBackgroundSkipsPill() {
         let attrString = NSAttributedString(string: "Title")
         let textData = TitleTextData.extract(from: attrString)
-        var style = TitleStyle.default
+        var style = TitleStyle.defaultStyle()
         style.showBackground = false
 
         let metrics = TitleMetricsCT.prepare(
@@ -310,7 +310,7 @@ import Testing
     @Test func prepareWithNamedFontFamily() {
         let attrString = NSAttributedString(string: "Helvetica Test")
         let textData = TitleTextData.extract(from: attrString)
-        var style = TitleStyle.default
+        var style = TitleStyle.defaultStyle()
         style.fontFamily = "Helvetica"
         style.fontSize = 36
 
@@ -328,7 +328,7 @@ import Testing
     @Test func prepareWithEmptyFontFamilyUsesSystem() {
         let attrString = NSAttributedString(string: "System Font Test")
         let textData = TitleTextData.extract(from: attrString)
-        var style = TitleStyle.default
+        var style = TitleStyle.defaultStyle()
         style.fontFamily = ""
 
         let metrics = TitleMetricsCT.prepare(
@@ -346,7 +346,7 @@ import Testing
     @Test func prepareWithLeftAlignment() {
         let attrString = NSAttributedString(string: "Left Aligned")
         let textData = TitleTextData.extract(from: attrString)
-        var style = TitleStyle.default
+        var style = TitleStyle.defaultStyle()
         style.alignment = .left
 
         let metrics = TitleMetricsCT.prepare(
@@ -362,7 +362,7 @@ import Testing
     @Test func prepareWithRightAlignment() {
         let attrString = NSAttributedString(string: "Right Aligned")
         let textData = TitleTextData.extract(from: attrString)
-        var style = TitleStyle.default
+        var style = TitleStyle.defaultStyle()
         style.alignment = .right
 
         let metrics = TitleMetricsCT.prepare(
@@ -380,7 +380,7 @@ import Testing
     @Test func drawTitleRespectsPositionX() {
         let attrString = NSAttributedString(string: "Positioned")
         let textData = TitleTextData.extract(from: attrString)
-        var style = TitleStyle.default
+        var style = TitleStyle.defaultStyle()
         style.positionX = 0.0
         style.showBackground = false
 
@@ -426,10 +426,10 @@ import Testing
         let attrString = NSAttributedString(string: "Size Test")
         let textData = TitleTextData.extract(from: attrString)
 
-        var smallStyle = TitleStyle.default
+        var smallStyle = TitleStyle.defaultStyle()
         smallStyle.fontSize = 24
 
-        var largeStyle = TitleStyle.default
+        var largeStyle = TitleStyle.defaultStyle()
         largeStyle.fontSize = 72
 
         let smallMetrics = TitleMetricsCT.prepare(
@@ -458,7 +458,7 @@ import Testing
     @Test func prepareCanBeCalledFromBackgroundThread() async {
         let attrString = NSAttributedString(string: "Background Thread Test")
         let textData = TitleTextData.extract(from: attrString)
-        let style = TitleStyle.default
+        let style = TitleStyle.defaultStyle()
 
         let metrics = await Task.detached {
             TitleMetricsCT.prepare(
@@ -475,7 +475,7 @@ import Testing
     @Test func drawTitleCanBeCalledFromBackgroundThread() async {
         let attrString = NSAttributedString(string: "Background Draw")
         let textData = TitleTextData.extract(from: attrString)
-        let style = TitleStyle.default
+        let style = TitleStyle.defaultStyle()
 
         let metrics = TitleMetricsCT.prepare(
             textData: textData,
@@ -521,7 +521,7 @@ import Testing
     @Test func boundingBoxRespectsCustomWidth() {
         let attrString = NSAttributedString(string: "Custom Width Test")
         let textData = TitleTextData.extract(from: attrString)
-        var style = TitleStyle.default
+        var style = TitleStyle.defaultStyle()
         style.width = 200
 
         let metrics = TitleMetricsCT.prepare(
@@ -542,7 +542,7 @@ import Testing
     @Test func boundingBoxHandlesWrapping() {
         let attrString = NSAttributedString(string: "A very long title that will definitely wrap to multiple lines when constrained")
         let textData = TitleTextData.extract(from: attrString)
-        var style = TitleStyle.default
+        var style = TitleStyle.defaultStyle()
         style.width = 200
 
         let metrics = TitleMetricsCT.prepare(

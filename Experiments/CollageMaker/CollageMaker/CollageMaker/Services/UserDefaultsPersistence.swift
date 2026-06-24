@@ -21,12 +21,10 @@ struct PersistenceBundle {
     var gradientStartColor: NSColor
     var gradientEndColor: NSColor
     var gradientAngle: Double
-    var backgroundImage: NSImage?
     var backgroundImagePath: String?
     var backgroundOpacity: Double
     var customImageOrder: [Int]
     var doubleExposureMaskOpacity: CGFloat
-    var doubleExposureMaskImage: NSImage?
     var doubleExposureMaskImagePath: String?
     var diagonalSliceAngle: CGFloat
     var hexagonalSpacing: CGFloat
@@ -127,7 +125,7 @@ final class UserDefaultsPersistence {
            let decoded = try? JSONDecoder().decode(TitleStyle.self, from: data) {
             titleStyle = decoded
         } else {
-            titleStyle = .default
+            titleStyle = .defaultStyle()
         }
         let gutter = CGFloat(defaults.double(forKey: Keys.gutter))
         let backgroundColor = loadColor(key: Keys.backgroundColor, default: .black)
@@ -143,11 +141,11 @@ final class UserDefaultsPersistence {
         let gradientStartColor = loadColor(key: Keys.gradientStartColor, default: .black)
         let gradientEndColor = loadColor(key: Keys.gradientEndColor, default: .darkGray)
         let gradientAngle = defaults.double(forKey: Keys.gradientAngle)
-        let (backgroundImage, backgroundImagePath) = loadBackgroundImage()
+        let backgroundImagePath = loadBackgroundImagePath()
         let backgroundOpacity = loadBackgroundOpacity()
         let customImageOrder = loadCustomImageOrder()
         let doubleExposureMaskOpacity = CGFloat(defaults.double(forKey: Keys.doubleExposureMaskOpacity))
-        let (doubleExposureMaskImage, doubleExposureMaskImagePath) = loadDoubleExposureMaskImage()
+        let doubleExposureMaskImagePath = loadDoubleExposureMaskImagePath()
         let diagonalSliceAngle = CGFloat(defaults.double(forKey: Keys.diagonalSliceAngle))
         let hexagonalSpacing = CGFloat(defaults.double(forKey: Keys.hexagonalSpacing))
         let rightDrawerWidth: CGFloat
@@ -168,12 +166,10 @@ final class UserDefaultsPersistence {
             gradientStartColor: gradientStartColor,
             gradientEndColor: gradientEndColor,
             gradientAngle: gradientAngle,
-            backgroundImage: backgroundImage,
             backgroundImagePath: backgroundImagePath,
             backgroundOpacity: backgroundOpacity,
             customImageOrder: customImageOrder,
             doubleExposureMaskOpacity: doubleExposureMaskOpacity,
-            doubleExposureMaskImage: doubleExposureMaskImage,
             doubleExposureMaskImagePath: doubleExposureMaskImagePath,
             diagonalSliceAngle: diagonalSliceAngle,
             hexagonalSpacing: hexagonalSpacing,
@@ -248,28 +244,22 @@ final class UserDefaultsPersistence {
 
     // MARK: - Background Image
 
-    private func loadBackgroundImage() -> (image: NSImage?, path: String?) {
+    private func loadBackgroundImagePath() -> String? {
         guard let path = defaults.string(forKey: Keys.backgroundImagePath),
-              let url = URL(string: path),
-              FileManager.default.fileExists(atPath: path),
-              let data = try? Data(contentsOf: url),
-              let image = NSImage(data: data) else {
-            return (nil, nil)
+              FileManager.default.fileExists(atPath: path) else {
+            return nil
         }
-        return (image, path)
+        return path
     }
 
     // MARK: - Double Exposure Mask Image
 
-    private func loadDoubleExposureMaskImage() -> (image: NSImage?, path: String?) {
+    private func loadDoubleExposureMaskImagePath() -> String? {
         guard let path = defaults.string(forKey: Keys.doubleExposureMaskImagePath),
-              let url = URL(string: path),
-              FileManager.default.fileExists(atPath: path),
-              let data = try? Data(contentsOf: url),
-              let image = NSImage(data: data) else {
-            return (nil, nil)
+              FileManager.default.fileExists(atPath: path) else {
+            return nil
         }
-        return (image, path)
+        return path
     }
 
     // MARK: - Background Opacity

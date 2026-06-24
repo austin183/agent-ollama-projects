@@ -1,5 +1,4 @@
 import AppKit
-import Combine
 import SwiftUI
 
 private func normalizeForEditor(_ attrString: NSAttributedString, fontFamily: String, alignment: NSTextAlignment) -> NSAttributedString {
@@ -26,7 +25,7 @@ struct AttributedStringEditor: View {
     @Binding var attributedString: NSAttributedString
     var titleStyle: TitleStyle
 
-    @StateObject private var textViewHolder = StyleableTextViewHolder()
+    @State private var textViewHolder = StyleableTextViewHolder()
     @State private var boldActive = false
     @State private var italicActive = false
     @State private var underlineActive = false
@@ -214,21 +213,15 @@ struct AttributedStringEditor: View {
     }
 }
 
-class StyleableTextViewHolder: ObservableObject {
-    let objectWillChange = PassthroughSubject<StyleableTextViewHolder, Never>()
-    var textView: NSTextView? {
-        didSet {
-            DispatchQueue.main.async {
-                self.objectWillChange.send(self)
-            }
-        }
-    }
+@Observable
+class StyleableTextViewHolder {
+    var textView: NSTextView?
 }
 
 struct AttributedStringEditorView: NSViewRepresentable {
     @Binding var attributedString: NSAttributedString
     var titleStyle: TitleStyle
-    @ObservedObject var textViewHolder: StyleableTextViewHolder
+    var textViewHolder: StyleableTextViewHolder
     var onSelectionChange: (Bool, Bool, Bool) -> Void
 
     func makeNSView(context: Context) -> NSTextView {

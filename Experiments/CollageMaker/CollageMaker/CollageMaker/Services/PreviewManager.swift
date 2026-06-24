@@ -234,6 +234,16 @@ final class PreviewManager {
     /// Yields to let pending async rendering tasks complete.
     /// Used by tests to synchronize with background work.
     func awaitPendingTasks() async {
-        try? await Task.sleep(nanoseconds: 300_000_000)
+        let snapshot: [Task<Void, Never>] = [
+            previewTask,
+            previewDebounceTask,
+            backgroundTask,
+            overlayTask,
+            titleTask,
+        ].compactMap { $0 } + panelPreviewTasks.values
+
+        for task in snapshot {
+            await task.value
+        }
     }
 }

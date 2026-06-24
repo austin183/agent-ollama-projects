@@ -11,7 +11,7 @@ private let logger = Logger(
 @Observable
 final class TitleManager {
     var titleAttrString: NSAttributedString = NSAttributedString(string: "")
-    var titleStyle: TitleStyle = .default
+    var titleStyle: TitleStyle = .defaultStyle()
     var isDraggingTitle: Bool = false
 
     private var cachedBounds: TitleBoundsCache?
@@ -172,7 +172,7 @@ final class TitleManager {
 
     func reset() {
         titleAttrString = NSAttributedString(string: "")
-        titleStyle = .default
+        titleStyle = .defaultStyle()
         isDraggingTitle = false
         cachedBounds = nil
         cachedLayoutKey = nil
