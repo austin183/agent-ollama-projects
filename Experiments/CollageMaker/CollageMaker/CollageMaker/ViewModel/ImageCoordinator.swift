@@ -11,7 +11,9 @@ private let logger = Logger(
 /// Snapshot of image-coordinator domain state for undo restoration.
 struct ImageDomainState {
     let images: [ImageItem]
+    let customImageOrder: [Int]
     let panels: [ImagePanel]
+    let panelAssignments: [UUID: Int]
     let cropMap: [UUID: CropInfo]
     let cropVersions: [UUID: Int]
 }
@@ -38,6 +40,7 @@ final class ImageCoordinator {
     private let saliencyAnalyzer: SaliencyAnalysis
 
     var saliencyResults: [Int: SaliencyResult] = [:]
+    private var saliencyTask: Task<Void, Never>?
 
     init(
         imageLibrary: ImageLibraryManager,
@@ -82,22 +85,36 @@ final class ImageCoordinator {
 
     private func scheduleSaliencyAnalysis() {
         guard !imageLibrary.images.isEmpty && !target.isProcessing else { return }
-        Task { [weak self] in
+        saliencyTask?.cancel()
+        saliencyTask = Task { [weak self] in
             await self?.analyzeSaliency()
+        }
+    }
+
+    func cancelSaliencyTask() {
+        saliencyTask?.cancel()
+        saliencyTask = nil
+    }
+
+    func awaitPendingTasks() async {
+        if let task = saliencyTask {
+            await task.value
         }
     }
 
     func clearDomain() -> ImageDomainState {
         guard !imageLibrary.images.isEmpty else {
-            return ImageDomainState(images: [], panels: [], cropMap: [:], cropVersions: [:])
+            return ImageDomainState(images: [], customImageOrder: [], panels: [], panelAssignments: [:], cropMap: [:], cropVersions: [:])
         }
         logger.info("Clear image domain")
         let oldPanels = layoutManager.panels
+        let oldPanelAssignments = layoutManager.panelAssignments
         let oldCropMap = cropManager.cropMap
         let oldCropVersions = cropManager.cropVersions
+        let oldCustomImageOrder = imageLibrary.customImageOrder
         let oldImages = imageLibrary.clearAll()
         saliencyResults.removeAll()
-        return ImageDomainState(images: oldImages, panels: oldPanels, cropMap: oldCropMap, cropVersions: oldCropVersions)
+        return ImageDomainState(images: oldImages, customImageOrder: oldCustomImageOrder, panels: oldPanels, panelAssignments: oldPanelAssignments, cropMap: oldCropMap, cropVersions: oldCropVersions)
     }
 
     // MARK: - Panel Assignment
@@ -165,6 +182,10 @@ final class ImageCoordinator {
         do {
             let cgImages = imageLibrary.images.map { $0.cgImage }
             let results = try await saliencyAnalyzer.analyzeAll(cgImages)
+            guard !Task.isCancelled else {
+                logger.info("Saliency analysis cancelled, discarding results")
+                return
+            }
             var indexed: [Int: SaliencyResult] = [:]
             for (i, result) in results.enumerated() {
                 indexed[i] = result

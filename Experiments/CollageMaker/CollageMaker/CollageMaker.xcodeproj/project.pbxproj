@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		CT000002000000000000 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CT000001000000000000 /* CoreText.framework */; };
+		D950F38E2FCF4F6100AA882F /* TestImages in Resources */ = {isa = PBXBuildFile; fileRef = D950F38D2FCF4F6100AA882F /* TestImages */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +33,7 @@
 		D941DE972FB0ED2A00B1C1C2 /* CollageMaker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CollageMaker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D941DEA42FB0ED2B00B1C1C2 /* CollageMakerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CollageMakerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D941DEAE2FB0ED2B00B1C1C2 /* CollageMakerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CollageMakerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D950F38D2FCF4F6100AA882F /* TestImages */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TestImages; path = ../TestImages; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -85,6 +87,7 @@
 				D941DEA72FB0ED2B00B1C1C2 /* CollageMakerTests */,
 				D941DEB12FB0ED2B00B1C1C2 /* CollageMakerUITests */,
 				D941DE982FB0ED2A00B1C1C2 /* Products */,
+				D950F38D2FCF4F6100AA882F /* TestImages */,
 				D950F38C2FCF4F6100AA882F /* Recovered References */,
 			);
 			sourceTree = "<group>";
@@ -241,6 +244,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D950F38E2FCF4F6100AA882F /* TestImages in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

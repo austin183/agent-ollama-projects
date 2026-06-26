@@ -238,3 +238,4 @@ __marimo__/
 **/.playwright-cli/
 **/.playwright-mcp/
 Experiments/CollageMaker/_agent_docs/logs/
+**/bookmarks.plist

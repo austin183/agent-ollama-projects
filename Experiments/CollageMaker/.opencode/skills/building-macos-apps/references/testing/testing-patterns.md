@@ -36,6 +36,8 @@
 - Behavioral Cache Testing (Preferred)
 - Testing Synchronous DispatchQueue Closures
 - XCUIAutomation macOS API Gotchas
+- UITest Bundle Resource Discovery
+- UndoManager Coalescing in Tests
 
 ## CGImage Test Fixtures — Use NSBitmapImageRep
 
@@ -621,6 +623,8 @@ Release builds retain the sandbox for production safety.
 - **UserDefaults test suite instability** — A computed property that creates `UserDefaults(suiteName: UUID())` each access generates a different suite per read, so save/load go to different suites. Store as a stable instance property initialized in `init`.
 - **Identity-based cache tests are fragile** — `===` on cached `@Observable` objects can fail due to macro re-creation or test ordering. Prefer behavioral tests: compare computed values (e.g., `minWidth`, `frame.origin.x`) to verify cache hit/miss outcomes.
 - **XCUIAutomation macOS APIs differ from iOS** — `setEnvironment`, `menuItem`, `typeKeyword`, `focus()`, and `wait(for:)` return type all behave differently or don't exist. See § "XCUIAutomation macOS API Gotchas"
+- **UndoManager coalescing in tests** — Consecutive `registerUndo` calls for the same target within a Swift Testing `@MainActor` context are merged into one entry. Test single undo actions in isolation; cover multi-action sequences with integration gauntlets. See § "UndoManager Coalescing in Tests"
+- **Walking up from `bundleURL` to find resources** — Never chain `deletingLastPathComponent()` from `Bundle(for:).bundleURL` to locate test fixtures. The UITest bundle lives in DerivedData, so path walking never reaches source files. Use `Bundle(for:).url(forResource:withExtension: nil)` instead, with the resource added to the UITest target's Resources build phase. See § "UITest Bundle Resource Discovery"
 
 ## Identity-Based Cache Testing
 
@@ -769,3 +773,141 @@ private func waitForImagesLoaded(timeout: TimeInterval = 60) {
 | `'XCUIApplication' has no member 'setEnvironment'` | Use `launchArguments` |
 | `'XCUIElementQuery' has no member 'menuItem'` | Use `app.menuItems[]` |
 | `cannot convert 'Void' to 'DispatchTimeoutResult'` | Use `RunLoop` polling loop |
+
+## UITest Bundle Resource Discovery
+
+XCUIAutomation tests need test fixture files (images, data, etc.) accessible to the launched app. Resources are **not automatically copied** into UITest bundles — the UITest target starts with an empty Resources build phase.
+
+### The Anti-Pattern: Walking Up from bundleURL
+
+```swift
+// ❌ NEVER DO THIS — always fails
+let bundleURL = Bundle(for: Self.self).bundleURL
+let candidates = [
+    bundleURL.deletingLastPathComponent().deletingLastPathComponent()...,
+]
+```
+
+This fails because:
+1. The UITest bundle lives in DerivedData, not the source tree
+2. Walking up from DerivedData never reaches source files
+3. The path depth varies by Xcode version and project configuration
+
+### Step 1: Add a Folder Reference to project.pbxproj
+
+Four edits are needed to copy resources into the UITest bundle:
+
+1. **PBXFileReference** — Add a folder reference to the resource directory:
+```
+TESTIMAGES_REF /* TestImages */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TestImages; path = ../TestImages; sourceTree = "<group>"; };
+```
+
+2. **PBXBuildFile** — Create a build file for the reference:
+```
+TESTIMAGES_BUILD /* TestImages in Resources */ = {isa = PBXBuildFile; fileRef = TESTIMAGES_REF /* TestImages */; };
+```
+
+3. **PBXGroup** — Add to the project's main group children for Xcode navigator visibility.
+
+4. **PBXResourcesBuildPhase** — Add the build file to the UITest target's Resources phase:
+```
+UITests_Resources /* Resources */ = {
+    isa = PBXResourcesBuildPhase;
+    files = (
+        TESTIMAGES_BUILD /* TestImages in Resources */,
+    );
+};
+```
+
+### Step 2: Use Bundle API to Discover Resources
+
+```swift
+// ✅ Correct — works regardless of DerivedData path structure
+let testImagesPath = Bundle(for: Self.self).url(forResource: "TestImages", withExtension: nil)!.path
+```
+
+**Key:** `withExtension: nil` finds a folder resource, not a file with an extension.
+
+### Verification
+
+After `project.pbxproj` edits, verify with `build-for-testing` (not just `build`):
+
+```bash
+xcodebuild build-for-testing -project App.xcodeproj -scheme App -destination 'platform=macOS,arch=arm64'
+```
+
+Then check the built bundle:
+```bash
+ls ~/Library/Developer/Xcode/DerivedData/App-*/Build/Products/Debug/UITestRunner.app/Contents/PlugIns/UITests.xctest/Contents/Resources/TestImages/
+```
+
+### Debugging Clues
+
+- `FileManager.default.fileExists(atPath:)` returns `false` for paths built from `bundleURL.deletingLastPathComponent()` chains
+- A fallback path in a `candidates` array is always the last tried and always wrong
+- `ls` on the built test bundle's `Contents/Resources/` shows no resource directory if the build phase is misconfigured
+- `build` alone does not compile the UITest target — use `build-for-testing`
+
+## UndoManager Coalescing in Tests
+
+`UndoManager` coalesces consecutive undo registrations targeting the same object within a single run loop cycle. In Swift Testing with `@MainActor`, the Cocoa run loop is not active — all work goes through Swift's task scheduler, which never creates the event boundaries `UndoManager` needs to separate actions.
+
+**Result:** Two consecutive `registerUndo` calls for the same property (e.g., `setLayoutStyle(.grid)` then `setLayoutStyle(.freeform)`) are merged into one undo entry. Only the last registration survives.
+
+### What Does NOT Work
+
+None of these create a new run loop cycle in Swift Testing environments:
+
+```swift
+// ❌ DispatchQueue.main.async — not drained by the run loop in test context
+DispatchQueue.main.async { undoManager.registerUndo(...) }
+
+// ❌ Task on MainActor — Swift scheduler, not Cocoa event loop
+let task = Task { @MainActor in undoManager.registerUndo(...) }
+await task.value
+
+// ❌ RunLoop.main.run(until:) — drains NSRunLoop sources, not libdispatch
+RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+
+// ❌ beginUndoGrouping/endUndoGrouping — coalescing is per-target, not per-group
+undoManager.beginUndoGrouping()
+undoManager.registerUndo(...)
+undoManager.endUndoGrouping()
+```
+
+### What Works
+
+**Test single undo actions in isolation** — Each test exercises one operation + one `undo()`. Coalescing only occurs with consecutive registrations on the same target:
+
+```swift
+@Test func undoLayoutStyleRestoresPrevious() async throws {
+    let vm = makeViewModel()
+    vm.setLayoutStyle(.grid)
+    vm.undoManager.undo()
+    #expect(vm.layoutStyle == .freeform)
+}
+```
+
+**Cover multi-action sequences with integration tests** — A gauntlet test (e.g., `undoMultiStepSequence`) validates undo works across a real sequence of different operations without testing consecutive changes to the same property:
+
+```swift
+@Test func undoMultiStepSequence() async throws {
+    let vm = makeViewModel()
+    vm.addImages([createTestImageItem()])
+    vm.setLayoutStyle(.grid)
+    vm.removeImage(at: 0)
+    vm.setBackgroundStyle(.color(.red))
+
+    // Each undo reverses the preceding distinct action
+    vm.undoManager.undo()
+    #expect(vm.backgroundStyle == .default)
+
+    vm.undoManager.undo()
+    #expect(vm.images.count == 1)
+
+    vm.undoManager.undo()
+    #expect(vm.layoutStyle == .freeform)
+}
+```
+
+**Accept coalescing as expected in production** — In the real app, consecutive calls to the same setter are separated by user interactions (run loop cycles), so coalescing never occurs. The test environment is the anomaly.

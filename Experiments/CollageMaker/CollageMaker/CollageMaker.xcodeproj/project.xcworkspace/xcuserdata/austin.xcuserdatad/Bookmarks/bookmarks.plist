@@ -36,13 +36,13 @@
 				<key>focused</key>
 				<string></string>
 				<key>leading</key>
-				<string>        )
-    }
+				<string>        if let oldCrop = cropMap[panelId] {
+            undoManager.registerUndo(withTarget: self) { target in
 </string>
 				<key>trailing</key>
-				<string>
-    func updatePreview() {
-        guard !panels.isEmpty else { return }
+				<string>                target.cropMap[panelId] = oldCrop
+                target.cropManager.cropVersions[panelId, default: 0] += 1
+                target.updatePanelPreview(panelId: panelId)
 </string>
 			</dict>
 			<key>type</key>

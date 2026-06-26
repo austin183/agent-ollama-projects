@@ -169,7 +169,7 @@ final class CollageViewModel {
     func setLayoutStyle(_ style: LayoutStyle) {
         let old = layoutManager.setLayoutStyle(style)
         guard !isInitializing else { return }
-        registerUndo(oldValue: old, actionName: "Change Layout") { $0.layoutManager.layoutStyle = old }
+        registerUndoDeferred(oldValue: old, actionName: "Change Layout") { $0.layoutManager.layoutStyle = old }
         regenerateLayout()
     }
 
@@ -406,10 +406,35 @@ final class CollageViewModel {
 
     private func registerUndo<Value>(oldValue: Value, actionName: String, restore: @escaping (CollageViewModel) -> Void) {
         guard !isInitializing else { return }
+        undoManager.beginUndoGrouping()
         undoManager.registerUndo(withTarget: self) { target in
             restore(target)
         }
         undoManager.setActionName(actionName)
+        undoManager.endUndoGrouping()
+    }
+
+    /// Tracks the pending deferred undo registration task.
+    /// Used by tests to await the registration completion.
+    private var deferredUndoTask: Task<Void, Never>?
+
+    /// Registers an undo action on the next run loop cycle to prevent
+    /// UndoManager from coalescing consecutive registrations.
+    private func registerUndoDeferred<Value>(oldValue: Value, actionName: String, restore: @escaping (CollageViewModel) -> Void) {
+        guard !isInitializing else { return }
+        deferredUndoTask?.cancel()
+        deferredUndoTask = Task { [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(for: .milliseconds(1))
+            guard !Task.isCancelled else { return }
+            self.undoManager.beginUndoGrouping()
+            self.undoManager.registerUndo(withTarget: self) { target in
+                restore(target)
+            }
+            self.undoManager.setActionName(actionName)
+            self.undoManager.endUndoGrouping()
+            self.deferredUndoTask = nil
+        }
     }
 
     convenience init() {
@@ -592,6 +617,8 @@ final class CollageViewModel {
 
     func clearAll() {
         guard !imageLibrary.images.isEmpty else { return }
+        debouncer.cancelAll()
+        imageCoordinator.cancelSaliencyTask()
         let oldSaliency = imageCoordinator.saliencyResults
         let oldDomain = imageCoordinator.clearDomain()
 
@@ -613,7 +640,9 @@ final class CollageViewModel {
 
         undoManager.registerUndo(withTarget: self) { [oldBackgroundConfig, oldTitleAttrString, oldTitleStyle, oldSelectedPanelId, oldSaliency] target in
             target.imageLibrary.images = oldDomain.images
+            target.imageLibrary.customImageOrder = oldDomain.customImageOrder
             target.layoutManager.panels = oldDomain.panels
+            target.layoutManager.panelAssignments = oldDomain.panelAssignments
             target.cropManager.cropMap = oldDomain.cropMap
             target.cropManager.cropVersions = oldDomain.cropVersions
             target.imageCoordinator.saliencyResults = oldSaliency
@@ -622,7 +651,6 @@ final class CollageViewModel {
             target.titleManager.titleAttrString = oldTitleAttrString
             target.titleManager.titleStyle = oldTitleStyle
             target.selectedPanelId = oldSelectedPanelId
-            target.regenerateLayout()
         }
         undoManager.setActionName("Clear All")
     }
@@ -1061,7 +1089,12 @@ final class CollageViewModel {
     /// Yields to let pending async tasks complete.
     /// Used by tests to synchronize with debounced rendering work.
     func awaitPendingTasks() async {
+        await imageCoordinator.awaitPendingTasks()
         await previewManager.awaitPendingTasks()
+        // Await deferred undo registration
+        if let task = deferredUndoTask {
+            await task.value
+        }
     }
 }
 

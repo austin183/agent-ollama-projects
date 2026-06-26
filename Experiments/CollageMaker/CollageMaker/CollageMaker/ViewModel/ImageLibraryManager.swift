@@ -98,6 +98,7 @@ final class ImageLibraryManager {
         guard index < images.count else { return nil }
         let removed = images[index]
         images.remove(at: index)
+        onImagesChanged?()
         return (removed, index)
     }
 

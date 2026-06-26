@@ -12,24 +12,7 @@ final class CollageMakerTitleTests: XCTestCase {
     }
 
     private static func testImagesDirectory() -> String {
-        let testBundleURL = Bundle(for: CollageMakerTitleTests.self).bundleURL
-        let candidates = [
-            testBundleURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-                .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-                .deletingLastPathComponent().appendingPathComponent("TestImages").path,
-            testBundleURL.deletingLastPathComponent().appendingPathComponent("TestImages").path,
-        ]
-
-        for path in candidates {
-            if FileManager.default.fileExists(atPath: path) {
-                return path
-            }
-        }
-
-        return testBundleURL.deletingLastPathComponent()
-            .deletingLastPathComponent().deletingLastPathComponent()
-            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-            .deletingLastPathComponent().appendingPathComponent("TestImages").path
+        Bundle(for: CollageMakerTitleTests.self).url(forResource: "TestImages", withExtension: nil)!.path
     }
 
     private func waitForImagesLoaded(timeout: TimeInterval = 60) {
