@@ -17,9 +17,12 @@ struct FontMerger {
 
         guard let existing = existingFont else { return defaultFont }
 
-        let traits = existing.fontDescriptor.symbolicTraits
+        let allTraits = existing.fontDescriptor.symbolicTraits
+        var traits: NSFontDescriptor.SymbolicTraits = []
+        if allTraits.contains(.bold) { traits.insert(.bold) }
+        if allTraits.contains(.italic) { traits.insert(.italic) }
         let baseDescriptor = defaultFont.fontDescriptor
-        let mergedDescriptor = baseDescriptor.withSymbolicTraits(traits)
+        let mergedDescriptor = traits.isEmpty ? baseDescriptor : baseDescriptor.withSymbolicTraits(traits)
         return NSFont(descriptor: mergedDescriptor, size: targetSize) ?? defaultFont
     }
 }

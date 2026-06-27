@@ -8,10 +8,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PROJECT_DIR="$SCRIPT_DIR/CollageMaker"
 
 DESTINATION='platform=macOS,arch=arm64'
-
-# Capture raw output to a temp file so we can parse results
-TMPFILE=$(mktemp)
-trap 'rm -f "$TMPFILE"' EXIT
+RESULT_BUNDLE="/tmp/CollageMakerTestResults.xcresult"
+rm -rf "$RESULT_BUNDLE" 2>/dev/null
 
 echo "Running tests..."
 
@@ -20,24 +18,46 @@ xcodebuild test \
     -scheme "$SCHEME" \
     -destination "$DESTINATION" \
     -only-testing:"$TEST_TARGET" \
+    -resultBundlePath "$RESULT_BUNDLE" \
     -quiet \
-    2>&1 | tee "$TMPFILE" || true
+    > /dev/null 2>&1
 
-echo ""
-echo "=== Test Results ==="
-
-PASSED=$(grep -ci 'Test case .* passed' "$TMPFILE" || true)
-FAILED=$(grep -ci 'Test case .* failed' "$TMPFILE" || true)
-TOTAL=$((PASSED + FAILED))
-
-if [ "$FAILED" -gt 0 ]; then
+# Parse results from xcresult bundle
+if [ ! -d "$RESULT_BUNDLE" ]; then
   echo ""
-  echo "❌ $FAILED of $TOTAL tests failed:"
+  echo "=== Test Results ==="
   echo ""
-  grep -i 'Test case .* failed' "$TMPFILE" || true
+  echo "Build failed — no test results available."
   echo ""
   exit 1
-else
-  echo "✅ All $TOTAL tests passed."
-  exit 0
 fi
+
+xcrun xcresulttool get test-results summary --path "$RESULT_BUNDLE" --format json 2>/dev/null | python3 -c "
+import sys, json
+
+d = json.load(sys.stdin)
+pt = d.get('passedTests', 0)
+ft = d.get('failedTests', 0)
+st = d.get('skippedTests', 0)
+total = pt + ft + st
+failures = d.get('testFailures', [])
+
+skip_note = f' ({st} skipped)' if st else ''
+print(f'')
+print('=== Test Results ===')
+
+if ft > 0:
+    print(f'')
+    print(f'\u274c {ft} of {total} tests failed{skip_note}:')
+    print(f'')
+    for f in failures:
+        ident = f.get('testIdentifierString', f.get('testName', 'unknown'))
+        desc = f.get('failureText', 'no description')
+        print(f'  {ident}')
+        print(f'    {desc}')
+    print(f'')
+    sys.exit(1)
+else:
+    print(f'\u2705 All {total} tests passed.{skip_note}')
+    sys.exit(0)
+"

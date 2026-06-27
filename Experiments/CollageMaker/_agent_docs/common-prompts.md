@@ -19,12 +19,12 @@ Please use our macos skills to help me address the review changes received in @_
 
 # Implement
 ```
-Please implement the plan for Phase 1 in @_agent_docs/plans/2026-06-24-visual-validation-automation.md using our macos skills for guidance.
+Please implement the plan for Phase 2 in @_agent_docs/plans/2026-06-24-visual-validation-automation.md using our macos skills for guidance.
 ```
 
 # Small Change Requests
 ```
-Please work on the change request in @_agent_docs/change-requests/round-100.md using our macos skills for guidance. 
+Please work on the change request in @_agent_docs/change-requests/round-107.1.md using our macos skills for guidance. 
 ```
 
 # Review
