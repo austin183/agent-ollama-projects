@@ -14,7 +14,7 @@ Can you please run the @planner and @planner-g31 agents to create draft plans fo
 ## Review
 (In Plan Mode (Tab Key to change Modes))
 ```
-Please use our macos skills to help me address the review changes received in @_agent_docs/reviews/2026-06-22-review-marcos.md and @_agent_docs/reviews/2026-06-22-review-victoria.md
+Please use our macos skills to help me address the review changes received in @_agent_docs/reviews/2026-06-27-agent-world-performance-perspective.md
 ```
 
 # Implement

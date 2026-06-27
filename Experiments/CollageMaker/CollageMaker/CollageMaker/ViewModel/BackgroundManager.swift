@@ -9,9 +9,24 @@ final class BackgroundManager {
     var gradientStartColor: NSColor = .black
     var gradientEndColor: NSColor = .darkGray
     var gradientAngle: Double = 0
-    var backgroundImage: NSImage?
+    var backgroundImage: NSImage? {
+        didSet {
+            if backgroundImage !== oldValue {
+                _cachedBackgroundCGImage = nil
+            }
+        }
+    }
     var backgroundImagePath: String?
     var backgroundOpacity: Double = 1.0
+    private var _cachedBackgroundCGImage: CGImage?
+
+    func getCachedBackgroundCGImage() -> CGImage? {
+        guard let image = backgroundImage else { return nil }
+        if let cached = _cachedBackgroundCGImage { return cached }
+        let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        _cachedBackgroundCGImage = cg
+        return cg
+    }
 
     func buildConfig() -> BackgroundConfig {
         BackgroundConfig(
@@ -34,7 +49,7 @@ final class BackgroundManager {
 
     func updateBackground(updater: PreviewUpdatable) {
         let bgConfig = buildConfig()
-        let backgroundImageCG = backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        let backgroundImageCG = getCachedBackgroundCGImage()
 
         updater.updateBackground(
             config: bgConfig,

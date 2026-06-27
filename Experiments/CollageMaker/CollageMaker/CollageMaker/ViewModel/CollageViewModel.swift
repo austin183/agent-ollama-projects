@@ -921,7 +921,7 @@ final class CollageViewModel {
 
         let config = buildAssemblyConfig()
         let cgImages = images.map { $0.cgImage }
-        let backgroundImageCG = backgroundManager.backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        let backgroundImageCG = backgroundManager.getCachedBackgroundCGImage()
 
         previewManager.updatePreview(
             config: config,
@@ -1068,7 +1068,7 @@ final class CollageViewModel {
 
         let config = buildAssemblyConfig()
         let cgImages = imageLibrary.images.map { $0.cgImage }
-        let bgCG = backgroundImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        let bgCG = backgroundManager.getCachedBackgroundCGImage()
 
         switch await exportManager.export(
             config: config,
