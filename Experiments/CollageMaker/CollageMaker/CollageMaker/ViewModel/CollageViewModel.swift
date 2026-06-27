@@ -189,26 +189,44 @@ final class CollageViewModel {
     func setDiagonalSliceAngle(_ value: CGFloat) {
         let old = layoutManager.setDiagonalSliceAngle(value)
         guard !isInitializing else { return }
-        registerUndo(oldValue: old, actionName: "Change Slice Angle") { $0.layoutManager.diagonalSliceAngle = old }
-        if layoutStyle == .diagonalSlices {
-            regenerateLayout(preserveCrops: false)
+        debouncer.debounce(id: "sliceAngle", delay: FrameTempo.layoutChangeDebounce) { [weak self] in
+            guard let self else { return }
+            self.undoManager.registerUndo(withTarget: self) { target in
+                target.layoutManager.diagonalSliceAngle = old
+            }
+            self.undoManager.setActionName("Change Slice Angle")
+            if self.layoutStyle == .diagonalSlices {
+                self.regenerateLayout(preserveCrops: false)
+            }
         }
     }
 
     func setHexagonalSpacing(_ value: CGFloat) {
         let old = layoutManager.setHexagonalSpacing(value)
         guard !isInitializing else { return }
-        registerUndo(oldValue: old, actionName: "Change Hex Spacing") { $0.layoutManager.hexagonalSpacing = old }
-        if layoutStyle == .hexagonal {
-            regenerateLayout(preserveCrops: false)
+        debouncer.debounce(id: "hexSpacing", delay: FrameTempo.layoutChangeDebounce) { [weak self] in
+            guard let self else { return }
+            self.undoManager.registerUndo(withTarget: self) { target in
+                target.layoutManager.hexagonalSpacing = old
+            }
+            self.undoManager.setActionName("Change Hex Spacing")
+            if self.layoutStyle == .hexagonal {
+                self.regenerateLayout(preserveCrops: false)
+            }
         }
     }
 
     func setDoubleExposureMaskOpacity(_ value: CGFloat) {
         let old = layoutManager.setDoubleExposureMaskOpacity(value)
         guard !isInitializing else { return }
-        registerUndo(oldValue: old, actionName: "Change Mask Opacity") { $0.layoutManager.doubleExposureMaskOpacity = old }
         updatePreviewDebounced()
+        debouncer.debounce(id: "maskOpacity", delay: FrameTempo.layoutChangeDebounce) { [weak self] in
+            guard let self else { return }
+            self.undoManager.registerUndo(withTarget: self) { target in
+                target.layoutManager.doubleExposureMaskOpacity = old
+            }
+            self.undoManager.setActionName("Change Mask Opacity")
+        }
     }
 
     func setMaskImage(_ image: NSImage?, path: String?) {

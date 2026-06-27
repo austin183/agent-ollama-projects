@@ -191,6 +191,70 @@ import Testing
         await quiesce(vm)
     }
 
+    // MARK: - Slider Debounced Undo
+
+    @Test func undoAfterDiagonalSliceAngleChange() async {
+        let vm = makeViewModel()
+        let images = (0..<3).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
+        vm.imageLibrary.images = images
+        vm.regenerateLayout()
+        vm.setLayoutStyle(.diagonalSlices)
+        await vm.awaitPendingTasks()
+
+        let originalAngle = vm.diagonalSliceAngle
+
+        vm.setDiagonalSliceAngle(60)
+        await awaitDebounced(vm)
+        #expect(vm.diagonalSliceAngle == 60)
+
+        vm.undoManager.undo()
+        await vm.awaitPendingTasks()
+
+        #expect(vm.diagonalSliceAngle == originalAngle, "undo should restore the original slice angle")
+        await quiesce(vm)
+    }
+
+    @Test func undoAfterHexagonalSpacingChange() async {
+        let vm = makeViewModel()
+        let images = (0..<4).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
+        vm.imageLibrary.images = images
+        vm.regenerateLayout()
+        vm.setLayoutStyle(.hexagonal)
+        await vm.awaitPendingTasks()
+
+        let originalSpacing = vm.hexagonalSpacing
+
+        vm.setHexagonalSpacing(15)
+        await awaitDebounced(vm)
+        #expect(vm.hexagonalSpacing == 15)
+
+        vm.undoManager.undo()
+        await vm.awaitPendingTasks()
+
+        #expect(vm.hexagonalSpacing == originalSpacing, "undo should restore the original hex spacing")
+        await quiesce(vm)
+    }
+
+    @Test func undoAfterMaskOpacityChange() async {
+        let vm = makeViewModel()
+        let images = (0..<3).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
+        vm.imageLibrary.images = images
+        vm.regenerateLayout()
+        await vm.awaitPendingTasks()
+
+        let originalOpacity = vm.doubleExposureMaskOpacity
+
+        vm.setDoubleExposureMaskOpacity(0.8)
+        await awaitDebounced(vm)
+        #expect(vm.doubleExposureMaskOpacity == 0.8)
+
+        vm.undoManager.undo()
+        await vm.awaitPendingTasks()
+
+        #expect(vm.doubleExposureMaskOpacity == originalOpacity, "undo should restore the original mask opacity")
+        await quiesce(vm)
+    }
+
     // MARK: - Layout Style Change
 
     @Test func undoAfterLayoutStyleChange() async {
