@@ -53,6 +53,7 @@ Guidance for building macOS SwiftUI desktop applications with image processing, 
 | Topic | Reference |
 |-------|-----------|
 | **Coordinate System Traps** | [references/graphics/coordinate-systems.md](references/graphics/coordinate-systems.md) |
+| **CGImage Pixel Extraction via CGBitmapContext** | [references/graphics/cgbitmapcontext-pixel-extraction.md](references/graphics/cgbitmapcontext-pixel-extraction.md) |
 | **CoreImage, CoreGraphics, Compositing** | [references/graphics/coreimage-filters.md](references/graphics/coreimage-filters.md) |
 | **Vision API Details** | [references/graphics/vision-api-details.md](references/graphics/vision-api-details.md) |
 | **vImage Processing** | [references/graphics/vimage-processing.md](references/graphics/vimage-processing.md) |

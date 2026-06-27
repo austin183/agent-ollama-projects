@@ -318,6 +318,7 @@ Never create `NSImage` in a computed property accessed from `body`. SwiftUI call
 - `Issue.record("message")` — conditional failure
 - `@Test("param: ", [values])` — parameterized tests
 - Test resources: `Bundle.module.url(forResource:withExtension:)`
+- **`.timeLimit()` requires minutes** — Swift Testing's `.timeLimit()` trait requires time values in **minutes**, not seconds. `.seconds(30)` is unavailable. Use `.minutes(1)` or fractional minutes like `.minutes(0.5)` for 30 seconds: `@Test(.timeLimit(.minutes(1)))`
 - **`tolerance:` not available** — This Xcode version's Swift Testing doesn't support `tolerance:` on `#expect()`. Use range checks: `#expect(value > lower && value < upper)`, or exact equality for integer-valued `CGFloat`s
 - **`import Foundation` required for `UUID`** — `CoreGraphics` and `Testing` don't transitively import `Foundation`. New test files need `import Foundation` explicitly
 - **Weak switch assertions** — A `switch` in a test that ignores one case with `break` passes silently even if the decoder returns the wrong case. Record an issue in unexpected branches:
@@ -625,6 +626,7 @@ Release builds retain the sandbox for production safety.
 - **XCUIAutomation macOS APIs differ from iOS** — `setEnvironment`, `menuItem`, `typeKeyword`, `focus()`, and `wait(for:)` return type all behave differently or don't exist. See § "XCUIAutomation macOS API Gotchas"
 - **UndoManager coalescing in tests** — Consecutive `registerUndo` calls for the same target within a Swift Testing `@MainActor` context are merged into one entry. Test single undo actions in isolation; cover multi-action sequences with integration gauntlets. See § "UndoManager Coalescing in Tests"
 - **Walking up from `bundleURL` to find resources** — Never chain `deletingLastPathComponent()` from `Bundle(for:).bundleURL` to locate test fixtures. The UITest bundle lives in DerivedData, so path walking never reaches source files. Use `Bundle(for:).url(forResource:withExtension: nil)` instead, with the resource added to the UITest target's Resources build phase. See § "UITest Bundle Resource Discovery"
+- **`.timeLimit()` syntax** — Swift Testing's `.timeLimit()` trait requires time values in **minutes**, not seconds. Use `.minutes(1)` or fractional minutes like `.minutes(0.5)`. `.seconds(N)` is unavailable and causes compilation errors.
 
 ## Identity-Based Cache Testing
 
