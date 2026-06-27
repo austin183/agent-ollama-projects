@@ -170,6 +170,36 @@ final class CollageViewModel {
 }
 ```
 
+## Derived State Maintenance with didSet
+
+When a stored property has derived lookup dictionaries (e.g., `[UUID: Element]`) that must stay in sync, use `didSet` on the source collection to auto-rebuild them. This eliminates code paths that forget cache invalidation.
+
+```swift
+@Observable @MainActor final class LayoutManager {
+    var panels: [ImagePanel] = [] {
+        didSet { rebuildIndexMaps() }
+    }
+    private(set) var panelById: [UUID: ImagePanel] = [:]
+    private(set) var panelSlotById: [UUID: Int] = [:]
+
+    private func rebuildIndexMaps() {
+        panelById.removeAll(keepingCapacity: true)
+        panelSlotById.removeAll(keepingCapacity: true)
+        for (index, panel) in panels.enumerated() {
+            panelById[panel.id] = panel
+            panelSlotById[panel.id] = index
+        }
+    }
+}
+```
+
+**Why it works:** `didSet` fires on any struct-array modification — direct assignment (`panels = ...`), `removeAll()`, subscript mutation. Tests bypassing production flow (e.g., `layoutManager.panels = panels`) still correctly populate the dictionaries.
+
+**Rules:**
+- Use `private(set)` on derived maps so external code reads but never writes them directly
+- `removingAll(keepingCapacity: true)` preserves backing storage for repeated rebuilds
+- If elements are reference types, subscript mutation won't trigger didSet — only full array reassignment will; wrap mutations in explicit invalidation calls
+
 ## @Bindable Nested Struct Mutations Bypass didSet
 
 When using `@Bindable` bindings to nested struct properties, SwiftUI's observation system may handle the mutation through `withMutation` without invoking the parent property's setter. This means `didSet` observers don't fire for all mutation paths.
@@ -541,6 +571,7 @@ When migrating from `ObservableObject` to `@Observable`:
 11. **Multi-field cache invalidation** — Every code path that clears a multi-field cache (result + key + input) must clear ALL fields. Leaving key fields stale causes the cache to return stale `nil` on restore. Prefer the defensive guard pattern: `if let cachedResult = cachedResult, ...` — if the result is `nil`, the cache always misses.
 12. **Gesture hot path caching** — Move expensive computation (CoreText, image processing) to a cached ViewModel method. Keep cheap math in a computed property that reads the cache. Position changes during drag recompute the cheap math but reuse the cached expensive result.
 13. **Body re-evaluation cascades** — High-frequency gesture state (e.g., `DragGesture.onChanged`) invalidates all `@Observable` observers or the parent's body if using `@State`. Fix: extract the state into a self-contained sibling struct with local `@State`, sync to ViewModel once on `onEnded`. Only the isolated struct's body re-evaluates.
+14. **Derived lookup maps via didSet** — When storing `[UUID: Element]` dictionaries alongside an array source of truth, use `didSet` on the array to auto-rebuild them. This covers all mutation paths (assignment, removeAll, subscript) including tests that bypass production flow. Use `private(set)` and `removingAll(keepingCapacity: true)` for safety + performance.
 
 ## Extracting Managers from @Observable ViewModels
 
@@ -795,5 +826,6 @@ GeometryReader { geometry in
 - **@Observable delegation chain** — A computed property on an `@Observable` class that delegates to a sub-manager (e.g., `var cropMap { cropManager.cropMap }`) breaks observation. SwiftUI only tracks stored properties on the observed instance. Fix requires BOTH: (a) make the delegate `@Observable`, (b) views read `vm.cropManager.cropMap` directly, not through the computed property. Alternative: use a **version counter** — private `Int` read in the computed getter, incremented at mutation sites — to preserve abstraction.
 - **@Bindable nested struct mutations bypass `didSet`** — Bindings like `$viewModel.titleStyle.backgroundColor` may use `withMutation` internally, skipping the parent property's `didSet`. Side effects (e.g., `updatePreview()`) won't fire. Fix: use explicit setter methods with `Binding(get:set:)`.
 - **Multi-field cache partial clear** — Clearing only the result field of a multi-field cache (result + key + input) leaves keys stale. On restore, the keys match and the cache returns stale `nil`. Fix: clear ALL fields, or use defensive guard (`if let cachedResult = cachedResult, ...`).
+- **Derived lookup maps go stale** — `[UUID: Element]` dictionaries alongside an array source of truth drift out of sync whenever the array is modified (assignment, removeAll, subscript). Fix: `didSet` on the array with a single `rebuildIndexMaps()` call covers every mutation path including tests that bypass production flow. Use `private(set)` and `removingAll(keepingCapacity: true)`.
 - **Expensive computed in gesture hot path** — `@Observable` has no path-based granularity — any tracked property change triggers full body re-evaluation. During 33fps gesture loops, expensive computation in computed properties causes hitching. Fix: cache expensive work in a ViewModel method, expose cheap math via computed property.
 - **Gesture-driven body re-evaluation cascade** — Updating `@Observable` state on every `DragGesture.onChanged` tick (~60fps) invalidates all `@Bindable` observers, causing sibling views to re-render unnecessarily. Using `@State` on the parent view has the same problem — the parent's body re-evaluates, including all children. Fix: extract the gesture state into a self-contained sibling struct with local `@State`, sync to ViewModel once on `onEnded`.

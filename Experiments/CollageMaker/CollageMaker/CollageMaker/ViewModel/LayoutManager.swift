@@ -15,8 +15,12 @@ final class LayoutManager {
     var diagonalSliceAngle: CGFloat = 45.0
     var hexagonalSpacing: CGFloat = 8.0
 
-    var panels: [ImagePanel] = []
+    var panels: [ImagePanel] = [] {
+        didSet { rebuildIndexMaps() }
+    }
     var panelAssignments: [UUID: Int] = [:]
+    private(set) var panelById: [UUID: ImagePanel] = [:]
+    private(set) var panelSlotById: [UUID: Int] = [:]
 
     /// Incremented whenever panels are regenerated. Used by the VM to invalidate
     /// cached derived values (e.g., panelFrames) without exposing LayoutManager internals.
@@ -100,6 +104,21 @@ final class LayoutManager {
         doubleExposureMaskImage = nil
         doubleExposureMaskImagePath = nil
         doubleExposureMaskOpacity = 0.5
+    }
+
+    func panelForImageIndex(_ imageIndex: Int) -> ImagePanel? {
+        return panels.first { panel in
+            panelAssignments[panel.id] == imageIndex || panel.imageIndex == imageIndex
+        }
+    }
+
+    private func rebuildIndexMaps() {
+        panelById.removeAll(keepingCapacity: true)
+        panelSlotById.removeAll(keepingCapacity: true)
+        for (index, panel) in panels.enumerated() {
+            panelById[panel.id] = panel
+            panelSlotById[panel.id] = index
+        }
     }
 
     // MARK: - Setters with Side Effects

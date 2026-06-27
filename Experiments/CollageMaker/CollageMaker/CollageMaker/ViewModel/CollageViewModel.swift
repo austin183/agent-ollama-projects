@@ -885,7 +885,7 @@ final class CollageViewModel {
     // MARK: - Preview & Export
 
     func updatePanelPreview(panelId: UUID) {
-        guard let panel = panels.first(where: { $0.id == panelId }),
+        guard let panel = layoutManager.panelById[panelId],
               let crop = cropMap[panelId] else { return }
 
         let effectiveIndex = panelAssignments[panelId] ?? panel.imageIndex

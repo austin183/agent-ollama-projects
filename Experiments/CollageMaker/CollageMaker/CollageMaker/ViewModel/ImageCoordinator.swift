@@ -31,7 +31,7 @@ struct SwapState {
 /// and saliency analysis. Returns data for undo; VM handles registration.
 @MainActor
 final class ImageCoordinator {
-    var target: ImageCoordinationTarget!
+    weak var target: (any ImageCoordinationTarget)?
     let imageLibrary: ImageLibraryManager
     let layoutManager: LayoutManager
     let cropManager: CropManager
@@ -84,7 +84,7 @@ final class ImageCoordinator {
     }
 
     private func scheduleSaliencyAnalysis() {
-        guard !imageLibrary.images.isEmpty && !target.isProcessing else { return }
+        guard !imageLibrary.images.isEmpty, let target, !target.isProcessing else { return }
         saliencyTask?.cancel()
         saliencyTask = Task { [weak self] in
             await self?.analyzeSaliency()
@@ -121,31 +121,28 @@ final class ImageCoordinator {
 
     func assignImage(_ imageIndex: Int, to panelId: UUID) {
         layoutManager.panelAssignments[panelId] = imageIndex
-        target.resetCrop(panelId: panelId)
-        target.updatePanelPreview(panelId: panelId)
+        target?.resetCrop(panelId: panelId)
+        target?.updatePanelPreview(panelId: panelId)
     }
 
     func getEffectiveImageIndex(for panelId: UUID) -> Int? {
         if let assigned = layoutManager.panelAssignments[panelId] {
             return assigned
         }
-        guard let panelIndex = layoutManager.panels.firstIndex(where: { $0.id == panelId }) else { return nil }
-        return panelIndex
+        return layoutManager.panelSlotById[panelId]
     }
 
     func selectPanelForImage(at imageIndex: Int) {
         guard imageIndex < imageLibrary.images.count else { return }
-        if let panel = layoutManager.panels.first(where: {
-            layoutManager.panelAssignments[$0.id] == imageIndex || $0.imageIndex == imageIndex
-        }) {
-            target.selectedPanelId = panel.id
+        if let panel = layoutManager.panelForImageIndex(imageIndex) {
+            target?.selectedPanelId = panel.id
         }
     }
 
     func swapPanelImages(sourceId: UUID, targetId: UUID) -> SwapState? {
         guard sourceId != targetId else { return nil }
-        guard let sourceSlot = layoutManager.panels.firstIndex(where: { $0.id == sourceId }),
-              let targetSlot = layoutManager.panels.firstIndex(where: { $0.id == targetId }) else { return nil }
+        guard let sourceSlot = layoutManager.panelSlotById[sourceId],
+              let targetSlot = layoutManager.panelSlotById[targetId] else { return nil }
 
         let state = SwapState(
             customOrder: imageLibrary.customImageOrder,
@@ -166,8 +163,8 @@ final class ImageCoordinator {
             cropManager.cropVersions[targetId, default: 0] += 1
         }
 
-        target.updatePanelPreview(panelId: sourceId)
-        target.updatePanelPreview(panelId: targetId)
+        target?.updatePanelPreview(panelId: sourceId)
+        target?.updatePanelPreview(panelId: targetId)
         return state
     }
 
@@ -176,8 +173,8 @@ final class ImageCoordinator {
     func analyzeSaliency() async {
         guard !imageLibrary.images.isEmpty else { return }
         logger.info("Saliency analysis started for \(self.imageLibrary.images.count) image(s)")
-        target.beginProcessing()
-        defer { target.endProcessing() }
+        target?.beginProcessing()
+        defer { target?.endProcessing() }
 
         do {
             let cgImages = imageLibrary.images.map { $0.cgImage }
@@ -197,12 +194,12 @@ final class ImageCoordinator {
                 images: imageLibrary.images,
                 results: indexed
             )
-            target.cancelDebouncer(id: "previewRender")
-            target.updatePreview()
-            target.updateAllPanelPreviews()
+            target?.cancelDebouncer(id: "previewRender")
+            target?.updatePreview()
+            target?.updateAllPanelPreviews()
         } catch {
             logger.error("Saliency analysis failed: \(error.localizedDescription, privacy: .public)")
-            target.errorMessage = error.localizedDescription
+            target?.errorMessage = error.localizedDescription
         }
     }
 }

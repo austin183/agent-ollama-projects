@@ -3,6 +3,13 @@ import Foundation
 import Testing
 @testable import CollageMaker
 
+// MARK: - Note on Build Artifacts
+
+// If tests that expect NSFont.boldSystemFont(ofSize:) to return a bold, sized font
+// fail with a 12-point non-bold result (typically .monospacedDigit), the compiled
+// artifacts are stale. Clean the build folder (Product → Clean Build Folder, ⇧⌘K)
+// and re-run before investigating logic bugs.
+
 @Suite struct FontMergerTests {
 
     // MARK: - Default font with empty family
