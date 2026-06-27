@@ -28,6 +28,12 @@ var gutter: CGFloat = 0 {
 
 This ordering ensures undo restores the old value, which then triggers `didSet` again — re-persisting the old value and re-running side effects. This is the correct behavior: undo should fully reverse the action, including persistence.
 
+### Immediate Registration with Deferred Grouping Finalization
+
+When using `beginUndoGrouping()`/`endUndoGrouping()` for grouping, register the undo action **immediately** (not deferred). The group is just a container — the undo action must exist on the stack before `endUndoGrouping()` closes it. Deferring registration until after an inactivity window makes Cmd+Z unresponsive during that window.
+
+This pattern applies to continuous controls like sliders and color pickers that lack explicit gesture lifecycle callbacks (see [inactivity-based-interaction-detection-learnings](../inactivity-based-interaction-detection-learnings.md) for the full implementation).
+
 ### Collection mutation undo patterns
 
 Three distinct patterns emerged for undoing array mutations:

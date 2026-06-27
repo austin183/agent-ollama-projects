@@ -27,6 +27,7 @@ import Testing
         let images = (0..<2).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
         vm.regenerateLayout()
+        vm.updatePreview()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
         #expect(assembler.previewCalls >= 1)
@@ -40,6 +41,7 @@ import Testing
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
         vm.regenerateLayout()
+        vm.updatePreview()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
         #expect(assembler.lastPreviewConfig?.canvasSize == SizeConstants.defaultCanvasSize)
@@ -53,6 +55,7 @@ import Testing
         let images = [createTestImageItem(size: CGSize(width: 200, height: 200))]
         vm.imageLibrary.images = images
         vm.regenerateLayout()
+        vm.updatePreview()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
         #expect(assembler.lastPreviewPreviewSize == SizeConstants.defaultPreviewSize)
@@ -66,6 +69,7 @@ import Testing
         let images = (0..<4).map { _ in createTestImageItem(size: CGSize(width: 200, height: 200)) }
         vm.imageLibrary.images = images
         vm.regenerateLayout()
+        vm.updatePreview()
 
         try? await Task.sleep(nanoseconds: 50_000_000)
         #expect(assembler.lastPreviewPanels.count == 4)

@@ -55,7 +55,7 @@ import Testing
 
         try? await Task.sleep(nanoseconds: 200_000_000)
 
-        #expect(assembler.previewCalls > 0)
+        #expect(assembler.renderPanelCalls > 0)
         #expect(vm.layoutManager.panels.count == 5)
         vm.previewManager.cancelAll()
     }

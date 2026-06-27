@@ -32,4 +32,5 @@ enum FrameTempo {
     static let backgroundColorDebounce: Duration = .milliseconds(20)
     static let fontSizeDebounce: Duration = .milliseconds(6)
     static let previewRenderDebounce: Duration = .milliseconds(20)
+    static let backgroundUndoDebounce: Duration = .milliseconds(150)
 }

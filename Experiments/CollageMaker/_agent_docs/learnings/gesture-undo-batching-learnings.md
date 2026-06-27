@@ -87,6 +87,33 @@ oldTitleStyle = nil
 
 **Note:** This means title drag will produce two undo entries: the individual `didSet` entries for each style assignment during the drag, plus the single "Move Title" entry registered at the end. The "Move Title" entry is the one the user will actually use (it's first in the undo stack). The intermediate `didSet` entries sit behind it and will never be reached unless the user redoes past "Move Title". This is acceptable — the primary undo behavior is correct, and the extra entries are harmless dead weight.
 
+### Property-level undo grouping with inactivity detection
+
+For continuous controls like sliders and color pickers that lack explicit gesture lifecycle callbacks, use an inactivity timer (~150ms) to infer end-of-interaction. Register the undo action immediately (for Cmd+Z responsiveness), wrap it in `beginUndoGrouping()`/`endUndoGrouping()`, and finalize the group after the inactivity window expires. This produces a single undo step per interaction while keeping undo available instantly.
+
+```swift
+var gradientAngle: Double {
+    get { backgroundManager.gradientAngle }
+    set {
+        let startedGroup = backgroundManager.beginInteraction()  // Captures OLD values first
+        if startedGroup { undoManager.beginUndoGrouping() }
+        backgroundManager.gradientAngle = newValue
+        let preValue = backgroundManager.preInteractionGradientAngle
+        self.undoManager.registerUndo(withTarget: self) { $0.backgroundManager.gradientAngle = preValue }
+        backgroundManager.registerDeferredUndo(actionName: "Change Gradient Angle") { [weak self] in
+            guard let self else { return }
+            self.undoManager.setActionName("Change Gradient Angle")
+            self.undoManager.endUndoGrouping()
+        }
+        updateBackground()
+    }
+}
+```
+
+**Critical guard:** Boolean state flags that track "in progress" must have a guaranteed reset path on every termination code path (timer expiry, cancellation, external interrupt). Missing a reset path is a critical bug — after the first slider drag, `interacting` stays `true` forever and all subsequent drags use stale pre-interaction values. Consider RAII-style wrappers to make this automatic.
+
+**Separation of concerns:** The manager (`BackgroundManager`) owns interaction state and timer lifecycle; it returns `Bool` from `beginInteraction()` to signal "should I open an undo group?" without directly accessing the UndoManager. The ViewModel owns UndoManager coordination and property side effects. This keeps the manager testable in isolation.
+
 ---
 
 ## What Didn't Work / Gaps

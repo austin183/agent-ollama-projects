@@ -22,7 +22,7 @@ import Testing
 
     // Helper: wait for debounced operations (gutter, background color, etc.)
     private func awaitDebounced(_ vm: CollageViewModel) async {
-        try? await Task.sleep(for: .milliseconds(120))
+        try? await Task.sleep(for: .milliseconds(200))
         await vm.awaitPendingTasks()
     }
 

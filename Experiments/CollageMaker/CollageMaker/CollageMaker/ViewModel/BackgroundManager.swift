@@ -69,4 +69,48 @@ final class BackgroundManager {
         backgroundImagePath = nil
         backgroundOpacity = 1.0
     }
+
+    // MARK: - Deferred Undo State
+
+    var interacting: Bool = false
+    var preInteractionGradientAngle: Double = 0
+    var preInteractionGradientStartColor: NSColor = .black
+    var preInteractionGradientEndColor: NSColor = .darkGray
+    var preInteractionBackgroundColor: NSColor = .black
+    var preInteractionBackgroundOpacity: Double = 1.0
+
+    var deferredUndoTask: Task<Void, Never>?
+
+    func beginInteraction() -> Bool {
+        if interacting { return false }
+        interacting = true
+        preInteractionGradientAngle = gradientAngle
+        preInteractionGradientStartColor = gradientStartColor
+        preInteractionGradientEndColor = gradientEndColor
+        preInteractionBackgroundColor = backgroundColor
+        preInteractionBackgroundOpacity = backgroundOpacity
+        return true
+    }
+
+    func endInteraction() {
+        interacting = false
+    }
+
+    func registerDeferredUndo(actionName: String, finalize: @escaping () -> Void) {
+        deferredUndoTask?.cancel()
+        deferredUndoTask = Task { [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(for: FrameTempo.backgroundUndoDebounce)
+            guard !Task.isCancelled else { return }
+            finalize()
+            self.endInteraction()
+            self.deferredUndoTask = nil
+        }
+    }
+
+    func cancelDeferredUndo() {
+        deferredUndoTask?.cancel()
+        deferredUndoTask = nil
+        if interacting { endInteraction() }
+    }
 }

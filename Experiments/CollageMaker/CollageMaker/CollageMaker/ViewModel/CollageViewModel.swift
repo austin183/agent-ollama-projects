@@ -228,17 +228,24 @@ final class CollageViewModel {
     var backgroundColor: NSColor {
         get { backgroundManager.backgroundColor }
         set {
-            let old = backgroundManager.backgroundColor
-            backgroundManager.backgroundColor = newValue
             guard !isInitializing else { return }
-            debouncer.debounce(id: "backgroundColor", delay: FrameTempo.backgroundColorDebounce) { [weak self] in
-                guard let self else { return }
-                self.undoManager.registerUndo(withTarget: self) { target in
-                    target.backgroundManager.backgroundColor = old
-                }
-                self.undoManager.setActionName("Change Background Color")
-                self.updatePreview()
+
+            let startedGroup = backgroundManager.beginInteraction()
+            if startedGroup {
+                undoManager.beginUndoGrouping()
             }
+
+            backgroundManager.backgroundColor = newValue
+
+            let preValue = backgroundManager.preInteractionBackgroundColor
+            self.undoManager.registerUndo(withTarget: self) { $0.backgroundManager.backgroundColor = preValue }
+
+            backgroundManager.registerDeferredUndo(actionName: "Change Background Color") { [weak self] in
+                guard let self else { return }
+                self.undoManager.setActionName("Change Background Color")
+                self.undoManager.endUndoGrouping()
+            }
+            updateBackground()
         }
     }
 
@@ -267,42 +274,72 @@ final class CollageViewModel {
     var gradientStartColor: NSColor {
         get { backgroundManager.gradientStartColor }
         set {
-            let old = backgroundManager.gradientStartColor
-            backgroundManager.gradientStartColor = newValue
             guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.backgroundManager.gradientStartColor = old
+
+            let startedGroup = backgroundManager.beginInteraction()
+            if startedGroup {
+                undoManager.beginUndoGrouping()
             }
-            undoManager.setActionName("Change Gradient Start Color")
-            updatePreviewDebounced()
+
+            backgroundManager.gradientStartColor = newValue
+
+            let preValue = backgroundManager.preInteractionGradientStartColor
+            self.undoManager.registerUndo(withTarget: self) { $0.backgroundManager.gradientStartColor = preValue }
+
+            backgroundManager.registerDeferredUndo(actionName: "Change Gradient Start Color") { [weak self] in
+                guard let self else { return }
+                self.undoManager.setActionName("Change Gradient Start Color")
+                self.undoManager.endUndoGrouping()
+            }
+            updateBackground()
         }
     }
 
     var gradientEndColor: NSColor {
         get { backgroundManager.gradientEndColor }
         set {
-            let old = backgroundManager.gradientEndColor
-            backgroundManager.gradientEndColor = newValue
             guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.backgroundManager.gradientEndColor = old
+
+            let startedGroup = backgroundManager.beginInteraction()
+            if startedGroup {
+                undoManager.beginUndoGrouping()
             }
-            undoManager.setActionName("Change Gradient End Color")
-            updatePreviewDebounced()
+
+            backgroundManager.gradientEndColor = newValue
+
+            let preValue = backgroundManager.preInteractionGradientEndColor
+            self.undoManager.registerUndo(withTarget: self) { $0.backgroundManager.gradientEndColor = preValue }
+
+            backgroundManager.registerDeferredUndo(actionName: "Change Gradient End Color") { [weak self] in
+                guard let self else { return }
+                self.undoManager.setActionName("Change Gradient End Color")
+                self.undoManager.endUndoGrouping()
+            }
+            updateBackground()
         }
     }
 
     var gradientAngle: Double {
         get { backgroundManager.gradientAngle }
         set {
-            let old = backgroundManager.gradientAngle
-            backgroundManager.gradientAngle = newValue
             guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.backgroundManager.gradientAngle = old
+
+            let startedGroup = backgroundManager.beginInteraction()
+            if startedGroup {
+                undoManager.beginUndoGrouping()
             }
-            undoManager.setActionName("Change Gradient Angle")
-            updatePreviewDebounced()
+
+            backgroundManager.gradientAngle = newValue
+
+            let preValue = backgroundManager.preInteractionGradientAngle
+            self.undoManager.registerUndo(withTarget: self) { $0.backgroundManager.gradientAngle = preValue }
+
+            backgroundManager.registerDeferredUndo(actionName: "Change Gradient Angle") { [weak self] in
+                guard let self else { return }
+                self.undoManager.setActionName("Change Gradient Angle")
+                self.undoManager.endUndoGrouping()
+            }
+            updateBackground()
         }
     }
 
@@ -331,14 +368,24 @@ final class CollageViewModel {
     var backgroundOpacity: Double {
         get { backgroundManager.backgroundOpacity }
         set {
-            let old = backgroundManager.backgroundOpacity
-            backgroundManager.backgroundOpacity = newValue
             guard !isInitializing else { return }
-            undoManager.registerUndo(withTarget: self) { target in
-                target.backgroundManager.backgroundOpacity = old
+
+            let startedGroup = backgroundManager.beginInteraction()
+            if startedGroup {
+                undoManager.beginUndoGrouping()
             }
-            undoManager.setActionName("Change Background Opacity")
-            updatePreviewDebounced()
+
+            backgroundManager.backgroundOpacity = newValue
+
+            let preValue = backgroundManager.preInteractionBackgroundOpacity
+            self.undoManager.registerUndo(withTarget: self) { $0.backgroundManager.backgroundOpacity = preValue }
+
+            backgroundManager.registerDeferredUndo(actionName: "Change Background Opacity") { [weak self] in
+                guard let self else { return }
+                self.undoManager.setActionName("Change Background Opacity")
+                self.undoManager.endUndoGrouping()
+            }
+            updateBackground()
         }
     }
 
@@ -602,8 +649,6 @@ final class CollageViewModel {
         let foundInNew = selectedPanelId != nil && panels.contains { $0.id == selectedPanelId }
         logger.info("Regenerated layout: \(panelCount) panels, style=\(styleRaw, privacy: .public), selectedId=\(selectedStr, privacy: .public), foundInNew=\(foundInNew)")
 
-        isLayeredMode = false
-        updatePreview()
         updateAllPanelPreviews()
     }
 
@@ -617,6 +662,13 @@ final class CollageViewModel {
 
     func clearAll() {
         guard !imageLibrary.images.isEmpty else { return }
+
+        // If a background property interaction was in progress, close its open undo group
+        // so the Clear All undo doesn't get lumped into it.
+        if backgroundManager.interacting {
+            undoManager.endUndoGrouping()
+        }
+        backgroundManager.cancelDeferredUndo()
         debouncer.cancelAll()
         imageCoordinator.cancelSaliencyTask()
         let oldSaliency = imageCoordinator.saliencyResults
@@ -1093,6 +1145,9 @@ final class CollageViewModel {
         await previewManager.awaitPendingTasks()
         // Await deferred undo registration
         if let task = deferredUndoTask {
+            await task.value
+        }
+        if let task = backgroundManager.deferredUndoTask {
             await task.value
         }
     }

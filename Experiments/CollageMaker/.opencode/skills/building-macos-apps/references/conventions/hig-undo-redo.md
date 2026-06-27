@@ -59,6 +59,8 @@ func endCropAdjustment() {
 // All crop position changes between begin/end are one undo
 ```
 
+**Immediate registration, deferred finalization:** The undo action must be registered synchronously (before `endUndoGrouping()` closes the group). The group is just a container — `registerUndo` happens per-event; only the grouping closure (`begin`/`end`) is deferred. Deferring registration until after an inactivity window makes Cmd+Z unresponsive during that window. See [Property-Level Undo Grouping](#property-level-undo-grouping-inactivity-based-detection) for the full pattern with code.
+
 ## View-layer Gesture Batching
 
 When gesture lifecycle lives in the View, the View owns the undo grouping lifecycle. This requires `undoManager` to be `internal` (not `private`) on the ViewModel.
@@ -146,6 +148,123 @@ var titleStyle: TitleStyle = .default {
 ```
 
 Set the flag at gesture start, clear at gesture end. The gesture's own end-of-gesture undo registration handles the single before→after entry. Without the guard, intermediate `didSet` entries accumulate in the undo stack as harmless but wasteful dead weight.
+
+## Property-Level Undo Grouping (Inactivity-Based Detection)
+
+For continuous controls like sliders and color pickers that **lack explicit gesture lifecycle callbacks**, use an inactivity timer to infer end-of-interaction. The control fires property setters at high frequency (~60fps), so grouping must be deferred while undo registration is immediate.
+
+### Pattern: Immediate Registration + Deferred Grouping Finalization
+
+Register the undo action synchronously on every setter call (Cmd+Z works instantly). Wrap in `beginUndoGrouping()`/`endUndoGrouping()`. Close the group after an inactivity window expires (~150ms).
+
+```swift
+var gradientAngle: Double {
+    get { backgroundManager.gradientAngle }
+    set {
+        guard !isInitializing else { return }
+
+        let startedGroup = backgroundManager.beginInteraction()
+        if startedGroup {
+            undoManager.beginUndoGrouping()  // Group all property changes in this interaction
+        }
+
+        backgroundManager.gradientAngle = newValue
+
+        // Undo registered IMMEDIATELY — Cmd+Z works right away
+        let preValue = backgroundManager.preInteractionGradientAngle
+        self.undoManager.registerUndo(withTarget: self) { $0.backgroundManager.gradientAngle = preValue }
+
+        // Group finalization deferred until inactivity window expires
+        backgroundManager.registerDeferredUndo(actionName: "Change Gradient Angle") { [weak self] in
+            guard let self else { return }
+            self.undoManager.setActionName("Change Gradient Angle")
+            self.undoManager.endUndoGrouping()  // Finalize as single undo step
+        }
+        updateBackground()
+    }
+}
+```
+
+### Interaction State Machine
+
+A manager owns the interaction state and returns `Bool` from `beginInteraction()` to signal "should I open an undo group?":
+
+```swift
+func beginInteraction() -> Bool {
+    if interacting { return false }  // Already in progress — skip
+    interacting = true
+    preInteractionGradientAngle = gradientAngle  // Capture BEFORE assignment
+    return true  // Caller should call undoManager.beginUndoGrouping()
+}
+
+func endInteraction() {
+    interacting = false
+}
+```
+
+**Separation of concerns:** The manager owns interaction state (`interacting`, `preInteraction*` values, timer lifecycle). The ViewModel owns UndoManager coordination. The manager returns `Bool` without directly accessing the UndoManager — keeps it testable in isolation.
+
+### Critical: Guaranteed Reset on Every Termination Path
+
+Boolean "in progress" flags must reset on **every** code path that terminates the interaction (timer expiry, cancellation, external interrupt). Missing a reset path is a critical bug — after first slider drag, `interacting` stays `true` forever and all subsequent drags use stale pre-interaction values.
+
+```swift
+func registerDeferredUndo(actionName: String, finalize: @escaping () -> Void) {
+    deferredUndoTask?.cancel()
+    deferredUndoTask = Task { [weak self] in
+        guard let self else { return }
+        try? await Task.sleep(for: FrameTempo.backgroundUndoDebounce)  // ~150ms
+        guard !Task.isCancelled else { return }
+        finalize()
+        self.endInteraction()  // Reset on timer expiry
+        self.deferredUndoTask = nil
+    }
+}
+
+func cancelDeferredUndo() {
+    deferredUndoTask?.cancel()
+    deferredUndoTask = nil
+    if interacting { endInteraction() }  // Reset on cancellation too
+}
+```
+
+**Consider RAII-style wrappers** to make reset automatic. A struct with `deinit` that calls `endInteraction()` eliminates entire classes of missed-reset bugs.
+
+### Open Group Cleanup on External Interrupts
+
+If an external action (e.g., `clearAll()`) occurs while a property interaction is in progress, close the open undo group so the external action doesn't get lumped into it:
+
+```swift
+func clearAll() {
+    if backgroundManager.interacting {
+        undoManager.endUndoGrouping()  // Close orphaned group
+        backgroundManager.cancelDeferredUndo()
+    }
+    // ... rest of clearAll
+}
+```
+
+### When to Use Inactivity Detection vs. Explicit Gesture Lifecycle
+
+| Control type | Has explicit start/end? | Detection method |
+|---|---|---|
+| Scroll pan, pinch, title drag | Yes (gesture callbacks) | `beginUndoGrouping()`/`endUndoGrouping()` tied to `onChanged`/`onEnded` |
+| Slider drag, color picker drag | No (property setter fires per-tick) | Inactivity timer (~150ms) + interaction state machine |
+| Typing in text field | No (each keystroke is discrete) | Immediate undo registration, no grouping needed |
+
+**Rule of thumb:** If the control produces more than ~10 events/sec during normal interaction AND lacks explicit start/end callbacks, use inactivity-based detection with immediate undo registration + deferred grouping finalization.
+
+### Pre-Interaction Capture Order Matters
+
+Call `beginInteraction()` **before** assigning the new value so the manager captures the OLD value:
+
+```swift
+let startedGroup = backgroundManager.beginInteraction()  // Captures OLD values first
+if startedGroup { undoManager.beginUndoGrouping() }
+backgroundManager.gradientAngle = newValue  // Now safe to assign new value
+```
+
+Assigning before `beginInteraction()` causes it to read the NEW value instead of the old — Cmd+Z becomes a no-op.
 
 ## macOS-Specific
 
