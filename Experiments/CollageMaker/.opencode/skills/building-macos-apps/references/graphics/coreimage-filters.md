@@ -215,6 +215,52 @@ class MockAssembler: CollageAssembly {
 }
 ```
 
+## Background Style Rendering
+
+`makeAssemblyConfig()` has separate parameters for different background styles. Using the wrong one produces silent black output:
+
+| Parameter | Used by `.solid` | Used by `.gradient` | Used by `.image` |
+|---|---|---|---|
+| `backgroundColor:` | **Yes** → `BackgroundConfig.color.cgColor` | No (ignored) | **Yes** → `BackgroundConfig.color.cgColor` |
+| `gradientStartColor:` | No (ignored) | **Yes** → start of linear gradient | No (ignored) |
+| `gradientEndColor:` | No (ignored) | **Yes** → end of linear gradient | No (ignored) |
+| `gradientAngle:` | No (ignored) | **Yes** → gradient direction | No (ignored) |
+
+**Rule:** For `.solid` or `.image` styles, pass the fill color as `backgroundColor:`. Only use `gradientStartColor:`/`gradientEndColor:` when `backgroundStyle: .gradient`.
+
+```swift
+// Solid red — use backgroundColor:
+makeAssemblyConfig(
+    panels: panels, crops: crops,
+    backgroundColor: .red,
+    backgroundStyle: .solid,
+    gradientStartColor: .black,   // ignored but must be present
+    gradientEndColor: .darkGray,  // ignored
+    gradientAngle: 0,             // ignored
+    canvasSize: canvasSize
+)
+
+// Gradient red→blue — use gradient colors
+makeAssemblyConfig(
+    panels: [], crops: [:],
+    backgroundColor: .black,      // ignored for .gradient
+    backgroundStyle: .gradient,
+    gradientStartColor: .red,
+    gradientEndColor: .blue,
+    gradientAngle: 45,
+    canvasSize: canvasSize
+)
+
+// BUG — passes red as gradientStartColor but style is .solid → full-canvas black
+makeAssemblyConfig(
+    panels: panels, crops: crops,
+    backgroundStyle: .solid,
+    gradientStartColor: .red,     // IGNORED by drawSolidBackground!
+    backgroundColor: .black,      // default = black fill
+    ...
+)
+```
+
 ## Pitfalls
 
 - **CGContext `[.byteOrder32Big]` test failures** — `makeImage()` returns `nil` in test environment; use `NSBitmapImageRep` with RGBA

@@ -31,6 +31,9 @@
 - UserDefaults Test Suite Stability
 - UserDefaults Test Isolation with UUID Suite Names
 - App Sandbox Blocks Test File Access
+- Pixel Sampling for Background Verification in Tests
+- ImageItem.cgImage Is a Stored Property, Not a Method
+- Canvas Coverage Thresholds by Layout Style
 - Pitfalls
 - Identity-Based Cache Testing
 - Behavioral Cache Testing (Preferred)
@@ -604,9 +607,59 @@ Release builds retain the sandbox for production safety.
 - Use absolute paths in environment variables — `open` launches with `~` as the working directory
 - Add `OSLog` at the file discovery boundary to distinguish "path wrong" from "path correct but sandbox blocked"
 
-## Pitfalls
+## Pixel Sampling for Background Verification in Tests
 
-- **`CGPathApply` compiler crash** — `CGPath.apply(info:)` with a closure accessing `element.pointee.type` can crash swift-frontend in test targets. Test transforms via `CGPoint.applying(_:)` instead.
+When verifying background colors render correctly in headless test environment:
+
+1. **Don't sample panel centers** — they show panel content (white from `createTestImageItem`), not background.
+2. **Don't use full-canvas solid fill with no panels** — produces all-black output in headless JPEG roundtrip via `NSImage(data:)`.
+3. **Use gutter-region sampling** — create a layout with multiple small panels and large gutters (e.g., 4 images, gutter=20), then sample the canvas center which falls in the gap between panels.
+
+```swift
+let panels = LayoutGenerator.generate(
+    numImages: 4, canvasSize: canvasSize, gutter: 20, style: .uniform
+)
+// ... set up crops with small source rects (50x50) ...
+// Sample center pixel — falls in gutter between the 2×2 panel grid
+
+let width = Int(canvasSize.width)
+let height = Int(canvasSize.height)
+let idx = ((height / 2) * width + width / 2) * 4
+let r = Int(pixels[idx])
+let g = Int(pixels[idx + 1])
+let b = Int(pixels[idx + 2])
+// Verify color matches expected background
+```
+
+## ImageItem.cgImage Is a Stored Property, Not a Method
+
+`createTestImageItem(...)` returns `ImageItem`, which has `let cgImage: CGImage` as a stored property. Do NOT call it as a method:
+
+```swift
+// ❌ WRONG — "cannot call value of non-function type 'CGImage'"
+let cg = createTestImageItem(color: .white).cgImage(forProposedRect: nil, context: nil, hints: nil)
+
+// ✅ CORRECT — cgImage is already a CGImage property
+let cg = createTestImageItem(color: .white).cgImage
+```
+
+## Canvas Coverage Thresholds by Layout Style
+
+Sum-of-bounding-boxes coverage varies significantly by layout geometry. Use these relaxed thresholds for fitness functions:
+
+| Layout | Typical Coverage (10 images) | Recommended Minimum | Reason |
+|---|---|---|---|
+| `.uniform` | 65–99% | ≥25% | Empty grid cells when N ≠ C×R |
+| `.hero` | 70–95% | ≥25% | Hero panel + side strip leaves gaps |
+| `.mosaic` | 60–90% | ≥25% | Random split ratios leave unused space |
+| `.diagonalSlices` | 40–80% | ≥10% | Shear-transformed parallelograms don't fill corners |
+| `.hexagonal` | 10–60% | ≥10% | Circle-packed hexagons have inherent spacing gaps |
+
+**Rule:** Coverage thresholds should be fitness-function level (catch total regressions), not precision requirements. The plan's "≥95%" is unrealistic for most layouts.
+
+## Pitfalls
+- **Background style parameter mismatch** — `makeAssemblyConfig()` reads `backgroundColor:` for `.solid`/`.image` styles and `gradientStartColor:`/`gradientEndColor:` only for `.gradient`. Passing gradient colors with `.solid` produces silent full-canvas black. See § "Pixel Sampling for Background Verification in Tests" for the gutter-region sampling pattern to verify backgrounds render correctly.
+- **ImageItem.cgImage is a stored property** — `createTestImageItem(color:).cgImage` returns `CGImage`. Do NOT call `.cgImage(forProposedRect:context:hints:)` on it — that's `NSImage.cgImage`, not `CGImage.cgImage`. Calling it as a method produces "cannot call value of non-function type 'CGImage'".
 - **Shadow implementation** — Duplicating production logic in a test file to verify `private` code provides zero regression protection. Extract to `internal` or a static model method.
 - **`xcodebuild test` skips Swift Testing** — use `-only-testing:TargetName` flag
 - **`@MainActor` test struct** — annotate test structs when testing `@testable` imports with `@MainActor` types
