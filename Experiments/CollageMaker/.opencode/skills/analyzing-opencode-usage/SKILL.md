@@ -26,6 +26,39 @@ bash .opencode/skills/analyzing-opencode-usage/script/analytics.sh --project Col
 bash .opencode/skills/analyzing-opencode-usage/script/analytics.sh --summary --models --json
 ```
 
+## Workflows
+
+### Generate HTML Report
+
+Produces a self-contained HTML report with charts, tables, and code impact metrics.
+
+```bash
+# Last 30 days (default)
+bash .opencode/skills/analyzing-opencode-usage/script/generate_llm_report.sh
+
+# Custom range or output location
+bash .opencode/skills/analyzing-opencode-usage/script/generate_llm_report.sh \
+  --days 7 --output /tmp/report.html
+
+# With daily activity data companion file
+bash .opencode/skills/analyzing-opencode-usage/script/generate_llm_report.sh \
+  --days 30 --activity
+```
+
+**Output:** HTML report at the specified path, plus `*-daily-data.json` when `--activity` is used. The JSON contains per-day token counts, commit SHAs with full messages, and session file references for use by the activity summary workflow below.
+
+### Generate Daily Activity Summary
+
+Agent-driven workflow that produces a human-readable daily activity markdown from the report data:
+
+1. Run `generate_llm_report.sh --activity` to produce `daily-data.json` (see above)
+2. Read `daily-data.json` for the date range, per-day token counts, and session file references
+3. For each day with commits, read the referenced session files from `_agent_docs/project-timeline/sessions/`
+4. Follow `references/activity-template.md` to structure the summary (overview paragraph + per-day sections)
+5. Output to `<date-range>-collagemaker-daily-activity-summary.md` alongside the HTML report
+
+The activity template specifies including total tokens broken down by type, session counts, commit SHAs with full messages, and a narrative overview of what was accomplished each day.
+
 ## Script Reference
 
 Run `bash .opencode/skills/analyzing-opencode-usage/script/analytics.sh [FLAGS]`. All sections are combinable.
@@ -229,3 +262,9 @@ for row in data:
 ```
 
 This is more reliable than jq for multi-line output with dotted field names.
+
+## Templates
+
+**`references/report.html`** — Self-contained HTML report template with charts, tables, and code impact metrics. Filled by `generate_llm_report.sh`.
+
+**`references/activity-template.md`** — Structure for daily activity summaries from `daily-data.json`: overview paragraph, token breakdowns, session counts, and commit SHAs per day.
