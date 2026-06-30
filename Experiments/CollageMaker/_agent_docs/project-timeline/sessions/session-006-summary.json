@@ -1,0 +1,33 @@
+{
+  "session_id": "refactor-housekeeping-06",
+  "session_number": 6,
+  "date": "2026-06-30",
+  "purpose": "refactor",
+  "agent_role": "build-quick-work",
+  "files_changed": [
+    ".opencode/agents/build-code.md",
+    ".opencode/agents/build-debug.md",
+    ".opencode/agents/build-docs.md",
+    ".opencode/agents/build-quick-work.md",
+    ".opencode/agents/build-test.md",
+    ".opencode/skills/analyzing-opencode-usage/SKILL.md",
+    ".opencode/skills/analyzing-opencode-usage/script/charts.py",
+    ".opencode/skills/analyzing-opencode-usage/script/generate_value_report.sh",
+    ".opencode/skills/analyzing-opencode-usage/script/render_value_report.py",
+    ".opencode/skills/analyzing-opencode-usage/script/validate_summaries.sh",
+    ".opencode/skills/analyzing-opencode-usage/references/session-summary.json",
+    "AGENTS.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [
+    "300bfa72eafee1984f5527796e656f9defd62262",
+    "a813bb966af1862b7f6340e159cee9f2c306c4e2"
+  ],
+  "outcome": "success",
+  "notes": "Committed two rounds of pending changes: (1) new build-task agent definitions for code, debug, docs, and test workflows; (2) token value analysis report feature including generate_value_report.sh, render_value_report.py, validate_summaries.sh scripts, session-summary template, SKILL.md documentation updates, charts.py additions with dict-row support and HTML table renderers, and AGENTS.md session summary guidance. Excluded generated artifacts (_agent_docs/token-value-report/, _agent_docs/project-timeline/llm-usage/plans/) as they are runtime outputs."
+}
