@@ -1,0 +1,17 @@
+{
+  "session_id": "",
+  "session_number": 0,
+  "date": "",
+  "purpose": "code|test|docs|debug|refactor|research",
+  "agent_role": "",
+  "files_changed": [],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success|partial|failed",
+  "notes": ""
+}

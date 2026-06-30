@@ -70,6 +70,15 @@ Key conventions:
 - **Code signing is Automatic** — builds work locally without explicit identity configuration.
 - **`_agent_docs/learnings/`** contains 30+ session learnings files with hard-won knowledge about SwiftUI gestures, coordinate transforms, undo batching, and more. Read relevant files before making changes in those areas.
 
+## Session Summary
+
+At the end of every session, write a session summary JSON to `_agent_docs/project-timeline/sessions/session-NNN-summary.json` alongside the session's `.md` file. Copy the template from `.opencode/skills/analyzing-opencode-usage/references/session-summary.json` and fill in all fields.
+
+**Purpose values:** `code` | `test` | `docs` | `debug` | `refactor` | `research`
+**Outcome values:** `success` | `partial` | `failed`
+
+Run `bash .opencode/skills/analyzing-opencode-usage/script/validate_summaries.sh` to verify summaries are valid.
+
 ## Skill references
 
 The `building-macos-apps` skill provides detailed patterns for:

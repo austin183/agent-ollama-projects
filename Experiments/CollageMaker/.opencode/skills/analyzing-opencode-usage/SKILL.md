@@ -59,6 +59,44 @@ Agent-driven workflow that produces a human-readable daily activity markdown fro
 
 The activity template specifies including total tokens broken down by type, session counts, commit SHAs with full messages, and a narrative overview of what was accomplished each day.
 
+### Generate Token Value Analysis Report
+
+Produces a comprehensive HTML report combining token consumption with code output metrics (commits, lines added, test ratios, efficiency curves).
+
+```bash
+# Last 30 days for CollageMaker (default)
+bash .opencode/skills/analyzing-opencode-usage/script/generate_value_report.sh
+
+# Custom project and date range
+bash .opencode/skills/analyzing-opencode-usage/script/generate_value_report.sh \
+  --project MyProject --output /tmp/value-report.json
+
+# Regenerate HTML from existing JSON data
+python3 .opencode/skills/analyzing-opencode-usage/script/render_value_report.py < value-report-data.json > token-value-report.html
+```
+
+**Output:** `value-report-data.json` (merged DB + git data) and optionally the rendered HTML. The report includes cumulative efficiency curves, cumulative cost estimates (low/high tiers), agent-stacked daily breakdowns, rolling tokens-per-commit trends, test ratio over time, commit efficiency rankings, and agent context efficiency tables. Cost estimates use two tiers: cheap ($0.05/M input, $0.15/M output) and expensive ($0.50/M input, $1.50/M output).
+
+### Validate Session Summaries
+
+Scans session summary JSON files for structural validity against the template schema.
+
+```bash
+# Use defaults (root computed from script location)
+bash .opencode/skills/analyzing-opencode-usage/script/validate_summaries.sh
+
+# Strict mode — exit 1 if any summary has missing fields
+bash .opencode/skills/analyzing-opencode-usage/script/validate_summaries.sh --strict
+
+# Custom paths (e.g., when called from a different location)
+bash .opencode/skills/analyzing-opencode-usage/script/validate_summaries.sh \
+  --root /path/to/project \
+  --sessions-dir /path/to/sessions \
+  --template references/session-summary.json
+```
+
+**Output:** Summary counts (total, valid, invalid), missing field reports, and breakdowns by purpose/outcome/agent-role. Exit code 0 = all valid (or non-strict). Exit code 1 in `--strict` mode when any summary is invalid.
+
 ## Script Reference
 
 Run `bash .opencode/skills/analyzing-opencode-usage/script/analytics.sh [FLAGS]`. All sections are combinable.
@@ -268,3 +306,5 @@ This is more reliable than jq for multi-line output with dotted field names.
 **`references/report.html`** — Self-contained HTML report template with charts, tables, and code impact metrics. Filled by `generate_llm_report.sh`.
 
 **`references/activity-template.md`** — Structure for daily activity summaries from `daily-data.json`: overview paragraph, token breakdowns, session counts, and commit SHAs per day.
+
+**`references/session-summary.json`** — JSON template for session summary files. Used by `validate_summaries.sh` to check structural validity. Agents should copy this template at the end of each session and fill in all fields before writing to `_agent_docs/project-timeline/sessions/`.
