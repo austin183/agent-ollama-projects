@@ -1,0 +1,39 @@
+{
+  "date": "2026-07-13",
+  "session_number": 009,
+  "agent_role": "build-tdd",
+  "purpose": "tdd",
+  "title": "Left sidebar reorder: layout first + auto-expand on multiple images",
+  "description": "Reordered left sidebar so Layout section appears above Image Library (prevents overflow when many images loaded). Added auto-expand behavior: Layout section automatically expands when user adds more than one image, drawing attention to layout options.",
+  "files_changed": [
+    {
+      "path": "MyESModules/App/createCollageLifecycle.js",
+      "change": "Fixed global drop handler: replaced direct layoutManager.regenerate() + _scheduleRender() with this._regenerateAndRender() so auto-expand fires on drag-drop"
+    },
+    {
+      "path": "MyESModules/App/createCollageData.js",
+      "change": "Reordered leftSidebarSections array: layout first, library second"
+    },
+    {
+      "path": "MyESModules/App/createCollageMethods.js",
+      "change": "Added autoExpandLayoutOnImages() method that expands layout section when images.length > 1"
+    },
+    {
+      "path": "MyESModules/App/createRenderMethods.js",
+      "change": "Added guarded call to vm.autoExpandLayoutOnImages() in _regenerateAndRender()"
+    },
+    {
+      "path": "MyComponents/SidebarSectionsTest.html",
+      "change": "Updated 3.1.8 for new order; added 3.1.13 (expand when >1), 3.1.14 (no expand when <=1), 3.1.15 (no expand when 0)"
+    },
+    {
+      "path": "MyComponents/Phase3FollowUpTest.html",
+      "change": "Updated leftSidebarSections order assertion to match new layout-first order"
+    }
+  ],
+  "tests_added": 3,
+  "tests_updated": 2,
+  "test_results": "All tests pass. 1 pre-existing failure in SaliencyDebugOverlayTest.html (unrelated).",
+  "tdd_cycle": "RED: Wrote 4 failing tests (order assertion + 3 auto-expand behaviors). GREEN: Reordered array, added autoExpandLayoutOnImages method, wired into _regenerateAndRender. REFACTOR: No refactoring needed — changes follow existing autoExpandCropOnSelect pattern.",
+  "notes": "Auto-expand fires via _regenerateAndRender which is called after every image load (file picker, drag-drop, paste). The method is idempotent — calling it when layout is already expanded or when images <= 1 has no effect. Guarded with 'if (vm.autoExpandLayoutOnImages)' for testability. This was one of the UX improvements flagged by world-review in session 008.\n\nBUG FIX: Global drop handler in createCollageLifecycle.js was calling layoutManager.regenerate() + _scheduleRender() directly, bypassing _regenerateAndRender(). Fixed by replacing with this._regenerateAndRender() so both file picker and drag-drop paths trigger auto-expand."
+}

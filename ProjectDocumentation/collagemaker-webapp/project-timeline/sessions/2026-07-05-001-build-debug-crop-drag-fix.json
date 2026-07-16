@@ -1,0 +1,18 @@
+{
+  "purpose": "debug",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "CollageMaker/MyESModules/App/createCollageMethods.js"
+  ],
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "summary": "Fixed crop overlay drag interaction not working. Root cause: in createCollageMethods.js, selectPanel() passed base._cropInteraction to cropHandlers.selectPanel(), but _cropInteraction is stored on the Vue instance (this._cropInteraction) not on the base object (result of initializeCollageBase()). This meant cropInteraction was always undefined, so setPanelId() was never called and pointer event listeners were never attached to the crop preview canvas. Fix: changed base._cropInteraction to this._cropInteraction. All 687 unit tests pass with 0 failures.",
+  "key_decisions": [
+    "Changed base._cropInteraction to this._cropInteraction in selectPanel method"
+  ],
+  "challenges": [
+    "The bug was subtle - base and this both exist in the same scope but _cropInteraction is only on the Vue instance"
+  ]
+}

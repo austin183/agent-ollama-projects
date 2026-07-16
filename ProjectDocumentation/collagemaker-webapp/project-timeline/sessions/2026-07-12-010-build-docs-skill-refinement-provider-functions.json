@@ -1,0 +1,19 @@
+{
+  "session_id": "",
+  "session_number": 100,
+  "date": "2026-07-12",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with the provider function pattern from learnings/2026-07-12-provider-function-callback-injection.md. Replaced the outdated 'Callback Wiring in Extracted Modules' example (which showed stale direct-callback pattern: onRenderScheduled: (vm) => renderMethods._scheduleRender(vm)) with the correct provider function pattern (getOnRenderScheduled: () => (vm) => renderMethods._scheduleRender(vm)). Added decision guidance for choosing between direct callbacks (stable references) vs. provider functions (potentially replaced references), the _invokeProvider defensive guard helper, and the typeof callback guard rule. Updated frontmatter description to include 'provider functions' in the factory testability patterns list."
+}

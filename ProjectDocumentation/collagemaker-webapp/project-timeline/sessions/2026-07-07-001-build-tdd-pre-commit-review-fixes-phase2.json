@@ -1,0 +1,28 @@
+{
+  "session_id": "2026-07-06-pre-commit-review-fixes-phase2",
+  "session_number": 49,
+  "date": "2026-07-06",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/Rendering/CanvasRenderer.js",
+    "MyESModules/Interaction/FileDropHandler.js",
+    "MyESModules/App/createFileHandlers.js",
+    "MyESModules/App/createCollageLifecycle.js",
+    "MyComponents/RenderingTest.html",
+    "_agent_docs/plans/2026-07-05-pre-commit-review-fixes.md"
+  ],
+  "test_files_added": [
+    "MyComponents/FileDropHandlerTest.html"
+  ],
+  "tests_added": 15,
+  "assertions_added": 28,
+  "bugs_fixed": 3,
+  "learnings_written": [
+    "_agent_docs/learnings/2026-07-06-event-listener-cleanup-testing.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Phase 2 of pre-commit review fixes: Memory & Lifecycle Cleanup. Implemented via TDD. 15 new tests: 5 CanvasRenderer dispose tests (P2.1-P2.5) in RenderingTest.html, 10 drop handler cleanup tests (P2.6-P2.15) in new FileDropHandlerTest.html. Fixed: (1) Canvas GPU memory not released on dispose — added canvas.width=0/height=0; (2) Global drop listeners never removed — both FileDropHandler and createFileHandlers now return cleanup functions; (3) Lifecycle cleanup wired with proper ordering. World-review identified 4 additional issues: race condition in cleanup order (fixed: drop listeners removed first), visual feedback leak (fixed: drag-over class removed in cleanup), rAF leak after dispose (fixed: _disposed flag), duplicate setup guard (fixed: auto-cleanup previous listeners). All 677 tests pass (1 pre-existing SaliencyDebugOverlayTest failure unrelated)."
+}

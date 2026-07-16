@@ -1,0 +1,22 @@
+{
+  "session_id": "build-tdd-review-fixes-phase1-settings-persistence",
+  "session_number": 2,
+  "date": "2026-07-15",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/App/createSettingsHandlers.js",
+    "MyESModules/App/createCollageLifecycle.js"
+  ],
+  "test_files_added": [
+    "MyComponents/SettingsHandlersTest.html"
+  ],
+  "tests_added": 15,
+  "assertions_added": 52,
+  "bugs_fixed": 1,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Implemented Phase 1 (Settings Persistence for Title Fields) from the 2026-07-15-review-fixes-implementation plan via TDD. Fixed critical issue CI-1: 7 title style fields (fontOpacity, bgOpacity, titleBoxWidth, titleBoxX, titleBoxY, showBackground, backgroundColor) were missing from both save and restore paths, causing all title customization to be lost on page reload. Created SettingsHandlersTest.html with 11 tests covering _saveSettings payload (5 tests: all 7 fields present, original 4 fields preserved, no key collision, null preservation, falsy value preservation) and _applySavedSettings restore (6 tests: all 7 fields restored, backward compat with old settings, falsy guards for 0/false/null). Added 4 round-trip tests to SettingsPersistenceTest.html. All 15 new tests pass. Full suite: 1,272 pass, 1 pre-existing failure (SaliencyDebugOverlayTest 3.4.4.7, unrelated). World-review completed — no actionable findings (null-safety concerns are pre-existing patterns, truthy guard for titleBackgroundColor matches existing string-field convention, dead code cleanup explicitly out of scope per plan). No refactoring needed — changes are minimal data-mapping additions following existing patterns."
+}

@@ -1,0 +1,24 @@
+{
+  "session_id": "2026-07-05-pre-commit-review-fixes-phase1",
+  "session_number": 48,
+  "date": "2026-07-05",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/Export/formats/pngExporter.js",
+    "MyESModules/index.js",
+    "MyComponents/ExportManagerTest.html",
+    "MyComponents/SaliencyDebugOverlayTest.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 6,
+  "assertions_added": 9,
+  "bugs_fixed": 2,
+  "learnings_written": [
+    "_agent_docs/learnings/2026-07-05-export-registry-signature-alignment.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Phase 1 of pre-commit review fixes: Fixed PNG exporter signature mismatch (quality as 3rd arg was misinterpreted as exportSize, producing 300x150 exports instead of 1920x1080) and barrel export bug (exportToJpeg imported from ExportManager.js which exports an object, not the function). Added 6 tests (Section 6.1 PNG signature, Section 6.2 barrel exports) with canvas dimension interception via Object.defineProperty. Also fixed SaliencyDebugOverlayTest.html import path (same root cause). Ran world-review: DPR check passed, test scoping verified, added JSDoc to pngExporter. All 655 tests pass (6 new, 0 regressions)."
+}

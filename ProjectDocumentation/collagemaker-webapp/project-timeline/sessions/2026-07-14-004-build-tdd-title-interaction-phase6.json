@@ -1,0 +1,24 @@
+{
+  "session_id": "build-tdd-title-interaction-phase6",
+  "session_number": 4,
+  "date": "2026-07-14",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/Interaction/TitleInteraction.js",
+    "MyESModules/App/createCollageLifecycle.js",
+    "MyESModules/Interaction/PanelSwap.js",
+    "MyESModules/index.js"
+  ],
+  "test_files_added": [
+    "MyComponents/TitleInteractionTest.html"
+  ],
+  "tests_added": 22,
+  "assertions_added": 33,
+  "bugs_fixed": 3,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Implemented Phase 6 (Title Canvas Interaction) via TDD. Created TitleInteraction.js with createTitleInteraction() factory supporting drag-to-move, edge-drag-to-resize (left/right), hover feedback, pointer capture lifecycle, multi-touch guard, and PanelSwap coordination. Added 22 unit tests covering hit testing (5), drag behavior (5), resize behavior (2), multi-touch guard (1), PanelSwap coordination (1), attach/detach lifecycle (3), hover feedback (3), and callbacks (2). Wired into Vue lifecycle with undo integration. Fixed world-review findings: (1) NaN bug in boxWidth fallback calculation (?? operator misuse), (2) cursor feedback improved from move/ew-resize to grab/grabbing/ew-resize. Bug fix session: (1) Panel swap firing behind title — root cause was titleInteractionMode set to null on pointerdown so PanelSwap guard didn't fire; fixed by setting mode immediately on pointerdown AND reordering attach so TitleInteraction listener fires before PanelSwap, (2) No hover outline — root cause was onRenderScheduled never called during hover; fixed by tracking lastHoverTarget and scheduling render on state change. All 22 tests pass. Pre-existing SaliencyDebugOverlayTest failure (1) unrelated."
+}

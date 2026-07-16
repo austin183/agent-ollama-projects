@@ -1,0 +1,20 @@
+{
+  "session_id": "build-docs-2026-07-03-testing",
+  "session_number": 15,
+  "date": "2026-07-03",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/testing.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill using learnings from 2026-07-03-phase3-testing-learnings.md. Added to references/testing.md: (1) Mocking Browser APIs section with document.createElement and localStorage patterns, (2) Chai CDN Limitations section (no eventually/startWith), (3) Manager-Specific Testing for TitleManager cross-flag toggling, ExportManager mock assembler, SettingsPersistence localStorage round-trips, (4) Buffer-Based File Upload pattern for Playwright, (5) 4 new gotchas (#6-9), (6) Assertion Density rule of thumb. SKILL.md updated Testing conventions and Learnings section. Also fixed duplicate 'Testing undo/redo buttons' heading in testing.md."
+}

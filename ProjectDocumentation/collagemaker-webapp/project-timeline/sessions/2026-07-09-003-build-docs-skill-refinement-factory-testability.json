@@ -1,0 +1,19 @@
+{
+  "session_id": "2026-07-09-building-web-apps-factory-testability-refinement",
+  "session_number": 58,
+  "date": "2026-07-09",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with 5 learnings from Phase 5 refactoring: (1) Callback Injection Pattern for Vue Handler DIP — handler factories accept callbacks receiving Vue instance, (2) DOM ID Injection as factory configuration with sensible defaults, (3) Internal vs Module Extraction rule of thumb, (4) getLayoutOptions() for data-driven OCP-compliant UI, (5) File Input Handler DOM-read pattern. Added new 'Factory Testability Patterns' section, 'File Input Handlers' subsection, 'Data-Driven UI Options' under Extensibility, and updated Quick Reference and description."
+}

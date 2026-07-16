@@ -1,0 +1,11 @@
+{
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    "_agent_docs/specifications/change-requests/2026-07-12-pre-merge-review-tony.md"
+  ],
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success"
+}

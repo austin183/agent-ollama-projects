@@ -1,0 +1,22 @@
+{
+  "session_id": "debug-vue-options-api-methods-2026-07-02",
+  "session_number": 11,
+  "date": "2026-07-02",
+  "purpose": "debug",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "MyESModules/App/createCollageLifecycle.js",
+    "MyESModules/App/createCollageApp.js"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 2,
+  "learnings_written": [
+    "_agent_docs/learnings/vue-options-api-pattern.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Fixed two Vue 3 Options API bugs. Bug 1: Methods defined at root level of Options API object (not inside methods:) are not available via this — _applySavedSettings and _handleKeyboard in createCollageLifecycle.js caused TypeError during mounted(). Fix: moved them into a methods: { } block. Bug 2: Object spread order silently overwrites properties — ...lifecycleConfig after methods: methodsConfig replaced all template-referenced methods (triggerFilePicker, undo, redo, etc.) with only lifecycle helper methods. Vue render warnings + isTitleFormatActive TypeError. Fix: explicitly merge both method sources and reference lifecycle hooks by name instead of spreading. Both bugs are documented in updated vue-options-api-pattern.md learnings."
+}

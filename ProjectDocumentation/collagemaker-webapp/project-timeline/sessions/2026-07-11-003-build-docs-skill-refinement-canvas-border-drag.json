@@ -1,0 +1,23 @@
+{
+  "session_id": "2026-07-11-003",
+  "session_number": 3,
+  "date": "2026-07-11",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/canvas-2d.md",
+    ".opencode/skills/building-web-apps/references/interaction.md",
+    ".opencode/skills/building-web-apps/references/accessibility.md",
+    ".opencode/skills/building-web-apps/references/testing-unit.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with 4 patterns from learnings/2026-07-11-canvas-border-refactor-and-drag-cleanup.md: (1) config-based rendering helpers in canvas-2d.md with !== undefined guard, (2) global pointerup drag cleanup in interaction.md, (3) ARIA role selection for interactive canvases in accessibility.md, (4) characterization tests before refactor in testing-unit.md. Updated SKILL.md frontmatter description, reference lines, and inline Canvas 2D/pointer/testing sections. Updated table of contents in interaction.md, accessibility.md, and testing-unit.md."
+}

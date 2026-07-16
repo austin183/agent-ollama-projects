@@ -1,0 +1,22 @@
+{
+  "session_id": "build-tdd-crop-overlay-styling-2026-07-13",
+  "session_number": 4,
+  "date": "2026-07-13",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/Layout/CropOverlayShape.js",
+    "MyESModules/App/createCropPreviewRenderer.js",
+    "MyComponents/CropOverlayShapeTest.html",
+    "MyComponents/CropPreviewTest.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 9,
+  "bugs_fixed": 2,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Three iterations on crop overlay styling for shaped panels:\n1. Thinned border: lineWidth=2->1, stroke alpha 0.85->0.55, fill alpha 0.18->0.10\n2. Zero fill alpha: drawShapeOverlay fill set to rgba(255,255,255,0) so image is fully visible\n3. Root cause fix: replaced destination-out compositing with evenodd compound path fill. The destination-out approach was fundamentally different from how rectangular panels work (4 fillRect calls that never touch the crop interior). The evenodd approach draws the dark overlay once with a compound path (canvas rect + shape), filling everything EXCEPT the shape interior — matching the rectangular panel behavior exactly. No save/restore or compositing mode switching needed.\n\nbeginPathFromPoints gained a continuePath parameter for compound path support.\nUpdated 9 test assertions across CropOverlayShapeTest.html and CropPreviewTest.html."
+}

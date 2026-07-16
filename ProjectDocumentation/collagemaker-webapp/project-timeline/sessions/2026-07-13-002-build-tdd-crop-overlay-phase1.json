@@ -1,0 +1,24 @@
+{
+  "session_id": "ses_crop-overlay-phase1-tdd",
+  "session_number": 2,
+  "date": "2026-07-13",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/Layout/CropOverlayShape.js",
+    "MyESModules/App/createCropPreviewRenderer.js",
+    "MyComponents/CropOverlayShapeTest.html",
+    "MyComponents/CropPreviewTest.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 13,
+  "assertions_added": 35,
+  "bugs_fixed": 0,
+  "learnings_written": [
+    "2026-07-13-canvas-destination-out-shape-cutouts.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Implemented Phase 1 of the Shaped Crop Overlay feature (plan: 2026-07-12-crop-overlay-swap-all-layouts-plan.md). Phase 1.1: Added beginPathFromPoints helper and shaped dark overlay using destination-out compositing for non-rectangular panels. Phase 1.2: Enhanced drawShapeOverlay styling (solid stroke, brighter fill/stroke) and shaped crop border. All 13 new tests pass. Addressed world-review concerns: cached computeShapeOverlayPoints results, added try/finally for canvas state safety. No regression in existing test suite (1206 total tests, 1 pre-existing failure in SaliencyDebugOverlayTest unrelated to changes)."
+}

@@ -1,0 +1,19 @@
+{
+  "session_id": "2026-07-12-001",
+  "session_number": 1,
+  "date": "2026-07-12",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill using learnings from 2026-07-11-method-extraction-and-world-review.md. Five changes: (1) Updated YAML description to include module extraction and service locator safety. (2) Refined Internal vs. Module Extraction guidance with ~400-line threshold and primary/secondary improvement distinction. (3) Added Callback Wiring in Extracted Modules pattern for cross-module callback injection to prevent circular dependencies. (4) Added Service Locator Access Safety section covering optional chaining consistency and callback-time service lookups. (5) Updated world-review workflow step with 'tests verify specified behavior; world-review questions assumed behavior' insight and two new checklist items."
+}

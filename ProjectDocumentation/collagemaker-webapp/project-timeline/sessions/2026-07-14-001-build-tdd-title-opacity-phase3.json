@@ -1,0 +1,26 @@
+{
+  "session_id": "2026-07-14-001",
+  "session_number": 101,
+  "date": "2026-07-14",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/Models/TitleStyle.js",
+    "MyESModules/State/TitleManager.js",
+    "MyESModules/Rendering/TitleRenderer.js",
+    "MyESModules/App/createTitleHandlers.js",
+    "MyESModules/App/createCollageMethods.js",
+    "index.html",
+    "MyComponents/TitleRendererTest.html",
+    "MyComponents/TitleManagerTest.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 21,
+  "assertions_added": 58,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Phase 3: Title Opacity Controls — implemented fontOpacity and bgOpacity fields in TitleStyle model, clamped setters in TitleManager (Math.max(0, Math.min(1, value))), save/restore globalAlpha pattern in TitleRenderer for both background rect and text rendering, handler wiring through createTitleHandlers and createCollageMethods, two range sliders in index.html Title section with ARIA attributes (aria-valuenow, aria-valuemin, aria-valuemax). All 1920+ existing tests pass with 0 regressions. 21 new tests added: 9 TitleRenderer opacity tests (globalAlpha save/restore, no alpha leakage, edge cases) and 12 TitleManager/model tests (setter clamping, notify callbacks, createTitleStyle defaults). World-review addressed: confirmed slider range (min=0, max=1, step=0.01 = 100 steps, not 10000), added ARIA attributes for accessibility, verified rAF debouncing in CanvasRenderer prevents render stuttering."
+}

@@ -1,0 +1,20 @@
+{
+  "session_id": "session-017",
+  "session_number": 17,
+  "date": "2026-07-03",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/css-layout.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Created references/css-layout.md from the flex-min-height-zero-pitfall learning. Added universal rule (min-height: 0 for column flex chains, min-width: 0 for row flex chains), the CollageMaker flex tree diagram, and tables mapping all min-height: 0 and min-width: 0 declarations in Style.css to their line numbers. Updated SKILL.md with the new reference in Key References and a CSS flex entry in Quick Reference."
+}

@@ -1,0 +1,20 @@
+{
+  "session_id": "session-035",
+  "session_number": 35,
+  "date": "2026-07-04",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/testing.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill using learnings from 2026-07-04-pwa-testing-patterns.md. Added to references/testing.md: (1) Falsy vs. Missing Field Validation section with explicit undefined/null vs empty string pattern, (2) Playwright Page Load Strategy section documenting domcontentloaded + waitForSelector('#mocha') vs networkidle, (3) enhanced Deferred Feature Tests section with pure function/E2E/deferred test patterns and test numbering traceability, (4) Pure Function Testing section for browser-independent utility design, (5) Cache API Gotchas section (no built-in eviction, opaque response TypeError). Added gotcha #12 for networkidle timeouts. Updated SKILL.md Quick Reference with domcontentloaded and falsy-vs-missing patterns. Follows skills-best-practice: progressive disclosure (details in references/), concise SKILL.md, one-level-deep references."
+}

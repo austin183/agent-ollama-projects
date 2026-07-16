@@ -1,0 +1,21 @@
+{
+  "session_id": "",
+  "session_number": 7,
+  "date": "2026-07-12",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/testing-unit.md",
+    ".opencode/skills/building-web-apps/references/canvas-2d.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill using learnings from 2026-07-12-canvas-render-order-testing.md. Three changes: (1) Enhanced testing-unit.md 'Canvas Render Order Testing via Context Method Wrapping' section — added full code example with shadowColor/globalAlpha capture, distinguishing properties table (hex drag target, selection border, hover border), 'canvas properties persist' insight, and expanded 'when to use' conditions. (2) Added 'Same-Panel Overlap Guard' section to canvas-2d.md — the general pattern of skipping lower-priority overlays when they target the same element as a higher-priority overlay, with code example and file reference. (3) Updated SKILL.md description to include 'render order testing via context method wrapping' and added context method wrapping reference in the Testing section alongside existing Proxy-based mocking reference."
+}
