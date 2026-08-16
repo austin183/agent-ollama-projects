@@ -1,0 +1,18 @@
+{
+  "session_id": "",
+  "date": "",
+  "title": "",
+  "purpose": "",
+  "agent_role": "",
+  "model": "",
+  "duration_minutes": 0,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "",
+  "key_decisions": [],
+  "learnings": [],
+  "files_created": [],
+  "files_modified": [],
+  "next_steps": []
+}
