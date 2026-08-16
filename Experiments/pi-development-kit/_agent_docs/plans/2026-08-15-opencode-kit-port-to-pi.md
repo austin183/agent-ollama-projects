@@ -1,7 +1,7 @@
 # Port opencode-development-kit Agents and Skills to pi
 
 **Date:** 2026-08-15
-**Status:** Phase 1 complete (2026-08-16) — proceeding phase by phase
+**Status:** Phase 2 complete (2026-08-16) — proceeding phase by phase
 **Source project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/opencode-development-kit`
 **Target project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/pi-development-kit`
 
@@ -82,6 +82,14 @@ Verified during Phase 1 (2026-08-16):
 - **Session dir encoding uses the real path**: `/tmp/…` sessions land in `~/.pi/agent/sessions/--private-tmp-…--/` on macOS (`/tmp` → `/private/tmp`). The Phase 4 parser should resolve symlinks when mapping a cwd to its session dir.
 - **Child LLM errors propagate cleanly**: if the child's model fails (e.g., LM Studio 400 "insufficient resources"), the tool returns `isError` with the error text, and the parent JSONL still records `results[i]` with `stopReason: "error"`, `exitCode: 0`, and the *intended* `model` — useful for attribution of failed runs.
 - **world-review model override verified end-to-end** (2026-08-16, after the user loaded the model in LM Studio): `lmstudio/qwen-agentworld-35b-a3b` runs successfully and is recorded in the parent JSONL with full usage. Note: the model is large (~34.94 GB); if LM Studio's memory guardrail blocks it (400 error), the run fails cleanly but the intended `model` is still recorded (see fixture `2026-08-16T02-16-57`).
+
+Verified during Phase 2 (2026-08-16):
+
+- **Prompt templates expand in non-interactive `pi -p`** — typing `/template args` as the `-p` prompt goes through the same expansion pipeline as the TUI (verified with a sentinel template: the model receives the expanded text, not the literal `/name`). This makes the whole template surface testable in scripts; the session JSONL's first user message is ground truth for what expanded.
+- **Project `.pi/prompts/` auto-discovery follows symlinked directories** — verified by symlinking the kit's `prompts/` into a scratch project; templates loaded without the settings snippet or `--prompt-template` flags.
+- **`Role:` marker convention holds end-to-end** — expanded persona templates land in the session JSONL as user messages whose first line is `Role: <agent>` (all 5 persona templates verified). The Phase 4 grep contract `^Role: ([a-z-]+)` is sound.
+- **Persona templates produce compliant role behavior** — `/build-tdd <task>` ran a real Red-Green-Refactor cycle with triangulation and wrote a session summary with `agent_role: build-tdd`; `/plan-bdd <feature>` delegated to both `world-review` (agentworld model) and `planner` subagents, executed spec formulas in Node, and wrote the plan + session summary.
+- **Local-model probe contention**: long `-p` probes share LM Studio with any interactive pi session, so both slow down (a solid-review probe needed >30 min wall time with a competing session). Budget probe timeouts accordingly, or run probes when no other session is active.
 
 ### Target layout
 
@@ -245,7 +253,7 @@ Vendor the subagent extension and port all 9 agent definitions to `.pi/agents/`,
 
 ---
 
-## Phase 2: Prompt Templates (Role Launchers)
+## Phase 2: Prompt Templates (Role Launchers) *(complete 2026-08-16)*
 
 ### Overview
 
@@ -291,6 +299,8 @@ Give the 5 primary roles their opencode-style "session persona" via thin prompt 
 | 2.4 | Delegation works: `/diff-review` on a scratch diff spawns a subagent run (streaming output shows agent name + model) and returns findings to the main session | scratch project |
 | 2.5 | `/plan-bdd <small feature>` in a scratch project: main session runs the BDD workflow; subagent runs for `world-review` and `planner` visible; plan file lands in `[docs directory]/plans/` | scratch project |
 | 2.6 | Session JSONL of 2.3 contains a user message starting with `Role: build-tdd` (marker convention holds for analytics) | grep the session file |
+
+**Results (2026-08-16):** all checks passed via non-interactive `pi -p` probes in a scratch project (templates symlinked from the kit's `.pi/prompts/`). 2.1 verified functionally as expansion of 7 of 8 templates (world-review redundant — probe 2.5 already exercised it via delegation on the agentworld model); the interactive autocomplete listing is left as a user sanity check. 2.3 produced 4/4 passing tests + `agent_role: build-tdd` summary; 2.5 produced a 3-level BDD plan + both subagent runs attributed (world-review on agentworld, planner inherited). 2.6 confirmed by JSONL grep. Four probe sessions saved as parser fixtures (`phase2-*.jsonl`).
 
 ---
 
