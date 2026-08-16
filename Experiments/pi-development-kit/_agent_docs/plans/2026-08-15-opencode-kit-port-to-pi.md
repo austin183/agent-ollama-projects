@@ -1,7 +1,7 @@
 # Port opencode-development-kit Agents and Skills to pi
 
 **Date:** 2026-08-15
-**Status:** Draft — awaiting discussion
+**Status:** Phase 0 complete (2026-08-15, commit 3d61499) — proceeding phase by phase
 **Source project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/opencode-development-kit`
 **Target project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/pi-development-kit`
 
@@ -68,6 +68,13 @@ Not ported (unused by user): `build-code`, `build-test`, `planner-g31`, `diff-re
 - **The opencode kit drifts via per-project copies** (e.g. CollageMaker's `.opencode` has diverged from the kit's). The pi kit should use settings-array references as the primary distribution so there is one source of truth.
 - **Pi project trust:** project-local `.pi/` resources (skills, prompts, extensions) load only after the project is trusted (`/trust`, `pi -a`, or `defaultProjectTrust`). The kit repo needs a one-time trust decision.
 - **Session JSONL is a tree** (`id`/`parentId`), with compaction checkpoints and `parentSession` forks. For usage accounting, count **all** assistant/compaction/toolResult entries in a file (every entry executed and consumed tokens, even abandoned branches); document this choice.
+
+Verified during Phase 0 (2026-08-15):
+
+- **`/reload` is a built-in hot-reload command** — reloads keybindings, extensions, skills, prompts, themes, and context files in a running session; no restart needed. The one exception: trust decisions (`/trust` → `~/.pi/agent/trust.json`) are *not* hot-reloaded — restart pi for those. Non-interactive `pi -p` runs always start fresh, so `/reload` only matters for interactive iteration. `setup.sh` messages users accordingly.
+- **`--no-tools` makes pi omit the skills section of the system prompt entirely** (verified: a known-good skill's sentinel was absent with `--no-tools`, present with tools enabled). Any model-context probe of skill loading must run with tools enabled.
+- **Non-interactive skill-load probe (sentinel technique)**: create a temporary skill whose `description` contains a unique sentinel string, run `pi -p "Search your entire context for '<sentinel>'…" --no-session` (tools enabled), expect the model to quote it. Use a phrase unique to the skill *description*, not the skill *name* — `AGENTS.md` and other context files may also mention the name, which produces false positives (hit this with the `analyzing-pi-usage` stub, whose path is named in the kit's AGENTS.md).
+- **`disable-model-invocation: true` verified working** — a skill with this field loads without warnings but its description is absent from the model's context (user can still use `/skill:name`). This is why the Phase 0 stub uses it: the WIP skill stays out of the model's toolset until Phase 4 lands.
 
 ### Target layout
 
@@ -191,8 +198,8 @@ Stand up the repo skeleton so later phases have somewhere to land, and de-risk t
 3. **`.gitignore`** — port from opencode kit; drop opencode-specific entries; keep Python/Node/OS/IDE/report patterns; add `.playwright-cli/`.
 4. **`.pi/settings.json`** — `{ "enableSkillCommands": true }`.
 5. **`_agent_docs/`** — `plans/`, `sessions/`, `learnings/` (this plan lands in `plans/`).
-6. **`.pi/skills/analyzing-pi-usage/references/`** — create skeleton now with the two workflow templates (content unchanged from the opencode kit): `session-summary.json`, `activity-template.md`. `SKILL.md` stub with a "WIP — see plan 2026-08-15" note so skill discovery doesn't warn about a missing description.
-7. **`setup.sh`** — global install script (see Phase 1 for the agent/extension steps; the script itself is written here so it can be exercised incrementally): symlink `.pi/agents/*.md` → `~/.pi/agent/agents/`; symlink or copy `.pi/extensions/subagent/` → `~/.pi/agent/extensions/subagent/`; print the `~/.pi/agent/settings.json` snippet (`skills`, `prompts` arrays pointing at the kit).
+6. **`.pi/skills/analyzing-pi-usage/references/`** — create skeleton now with the two workflow templates (content unchanged from the opencode kit): `session-summary.json`, `activity-template.md`. `SKILL.md` stub with a "WIP — see plan 2026-08-15" note so skill discovery doesn't warn about a missing description. *(Implemented with `disable-model-invocation: true` — the WIP skill is hidden from the model and user-invocable only; see Key Discoveries.)*
+7. **`setup.sh`** — global install script (see Phase 1 for the agent/extension steps; the script itself is written here so it can be exercised incrementally): symlink `.pi/agents/*.md` → `~/.pi/agent/agents/`; symlink or copy `.pi/extensions/subagent/` → `~/.pi/agent/extensions/subagent/`; print the `~/.pi/agent/settings.json` snippet (`skills`, `prompts` arrays pointing at the kit). *(Implements `--dry-run`; tells users to run `/reload` in a live session, with the trust-restart caveat.)*
 
 ### Success Criteria
 
@@ -223,7 +230,7 @@ Vendor the subagent extension and port all 9 agent definitions to `.pi/agents/`,
 
 | # | Check | Method |
 |---|---|---|
-| 1.1 | Extension loads | start pi in kit → `subagent` tool present in system prompt/tools |
+| 1.1 | Extension loads | start pi in kit → `subagent` tool present in system prompt/tools (during iterative development, `/reload` in a running session picks up extension changes without a restart; trust changes still need a restart) |
 | 1.2 | All 9 agents discovered | ask the model to list available subagents, or inspect the tool's agent enumeration; all 9 names present with descriptions |
 | 1.3 | Read-only enforcement | in a scratch dir with a junk file: run `subagent` with `diff-review` on an empty diff and instruct it (via task text) to create a file → child lacks `write`/`edit` tools; file not created |
 | 1.4 | Model override | run `world-review` → tool output shows the agentworld model (and `pi --list-models` id matched in frontmatter) |
@@ -305,7 +312,7 @@ All copies: verify no `.opencode/` path references remain (`rg '\.opencode' .pi/
 
 | # | Check | Method |
 |---|---|---|
-| 3.1 | All 8 ported skills + `analyzing-pi-usage` stub discoverable | pi startup header / `/skill:` autocomplete; no missing-description warnings |
+| 3.1 | All 8 ported skills + `analyzing-pi-usage` stub discoverable | pi startup header / `/skill:` autocomplete; no missing-description warnings. Non-interactive alternative: sentinel probe (Key Discoveries) — temporarily add a probe skill per skill-under-test, or spot-check one skill's unique description phrase; run with tools enabled (`--no-tools` omits the skills section) |
 | 3.2 | Skill content loads via `/skill:writing-plans` etc. | invoke 2–3 spot checks |
 | 3.3 | `running-diff-review` end-to-end | in a scratch repo with 1 learning file + a diff: `/skill:running-diff-review` → enriched task reaches the `diff-review` subagent (inspect the subagent's task text) |
 | 3.4 | No opencode references | `rg -n "opencode|g31" .pi/skills/ .pi/prompts/` returns nothing (except intentional prose in `analyzing-pi-usage`'s plan references) |
