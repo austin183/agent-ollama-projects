@@ -1,7 +1,7 @@
 # Port opencode-development-kit Agents and Skills to pi
 
 **Date:** 2026-08-15
-**Status:** Phase 0 complete (2026-08-15, commit 3d61499) — proceeding phase by phase
+**Status:** Phase 1 complete (2026-08-16) — proceeding phase by phase
 **Source project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/opencode-development-kit`
 **Target project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/pi-development-kit`
 
@@ -75,6 +75,13 @@ Verified during Phase 0 (2026-08-15):
 - **`--no-tools` makes pi omit the skills section of the system prompt entirely** (verified: a known-good skill's sentinel was absent with `--no-tools`, present with tools enabled). Any model-context probe of skill loading must run with tools enabled.
 - **Non-interactive skill-load probe (sentinel technique)**: create a temporary skill whose `description` contains a unique sentinel string, run `pi -p "Search your entire context for '<sentinel>'…" --no-session` (tools enabled), expect the model to quote it. Use a phrase unique to the skill *description*, not the skill *name* — `AGENTS.md` and other context files may also mention the name, which produces false positives (hit this with the `analyzing-pi-usage` stub, whose path is named in the kit's AGENTS.md).
 - **`disable-model-invocation: true` verified working** — a skill with this field loads without warnings but its description is absent from the model's context (user can still use `/skill:name`). This is why the Phase 0 stub uses it: the WIP skill stays out of the model's toolset until Phase 4 lands.
+
+Verified during Phase 1 (2026-08-16):
+
+- **Subagents can nest.** Child `pi` processes load global extensions too, so a subagent with the default toolset (no `tools:` frontmatter) also gets the `subagent` tool and can delegate further (verified: main → `plan-bdd` → `planner`). Consequence for Phase 4: the parser must **recurse** into `details.results[i].messages[]` to find nested subagent `toolResult` entries — nested usage is NOT included in the parent result's `usage` (that counts only the intermediate agent's own LLM turns).
+- **Session dir encoding uses the real path**: `/tmp/…` sessions land in `~/.pi/agent/sessions/--private-tmp-…--/` on macOS (`/tmp` → `/private/tmp`). The Phase 4 parser should resolve symlinks when mapping a cwd to its session dir.
+- **Child LLM errors propagate cleanly**: if the child's model fails (e.g., LM Studio 400 "insufficient resources"), the tool returns `isError` with the error text, and the parent JSONL still records `results[i]` with `stopReason: "error"`, `exitCode: 0`, and the *intended* `model` — useful for attribution of failed runs.
+- **world-review model caveat**: `lmstudio/qwen-agentworld-35b-a3b` is correctly wired (verified end-to-end: frontmatter → `--model` → LM Studio), but LM Studio's memory guardrail currently refuses to load it (~34.94 GB estimated). Works when memory is available or guardrails are adjusted; the agent definition itself is correct.
 
 ### Target layout
 
@@ -209,7 +216,7 @@ Stand up the repo skeleton so later phases have somewhere to land, and de-risk t
 
 ---
 
-## Phase 1: Subagent Extension + Agent Definitions
+## Phase 1: Subagent Extension + Agent Definitions *(complete 2026-08-16)*
 
 ### Overview
 
