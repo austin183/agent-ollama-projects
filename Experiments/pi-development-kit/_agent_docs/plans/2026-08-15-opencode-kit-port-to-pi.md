@@ -1,7 +1,7 @@
 # Port opencode-development-kit Agents and Skills to pi
 
 **Date:** 2026-08-15
-**Status:** Phase 2 complete (2026-08-16) — proceeding phase by phase
+**Status:** Phase 3 complete (2026-08-16) — proceeding phase by phase
 **Source project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/opencode-development-kit`
 **Target project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/pi-development-kit`
 
@@ -304,7 +304,7 @@ Give the 5 primary roles their opencode-style "session persona" via thin prompt 
 
 ---
 
-## Phase 3: Skills Port
+## Phase 3: Skills Port *(complete 2026-08-16)*
 
 ### Overview
 
@@ -333,6 +333,8 @@ All copies: verify no `.opencode/` path references remain (`rg '\.opencode' .pi/
 | 3.2 | Skill content loads via `/skill:writing-plans` etc. | invoke 2–3 spot checks |
 | 3.3 | `running-diff-review` end-to-end | in a scratch repo with 1 learning file + a diff: `/skill:running-diff-review` → enriched task reaches the `diff-review` subagent (inspect the subagent's task text) |
 | 3.4 | No opencode references | `rg -n "opencode|g31" .pi/skills/ .pi/prompts/` returns nothing (except intentional prose in `analyzing-pi-usage`'s plan references) |
+
+**Results (2026-08-16):** all checks passed via non-interactive `pi -a -p` probes (kit repo for 3.1/3.2; scratch repo `/tmp/pi-kit-phase3-test` with kit skills symlinked for 3.3). 3.3's enriched task verified in the session JSONL — the `diff-review` subagent received the learnings block in the skill's exact format and correctly did not flag the documented intentional pattern. Two source bugs found and fixed in the port: (1) `reviewing-agents-md`'s description contained an unquoted `: ` ("best practices: conciseness"), making the YAML frontmatter unparseable — pi silently skips skills with a missing description, so the skill never loaded (bug inherited from the opencode kit source; fixed by rewording, opencode kit left untouched per plan); (2) 12 copied files had CRLF line endings — normalized to LF. Note for Phase 4: pi's skill loader honors `.gitignore` files when scanning skill dirs, and the kit lives inside the larger `agent-ollama-projects` git repo, whose root `.gitignore` patterns apply to kit skill discovery (none currently collide).
 
 ---
 
