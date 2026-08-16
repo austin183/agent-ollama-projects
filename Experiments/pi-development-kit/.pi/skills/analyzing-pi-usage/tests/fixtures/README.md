@@ -10,6 +10,7 @@ reference shapes for the Phase 4 parser, especially:
 | `2026-08-16T02-16-57` | `world-review` run that **failed at model load** (LM Studio 400, memory guardrail). Shows `stopReason: "error"`, `exitCode: 0`, intended `model` still recorded, zero usage. |
 | `2026-08-16T02-21-04` | Successful single `planner` run on the inherited model. Shows full `usage` (input/output/contextTokens/turns) in `toolResult.details.results[0]`. |
 | `2026-08-16T02-24-02` | **Nested** run: main → `plan-bdd` → `planner`. Top-level `results[0]` is `plan-bdd` (its own turns only); the nested `planner` result lives inside `results[0].messages[].details.results[]`. The Phase 4 parser must recurse into `messages` to attribute nested subagents. |
+| `2026-08-16T13-41-28` | Successful `world-review` run on its override model. Shows `model: lmstudio/qwen-agentworld-35b-a3b` with non-zero usage on a clean `stopReason: "stop"` — the reference for per-model attribution. |
 
 Parser notes (from these fixtures):
 
