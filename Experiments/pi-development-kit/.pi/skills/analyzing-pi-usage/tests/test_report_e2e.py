@@ -7,7 +7,8 @@ import pytest
 from conftest import (
     assistant_msg, subagent_result, tool_result_msg, user_msg, write_session,
 )
-from generate_report import fetch_all_datasets, _sessions_by_day, _build_prod_row
+from generate_report import fetch_all_datasets, _build_prod_row
+from queries.utils import sessions_by_day
 from aggregator.merge import merge_datasets
 from render_consolidated_report import render_html
 
@@ -203,7 +204,7 @@ def test_helper_functions(world):
     data = fetch_all_datasets(project_path=str(project_dir),
                                since='2026-01-01', until='2026-12-31',
                                sessions_root=root)
-    by_day = _sessions_by_day(data['sessions'])
+    by_day = sessions_by_day(data['sessions'])
     assert by_day == {'2026-03-02': 1, '2026-03-03': 1}
     bp = _build_prod_row(data['sessions'])
     # main-session build-category sessions: both (planner->plan, main->build:

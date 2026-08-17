@@ -24,7 +24,7 @@ from queries import (
     cache_estimate as cache_queries, git_commits, session_summaries,
 )
 from aggregator.merge import merge_datasets
-from queries.utils import resolve_date
+from queries.utils import resolve_date, sessions_by_day
 
 
 def fetch_all_datasets(
@@ -120,7 +120,7 @@ def fetch_all_datasets(
         # git-date join in merge)
         'productivity_list': [{
             'total_sessions': len(sessions),
-            'daily_sessions': _sessions_by_day(sessions),
+            'daily_sessions': sessions_by_day(sessions),
         }],
         # Build-role session totals (build-* roles + main, per category mapping)
         'build_prod_list': [_build_prod_row(sessions)],
@@ -136,16 +136,6 @@ def fetch_all_datasets(
                                                      until=until, docs_dir=docs_dir),
         'subagent_runs': subagent_runs,
     }
-
-
-def _sessions_by_day(sessions) -> dict:
-    """Per-day session counts (a session counts once per day it has events)."""
-    from collections import defaultdict
-    by_day: dict = defaultdict(set)
-    for s in sessions:
-        for e in s.events:
-            by_day[e.day].add(s.session_id)
-    return {day: len(ids) for day, ids in by_day.items()}
 
 
 def _build_prod_row(sessions) -> dict:

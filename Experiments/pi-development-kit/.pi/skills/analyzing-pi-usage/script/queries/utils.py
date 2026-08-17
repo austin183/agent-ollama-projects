@@ -80,6 +80,21 @@ def _parse_or_default(value: Optional[str], default: str) -> str:
         return default
 
 
+def sessions_by_day(sessions) -> dict:
+    """Distinct sessions per UTC day (a session counts once per day).
+
+    Counts *sessions*, not token events: a single session yields many
+    events (assistant turns, compactions, subagent runs), so summing events
+    per day inflates session-based metrics (e.g. "sessions with changes").
+    """
+    from collections import defaultdict
+    by_day: dict = defaultdict(set)
+    for s in sessions:
+        for e in s.events:
+            by_day[e.day].add(s.session_id)
+    return {day: len(ids) for day, ids in by_day.items()}
+
+
 def load_sessions_for(project: Optional[str], since: Optional[str], until: Optional[str],
                       sessions_root=None):
     """Convenience: load (and date-filter) sessions for a query.

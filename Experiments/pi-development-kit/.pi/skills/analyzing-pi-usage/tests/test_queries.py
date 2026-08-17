@@ -4,6 +4,7 @@ plus project and date filtering."""
 from conftest import assistant_msg, subagent_result, tool_result_msg, user_msg, write_session
 from pi_sessions import load_sessions
 from queries import summary, models, roles, cross_tab, timeseries, top_sessions
+from queries.utils import sessions_by_day
 
 A = '2026-01-05T10:00:00.000Z'
 B = '2026-01-05T10:01:00.000Z'
@@ -165,3 +166,26 @@ def test_subagent_events_included_in_totals(sessions_root):
     assert s['role_count'] == 2  # main + planner (subagent role)
     roles_rows = {r['role']: r for r in roles.fetch(sessions=sessions)}
     assert roles_rows['planner']['total_tokens_raw'] == 990
+
+
+def test_sessions_by_day_counts_sessions_not_events(sessions_root):
+    """Regression: a session with N events contributes 1 per day it touches,
+    not N. (Counting events inflated 'sessions on commit days'.)"""
+    # s1: three events all on day 1, one event on day 2
+    write_session(sessions_root, '/data/p', 's1', A, [
+        assistant_msg('e1', None, A, 'm', input=10),
+        assistant_msg('e2', 'e1', B, 'm', input=20),
+        assistant_msg('e3', 'e2', B, 'm', input=30),
+        assistant_msg('e4', 'e3', C, 'm', input=40),
+    ])
+    # s2: two events on day 1 (same day as s1)
+    write_session(sessions_root, '/data/p', 's2', A, [
+        assistant_msg('f1', None, A, 'm', input=5),
+        assistant_msg('f2', 'f1', B, 'm', input=6),
+    ])
+    sessions = load_sessions(sessions_root=sessions_root)
+    by_day = sessions_by_day(sessions)
+    assert by_day == {'2026-01-05': 2, '2026-02-10': 1}
+    # Sessions on day-1-only commit dates -> 2 (not the 5 events that day)
+    on_day1 = sum(n for d, n in by_day.items() if d in {'2026-01-05'})
+    assert on_day1 == 2

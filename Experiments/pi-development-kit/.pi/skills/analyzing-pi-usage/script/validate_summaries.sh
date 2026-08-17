@@ -55,18 +55,29 @@ from collections import defaultdict
 
 sessions_dir, template_file, strict = sys.argv[1], sys.argv[2], sys.argv[3] == 'true'
 
-REQUIRED_FIELDS = [
-    'session_id', 'session_number', 'date', 'purpose', 'agent_role',
-    'files_changed', 'test_files_added', 'tests_added', 'assertions_added',
-    'bugs_fixed', 'learnings_written', 'plans_written', 'commits',
-    'outcome', 'notes',
+# Required fields = the keys of the summary template (agents must fill every
+# template field). Derive from the template file so the validator stays in
+# sync; fall back to the template's current field set if it is unreadable.
+FALLBACK_FIELDS = [
+    'session_id', 'date', 'title', 'purpose', 'agent_role', 'model',
+    'duration_minutes', 'tokens_input', 'tokens_output', 'tokens_reasoning',
+    'outcome', 'key_decisions', 'learnings', 'files_created',
+    'files_modified', 'next_steps',
 ]
+REQUIRED_FIELDS = FALLBACK_FIELDS
+try:
+    with open(template_file) as fp:
+        tmpl = json.load(fp)
+    if isinstance(tmpl, dict) and tmpl:
+        REQUIRED_FIELDS = list(tmpl.keys())
+except (OSError, json.JSONDecodeError):
+    pass
 
-summary_files = sorted(glob.glob(os.path.join(sessions_dir, '*-summary.json')))
+summary_files = sorted(glob.glob(os.path.join(sessions_dir, '*.json')))
 
 if not summary_files:
     print('No session summary files found in ' + sessions_dir)
-    print('Summaries should be named: session-NNN-summary.json')
+    print('Summaries should be named: YYYY-MM-DD-XXX-<role>-<description>.json (see the role agents)')
     sys.exit(0)
 
 total = len(summary_files)

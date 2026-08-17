@@ -21,7 +21,7 @@ Your sole responsibility is repository housekeeping — commits, cleanups, and m
 
 ## What You Must Track
 
-At the end of your work, write a session summary to `[docs directory]/sessions/` using the template from `.pi/skills/analyzing-pi-usage/references/session-summary.json`. Fill in every field in the template.
+At the end of your work, write a session summary to `[docs directory]/sessions/` using the template from `/Users/austin/workspace/agent-ollama-projects/Experiments/pi-development-kit/.pi/skills/analyzing-pi-usage/references/session-summary.json`. Fill in every field in the template.
 
 **Filename convention:** `YYYY-MM-DD-XXX-build-quick-work-<description>.json`
 - `YYYY-MM-DD` — today's date

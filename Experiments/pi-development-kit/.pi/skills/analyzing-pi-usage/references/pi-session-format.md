@@ -126,11 +126,18 @@ no usage; ignore for token accounting (but do count them for dedup).
    sort a session's assistant turns by timestamp and
    `uncached[n] = max(input[n] - input[n-1], 0)` (first turn keeps its full
    input). This is a model, not a measurement — label it simulated.
-3. **Timestamps are ISO-8601 UTC** (`…Z`). Analytics buckets by UTC day
+3. **Model IDs are recorded verbatim, and the spelling varies by context.**
+   Main-session turns record the settings-form ID (e.g.
+   `qwen/qwen3.8-27b` with a separate `provider` field), while subagent
+   results record the provider-qualified form (`lmstudio/qwen/qwen3.8-27b`).
+   The same physical model can therefore appear as two rows in by-model
+   tables. Pricing normalizes this (`pricing_model_id()` strips the leading
+   `lmstudio/` before the rate-table lookup); display is left verbatim.
+4. **Timestamps are ISO-8601 UTC** (`…Z`). Analytics buckets by UTC day
    (`timestamp[:10]`).
-4. **Malformed lines happen** (interrupted writes). Skip and count them;
+5. **Malformed lines happen** (interrupted writes). Skip and count them;
    never fatal.
-5. **Project matching**: sessions record `cwd` in the header — substring
+6. **Project matching**: sessions record `cwd` in the header — substring
    match with realpath resolution (gotcha in the layout section).
-6. **Live sessions grow.** An in-progress session appends to its file; totals
+7. **Live sessions grow.** An in-progress session appends to its file; totals
    taken at different times legitimately differ.

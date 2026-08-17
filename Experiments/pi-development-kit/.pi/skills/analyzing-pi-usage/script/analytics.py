@@ -21,7 +21,7 @@ from queries import (
     summary, models, roles, cross_tab, timeseries, top_sessions,
     cache_estimate, git_commits,
 )
-from queries.utils import resolve_date
+from queries.utils import resolve_date, sessions_by_day
 
 
 # ── Formatting helpers ───────────────────────────────────────────────────────
@@ -219,11 +219,9 @@ def show_impact(args, sessions) -> dict:
     daily_git = git_commits.fetch_daily(project=args.project, since=since, until=until)
 
     git_dates = {r['date'] for r in daily_git if r['commits'] > 0}
-    sessions_by_day = {}
-    for s in sessions:
-        for e in s.events:
-            sessions_by_day[e.day] = sessions_by_day.get(e.day, 0) + 1
-    sessions_with_changes = sum(n for day, n in sessions_by_day.items() if day in git_dates)
+    # Distinct sessions on commit days (not events — a session has many turns).
+    s_by_day = sessions_by_day(sessions)
+    sessions_with_changes = sum(n for day, n in s_by_day.items() if day in git_dates)
 
     total_commits = sum(r['commits'] for r in daily_git)
     total_adds = sum(r['adds'] for r in daily_git)

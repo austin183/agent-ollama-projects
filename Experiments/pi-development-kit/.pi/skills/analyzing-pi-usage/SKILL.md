@@ -96,9 +96,9 @@ python3 generate_report.py --project /path/to/project --json --output report.jso
 
 ### Keeping session summaries current
 
-- After each session, write `[docs directory]/sessions/session-NNN-summary.json`
-  from `references/session-summary.json` (session id, purpose, outcome,
-  files changed, learnings).
+- After each session, write a summary to `[docs directory]/sessions/` from
+  `references/session-summary.json` — filename `YYYY-MM-DD-XXX-<role>-<description>.json`
+  (per the role agents' conventions; fill every template field).
 - Validate with `bash script/validate_summaries.sh --root <project>` (add
   `--strict` in CI).
 

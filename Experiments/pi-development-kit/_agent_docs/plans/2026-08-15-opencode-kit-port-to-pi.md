@@ -1,7 +1,7 @@
 # Port opencode-development-kit Agents and Skills to pi
 
 **Date:** 2026-08-15
-**Status:** Phase 4 complete (2026-08-17) — proceeding phase by phase
+**Status:** Phase 5 complete (2026-08-17) — port complete
 **Source project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/opencode-development-kit`
 **Target project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/pi-development-kit`
 
@@ -458,7 +458,7 @@ Same consolidated HTML sections as the opencode kit (summary cards, by-model, by
 
 ---
 
-## Phase 5: Integration Validation + Documentation
+## Phase 5: Integration Validation + Documentation *(complete 2026-08-17)*
 
 ### Overview
 
@@ -480,6 +480,29 @@ End-to-end proof that the kit works as a unit, plus operator docs.
 - The scratch-project exercise completes without manual intervention beyond the initial prompts.
 - Report role table matches the known sequence of operations in the exercise.
 - A second user session in a *different* project picks up all skills/templates/agents with zero per-project setup (global distribution works).
+
+**Results (2026-08-17):** all success criteria met. Exercise repo: `/tmp/pi-kit-phase5-test` (fresh `git init`, `AGENTS.md` defining the docs dir + commit trailer convention, no local `.pi/`; trusted per-run via `pi -a`).
+
+| # | Criterion | Result |
+|---|---|---|
+| 5.1 | `/plan-bdd` → plan with subagent delegation | 54 min run: `world-review` (10 UX concerns, agentworld model) + `planner` (30-scenario BDD design) delegated via the `subagent` tool; plan at `_agent_docs/plans/wclite-cli.md` (10+8+12 scenarios, 11 known behaviors, 3 phases); session summary written. The plan even caught and corrected two errors in the planner's sample code by executing a chunk-size sweep |
+| 5.2 | `/build-tdd` → implemented per plan; summary written | 62 min run: Red-Green-Refactor per plan; `wclite.py` + `test_wclite.py` (36 passing tests, cross-validated against `wc -lwc`); full-template summary `2026-08-17-002-build-tdd-*.json` |
+| 5.3 | `/diff-review` → subagent findings | 30 min run: diff-review subagent (3 turns, 47.1K tokens) found a real coverage gap — the 8 MiB streaming test's `b"x " * 2**22` pattern lands every chunk boundary on whitespace, so the word-carry branch is never exercised end-to-end — plus 4 lower-severity nits; session ended at the template's designed "discuss findings" step |
+| 5.4 | `/build-quick-work` → commit with Co-Authored-By | commit `aac42ad` "feat: add wclite word/line/char counter CLI" with the `Co-Authored-By: LittleLight <noreply@traveler.dstny>` trailer from the project AGENTS.md; third summary written |
+| 5.5 | Report: all metrics non-zero, role attribution correct | Role table matches the known sequence exactly: plan-bdd 2 sess / 411.6K, build-tdd 1 / 651.5K, build-quick-work 1 / 155.6K, main 3 / 60.3K (discovery probes + diff-review launcher turns), diff-review 1 run / 47.1K, planner 2 runs / 33.1K, world-review 2 runs / 17.1K. 7 sessions, 1.38M tokens, 3 models, 5 subagent runs, 2 commits +783/−0 (+312 test), 100% sessions-on-commit-days, 52 KB HTML with every section populated |
+| 5.6 | Global distribution (different project, zero setup) | Fresh scratch repo with no `.pi/` at all: one-turn probe listed all 9 global skills and the `subagent` tool; all four exercise steps ran from it. Installed via `setup.sh` (agent + extension symlinks) + the printed settings snippet merged into `~/.pi/agent/settings.json` (backup: `settings.json.bak-phase5`) |
+| 5.7 | Kit README | `README.md`: what's inside + role table, install (trust + `setup.sh` + snippet + `/reload` caveat), per-project usage (docs-dir + commit conventions, workflow), usage-analysis quick start + caveats, session summaries, development |
+| 5.8 | `_agent_docs/project-timeline.md` entry | Created with the port as first entry (opencode-kit format: Purpose / Work completed / Key findings / Files / Next steps) |
+
+**Bugs found and fixed during the exercise:**
+
+1. **Role agents referenced the summary template by project-relative path** (`.pi/skills/analyzing-pi-usage/references/session-summary.json`) — only resolves inside the kit repo, so in other projects the model improvised its own summary schema (happened in the plan-bdd step). Fixed to absolute kit paths in all 5 role agents (same convention Phase 2 already used for the templates' agent-definition pointers). The build-tdd step, run after the fix, produced a full-template summary.
+2. **`validate_summaries.sh` validated the opencode-era schema** (`session-NNN-summary.json` + quantitative fields like `tests_added`) while the agents and the current template use `YYYY-MM-DD-XXX-<role>-<description>.json` with the token-centric template — it would have rejected every valid pi-kit summary. Now derives required fields from the template file (fallback: the template's current 16 fields) and globs `*.json`; SKILL.md's stale `session-NNN-summary.json` line updated to match.
+3. **`analytics.py --impact` counted token events, not distinct sessions** for "sessions on commit days" (reported 69 for a project with 7 sessions) — same bug class as the Phase 4 `merge.py` fix. Counting is now the shared `queries.utils.sessions_by_day()` (also adopted by `generate_report.py`, removing its local duplicate), with a regression test (suite: 81 passed).
+
+**Documentation additions:** `README.md` (new); `_agent_docs/project-timeline.md` (new, first entry); `references/pi-session-format.md` gained a gotcha on verbatim model-ID spellings (main sessions record settings-form IDs like `qwen/qwen3.8-27b`; subagent results record provider-qualified `lmstudio/qwen/qwen3.8-27b` — the same model can appear as two by-model rows; pricing normalizes via `pricing_model_id()`, display stays verbatim).
+
+**Operational notes (not kit bugs):** local-model pacing dominated the exercise (~3.5 h for four steps on LM Studio qwen3.8-27b); one aborted early plan-bdd attempt left a partial session (its world-review run is real usage and appears in the totals); the diff-review step's findings were left unaddressed by design (the template's next move is discussion with the user).
 
 ---
 
