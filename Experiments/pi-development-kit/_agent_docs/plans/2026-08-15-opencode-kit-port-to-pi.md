@@ -1,7 +1,7 @@
 # Port opencode-development-kit Agents and Skills to pi
 
 **Date:** 2026-08-15
-**Status:** Phase 3 complete (2026-08-16) — proceeding phase by phase
+**Status:** Phase 4 complete (2026-08-17) — proceeding phase by phase
 **Source project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/opencode-development-kit`
 **Target project:** `/Users/austin/workspace/agent-ollama-projects/Experiments/pi-development-kit`
 
@@ -338,7 +338,7 @@ All copies: verify no `.opencode/` path references remain (`rg '\.opencode' .pi/
 
 ---
 
-## Phase 4: `analyzing-pi-usage` Skill
+## Phase 4: `analyzing-pi-usage` Skill *(complete 2026-08-17)*
 
 ### Overview
 
@@ -428,6 +428,33 @@ Same consolidated HTML sections as the opencode kit (summary cards, by-model, by
 | 4.5 | Cache fallback fires under LM Studio data; real-cache path used when a provider-reported session is present | fixture test + live check |
 | 4.6 | Cost section: local models show $0 actual + cloud-equivalent with cache savings | open HTML |
 | 4.7 | `validate_summaries.sh` port validates existing `_agent_docs/sessions/` JSONs | run in kit |
+
+**Results (2026-08-17):** all checks passed.
+
+| # | Result |
+|---|---|
+| 4.1 | `python3 -m pytest tests/` → **80 passed** (parser, role attribution, fork dedup, subagent usage, cache estimate, queries, pricing, merge, e2e report render, real-fixture tests) |
+| 4.2 | Independent one-shot JSONL parse (entry-ID dedup, no shared code) matched `analytics.py --summary` field-for-field on the live `austin183.github.io` sessions (6 sessions). Apparent drift between runs traced to a live pi session appending to the same project — not a parser bug |
+| 4.3 | `generate_report.py --project austin183.github.io` → ~420 KB HTML with all sections non-zero (summary cards, charts, impact, models, cache, model×role, commit efficiency, top sessions) |
+| 4.4 | Subagent Runs section verified against real Phase-1/2 verification runs (`/private/tmp/pi-kit-phase2-test` sessions): 4 runs — planner, diff-review, solid-review, world-review — with correct per-run agent/model/tokens/cost in both `analytics.py --subagents` and the HTML |
+| 4.5 | Cache fallback fires on LM Studio data (simulated, LAG-delta); measured path used when `cacheRead > 0` — both covered by fixtures plus live checks |
+| 4.6 | Local models show $0.00 actual cost + cloud-equivalent with cache savings in the cost section |
+| 4.7 | `validate_summaries.sh` validates a populated summaries dir (2 valid + 1 invalid → flags 9 missing fields; `--strict` exits 1). Kit's own `_agent_docs/sessions/` is empty so far — script correctly reports "No session summary files found" |
+
+**Bugs found and fixed during implementation** (first three inherited from / adjacent to the opencode kit's patterns):
+
+1. **`fmt_num` infinite loop** — the Python port of the bash digit-grouping loop used `s = s[:-3] + ',' + s[-3:]`, which never shrinks the string, so `while len(s) > 3` never terminated (the 3600 s hang). Fixed with a parts-list approach. Parsing itself is fast (<0.1 s for the full 4 MB sessions tree); `jq` was never the bottleneck.
+2. **"Lines Added" card summed deletions** — `r[9]` (dels) instead of `r[8]` (adds). Inherited bug from the opencode kit renderer; fixed in the port, opencode kit left untouched per plan.
+3. **"Sessions with changes" counted events, not sessions** — produced a 4833% metric. Now counts distinct session IDs per day, and `merge.py` additionally caps the git-date-join estimate at the session total (defensive: the date join is an estimate, since pi does not record per-session file changes).
+4. **Git repo resolution** — `Path('/').parent == Path('/')` made the ancestor walk unbounded when no `.git` exists up the tree; and a project outside any repo previously fell back to the CWD repo with *no* path filter (leaking the CWD repo's commits into foreign projects' reports). Now: the project's own repo → the CWD repo only when it actually contains the project → no git data rather than guessing.
+5. **`generate_report.py` rejected non-existent project paths** while `analytics.py` accepted them (usage history stays useful after a directory moves; a typo yields "0 sessions" in both). Check removed for consistency.
+
+**Design notes worth keeping:**
+
+- `charts.py` and `model_pricing.py` are **pure copies** (zero diff) from the opencode kit; role→category mapping keeps chart key names identical (build/review/plan/explore/other).
+- `pricing_model_id()` strips the `lmstudio/` provider prefix before pricing-table lookup so the shared table works for pi model IDs.
+- Subagent usage is attributed from `toolResult.details.results[i].usage` in the *parent* session's JSONL (subagent runs use `--no-session`), including recursion into `results[].messages[].details.results[]` for nested runs; forked sessions are deduped by processing files by header timestamp so the first entry-ID wins.
+- "Sessions with changes" is a **git-date-join estimate** (documented in SKILL.md gotchas and the report footer), not a measured value.
 
 ---
 
