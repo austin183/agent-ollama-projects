@@ -216,12 +216,20 @@ def show_impact(args, sessions) -> dict:
     print_filter(args)
 
     since, until = resolve_date(args.since, args.until, args.days)
+    commits = git_commits.fetch(project=args.project, since=since, until=until)
     daily_git = git_commits.fetch_daily(project=args.project, since=since, until=until)
 
+    # Measured attribution (Pi-Session trailers) where present.
+    attr = git_commits.summarize_attribution(commits)
     git_dates = {r['date'] for r in daily_git if r['commits'] > 0}
+    if attr['attributed_commits'] > 0:
+        # Estimate only the unattributed remainder (their commit days).
+        est_dates = {c['date'] for c in commits if not c.get('session_id')}
+    else:
+        est_dates = git_dates
     # Distinct sessions on commit days (not events — a session has many turns).
     s_by_day = sessions_by_day(sessions)
-    sessions_with_changes = sum(n for day, n in s_by_day.items() if day in git_dates)
+    sessions_with_changes = sum(n for day, n in s_by_day.items() if day in est_dates)
 
     total_commits = sum(r['commits'] for r in daily_git)
     total_adds = sum(r['adds'] for r in daily_git)
@@ -230,8 +238,14 @@ def show_impact(args, sessions) -> dict:
 
     print()
     print(f"  Sessions in range:            {len(sessions)}")
-    print(f"  Sessions on commit days:      {sessions_with_changes} "
-          f"(date-matched estimate — pi does not record per-session file changes)")
+    if attr['attributed_commits'] > 0:
+        print(f"  Commits attributed:           {attr['attributed_commits']} of {total_commits} "
+              f"(Pi-Session trailer)")
+        print(f"  Sessions with changes:        {attr['sessions_measured']} (measured) "
+              f"+ {sessions_with_changes} est. for unattributed")
+    else:
+        print(f"  Sessions on commit days:      {sessions_with_changes} "
+              f"(date-matched estimate — pi does not record per-session file changes)")
     print()
     print(f"  {'Date':<12} {'Commits':>8} {'Lines +':>10} {'Lines -':>10} {'Test +':>10}")
     print('  ' + '─' * 56)
@@ -244,6 +258,9 @@ def show_impact(args, sessions) -> dict:
     return {
         'sessions': len(sessions),
         'sessions_with_changes': sessions_with_changes,
+        'sessions_with_changes_measured': attr['sessions_measured'],
+        'attributed_commits': attr['attributed_commits'],
+        'unattributed_commits': attr['unattributed_commits'],
         'commits': total_commits,
         'adds': total_adds, 'dels': total_dels, 'test_adds': total_test_adds,
         'daily': daily_git,

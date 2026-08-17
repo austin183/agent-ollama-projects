@@ -11,3 +11,4 @@ To work the `.pi/skills/analyzing-pi-usage` skill and its scripts into a reliabl
 - **Subagent runs**: the `subagent` tool (`.pi/extensions/subagent/`, vendored from pi's examples) runs isolated `pi -p` processes with `--no-session`; their usage is attributed from the parent session's tool results (`details.results[]`).
 - **Project trust**: pi loads project-local `.pi/` resources (skills, prompts, extensions) only after the project is trusted (`/trust`, `pi -a`, or `defaultProjectTrust`).
 - **Role markers**: prompt templates from this kit begin with a `Role: <agent>` line so the analytics skill can attribute main-session turns to roles.
+- **Commit attribution**: agent commits end with a `Pi-Session: <session-uuid>` trailer naming the session that made the changes (convention in `build-quick-work`), so the analytics skill measures change attribution instead of estimating it by date.

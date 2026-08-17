@@ -49,6 +49,7 @@
 - [Key coding convention 1]
 - [Key coding convention 2]
 - [Key coding convention 3]
+- Agent commits end with a `Pi-Session: <session-uuid>` trailer naming the session that made the changes (the pi-development-kit analytics skill joins it to sessions; see the `build-quick-work` agent for the exact convention)
 
 ## Documentation
 

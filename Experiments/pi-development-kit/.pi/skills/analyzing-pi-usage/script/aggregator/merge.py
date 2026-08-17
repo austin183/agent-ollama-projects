@@ -38,6 +38,7 @@ def merge_datasets(
     project_name: str = '',
     subagent_runs: dict | None = None,
     session_summaries: dict | None = None,
+    change_attribution: dict | None = None,
 ) -> dict:
     """Merge all raw datasets into the final report structure."""
     # Extract single-row queries
@@ -45,17 +46,29 @@ def merge_datasets(
     productivity = dict(productivity_raw[0]) if productivity_raw else {}
     build_prod = dict(build_prod_raw[0]) if build_prod_raw else {}
 
-    # Compute sessions_with_changes from git data (session dates matched to
-    # commit dates; pi does not record per-session file-change counts)
+    # Compute sessions_with_changes (pi does not record per-session file
+    # changes). With `Pi-Session:` commit trailers present, the attributed
+    # sessions are measured and only unattributed commits fall back to the
+    # date-join estimate; without trailers this is the legacy pure estimate.
     daily_sessions = productivity.pop('daily_sessions', {})
+    total_sessions = productivity.get('total_sessions', 0) or 0
+    attribution = change_attribution or {}
     git_dates_with_commits = {r.get('date', '') for r in daily_git if r.get('commits', 0) > 0}
-    sessions_with_changes = sum(daily_sessions.get(d, 0) for d in git_dates_with_commits)
-    # Cap: the date-join is an estimate (a session active on multiple commit
-    # days is counted once per day) and can never exceed the session total.
-    sessions_with_changes = min(sessions_with_changes, productivity.get('total_sessions', 0) or 0)
+    if attribution.get('attributed_commits', 0) > 0:
+        unattr_dates = {c.get('date', '') for c in git_commits if not c.get('session_id')}
+        est_remainder = sum(daily_sessions.get(d, 0) for d in unattr_dates)
+        # Cap: the estimate portion can never exceed the session total.
+        sessions_with_changes = min(
+            attribution.get('sessions_measured', 0) + est_remainder, total_sessions)
+        productivity['sessions_with_changes_measured'] = attribution.get('sessions_measured', 0)
+    else:
+        sessions_with_changes = sum(
+            daily_sessions.get(d, 0) for d in git_dates_with_commits)
+        sessions_with_changes = min(sessions_with_changes, total_sessions)
+        productivity['sessions_with_changes_measured'] = 0
     productivity['sessions_with_changes'] = sessions_with_changes
     productivity['pct_with_changes'] = round(
-        100.0 * sessions_with_changes / max(productivity.get('total_sessions', 0), 1), 1
+        100.0 * sessions_with_changes / max(total_sessions, 1), 1
     )
     productivity['session_summaries'] = session_summaries or {
         'total': 0, 'by_purpose': {}, 'by_outcome': {}, 'by_role': {}}
@@ -155,6 +168,7 @@ def merge_datasets(
             'total': 0, 'by_purpose': {}, 'by_outcome': {}, 'by_role': {}},
         'most_efficient_commits': commit_efficiency['most_efficient'],
         'least_efficient_commits': commit_efficiency['least_efficient'],
+        'change_attribution': change_attribution or {},
         'warnings': warnings,
     }
 

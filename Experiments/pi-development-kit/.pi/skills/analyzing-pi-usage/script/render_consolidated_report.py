@@ -14,6 +14,7 @@ Standalone usage:
     python3 render_consolidated_report.py < consolidated-data.json > report.html
 """
 
+import html
 import json
 import sys
 from pathlib import Path
@@ -653,6 +654,8 @@ def build_productivity_cards(data):
     total_sessions = prod.get('total_sessions', 0) or 0
     with_changes = prod.get('sessions_with_changes', 0) or 0
     pct = prod.get('pct_with_changes', 0) or 0
+    measured = prod.get('sessions_with_changes_measured', 0) or 0
+    changes_kind = f'{measured} measured' if measured else 'estimate'
 
     build_total = build_prod.get('total_build_sessions', 0) or 0
     build_productive = build_prod.get('productive_sessions', 0) or 0
@@ -664,7 +667,7 @@ def build_productivity_cards(data):
     html_parts = []
     html_parts.append('<div class="impact-grid">')
     html_parts.append(f'<div class="impact-card"><div class="impact-value">{pct}%</div><div class="impact-label">Sessions w/ File Changes</div></div>')
-    html_parts.append(f'<div class="impact-card"><div class="impact-value">{with_changes}/{total_sessions}</div><div class="impact-label">Productive Sessions</div></div>')
+    html_parts.append(f'<div class="impact-card"><div class="impact-value">{with_changes}/{total_sessions}</div><div class="impact-label">Productive Sessions ({changes_kind})</div></div>')
     html_parts.append(f'<div class="impact-card ratio"><div class="impact-value">{build_pct}%</div><div class="impact-label">Build Agent Productive</div></div>')
     html_parts.append(f'<div class="impact-card"><div class="impact-value">{zero_pct}%</div><div class="impact-label">Build Tokens w/ Zero Changes</div></div>')
     html_parts.append('</div>')
@@ -674,13 +677,23 @@ def build_productivity_cards(data):
 
 def build_productivity_notes(data):
     """Render productivity overview notes paragraph."""
+    prod = data.get('productivity', [])
+    if isinstance(prod, list) and prod:
+        prod = prod[0]
+    elif not prod:
+        prod = {}
     merged = data.get('timeseries', [])
     zero_commit_high_tok = [r for r in merged if r.get('commits', 0) == 0 and r.get('total_effective', 0) > 1_000_000]
     zero_commit_tok_total = sum(r['total_effective'] for r in zero_commit_high_tok)
 
     notes = '<p style="color:#8892a4; font-size:0.82rem; margin-bottom:1rem;"><strong>Notes:</strong> '
-    notes += 'Pi does not record per-session file changes, so "sessions w/ file changes" '
-    notes += 'counts sessions on days that have git commits (date-matched, an estimate). '
+    if prod.get('sessions_with_changes_measured', 0):
+        notes += 'Sessions with file changes are measured from <code>Pi-Session:</code> commit '
+        notes += 'trailers (see Change Attribution); unattributed commits fall back to the '
+        notes += 'date-matched estimate (sessions on days that have git commits). '
+    else:
+        notes += 'Pi does not record per-session file changes, so "sessions w/ file changes" '
+        notes += 'counts sessions on days that have git commits (date-matched, an estimate). '
     notes += 'Most sessions are exploratory, research, or cross-session coordination. '
     notes += 'Build-role productive sessions are estimated from token-ratio approximation '
     notes += '(build tokens / total effective tokens per day). '
@@ -689,6 +702,43 @@ def build_productivity_notes(data):
         notes += '(e.g., research, debugging, cross-session coordination). '
     notes += '</p>'
     return notes
+
+
+def build_change_attribution(data):
+    """Render per-session change attribution from Pi-Session commit trailers."""
+    attr = data.get('change_attribution', {})
+    if not attr or not attr.get('by_session'):
+        return ''
+    total_commits = attr.get('attributed_commits', 0) + attr.get('unattributed_commits', 0)
+    rows = sorted(attr['by_session'].items(),
+                  key=lambda kv: -(kv[1].get('adds', 0) + kv[1].get('dels', 0)))
+    html_out = []
+    html_out.append(
+        f'<p style="color:#8892a4; font-size:0.85rem;">'
+        f'{attr.get("attributed_commits", 0)} of {fmt(total_commits)} commits in range carry a '
+        f'<code>Pi-Session:</code> trailer naming the session that made the changes.</p>'
+    )
+    html_out.append(
+        '<table><thead><tr><th>Role</th><th>Session</th>'
+        '<th class="num">Commits</th><th class="num">Adds</th><th class="num">Dels</th></tr></thead><tbody>'
+    )
+    for sid, row in rows:
+        role = row.get('role') or 'unknown'
+        title = row.get('title') or sid[:8]
+        html_out.append(
+            f'<tr><td>{html.escape(role)}</td><td>{html.escape(str(title))}</td>'
+            f'<td class="num">{row.get("commits", 0)}</td>'
+            f'<td class="num">{fmt(row.get("adds", 0))}</td>'
+            f'<td class="num">{fmt(row.get("dels", 0))}</td></tr>'
+        )
+    html_out.append('</tbody></table>')
+    if attr.get('unattributed_commits', 0):
+        html_out.append(
+            f'<p style="color:#8892a4; font-size:0.8rem;">'
+            f'{attr["unattributed_commits"]} commit(s) without a trailer are covered by the '
+            f'date-matched estimate in the productivity cards.</p>'
+        )
+    return '\n'.join(html_out)
 
 
 def build_session_summaries_section(data):
@@ -1119,6 +1169,9 @@ def render_html(data: dict) -> str:
         if least_eff:
             commit_html += build_efficiency_commits_table(least_eff, 'Top 10 Least Efficient Commits')
         _tables_parts.append(subsection('Commit Efficiency', commit_html))
+    _change_attr = build_change_attribution(data)
+    if _change_attr:
+        _tables_parts.append(subsection('Change Attribution', _change_attr))
     if agents_detailed:
         _tables_parts.append(subsection(
             'Agent Context Efficiency',
@@ -1148,6 +1201,7 @@ def render_html(data: dict) -> str:
   <p>Data sources: pi session JSONL files (<code>~/.pi/agent/sessions/**/*.jsonl</code>) + git log (all tracked files)</p>
   <p>Subagent usage is attributed from <code>subagent</code> tool results persisted in parent sessions (nested runs included).</p>
   <p>Where pi reports real cache reads they are used; otherwise a per-session delta model estimates uncached input. Token counts use cache-adjusted (uncached) input by default; raw values shown for comparison in summary cards and top sessions table.</p>
+  <p>Change attribution: commits carrying a <code>Pi-Session: &lt;uuid&gt;</code> trailer are measured against the named session; other commits use a date-matched estimate.</p>
 </footer>
 
 <div id="svg-tooltip"></div>

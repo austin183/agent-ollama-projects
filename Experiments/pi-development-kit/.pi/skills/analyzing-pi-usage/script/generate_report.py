@@ -12,6 +12,7 @@ session structure.
 import argparse
 import json
 import sys
+from collections import Counter
 from datetime import date
 from pathlib import Path
 
@@ -164,6 +165,28 @@ def _build_prod_row(sessions) -> dict:
     }
 
 
+def join_change_attribution(sessions, commits) -> dict:
+    """Aggregate Pi-Session commit trailers and join them to loaded sessions.
+
+    Returns the `change_attribution` block for the report: per-session
+    commit/line totals, each with `role` (dominant event role) and `title`
+    (session name / first user text / short id, top-sessions rule) when the
+    session is present in the loaded set, else None/None.
+    """
+    attribution = git_commits.summarize_attribution(commits)
+    sessions_by_id = {s.session_id: s for s in sessions}
+    for sid, row in attribution['by_session'].items():
+        s = sessions_by_id.get(sid)
+        if s is not None:
+            roles = Counter(e.role for e in s.events)
+            row['role'] = roles.most_common(1)[0][0] if roles else 'main'
+            row['title'] = (s.name or s.first_user_text or s.session_id[:8])[:60]
+        else:
+            row['role'] = None
+            row['title'] = None
+    return attribution
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Generate pi LLM usage report',
@@ -203,6 +226,8 @@ def main():
 
     project_name = project_path.name
 
+    attribution = join_change_attribution(data['sessions'], data['git_commits'])
+
     output = merge_datasets(
         daily_agent=data['daily_tokens'],
         weekly=data['weekly'],
@@ -220,6 +245,7 @@ def main():
         project_name=project_name,
         subagent_runs=data['subagent_runs'],
         session_summaries=data['session_summaries'],
+        change_attribution=attribution,
     )
 
     # Add generated timestamp

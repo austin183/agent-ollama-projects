@@ -29,3 +29,32 @@
 - Scratch exercise repo: `/tmp/pi-kit-phase5-test` (sessions under `~/.pi/agent/sessions/--private-tmp-pi-kit-phase5-test--/`)
 
 **Next steps:** none — port complete. Ongoing maintenance notes: re-sync `charts.py`/`model_pricing.py` if opencode-side rates change; re-sync the vendored extension after pi updates (check `ExtensionAPI` drift).
+
+---
+
+## 2026-08-17 — Commit→Session Change Attribution (`Pi-Session` trailers)
+
+**Purpose:** Replace the report's date-matched "sessions with changes" estimate with a measurement: agent commits carry a `Pi-Session: <uuid>` trailer naming the session that made the changes, and the analytics skill joins trailers to real sessions. Plan: `_agent_docs/plans/2026-08-17-commit-session-attribution.md`.
+
+**Work completed:**
+
+- **Convention** — `build-quick-work` (the kit's only committer; every other role is explicitly commit-free) now requires the trailer: `$PI_SESSION_ID` when the committing session made the changes, or — for the usual build→handoff flow — the newest *other* session in `$(dirname "$PI_SESSION_FILE")` (UUID = filename after the last `_`). One-line conventions added to the kit `AGENTS.md` and `AGENTS.md.template`. Trailer semantics: **work session**, not committing session — that keeps the tokens→code join honest in the flagship handoff flow.
+- **Parser** — `git_commits.py` log format extended to `COMMIT:%h|%ad|%s%nMSG:%B%x1e` (full message, `\x1e` terminator on its own line); `\_parse_commits` gained a small state machine (message buffer until the terminator, then numstat) and a UUID-shaped `Pi-Session:` regex (last match wins, lowercased) → `commit['session_id']`. Marker lines are shape-validated (`sha|date|`) so a body line starting with `COMMIT:` cannot split a commit.
+- **Report** — new `summarize_attribution()` (per-session commits/+adds/−dels) and `generate_report.join_change_attribution()` (joins to loaded sessions: dominant role + top-sessions-style title; unknown IDs still count, just unlabelled). `merge_datasets` gains `change_attribution`: "sessions with changes" = measured attributed sessions + date-join estimate over *unattributed* commits only (capped at total sessions); `sessions_with_changes_measured` exposed. HTML: new **Change Attribution** table in Detailed Data Tables, productivity card labelled `N measured` vs `estimate`, notes + footer explain the convention. `analytics.py --impact` prints attributed/unattributed split.
+- **Tests** — 18 new (99 total, green): parser units (trailer present/absent/malformed/multiple/tab-in-message/binary numstat/marker-lookalike body line), `summarize_attribution` units, real temp-git-repo integration (`fetch` reads trailers; `fetch_daily` shape unchanged; date range), and e2e fetch→join→merge→render (known + unknown session IDs; no-trailer legacy path unchanged incl. HTML).
+- **Docs** — SKILL.md Key Concepts + `--impact` flag line; this timeline entry.
+
+**Key findings:**
+
+- **`PI_SESSION_ID` / `PI_SESSION_FILE` are exposed to agents as env vars** (verified in a live process) — the keystone: an agent knows its own session UUID, and the session filename layout (`<timestamp>_<uuid>.jsonl` under the encoded-cwd dir) makes the handoff discovery rule deterministic.
+- **Apple Git 2.50.1 parses date-only `--since` as an unreliable ~18:00–18:45Z instant of that date** (bisected: e.g. bare `--since=2026-03-03` excludes a 12:00Z commit on the same day; identical behavior under `TZ=UTC`, so it's a date-parsing quirk, not local-time). Explicit `…T00:00:00Z` bounds parse consistently. `\_run_git_log` now uses explicit UTC bounds **and** runs git with `TZ=UTC` so `--date=short` buckets commits by UTC day — which also fixes a latent mis-join: sessions are bucketed by UTC day, but commit dates were previously displayed/filtered in local time.
+- **`str.splitlines()` splits on `\x1e`** (record separator is a Unicode line boundary) — the message terminator must be found by splitting on `\n` only, or the in-message state swallows the numstat block. Caught by the first test run.
+- The estimate survives deliberately: repos without trailers (all existing history, non-kit projects) render exactly as before; the measured figure only appears when trailers exist.
+
+**Files:**
+
+- `script/queries/git_commits.py` (format, parser, `summarize_attribution`), `script/aggregator/merge.py`, `script/generate_report.py` (`join_change_attribution`), `script/analytics.py` (`--impact`), `script/render_consolidated_report.py` (table + labels + footer)
+- `.pi/agents/build-quick-work.md`, `AGENTS.md`, `AGENTS.md.template`
+- `tests/test_commit_attribution.py`, `SKILL.md`, plan + timeline entries
+
+**Next steps:** (1) first real exercise — a `build-quick-work` handoff commit in a scratch repo, then confirm the report shows the measured attribution end-to-end; (2) optionally mirror the trailer convention into the workspace `CLAUDE.md` next to the `Co-Authored-By` rule; (3) if handoff discovery ever proves ambiguous (multiple interleaved sessions), consider an explicit `Pi-Work-Session:` override.

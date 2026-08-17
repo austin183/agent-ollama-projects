@@ -48,7 +48,7 @@ python3 generate_report.py --project /path/to/project --json --output report.jso
 | `--models` / `--roles` / `--model-roles` | Usage by model, by role, cross-tab (`--agents` / `--model-agents` are aliases) |
 | `--timeseries` / `--weekly` / `--monthly` / `--projects` | Trends |
 | `--top-sessions [N]` | Top N sessions (default 20) |
-| `--impact` | Git-based file change impact (pi does not record per-session file changes) |
+| `--impact` | File change impact: measured from `Pi-Session:` commit trailers where present, date-matched estimate otherwise |
 | `--cache` | Prefix cache approximation (measured where providers report it, else simulated) |
 | `--subagents` | Per-run subagent attribution (pi-only capability) |
 | `--json` | Raw JSON output |
@@ -68,6 +68,12 @@ python3 generate_report.py --project /path/to/project --json --output report.jso
   turns, context size, cost, stop reason) inside the *parent* session file,
   including nested delegations. The report's "Subagent Runs" section
   attributes every delegated run.
+- **Change attribution** — agent commits end with a `Pi-Session: <uuid>`
+  trailer naming the session that made the changes (convention in the
+  `build-quick-work` agent). The report joins trailers to loaded sessions —
+  per-session commits/lines with role and title — and "sessions with
+  changes" becomes a measurement; commits without a trailer keep the
+  date-matched estimate. `analytics.py --impact` prints both figures.
 - **Costs** — actual recorded cost where the provider reports it; otherwise a
   cloud-equivalent estimate from `script/model_pricing.py` (add local models
   there for accuracy; unknown models use fallback rates and are warned).
