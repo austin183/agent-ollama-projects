@@ -1,0 +1,38 @@
+{
+  "session_id": "ses-2026-08-05-plan-bdd-world-review-report",
+  "date": "2026-08-05",
+  "title": "CollageMaker LLM Usage Report and World-Review Bug Plan",
+  "purpose": "bdd-planning",
+  "agent_role": "plan-bdd",
+  "model": "qwen/qwen3.6-27b",
+  "duration_minutes": 15,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "Generated updated all-time CollageMaker LLM usage report, launched world-review of report and skill, produced focused bug-fix plan for 5 world-review findings",
+  "key_decisions": [
+    "WR-5 (_resolve_date truthiness): No code change needed — current truthiness check correctly handles None and empty string; added documentation comment instead",
+    "WR-2 (productive_sessions): Use token-ratio approximation to estimate build sessions per day, with min() clamp as safety net",
+    "WR-3 (cost inconsistency): Add total_per_model keys to cost_summary and cache_cost_summary as canonical cost figures, keep flat-rate for backward compatibility",
+    "WR-1 (placeholder title): Derive project name from Path(args.project).name and inject into output['meta']['title'] after merge_datasets()",
+    "WR-4 (empty date): Set build_prod['date'] = 'all' to communicate cross-date aggregate"
+  ],
+  "learnings": [
+    "Existing comprehensive plan (_agent_docs/plans/analyzing-opencode-usage-bug-fixes.md) covers 12 bugs; world-review surfaced 2 new ones (placeholder title, empty date) not in that plan",
+    "World-review is effective at catching user-facing issues (placeholder text, confusing cost labels) that internal code review misses",
+    "generate_report.py --all flag does not exist; the script defaults to all-time when no date filter is provided"
+  ],
+  "files_created": [
+    "_agent_docs/plans/analyzing-opencode-usage-world-review-fixes.md",
+    "austin183.github.io/BlogPosts/references/CollageMaker-LLM-Report.html",
+    "austin183.github.io/BlogPosts/references/CollageMaker-LLM-Report-data.json"
+  ],
+  "files_modified": [
+    "_agent_docs/project-timeline.md/project-timeline.md"
+  ],
+  "next_steps": [
+    "Hand off world-review bug-fix plan to build-tdd for implementation",
+    "Consider merging world-review plan with existing comprehensive plan to avoid duplication",
+    "Add pricing entries for models using fallback rates (laguna-s-2.1, qwen/qwen3.6-27b-q4, qwen/qwen3.6-27b-lite, qwen/qwen3.5-9b)"
+  ]
+}

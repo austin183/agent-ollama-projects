@@ -1,0 +1,61 @@
+# [Project Name]
+
+[One-line description of what this project does]
+
+## Architecture
+
+- **Language/Framework**: [e.g., TypeScript / React, Python / FastAPI, Swift / SwiftUI]
+- **Key libraries**: [list important dependencies]
+- **Build system**: [e.g., Vite, webpack, Make, Gradle — or "no build step"]
+
+## Directory Structure
+
+```
+[ProjectName]/
+├── [source directory]/       # Main source code
+├── [test directory]/         # Test files
+├── [docs directory]/         # Agent documentation
+│   ├── plans/                # Implementation plans
+│   ├── learnings/            # Hard-won knowledge from sessions
+│   ├── research/             # Platform and library research
+│   └── sessions/             # Session summaries
+└── .opencode/                # Agent configuration
+    ├── agents/               # Agent definitions
+    └── skills/               # Reusable skills
+```
+
+## Running
+
+[How to start/run the project]
+
+```bash
+[command]
+```
+
+## Testing
+
+```bash
+# Run unit tests
+[test command]
+
+# Run E2E tests (if applicable)
+[e2e test command]
+```
+
+## Conventions
+
+- [Key coding convention 1]
+- [Key coding convention 2]
+- [Key coding convention 3]
+
+## Documentation
+
+- **Plans**: `[docs directory]/plans/` — implementation plans
+- **Learnings**: `[docs directory]/learnings/` — hard-won knowledge from sessions
+- **Session summaries**: `[docs directory]/sessions/` — write after each session using the template from `.opencode/skills/analyzing-opencode-usage/references/session-summary.json`
+
+## Working on the Project
+
+- Consult `.opencode/skills/` for project-specific patterns and gotchas
+- Capture learnings in `[docs directory]/learnings/` after significant discoveries
+- Use the `capturing-learnings` skill for structured post-session debriefs

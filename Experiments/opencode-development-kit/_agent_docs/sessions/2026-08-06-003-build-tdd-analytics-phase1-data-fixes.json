@@ -1,0 +1,38 @@
+{
+  "session_id": "2026-08-06-003-build-tdd-analytics-phase1-data-fixes",
+  "date": "2026-08-06",
+  "title": "Phase 1 Data Accuracy Fixes — productive_sessions, zero-token validation, top_sessions dates",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.6-27b",
+  "duration_minutes": 0,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "All 3 Phase 1 data accuracy fixes implemented and verified. 10 new tests added, all 76 tests pass (66 existing + 10 new). No regressions.",
+  "key_decisions": [
+    "Changed productive_sessions formula from max(1, ...) to max(0, ...) to prevent inflation of build session counts on commit dates with negligible build activity",
+    "Added _validate_models() as a pure function in merge.py that scans models_data for zero-token anomalies and returns warning messages",
+    "Added 'warnings' key to merge_datasets() return dict, populated by _validate_models() output",
+    "Added time_created to top_sessions SQL SELECT clause and populated TopSessionRow.created from query result instead of hardcoding empty string",
+    "Wrote source-code inspection tests for merge.py and top_sessions.py to verify the fixes are in place (following existing test conventions in the project)"
+  ],
+  "learnings": [
+    "The existing test test_productive_sessions_at_least_one_per_commit_date_with_build still passes because the build_tok > 0 filter excludes zero-build days before the max() is applied. The max(1) -> max(0) change affects edge cases with very small build ratios.",
+    "The project's test convention uses source-code inspection (reading .py files and checking for patterns) alongside functional tests. This is effective for verifying structural changes without needing database fixtures.",
+    "The _validate_models function follows the existing pattern of pure helper functions in merge.py (like _build_merged_daily, _build_phases, etc.) — no external dependencies, no side effects beyond logging."
+  ],
+  "files_created": [
+    ".opencode/skills/analyzing-opencode-usage/tests/test_phase1.py"
+  ],
+  "files_modified": [
+    ".opencode/skills/analyzing-opencode-usage/script/aggregator/merge.py",
+    ".opencode/skills/analyzing-opencode-usage/script/queries/top_sessions.py"
+  ],
+  "next_steps": [
+    "Phase 2: Input validation hardening — _resolve_date() rejecting 'None' string and invalid dates",
+    "Phase 3: Model pricing completeness — add 4 missing models to MODEL_PRICING",
+    "Phase 4: Documentation and disclaimer — cache hit rate clarification in HTML report",
+    "Regenerate CollageMaker report to verify productive_sessions is realistic and warnings array includes zero-token models"
+  ]
+}

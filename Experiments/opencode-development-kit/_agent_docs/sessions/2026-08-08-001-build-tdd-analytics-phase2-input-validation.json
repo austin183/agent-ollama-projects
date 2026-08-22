@@ -1,0 +1,34 @@
+{
+  "session_id": "2026-08-08-001",
+  "date": "2026-08-08",
+  "title": "Phase 2: Input validation hardening for _resolve_date()",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.6-27b",
+  "duration_minutes": 15,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "Successfully implemented Phase 2 of the analytics skill bug fixes plan. Hardened _resolve_date() to reject literal 'None' string, invalid date formats, and impossible dates. Added _parse_or_default() helper function with date validation via date.fromisoformat(). All 92 tests pass (76 existing + 16 new).",
+  "key_decisions": [
+    "Extracted _parse_or_default() as a pure helper function (only side effect: logging warning on invalid input) following SRP",
+    "Used date.fromisoformat() for date validation instead of regex, leveraging stdlib for correctness",
+    "Rejected literal 'None' string (case-insensitive, whitespace-trimmed) to prevent str(None) bugs from propagating to SQL queries",
+    "Added logging import and module-level logger to utils.py, consistent with other query modules (git_commits.py, daily_git.py)",
+    "Invalid dates fall back to default with a logged warning rather than raising ValueError, maintaining backward compatibility"
+  ],
+  "learnings": [
+    "The existing truthiness documentation test (checking for 'truthiness'/'falsy'/'empty string'/'fall through' keywords in comments) still passes because the new comments describe the same behavior with different wording — good test resilience",
+    "When mocking logger.warning, call_args[0] is the format string, not the interpolated message — need to check the full args tuple",
+    "The _resolve_date function was previously documented as passing 'None' string through as a valid date — this was a known bug that Phase 2 finally fixes"
+  ],
+  "files_created": [],
+  "files_modified": [
+    ".opencode/skills/analyzing-opencode-usage/script/queries/utils.py",
+    ".opencode/skills/analyzing-opencode-usage/tests/test_utils.py"
+  ],
+  "next_steps": [
+    "Phase 3: Model pricing completeness — add 4 missing models to MODEL_PRICING",
+    "Phase 4: Documentation and disclaimer — cache hit rate clarification in HTML report"
+  ]
+}

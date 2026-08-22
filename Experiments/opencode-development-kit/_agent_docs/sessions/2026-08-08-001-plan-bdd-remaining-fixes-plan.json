@@ -1,0 +1,44 @@
+{
+  "session_id": "ses-2026-08-08-plan-bdd-remaining-fixes-plan",
+  "date": "2026-08-08",
+  "title": "CollageMaker All-Time LLM Usage Report and Remaining Fixes Plan",
+  "purpose": "bdd-planning",
+  "agent_role": "plan-bdd",
+  "model": "qwen/qwen3.6-27b",
+  "duration_minutes": 20,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "Generated fresh all-time CollageMaker LLM usage report (May 10 - Aug 4, 2026, 1464 sessions), launched world-review of report and skill, produced comprehensive 4-phase plan for 6 remaining issues including key alignment bugs, contract testing, date range fixes, SQL injection hardening, and UX improvements",
+  "key_decisions": [
+    "Key mismatch in render_consolidated_report.py: render reads 'total'/'input'/'output'/'reasoning' but merge.py produces 'total_tokens_raw'/'input_tokens_raw'/'output_tokens_raw'/'reasoning_tokens_raw' — causes silent zero display in models/agents/cross-tab tables",
+    "Cache lookup key normalization: remove .replace('_', '-') transformation that breaks lookups for models with underscores",
+    "Date range discrepancy: add project_since/project_until to meta to distinguish query filter range from true project history",
+    "SQL injection in estimate_cache.py: add date format validation and LIKE character escaping since parameterized queries are not possible with subprocess-based SQL execution",
+    "UX raw vs effective tokens: add title tooltips on metric cards and a legend paragraph below the metrics grid",
+    "Contract test: add test_key_alignment.py to prevent future key mismatches between merge.py output and renderer consumption"
+  ],
+  "learnings": [
+    "World-review subagent falsely reported missing references/ directory — both activity-template.md and session-summary.json exist and are valid",
+    "render_consolidated_report.py has 4 key mismatches (lines 140, 153-155, 195, 230) causing silent zeros in 3 tables — highest impact bug remaining",
+    "estimate_cache.py is legacy code superseded by queries/cache_estimate.py but still executable — SQL injection risk via string interpolation",
+    "No contract test exists between merge.py output and render_consolidated_report.py consumption — key mismatches go undetected",
+    "meta.since/meta.until reflect query filter range not true project start — misleading when users pass --since flag",
+    "Previous plan (2026-08-06) already addressed productive_sessions, _resolve_date, zero-token validation, top_sessions dates, and model pricing — this plan covers only remaining gaps"
+  ],
+  "files_created": [
+    "_agent_docs/plans/2026-08-08-analytics-skill-remaining-fixes.md",
+    "austin183.github.io/BlogPosts/references/CollageMaker-LLM-Usage-Report.html",
+    "austin183.github.io/BlogPosts/references/CollageMaker-LLM-Usage-Report-data.json"
+  ],
+  "files_modified": [
+    "_agent_docs/project-timeline.md/project-timeline.md"
+  ],
+  "next_steps": [
+    "Hand off 2026-08-08 plan to build-tdd for implementation",
+    "Phase 1 (key alignment): highest priority — fixes silent zero display in 3 report tables",
+    "Phase 2 (contract test): prevents future regressions from key mismatches",
+    "Phase 3 (date range): improves report metadata accuracy",
+    "Phase 4 (security + UX): hardens legacy SQL and adds user-facing explanations"
+  ]
+}

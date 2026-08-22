@@ -1,0 +1,44 @@
+{
+  "session_id": "2026-08-15-001",
+  "date": "2026-08-15",
+  "title": "Phase 3: Date Range and Legacy Sessions for analytics skill",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 0,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "Implemented Phase 3 (Date Range and Legacy Sessions) of the 2026-08-08 remaining-fixes plan via strict Red-Green-Refactor. Added fetch_project_range() to queries/summary.py — a query that takes NO date parameters and so ignores the report filter by construction — returning the true all-time project range, all-time session count, and legacy (NULL model) session count. The fetched range is injected into merge_datasets() as an optional project_range parameter, populating new additive meta keys (project_since, project_until, total_sessions_all_time) while since/until keep the query-filtered range. Legacy sessions are counted in totals and flagged via a warnings entry. The HTML renderer annotates the Period subtitle with '(project started X, N all-time sessions)' when the query range is narrower than project history. All 163 tests pass (145 existing + 18 new in test_project_range.py). Verified against the real opencode DB: CollageMaker report shows meta.project_since=2026-05-10, project_until=2026-08-04, 1464 all-time sessions, '19 legacy sessions' warning; a --since 2026-07-01 filtered HTML report renders the subtitle annotation end-to-end.",
+  "key_decisions": [
+    "Kept merge_datasets() a pure in-memory merge: the plan text suggested merge.py fetch the project range, but the fetched range is instead obtained in generate_report.py (composition root) and injected as a parameter — preserving the codebase layering (queries=DB, merge=pure, generate_report=wiring) and the DIP pattern used by every other dataset",
+    "meta.since/meta.until remain the query-filtered range; project_since/project_until/total_sessions_all_time are additive keys so existing JSON consumers are unaffected (backward-compat tests assert empty/zero defaults when project_range is absent)",
+    "Legacy sessions (model IS NULL) are counted in session totals and flagged in warnings rather than excluded, per plan scenario 3.2; they carry 0 tokens so token totals are not inflated",
+    "fetch_project_range() signature takes no since/until/days parameters — a test asserts this via inspect, making filter-independence a contract rather than a convention",
+    "Renderer only annotates the subtitle when project_since differs from the query since (and is non-empty), so unfiltered reports and pre-Phase-3 JSON reports render unchanged",
+    "Fixed a RED-phase test bug during GREEN: module-level pytest fixtures referenced as bare names inside class test methods are not injected (they resolve to FixtureFunctionDefinition) — fixtures must be method parameters"
+  ],
+  "learnings": [
+    "The Phase 2 contract suite (META_KEYS frozenset + static .get() key allowlists) acts as the interface contract for later phases: adding meta keys requires extending META_KEYS and the renderer allowlist in test_contract.py in the same change, or the suite fails — useful friction that keeps merge output and consumers aligned",
+    "CollageMaker's sessions span three historical directory locations (the project was moved twice), so the substring LIKE filter in _build_where means a name-only --project filter is required to capture the project's full history across locations; full-path filters only see the most recent location (517 of 1464 sessions)",
+    "SQLite aggregate queries without GROUP BY always return exactly one row (NULL/0 values when the table is empty), so MIN/MAX/SUM over an empty session set needs NULL coalescing but never an empty result set",
+    "generate_report.py validates --project against Path.exists() relative to the CWD, so the script must be run from a directory containing the project path (or with a path that exists relative to CWD) — a usability gotcha when filtering by project name"
+  ],
+  "files_created": [
+    ".opencode/skills/analyzing-opencode-usage/tests/test_project_range.py"
+  ],
+  "files_modified": [
+    ".opencode/skills/analyzing-opencode-usage/script/queries/summary.py",
+    ".opencode/skills/analyzing-opencode-usage/script/aggregator/merge.py",
+    ".opencode/skills/analyzing-opencode-usage/script/generate_report.py",
+    ".opencode/skills/analyzing-opencode-usage/script/render_consolidated_report.py",
+    ".opencode/skills/analyzing-opencode-usage/script/data_access/types.py",
+    ".opencode/skills/analyzing-opencode-usage/tests/test_contract.py"
+  ],
+  "next_steps": [
+    "Commit the Phase 3 changes (build-quick-work responsibility)",
+    "Regenerate the published CollageMaker all-time report so the stored HTML/JSON pick up the new meta keys and subtitle",
+    "Implement Phase 4: Security hardening of estimate_cache.py (reject malicious input) and UX tooltips explaining raw vs effective tokens",
+    "Consider a UX note or docs update about the --project CWD-relative path validation gotcha in generate_report.py"
+  ]
+}

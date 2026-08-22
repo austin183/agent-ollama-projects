@@ -1,0 +1,43 @@
+{
+  "session_id": "2026-08-15-003-build-docs-collagemaker-report-timeline",
+  "date": "2026-08-15",
+  "title": "CollageMaker LLM report regeneration + session-timeline enrichment",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 30,
+  "tokens_input": 3981981,
+  "tokens_output": 14803,
+  "tokens_reasoning": 18413,
+  "outcome": "Regenerated the CollageMaker LLM usage report (HTML + JSON) for the full project history (Jul 1 - Aug 4, 2026, 517 sessions) and added a new 'Session Timeline — How Tokens Were Used Over Time' section that cross-references 233 session summaries from _agent_docs/project-timeline/sessions/ with daily token data: 5 phase cards with token shares, a 35-day day-by-day table (tokens, sessions, summaries, commits, agent mix, narrative), and 5 observed usage patterns.",
+  "key_decisions": [
+    "Used the full project path as --project filter so only /Users/austin/workspace/austin183.github.io/CollageMaker matches (the DB also contains /Users/austin/workspace/CollageMaker with 206 sessions and .../Experiments/CollageMaker with 741 sessions; a bare 'CollageMaker' substring would mix all three)",
+    "Full history equals the directory's lifetime (first session 2026-07-01, last 2026-08-04); no sessions exist after Aug 4, so data matches the Aug 5 report exactly (517 sessions, 717.7M raw, 48.1M effective, 94.2% cache)",
+    "Added the timeline as a post-processed HTML section between 'Charts & Visualizations' and 'Cost Analysis' — one-off enrichment script, no changes to the report generator or production scripts",
+    "Phase boundaries defined from session content, not dates alone: Greenfield (Jun 30-Jul 5, 33.3% of tokens), Stabilization & CRs (Jul 6-12, 23.1%), Title & UX (Jul 13-19, 16.7%), Undo/Redo & Mobile (Jul 20-26, 14.4%), Mobile Polish & Multi-Touch (Jul 27-Aug 3, 12.5%)",
+    "Added a 2026-08-02 row with 0 tokens: two summaries exist for that date but the DB records no sessions under it (matching work is timestamped Aug 3) — kept the daily table complete and explained the gap inline",
+    "Overwrote the existing BlogPosts/references/CollageMaker-LLM-Report.html in place and wrote the JSON payload alongside it"
+  ],
+  "learnings": [
+    "The current render_consolidated_report.py substitutes the project name correctly — the Aug 5 file still showed the '[ProjectName]' placeholder, the regenerated file shows 'CollageMaker'",
+    "Summary file dates and DB timestamps can diverge: 2026-08-02 has 2 summaries but zero DB sessions for the day (work recorded under Aug 3)",
+    "One session summary file (2026-07-13-009-build-tdd-sidebar-reorder-autexpand.json) is malformed JSON — 'session_number': 009 (leading zero); parsing needs a regex fallback for leading-zero integers",
+    "233 of 517 sessions have written summaries; only build-* and plan-bdd agents write them, so summary counts are a floor for daily activity (subagent runs like world-review/explore/diff-review are never summarized)",
+    "Token intensity decayed across the project: 5.3M effective tokens/day at the greenfield peak (Jul 5) down to ~0.6-0.9M/day in the polish weeks (Jul 27 - Aug 3)",
+    "validate_summaries.sh is out of sync with references/session-summary.json: it globs only '*-summary.json' files and checks a legacy field set (session_number, files_changed, test_files_added, bugs_fixed, ...) that the current template does not define — kit session files (YYYY-MM-DD-NNN-*.json) are invisible to it. Direct field comparison against the template is the working validation until the script is updated"
+  ],
+  "files_created": [
+    "austin183.github.io/BlogPosts/references/CollageMaker-LLM-Report.html (regenerated, ~220KB, with new Session Timeline section)",
+    "austin183.github.io/BlogPosts/references/CollageMaker-LLM-Report-data.json (regenerated, + session_timeline payload)",
+    "_agent_docs/sessions/2026-08-15-003-build-docs-collagemaker-report-timeline.json"
+  ],
+  "files_modified": [
+    "_agent_docs/project-timeline.md/project-timeline.md (new 2026-08-15 entry prepended)"
+  ],
+  "next_steps": [
+    "Commit the regenerated report + JSON (build-quick-work responsibility)",
+    "Consider making the session-timeline section a first-class feature of render_consolidated_report.py (would need a sessions-dir input and phase definitions)",
+    "Fix the malformed summary file 2026-07-13-009 (leading-zero session_number) in the CollageMaker project",
+    "Sync validate_summaries.sh with references/session-summary.json (glob pattern + required field list) so kit session files are actually validated"
+  ]
+}

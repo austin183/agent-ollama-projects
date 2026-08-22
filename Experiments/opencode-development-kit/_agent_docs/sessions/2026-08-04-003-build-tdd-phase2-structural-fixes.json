@@ -1,0 +1,45 @@
+{
+  "session_id": "2026-08-04-003-build-tdd-phase2-structural-fixes",
+  "date": "2026-08-04",
+  "title": "Phase 2: Fix 4 structural correctness bugs (B8, B9, B4, B6) via TDD",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.6-27b",
+  "duration_minutes": 20,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "GREEN — 30 tests pass (8 B1 + 8 B8 + 4 B4 + 9 B6 + 5 B9). All 4 Phase 2 structural bugs fixed. No structural refactoring needed — GREEN fixes were already SOLID-compliant.",
+  "key_decisions": [
+    "B8: Used list(merged_daily) shallow copy — sufficient since dict-level mutations are prevented by JSON serialization",
+    "B4: Replaced _build_phases() with empty-list return, preserved function signature for LSP API compatibility",
+    "B6: Added logging + _FALLBACK_WARNED set to model_pricing.py, added explicit entries for agents-a1 and big-pickle",
+    "B6: Used truly unknown model IDs (unknown-test-model-x) in warning tests since agents-a1/big-pickle are now explicit entries",
+    "B9: Rewrote productivity.py to remove dead summary_files SQL, removed sessions_with_changes/pct_with_changes from return, added zero-token filter to both queries",
+    "Created 3 new test files: test_merge.py (B8+B4), test_model_pricing.py (B6), test_productivity.py (B9)",
+    "Used @contextmanager decorator for log capture helper in test_model_pricing.py"
+  ],
+  "learnings": [
+    "B8 shared reference was documented as 'intentional' in a misleading comment — any downstream mutation (sort, append, pop) corrupted both keys",
+    "B4 hardcoded phases produced all-zero metrics for any report outside May-June 2026, misleading users with fabricated phase data",
+    "B6 get_pricing silently fell back to default rates for unknown models with no operator visibility",
+    "B9 summary_files column never populated in opencode DB, so sessions_with_changes was always 0 — dead SQL wasting a query execution",
+    "B9 productivity.py returned placeholder values (sessions_with_changes=0, pct_with_changes=0.0) that were always overwritten in merge.py",
+    "The @contextmanager decorator is required for generator-based context managers in Python 3.12 (bare yield in a method does not work with 'with')",
+    "When a bug fix adds explicit entries (agents-a1, big-pickle), tests that use those IDs as 'unknown models' must be updated to use truly unknown IDs"
+  ],
+  "files_created": [
+    ".opencode/skills/analyzing-opencode-usage/tests/test_merge.py",
+    ".opencode/skills/analyzing-opencode-usage/tests/test_model_pricing.py",
+    ".opencode/skills/analyzing-opencode-usage/tests/test_productivity.py"
+  ],
+  "files_modified": [
+    ".opencode/skills/analyzing-opencode-usage/script/aggregator/merge.py",
+    ".opencode/skills/analyzing-opencode-usage/script/model_pricing.py",
+    ".opencode/skills/analyzing-opencode-usage/script/queries/productivity.py"
+  ],
+  "next_steps": [
+    "Phase 3: B7 (CTE deduplication in cache_estimate.py), B11 (missing activity-template.md), B12 (wrong SKILL.md cost example)",
+    "Phase 1 remaining: B2 (productive_build_sessions), B3 (cost_summary reasoning_tokens), B5 (zero-token filter in summary.py)"
+  ]
+}

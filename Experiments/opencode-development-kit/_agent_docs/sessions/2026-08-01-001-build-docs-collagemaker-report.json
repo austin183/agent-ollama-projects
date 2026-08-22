@@ -1,0 +1,43 @@
+{
+  "session_id": "2026-08-01-001",
+  "date": "2026-08-01",
+  "title": "CollageMaker LLM Usage Analysis and Report Generation",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "model": "qwen/qwen3.6-27b",
+  "duration_minutes": 30,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "Generated consolidated HTML and JSON LLM usage reports for CollageMaker project. Discovered multiple bugs in the analytics skill through review. Reports written to BlogPosts/references/ directory.",
+  "key_decisions": [
+    "Used --since 2026-05-10 flag to capture all-time data, though project path only has sessions from July 1",
+    "Launched general subagent for code review since world-review returned empty results",
+    "Created session-summary.json template in references/ directory (was missing)"
+  ],
+  "learnings": [
+    "_resolve_date() bug: str(None) produces 'None' string used as SQL parameter - works by accident due to ASCII ordering",
+    "Multiple CollageMaker paths in DB: sessions split across 3 directory paths, report only covers the github.io path",
+    "build_productivity.productive_sessions can exceed total_build_sessions due to counting ALL sessions on commit dates",
+    "Hardcoded phase dates in merge.py are from a different project and produce empty phases for CollageMaker",
+    "Cost summary uses flat rates while model_pricing uses per-model rates - produces inconsistent totals",
+    "Cache estimation only counts assistant messages, excluding sessions with only user messages"
+  ],
+  "files_created": [
+    "_agent_docs/sessions/2026-08-01-001-build-docs-collagemaker-report.json",
+    ".opencode/skills/analyzing-opencode-usage/references/session-summary.json"
+  ],
+  "files_modified": [
+    "austin183.github.io/BlogPosts/references/CollageMaker-LLM-Report.html (overwritten)",
+    "austin183.github.io/BlogPosts/references/CollageMaker-LLM-Report-data.json (new)"
+  ],
+  "next_steps": [
+    "Fix _resolve_date() in queries/utils.py and generate_report.py to default to today's date when until=None",
+    "Fix build_productivity.productive_sessions to count only build sessions on commit dates",
+    "Make phase dates configurable or remove hardcoded phases from merge.py",
+    "Add explicit pricing for agents-a1 and big-pickle models in model_pricing.py",
+    "Deduplicate SQL CTEs in cache_estimate.py",
+    "Document cost calculation methods and their differences in SKILL.md",
+    "Consider merging sessions from all CollageMaker paths or documenting the path-specific behavior"
+  ]
+}

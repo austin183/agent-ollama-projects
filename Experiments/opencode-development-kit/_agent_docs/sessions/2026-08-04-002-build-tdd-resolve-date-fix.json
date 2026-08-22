@@ -1,0 +1,41 @@
+{
+  "session_id": "2026-08-04-002-build-tdd-resolve-date-fix",
+  "date": "2026-08-04",
+  "title": "B1: Fix _resolve_date() str(None) bug via TDD",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.6-27b",
+  "duration_minutes": 15,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "GREEN — 8 tests pass. _resolve_date() no longer returns 'None' string for partial date arguments. Duplicate resolve_date() removed from generate_report.py. Double-resolution bug fixed by passing days=None from main().",
+  "key_decisions": [
+    "Created tests/ directory with pytest test file (no existing test infrastructure)",
+    "Test file uses sys.path.insert to resolve script/ imports at runtime",
+    "Wrote 8 tests covering all 6 behavior spec rows plus regression guard and type check",
+    "Fixed _resolve_date by replacing conditional logic with direct fallback assignments",
+    "Removed 22-line duplicate resolve_date from generate_report.py",
+    "Fixed double-resolution: main() now passes days=None to fetch_all_datasets()",
+    "No structural refactoring needed — GREEN fix was already SOLID-compliant"
+  ],
+  "learnings": [
+    "The str(None) bug at queries/utils.py:36 produced literal 'None' string when only one of since/until was provided",
+    "generate_report.py had an exact duplicate of _resolve_date with the same bug",
+    "main() resolved dates then passed days=args.days to fetch_all_datasets(), triggering a second resolution that could override the first",
+    "The plan's Given/When/Then behavior specs translate almost verbatim into pytest parameterized tests",
+    "Python 3.12 + pytest 9.0.2 available in the environment, no requirements.txt needed"
+  ],
+  "files_created": [
+    ".opencode/skills/analyzing-opencode-usage/tests/test_utils.py"
+  ],
+  "files_modified": [
+    ".opencode/skills/analyzing-opencode-usage/script/queries/utils.py",
+    ".opencode/skills/analyzing-opencode-usage/script/generate_report.py"
+  ],
+  "next_steps": [
+    "B5: Write failing tests for zero-token session filter in queries/summary.py",
+    "B2: Write failing tests for productive_build_sessions counting in aggregator/merge.py",
+    "B3: Write failing tests for cost_summary missing reasoning_tokens in aggregator/merge.py"
+  ]
+}

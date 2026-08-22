@@ -1,0 +1,36 @@
+{
+  "session_id": "2026-08-04-001-plan-bdd-bug-fix-plan",
+  "date": "2026-08-04",
+  "title": "analyzing-opencode-usage bug fixes plan",
+  "purpose": "Create implementation plan for 12 bugs in the analyzing-opencode-usage skill",
+  "agent_role": "plan-bdd",
+  "model": "qwen/qwen3.6-27b",
+  "duration_minutes": 25,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "Wrote comprehensive bug fix plan covering 12 bugs in 3 phases with Given-When-Then scenarios, specific file paths, code changes, and success criteria",
+  "key_decisions": [
+    "Phased approach: P0 data correctness (B1/B10/B2/B3/B5), P1 structural (B4/B6/B8/B9), P2 maintenance (B7/B11/B12)",
+    "Phases return empty list instead of configurable CLI — deferring to future feature plan",
+    "Build sessions approximated via token ratio since per-category session counts don't exist in daily_tokens",
+    "Cost unified to per-model rates as primary, flat rates kept for backward compatibility",
+    "CTE extraction in cache_estimate.py reduces ~200 lines to ~40 lines of shared logic"
+  ],
+  "learnings": [
+    "generate_report.py calls resolve_date twice — once in main() and once in fetch_all_datasets() — with days=args.days still set, potentially overriding already-resolved dates",
+    "summary_files column in opencode DB is always 0 — productivity.py SQL referencing it is dead code",
+    "daily_agent_stacked and timeseries sharing the same list is documented as 'intentional' but is a mutation hazard",
+    "cost_summary omits reasoning_tokens entirely — silently excluding reasoning token costs from display",
+    "productive_build_sessions sums total sessions on commit dates, not build-category sessions — a subset can exceed its superset"
+  ],
+  "files_created": [
+    "_agent_docs/plans/analyzing-opencode-usage-bug-fixes.md"
+  ],
+  "files_modified": [],
+  "next_steps": [
+    "Review plan with stakeholder for approval",
+    "Hand off to build-tdd for Phase 1 implementation",
+    "Consider whether build session approximation via token ratio is acceptable or if daily_tokens.py needs per-category session counts"
+  ]
+}

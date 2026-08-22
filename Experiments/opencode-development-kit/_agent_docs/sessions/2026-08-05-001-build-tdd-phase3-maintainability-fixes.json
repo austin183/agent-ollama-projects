@@ -1,0 +1,36 @@
+{
+  "session_id": "",
+  "date": "2026-08-05",
+  "title": "Phase 3: CTE deduplication, activity template, cost example fix",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.6-27b",
+  "duration_minutes": 0,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "All 3 Phase 3 items completed with 17 new tests. Full suite: 47 tests passing (30 existing + 17 new). Zero regressions.",
+  "key_decisions": [
+    "Extracted 4-level CTE chain into _cache_cte(where) pure function — reduces 513 lines to 366 (147 lines saved, exceeding the 100-line target)",
+    "Each of the 5 fetch_* functions now calls _cache_cte(where) + its unique SELECT clause",
+    "Created activity-template.md matching the SKILL.md description: overview, daily breakdown with tokens/sessions/commits",
+    "Fixed SKILL.md cost example from wrong values (0.80/0.79/0.01) to correct values (1.25/0.89/0.36) verified against compute_cost()"
+  ],
+  "learnings": [
+    "The CTE deduplication was straightforward — the 5 fetch functions share identical CTE blocks with only the final SELECT differing",
+    "The SKILL.md cost example was significantly wrong: documented raw_cost of 0.80 vs actual 1.25 (56% error), likely from confusing output tokens with input tokens",
+    "Activity template creation is minimal but important — SKILL.md references it for daily activity generation workflow"
+  ],
+  "files_created": [
+    "tests/test_phase3.py",
+    ".opencode/skills/analyzing-opencode-usage/references/activity-template.md"
+  ],
+  "files_modified": [
+    ".opencode/skills/analyzing-opencode-usage/script/queries/cache_estimate.py",
+    ".opencode/skills/analyzing-opencode-usage/SKILL.md"
+  ],
+  "next_steps": [
+    "All 12 bugs from the plan are now addressed across Phases 1-3",
+    "Consider running generate_report.py end-to-end to verify cache estimate results match pre-change values (regression guard from plan)"
+  ]
+}

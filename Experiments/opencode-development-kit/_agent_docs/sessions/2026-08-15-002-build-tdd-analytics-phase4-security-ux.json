@@ -1,0 +1,41 @@
+{
+  "session_id": "2026-08-15-002",
+  "date": "2026-08-15",
+  "title": "Phase 4: Security Hardening and UX Polish for analytics skill",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 0,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "Implemented Phase 4 (Security Hardening and UX Polish) of the 2026-08-08 remaining-fixes plan via two strict Red-Green-Refactor cycles. Cycle 1 hardened the legacy estimate_cache.py against SQL injection: build_where() now validates --since/--until with a format regex plus calendar check (ValueError on bad input, so 2026-13-45 no longer silently yields an empty report) and escapes project names for safe LIKE use (wildcards %/_ and the string delimiter quote, with an explicit ESCAPE clause so SQLite actually honors the escaping). The CLI surfaces invalid input as a clean stderr error with exit code 2 instead of a traceback. Cycle 2 added UX polish to the HTML report: title tooltips on the Raw Tokens and Effective Tokens metric cards and a visible legend below the metric grid explaining the distinction and connecting the difference to estimated prefix-caching savings. All 177 tests pass (163 existing + 14 new in test_security_ux.py). Manual verification: --project \"'; DROP TABLE session; --\" is inert (query runs, 0 matches, table intact), --since not-a-date errors cleanly, normal CollageMaker runs are unchanged (518 sessions, 94.2% hit rate), and the regenerated all-time CollageMaker HTML shows both tooltips and the legend with correct values (1.7B raw / 133.0M effective).",
+  "key_decisions": [
+    "Hardened estimate_cache.py (plan Approach A, preferred) rather than deprecating it (Approach B), because analytics.sh still calls it actively at lines 460 and 845 — a deprecation-only change would leave the injection live in the shell pipeline",
+    "Extended the plan's _sanitize_like sketch in two places the tests proved necessary: it did not escape the single quote (so scenario 4.1.1's payload would still break out of the SQL string literal) and its backslash wildcard-escaping was a no-op in SQLite without an explicit ESCAPE '\\' clause in the LIKE expression",
+    "Date validation is format regex AND calendar validity (strptime): 2026-13-45 matches YYYY-MM-DD but is rejected, closing a silent-empty-report hole the format-only check in the plan would have left open",
+    "CLI maps ValueError from build_where to 'error: <msg>' on stderr plus sys.exit(2), mirroring argparse's usage-error convention; the invalid-date path is unit-tested in-process by monkeypatching sys.argv (build_where raises before any subprocess/DB access)",
+    "Legend rendered as <p class=\"subtitle metrics-legend\"> (reusing the report's existing subtitle style and adding a marker class) instead of the plan's inline-styled div — the plan snippet referenced var(--text-muted), which does not exist in the report CSS (it is --muted)",
+    "Tooltip wording taken from the plan and placed in title attributes, matching the existing convention set by the Phase-4-of-2026-08-06 cache-hit-rate tooltip; no .get() calls were added to build_summary_cards so the Phase 2 static key-contract tests stay green unchanged"
+  ],
+  "learnings": [
+    "A behavioral SQLite harness (execute the generated WHERE clause against an in-memory session table, assert table survival + expected matches) proves injection safety by outcome; under the old code the quote-injection test failed with ProgrammingError (multi-statement), confirming the payload genuinely split the SQL",
+    "The RED-phase captured stdout of the CLI test exposed the pre-fix silent-failure mode: --since not-a-date ran a valid query, matched 0 rows, and printed an all-zero report with exit code 0 — no error surfaced anywhere",
+    "The entire opencode-development-kit tree is untracked in git ('?? ./'), so git diff is empty for these changes — change verification must re-read the files rather than diff against HEAD",
+    "generate_report.py --project resolves relative to the CWD, so the CollageMaker report must be regenerated from Experiments/ with the skill script path prefixed (opencode-development-kit/.opencode/skills/.../generate_report.py) — the Phase 3 gotcha, re-confirmed",
+    "The LSP flags sys.path.insert-based imports as unresolved in every test file of this skill (test_contract.py, test_project_range.py included) — a pre-existing artifact of the runtime path insertion, not real errors; pytest runs are the source of truth"
+  ],
+  "files_created": [
+    ".opencode/skills/analyzing-opencode-usage/tests/test_security_ux.py"
+  ],
+  "files_modified": [
+    ".opencode/skills/analyzing-opencode-usage/script/estimate_cache.py",
+    ".opencode/skills/analyzing-opencode-usage/script/render_consolidated_report.py"
+  ],
+  "next_steps": [
+    "Commit the Phase 4 changes (build-quick-work responsibility)",
+    "Regenerate and republish the CollageMaker all-time report so the stored HTML picks up the tooltips and legend (verified output currently at /var/folders/52/y3c2m2xs6m15g1d212f935gc0000gn/T/opencode/phase4-verify-report.html; the stored reports under CollageMaker/_agent_docs/project-timeline/llm-usage/ are already deleted in the working tree)",
+    "Consider making analytics.sh surface estimate_cache.py stderr instead of swallowing it — line 460's '2>/dev/null || echo \"{}\"' now converts the new clean invalid-date error into a silently empty cache_estimate section",
+    "All four phases of the 2026-08-08 remaining-fixes plan are now implemented; consider a final end-to-end review pass or closing out the plan"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "session_id": "2026-08-11-001",
+  "date": "2026-08-11",
+  "title": "Phase 2: Key Validation Contract Test for analytics skill",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.6-27b",
+  "duration_minutes": 0,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "Created test_contract.py with 24 contract tests validating key alignment between merge.py output and consumers (render_consolidated_report.py, charts.py). All 145 tests pass (121 existing + 24 new).",
+  "key_decisions": [
+    "Used merge_datasets() with representative test data as the canonical fixture instead of a static JSON file, ensuring the contract test always validates against actual merge.py behavior",
+    "Chose static source analysis (regex extraction of .get('key') calls) for renderer/charts validation, avoiding the need to mock or instrument the rendering functions",
+    "Included negative tests (TestContractDetectsMismatches) to verify the contract test itself is effective at catching key mismatches",
+    "Extracted _extract_get_keys to module level to eliminate duplication between TestRendererKeyConsumption and TestChartsKeyConsumption"
+  ],
+  "learnings": [
+    "Contract tests are preventative by nature — they pass when the code is correct but would fail if a future key rename breaks alignment",
+    "The merge.py output structure has 20+ top-level keys and each section has its own key schema; comprehensive coverage requires defining expected keys for all 10+ data sections",
+    "Static analysis of .get('key') patterns in source code is a practical approach for validating consumer-side key usage without runtime instrumentation"
+  ],
+  "files_created": [
+    ".opencode/skills/analyzing-opencode-usage/tests/test_contract.py"
+  ],
+  "files_modified": [],
+  "next_steps": [
+    "Implement Phase 3: Date range and legacy sessions (meta.since/meta.until reflecting true project range)",
+    "Implement Phase 4: Security hardening of estimate_cache.py and UX tooltips for raw vs effective tokens"
+  ]
+}

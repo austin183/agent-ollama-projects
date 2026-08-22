@@ -1,0 +1,38 @@
+{
+  "session_id": "2026-08-06-002-build-docs-collagemaker-alltime-report",
+  "date": "2026-08-06",
+  "title": "CollageMaker all-time LLM usage report generation and world-review prep",
+  "purpose": "analytics",
+  "agent_role": "build-docs",
+  "model": "qwen/qwen3.6-27b",
+  "duration_minutes": 15,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "Generated updated all-time consolidated HTML and JSON reports for CollageMaker LLM usage. Reports written to BlogPosts/references/. Prepared for world-review of the analyzing-opencode-usage skill to identify bugs and data anomalies.",
+  "key_decisions": [
+    "Reports generated without --all flag (default behavior covers all time when no date filter applied)",
+    "JSON data file generated alongside HTML for programmatic access by world-review",
+    "Session captured before world-review launch to maintain timeline continuity"
+  ],
+  "learnings": [
+    "generate_report.py does not support --all flag; omitting date filters defaults to all-time (since 2000-01-01)",
+    "4 models still using fallback pricing: laguna-s-2.1, qwen/qwen3.6-27b-q4, qwen/qwen3.6-27b-lite, qwen/qwen3.5-9b",
+    "Report now covers 517 sessions (up from 509 in previous August 5 report), spanning July 1 - August 4, 2026",
+    "Cache hit rate remains steady at 94.2%, with $308 in cloud-equivalent savings"
+  ],
+  "files_created": [
+    "austin183.github.io/BlogPosts/references/CollageMaker-LLM-Usage-Report.html",
+    "austin183.github.io/BlogPosts/references/CollageMaker-LLM-Usage-Report-data.json",
+    "_agent_docs/sessions/2026-08-06-002-build-docs-collagemaker-alltime-report.json"
+  ],
+  "files_modified": [
+    "_agent_docs/project-timeline.md/project-timeline.md"
+  ],
+  "next_steps": [
+    "Launch world-review subagent to review report quality and analyzing-opencode-usage skill",
+    "Review world-review findings for bugs and data anomalies",
+    "Address any issues identified in the skill scripts",
+    "Consider adding missing models to model_pricing.py MODEL_PRICING dict"
+  ]
+}
