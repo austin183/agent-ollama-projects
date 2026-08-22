@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Aggregator for merging pi analytics datasets into the unified report structure.
 
-Ported from the opencode kit's aggregator/merge.py (agent rows became role
-rows; pi adds subagent-run and session-summary datasets). Combines raw query
-results from the parsed-JSONL query modules with git and cache-estimate data
-into a single coherent JSON report structure with cache-adjusted values and
-cost estimations.
+Combines raw query results from the parsed-JSONL query modules with git and
+cache-estimate data into a single coherent JSON report structure with
+cache-adjusted values and cost estimations, including subagent-run and
+session-summary datasets.
 """
 
 import logging

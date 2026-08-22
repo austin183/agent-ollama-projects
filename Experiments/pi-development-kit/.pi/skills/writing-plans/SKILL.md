@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Plan document formatting — templates, scenario structure, success criteria, and procedural workflows for writing implementation plans. Use when creating or updating plan documents in [docs directory]/plans/.
+description: Plan document formatting — templates, scenario structure, success criteria, and procedural workflows for writing implementation plans. Use when creating or updating plan documents in [docs directory]/plans/, decomposing a large plan into per-phase files, converting a code review into a plan (light planning pass), or auditing phase handoffs (ownership pinning, worked-example recompute, phase-close checks).
 ---
 
 # Writing Plans
@@ -103,6 +103,34 @@ Use this structure for implementation plans:
 - Similar implementation references
 ```
 
+## Plan Decomposition (Large Plans)
+
+When a plan exceeds **~200 lines, 5 phases, or ~15 KB** — or an execution agent is overthinking while working a phase (re-reading the whole plan, drifting into other phases' work) — decompose it into a directory instead of one file. Per-phase context isolation keeps working sessions small while whole-plan detail stays one hop away:
+
+```
+[docs directory]/plans/<plan-slug>/
+├── index.md              # Navigation + phase map with status (progress source of truth)
+├── context.md            # Stable whole-plan detail (decisions, interfaces, strategy, references)
+├── behavior-specs.md     # Canonical scenario tables (BDD plans only)
+└── phase-N-<slug>.md     # Self-contained: Depends on / Context to load / inlined owned scenarios / success criteria
+```
+
+Core rules: each scenario ID is inlined in exactly **one** phase file; depends-on contracts are referenced by ID only; phase files carry an explicit **"Context to load"** reading list; after splitting, archive the original with a "superseded" pointer header.
+
+See `references/decompose-plan.md` for the full procedure, phase-file template, integrity check, and the execution-agent working convention.
+
+## Review → Plan Conversion (Light Planning Pass)
+
+A code review is **plan-ready** when every finding carries location + fix + named regression test. Then the planning pass is transcription + scoping, not a full planning session: verify locations against source (never skip), cluster findings into phases by file ownership (not finding ID), pin fix contracts as RD-decisions, transcribe the review's test expectations into scenario rows, and run the integrity check before marking the plan ready.
+
+See `references/review-to-plan.md` for the plan-ready test, the amendment canonicality convention (`(rev)` / `R-*` / retirement), the scope-list backlog phase template, and the light-pass checklist.
+
+## Phase Handoff Consistency
+
+Decomposition isolates context per phase; these rules keep the loaded context *coherent* across phase boundaries: **pin behavior ownership** at authoring time, **recompute every worked-example constant** before a phase is ready, keep **hook semantics in the context entry** (not scenario prose), and run a **handoff audit at phase close** — diff the next phase's context load and inlined tables against as-built code before marking the phase done.
+
+See `references/phase-handoff.md` for the full rules and the phase-close checklist.
+
 ## Scenario Format
 
 Behavior scenarios use Given-When-Then format in tabular structure:
@@ -170,6 +198,10 @@ Consult these reference files for detailed procedures:
 
 - `references/create-plan.md` — Initial plan creation process, context gathering, research & discovery, plan structure development
 - `references/iterate-plan.md` — Iterating on existing plans, understanding current plan, presenting approach, making precise edits
+- `references/decompose-plan.md` — Splitting large plans into per-phase directories: tier layout, phase-file template, ownership rules, integrity check, archiving
+- `references/review-to-plan.md` — Converting a plan-ready code review into a phased plan (light planning pass): plan-ready test, file-ownership clustering, amendment canonicality, scope-list backlog phases, checklist
+- `script/plan-integrity-check.sh` — Mechanical plan integrity check (ID resolution, phase count vs map, phase-map file existence); run before a plan is marked ready
+- `references/phase-handoff.md` — Keeping phase context coherent across boundaries: ownership pinning, worked-example recompute, hook semantics, handoff audit at phase close
 
 ## Quick Reference Checklist
 
@@ -182,8 +214,12 @@ Consult these reference files for detailed procedures:
 - [ ] Iterate the plan section with test scenarios using iterate_plan guidance
 - [ ] Include "What We're NOT Doing" section to prevent scope creep
 - [ ] Maintain distinction between automated verification and manual verification
+- [ ] Decompose plans over ~200 lines / 5 phases / ~15 KB into a per-phase directory (`references/decompose-plan.md`)
+- [ ] Plan-ready review (location + fix + named test per finding)? Use the light planning pass, not a full planning session (`references/review-to-plan.md`)
+- [ ] Before a plan is marked ready: run `script/plan-integrity-check.sh <plan-dir>` — never by eye
+- [ ] Before closing a phase: recompute scenario-table constants and run the handoff audit against the next phase (`references/phase-handoff.md`)
 
 ---
 
 Base directory for this skill: `.pi/skills/writing-plans/`
-Relative paths in this skill are relative to this base directory.
+Relative paths in this skill are relative to this base directory (e.g. `bash .pi/skills/writing-plans/script/plan-integrity-check.sh <plan-dir>`).

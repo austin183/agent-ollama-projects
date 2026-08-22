@@ -8,7 +8,7 @@ Two data paths per session file:
    the cache split is real: ``uncached = max(input - cacheRead, 0)`` per
    turn. No estimation needed.
 2. **LAG-delta fallback:** when all cache fields are 0 (e.g. LM Studio),
-   port the opencode kit's delta method: sort the session's assistant turns
+   apply the delta method: sort the session's assistant turns
    by timestamp; ``effective_input[n] = max(input[n] - input[n-1], 0)`` with
    the first turn keeping its full input. Disclaim as simulated.
 

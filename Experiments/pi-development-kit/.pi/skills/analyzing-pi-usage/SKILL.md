@@ -7,9 +7,7 @@ description: Analyze pi agent token usage, cost, prefix-cache behavior, subagent
 
 Analyze what the pi agent is spending (tokens, cost, cache) and what it's
 producing (commits, lines, tests), sourced from pi's own session JSONL files
-plus `git log`. Ported from the opencode kit's `analyzing-opencode-usage`
-skill; the data source changed from opencode's SQLite DB to
-`~/.pi/agent/sessions/**/*.jsonl`.
+(`~/.pi/agent/sessions/**/*.jsonl`) plus `git log`.
 
 ## Quick Start
 

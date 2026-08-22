@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # pi-analytics.sh — Query pi's session JSONL files for usage analytics.
-# Thin wrapper over analytics.py (the opencode kit's analytics.sh was a full
-# bash/SQLite driver; pi's data lives in JSONL, so the logic is in Python).
+# Thin wrapper over analytics.py (pi's data lives in JSONL, so the logic is in Python).
 #
 # Usage: ./script/analytics.sh [OPTIONS]
 #

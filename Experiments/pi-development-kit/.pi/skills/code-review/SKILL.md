@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Reviews code changes for SOLID principles, separation of concerns, design quality, and code health. Use when reviewing pull requests, commit changes, or requesting architectural feedback on code.
+description: Reviews code for SOLID principles, separation of concerns, design quality, and code health. Use when reviewing pull requests or commit changes, requesting architectural feedback, or running an end-of-milestone six-pass full codebase review with a plan-ready output contract.
 ---
 # Code Review
 
@@ -188,6 +188,10 @@ See [best-practices.md](reference/best-practices.md) for:
 - Quality assurance techniques
 - Mentoring approaches
 - Resolving conflicts
+
+## End-of-Milestone Full Review
+
+For a whole-codebase review after a milestone ships (not a diff), use the six-pass format and the plan-ready output contract in `reference/milestone-review.md` — per-finding location + fix + why the tests are green, plus a tiered action plan. That output shape is what lets `writing-plans` (`references/review-to-plan.md`) convert the review into a plan in a single light planning session.
 
 ## When NOT to Use This Skill
 

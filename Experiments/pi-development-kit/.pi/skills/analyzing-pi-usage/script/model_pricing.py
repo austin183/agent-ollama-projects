@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Per-model pricing lookup and cost computation for opencode usage reports.
+"""Per-model pricing lookup and cost computation for LLM usage reports.
 
 Provides cloud-equivalent cost estimates for locally-run models. All models
 run locally via LM Studio (actual cost: $0), but this module computes what

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SVG chart generators and HTML table renderers for opencode usage reports.
+"""SVG chart generators and HTML table renderers for LLM usage reports.
 
 Two row formats are supported:
 

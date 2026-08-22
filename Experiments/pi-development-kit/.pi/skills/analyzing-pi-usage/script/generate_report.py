@@ -4,9 +4,8 @@
 Wires the JSONL data layer (pi_sessions) and query modules to the aggregator,
 producing a complete JSON report, optionally rendered as HTML.
 
-Unlike the opencode kit (one SQLite round-trip per query), pi's JSONL files
-are parsed ONCE per run and all query modules read from the shared in-memory
-session structure.
+pi's JSONL files are parsed ONCE per run and all query modules read from the
+shared in-memory session structure.
 """
 
 import argparse

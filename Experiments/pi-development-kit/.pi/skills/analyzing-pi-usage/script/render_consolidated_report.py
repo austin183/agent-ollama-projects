@@ -3,12 +3,9 @@
 
 This module provides the render_html() function used by generate_report.py
 to produce a self-contained HTML report with collapsible sections, charts, and tables.
-All token counts use cache-adjusted (uncached) input by default.
-
-Ported from the opencode kit's renderer: agent-named keys became role-named
-keys, the agent context-efficiency section was dropped (no pi counterpart),
-and a Subagent Runs section was added (pi's subagent tool results carry
-per-run attribution the opencode kit could not get).
+All token counts use cache-adjusted (uncached) input by default. The
+Subagent Runs section is rendered from pi's subagent tool results, which
+carry per-run attribution.
 
 Standalone usage:
     python3 render_consolidated_report.py < consolidated-data.json > report.html

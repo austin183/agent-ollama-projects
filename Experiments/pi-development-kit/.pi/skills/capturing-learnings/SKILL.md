@@ -74,11 +74,11 @@ Where should these learnings be saved?
 
 - Update existing skills document (if applicable)
 - Create new skills document for this exercise
-- Add to agent_docs/thoughts/ for future reference
+- Add to `_agent_docs/learnings/` as a dated rule-file (`YYYY-MM-DD-<slug>.md`); archive older ones as the folder grows
 - Document in a debrief file with date and purpose
 ```
 
-> **Note**: Paths like `agent_docs/thoughts/` should not become outdated. If the location changes, update this skill to reflect the new location.
+> **Note**: The learnings location follows project convention (`_agent_docs/learnings/`, dated rule-files). If it changes, update this skill to reflect the new location.
 
 ## Workflow Pattern
 

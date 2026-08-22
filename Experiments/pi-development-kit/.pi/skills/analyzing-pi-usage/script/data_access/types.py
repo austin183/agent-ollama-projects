@@ -3,11 +3,9 @@
 
 All data structures use TypedDict with explicit fields for IDE support and
 early error detection. Raw query results contain parsed-JSONL values; enriched
-results include computed/cached fields.
-
-Ported from the opencode kit's data_access/types.py: agent-named keys became
-role-named keys; pi adds cache_read/cache_write (provider-reported) and
-actual cost to the summary, plus subagent-run and session-summary datasets.
+results include computed/cached fields. The summary carries
+cache_read/cache_write (provider-reported) and actual cost, plus
+subagent-run and session-summary datasets.
 """
 
 from typing import TypedDict

@@ -82,7 +82,7 @@ class TokenEvent:
 
     @property
     def total(self) -> int:
-        """Raw tokens: input + output + reasoning (same convention as the opencode kit)."""
+        """Raw tokens: input + output + reasoning."""
         return self.input + self.output + self.reasoning
 
 

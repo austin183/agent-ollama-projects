@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Git commit statistics for pi usage analytics.
 
-Ported from the opencode kit (git-based, not DB-based). pi does not record
-per-session file changes, so change attribution comes from two sources:
+pi does not record per-session file changes, so change attribution comes
+from two sources:
 
 1. **Measured** — a `Pi-Session: <uuid>` commit trailer (kit convention, see
    the committer agent and SKILL.md) names the session that made the commit's
    changes. Parsed here into `commit['session_id']`.
 2. **Estimated** — when no trailer is present, the report falls back to
-   matching session dates to commit dates (the opencode-kit behavior).
+   matching session dates to commit dates.
 """
 
 import logging

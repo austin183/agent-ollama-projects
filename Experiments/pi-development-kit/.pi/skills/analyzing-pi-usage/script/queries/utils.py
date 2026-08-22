@@ -13,10 +13,8 @@ logger = logging.getLogger(__name__)
 
 # Role → daily/weekly category mapping.
 #
-# Mirrors the opencode kit's agent categories: opencode's default "general"
-# session role counted as build, so pi's unmarked main-session work (role
-# "main") maps to the same bucket. "explore" has no pi counterpart and stays
-# in the shape for report parity (always 0).
+# Unmarked main-session work (role "main") is counted as build. "explore"
+# is unused but stays in the shape for report parity (always 0).
 REVIEW_ROLES = frozenset({'diff-review', 'solid-review', 'world-review'})
 PLAN_ROLES = frozenset({'planner', 'plan-bdd'})
 
@@ -39,8 +37,8 @@ def role_category(role: Optional[str]) -> str:
 def pricing_model_id(model: str) -> str:
     """Adapt a pi model id (``provider/model``) to the pricing table's keys.
 
-    The pricing table is provider-agnostic (copied from the opencode kit); pi
-    records ids as e.g. ``lmstudio/qwen-agentworld-35b-a3b`` while the table
+    The pricing table is provider-agnostic; pi records ids as e.g.
+    ``lmstudio/qwen-agentworld-35b-a3b`` while the table
     keys are ``qwen-agentworld-35b-a3b``. Strip the ``lmstudio/`` prefix only
     when the remainder is a known table key, so cloud provider ids
     (``anthropic/claude-sonnet-4``) look up unchanged.

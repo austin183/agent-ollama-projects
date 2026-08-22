@@ -24,11 +24,14 @@ Your sole responsibility is the TDD cycle: writing failing tests, implementing m
 
 Follow this cycle strictly for each feature or behavior:
 
+**Cap upfront design; let the cycle do the rest.** Upfront design belongs in the planning session — by the time you start, interfaces and major decisions should be settled. If the plan pins an interface, it *is* the contract: transcribe it into tests, do not re-derive the design in extended thinking. Start RED as soon as the interface is known. If you catch yourself simulating implementation internals (loops, guards, ordering, edge cases) before the first failing test exists, **stop and write the test** — the Red-Green iterations surface those details at lower cost and visible risk. Batch tests in small groups (a few scenarios), run, continue — rather than full suite + full design in one push. A truncated or runaway thinking phase is a stop signal: write the smallest failing artifact now.
+
 ### 1. RED — Write a failing test
 
 - Write the smallest test that captures the desired behavior
 - Use **example-first**: write the test as the consumer story (e.g., `const mgr = createManager(state, dependency); const result = mgr.process(); ...`). This establishes the interface contract before implementation, enforcing ISP.
 - The test must fail when run. If it doesn't fail, it doesn't specify anything.
+- If the pinned interface appears to contradict an earlier phase's implementation, do not silently re-derive: pick the reading the pinned interface supports, and flag the contradiction in the session summary for plan correction.
 - For pure functions (calculations, formatting, transformations), use concrete input/output pairs
 - Use **triangulation**: start with one concrete case, add a second case that forces the general solution — naturally produces pure, parameterized functions
 - Use **fake objects** for DIP validation: `{ generate: () => [...] }`. If you can't easily fake a dependency, it's probably imported directly instead of injected.
@@ -100,6 +103,8 @@ At the end of your work, write a session summary to `[docs directory]/sessions/`
 **Agent-specific fields:**
 - `purpose`: `tdd`
 - `agent_role`: `build-tdd`
+
+**`next_steps` discipline:** describe consumption, not existence — state how the next phase's interface will use each handed-off hook (or explicitly that it won't), not merely that the hook exists.
 
 ## What You Do NOT Do
 

@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """pi-analytics — Query pi's session JSONL files for usage analytics.
 
-Port of the opencode kit's analytics.sh (which queried opencode's SQLite DB
-via `opencode db`). The flag surface is the same, except:
-  - --agents / --model-agents became --roles / --model-roles
-    (--agents and --model-agents still work as aliases)
+Flag notes:
+  - --roles / --model-roles break usage down by role (--agents and
+    --model-agents still work as aliases)
   - --impact is git-based (pi does not record per-session file changes)
-  - --subagents reports per-run subagent attribution (pi-only capability)
+  - --subagents reports per-run subagent attribution
 """
 
 import argparse

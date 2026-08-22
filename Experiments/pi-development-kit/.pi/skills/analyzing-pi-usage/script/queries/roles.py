@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Role usage breakdown for pi usage analytics.
 
-Roles are the pi counterpart of opencode's per-session agents: the main
-session's role comes from the `Role: <name>` user-message marker (default
-`main`), subagent runs carry their exact agent name.
+The main session's role comes from the `Role: <name>` user-message marker
+(default `main`); subagent runs carry their exact agent name.
 """
 
 from collections import defaultdict

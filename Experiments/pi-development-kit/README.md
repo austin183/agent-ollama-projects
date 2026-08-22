@@ -5,17 +5,13 @@ A reusable set of agents, prompt templates, skills, and an extension for the
 multi-agent workflow plus **LLM-usage analytics** driven by pi's native JSONL
 session files.
 
-Ported from `opencode-development-kit` — see
-`_agent_docs/plans/2026-08-15-opencode-kit-port-to-pi.md` for the full plan
-and per-phase results.
-
 ## What's inside
 
 | Resource | Location | Notes |
 |---|---|---|
 | 9 agent definitions | `.pi/agents/*.md` | Single source of truth for each role |
 | 8 prompt templates | `.pi/prompts/*.md` | Thin role launchers (`Role:` marker + pointer to the agent definition) |
-| 9 skills | `.pi/skills/` | 8 ported from the opencode kit + the new `analyzing-pi-usage` |
+| 9 skills | `.pi/skills/` | 8 general workflow skills + `analyzing-pi-usage` |
 | Subagent extension | `.pi/extensions/subagent/` | Vendored from pi's `examples/extensions/subagent/`; provides the `subagent` tool |
 
 ### Roles
@@ -130,7 +126,7 @@ Known data caveats (also in SKILL.md gotchas):
   `python3 -m pytest .pi/skills/analyzing-pi-usage/tests/` (80 tests;
   fixtures in `tests/fixtures/` are real pi session files from the kit's
   own verification runs).
-- `charts.py` and `model_pricing.py` are pure copies from the opencode kit —
-  re-sync manually if opencode-side rates change.
+- `model_pricing.py` rates are a static per-1M-token table — update them
+  manually when provider rates change.
 - The vendored extension may lag pi's bundled example after pi updates —
   re-sync per the header comment (check `ExtensionAPI` usage for drift).

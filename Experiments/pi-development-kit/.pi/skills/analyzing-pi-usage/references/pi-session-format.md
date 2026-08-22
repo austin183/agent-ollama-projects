@@ -15,8 +15,7 @@ Sessions are stored as JSON Lines under:
 
 - **Encoded directory name**: the session's working directory with every `/`
   replaced by `-`, wrapped in `--…--`, e.g.
-  `/Users/austin/workspace/austin183.github.io` →
-  `--Users-austin-workspace-austin183.github.io--`.
+  `/home/alice/projects/my-app` → `--home-alice-projects-my-app--`.
 - **The encoded path uses the real path** (symlinks resolved). On macOS that
   means `/tmp` sessions land under `--private-tmp-…--`. When filtering by
   project, resolve both sides (`os.path.realpath`) before matching.
@@ -33,7 +32,7 @@ session header.
 ### `session` (header, line 1)
 
 ```json
-{"type":"session","version":3,"id":"01a00ba3-…","timestamp":"2026-08-16T17:34:34.696Z","cwd":"/Users/austin/workspace/austin183.github.io"}
+{"type":"session","version":3,"id":"01a00ba3-…","timestamp":"2026-08-16T17:34:34.696Z","cwd":"/home/alice/projects/my-app"}
 ```
 
 Forks additionally carry `"parentSession": "<source session uuid>"`.
