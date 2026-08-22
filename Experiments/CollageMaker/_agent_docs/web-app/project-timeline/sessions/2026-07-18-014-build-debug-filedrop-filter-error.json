@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-18-014-build-debug-filedrop-filter-error",
+  "session_number": 14,
+  "date": "2026-07-18",
+  "purpose": "debug",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "MyESModules/Interaction/FileDropHandler.js",
+    "MyESModules/App/createCollageLifecycle.js"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 1,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Bug: 'files.filter is not a function' on image drag-and-drop. Root cause: FileDropHandler.js passed raw FileList (from e.dataTransfer.files) to the callback, but FileList is array-like and lacks .filter(). The lifecycle callback at createCollageLifecycle.js line 262 called files.filter() directly on the FileList. Fix: (1) FileDropHandler.js: wrap e.dataTransfer.files with Array.from() before passing to callback, matching its documented contract of File[]. (2) createCollageLifecycle.js: add Array.from(files) as defensive measure before .filter(). All 36 test suites pass (0 failures)."
+}

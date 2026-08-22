@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-18-001-build-docs-skill-refinement-self-calibrating-hit-test",
+  "session_number": 1,
+  "date": "2026-07-18",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/testing-unit.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined the building-web-apps skill with the self-calibrating hit test coordinates pattern from _agent_docs/learnings/2026-07-17-self-calibrating-hit-test-coordinates.md. Added a new section to references/testing-unit.md covering the pattern of importing production computation functions (e.g., computeBounds) to derive test coordinates for elements with computed/auto-fit dimensions. Distinguished this pattern from the existing proportional coordinates approach in testing-e2e.md. Updated SKILL.md Testing section with a cross-reference bullet."
+}

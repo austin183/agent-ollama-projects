@@ -1,0 +1,21 @@
+{
+  "session_id": "plan-bdd-title-changes-2026-07-17",
+  "session_number": 1,
+  "date": "2026-07-17",
+  "purpose": "bdd-planning",
+  "agent_role": "plan-bdd",
+  "files_changed": [
+    "_agent_docs/plans/2026-07-17-title-changes-implementation.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [
+    "_agent_docs/plans/2026-07-17-title-changes-implementation.md"
+  ],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Created implementation plan for 3 bugs + 1 enhancement from change request 2026-07-17-01-title-changes.md. Phase 1: Fix font style toggle (TitleManager applyFormattingToRange toggles all 3 properties instead of just the requested one). Phase 2: Fix erratic first-click resize (dragStartBoxWidth captures null for auto-fit, falls back to hardcoded 400px). Phase 3: Fix background width minimum (missing padding in minWidth clamp). Phase 4: Multi-line title support (textarea, newline splitting, multi-line rendering, 3-line limit). Root causes identified with exact file:line references. Behavior scenarios written at user, component, and pure function levels for each phase."
+}

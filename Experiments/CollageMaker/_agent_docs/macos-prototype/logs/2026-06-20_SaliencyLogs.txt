@@ -1,0 +1,1173 @@
+Last login: Thu Jun 11 06:38:21 on console
+(base) austin@Mac ~ % cd workspace/agent-ollama-projects/Experiments/CollageMaker
+(base) austin@Mac CollageMaker % bash script/build_and_run.sh --logs
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker/CollageMaker.xcodeproj -scheme CollageMaker -configuration Debug -destination platform=macOS,arch=arm64 build
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'CollageMaker' in project 'CollageMaker' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: ca6d3a2e6faf8f69352fb23bc6c5f380
+Build description path: /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/XCBuildData/ca6d3a2e6faf8f69352fb23bc6c5f380.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk /Users/austin/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.5-25F70-e082c4a02f00227109f4ed75e425c832.sdkstatcache
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker/CollageMaker.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -o /Users/austin/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.5-25F70-e082c4a02f00227109f4ed75e425c832.sdkstatcache
+
+Ld /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/__preview.dylib normal (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-macos26.4 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -O0 -L/Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug -F/Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug -install_name @rpath/CollageMaker.debug.dylib -Xlinker -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/Objects-normal/arm64/CollageMaker_dependency_info.dat -Xlinker -no_adhoc_codesign -o /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/__preview.dylib
+
+Ld /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker.debug.dylib normal (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-macos26.4 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -O0 -L/Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -L/Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug -F/Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -F/Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug -filelist /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/Objects-normal/arm64/CollageMaker.LinkFileList -install_name @rpath/CollageMaker.debug.dylib -Xlinker -rpath -Xlinker @executable_path/../Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/Objects-normal/arm64/CollageMaker_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/Objects-normal/arm64/CollageMaker_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/Objects-normal/arm64/CollageMaker.swiftmodule @/Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/Objects-normal/arm64/CollageMaker-linker-args.resp -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -framework CoreText -Xlinker -no_adhoc_codesign -o /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker.debug.dylib
+
+ProcessInfoPlistFile /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Info.plist /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/empty-CollageMaker.plist (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    builtin-infoPlistUtility /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/empty-CollageMaker.plist -producttype com.apple.product-type.application -genpkginfo /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/PkgInfo -expandbuildsettings -platform macosx -additionalcontentfile /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/assetcatalog_generated_info.plist -o /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Info.plist
+
+ConstructStubExecutorLinkFileList /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/CollageMaker-ExecutorLinkFileList-normal-arm64.txt (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    construct-stub-executor-link-file-list /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/CollageMaker-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'CollageMaker' from project 'CollageMaker')
+
+Ld /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker normal (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-macos26.4 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -O0 -L/Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug -F/Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/../Frameworks -rdynamic -Xlinker -no_deduplicate -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/CollageMaker-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/CollageMaker-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/CollageMaker-ExecutorLinkFileList-normal-arm64.txt /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker.debug.dylib -Xlinker -no_adhoc_codesign -o /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker
+
+CopySwiftLibs /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker.debug.dylib --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Frameworks --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/PlugIns --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Library/SystemExtensions --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Extensions --scan-folder /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk/System/Library/Frameworks/CoreText.framework --platform macosx --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+ExtractAppIntentsMetadata (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name CollageMaker --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk --xcode-version 17F42 --platform-family macOS --deployment-target 26.4 --bundle-identifier austin183.indie.CollageMaker --output /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Resources --target-triple arm64-apple-macos26.4 --binary-file /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker --dependency-file /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/Objects-normal/arm64/CollageMaker_dependency_info.dat --stringsdata-file /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/Objects-normal/arm64/CollageMaker.SwiftFileList --metadata-file-list /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/CollageMaker.DependencyMetadataFileList --static-metadata-file-list /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/CollageMaker.DependencyStaticMetadataFileList --swift-const-vals-list /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/Objects-normal/arm64/CollageMaker.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-06-20 12:26:03.764 appintentsmetadataprocessor[74599:9133078] Starting appintentsmetadataprocessor export
+2026-06-20 12:26:03.765 appintentsmetadataprocessor[74599:9133078] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+CodeSign /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker.debug.dylib (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker.debug.dylib
+
+CodeSign /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/__preview.dylib (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/__preview.dylib
+
+CodeSign /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --entitlements /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/CollageMaker.app.xcent --timestamp\=none --generate-entitlement-der /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app
+
+Validate /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    builtin-validationUtility /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app -no-validate-extension -infoplist-subpath Contents/Info.plist
+
+RegisterWithLaunchServices /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister -f -R -trusted /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app
+
+** BUILD SUCCEEDED **
+
+Filtering the log data using "process == "CollageMaker""
+^CTimestamp               Ty Process[PID:TID]
+
+(base) austin@Mac CollageMaker % bash script/build_and_run.sh --logs
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker/CollageMaker.xcodeproj -scheme CollageMaker -configuration Debug -destination platform=macOS,arch=arm64 build
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'CollageMaker' in project 'CollageMaker' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 3327115f99e9c06c98cdc3bcc04e6d83
+Build description path: /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/XCBuildData/3327115f99e9c06c98cdc3bcc04e6d83.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk /Users/austin/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.5-25F70-e082c4a02f00227109f4ed75e425c832.sdkstatcache
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker/CollageMaker.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -o /Users/austin/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.5-25F70-e082c4a02f00227109f4ed75e425c832.sdkstatcache
+
+ProcessInfoPlistFile /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Info.plist /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/empty-CollageMaker.plist (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    builtin-infoPlistUtility /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/empty-CollageMaker.plist -producttype com.apple.product-type.application -genpkginfo /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/PkgInfo -expandbuildsettings -platform macosx -additionalcontentfile /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/assetcatalog_generated_info.plist -o /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Info.plist
+
+CopySwiftLibs /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker.debug.dylib --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Frameworks --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/PlugIns --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Library/SystemExtensions --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Extensions --scan-folder /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk/System/Library/Frameworks/CoreText.framework --platform macosx --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+** BUILD SUCCEEDED **
+
+Filtering the log data using "process == "CollageMaker""
+Timestamp               Ty Process[PID:TID]
+2026-06-20 12:26:35.606 A  CollageMaker[74667:8b6549] (CoreSpotlight) end-index-batch
+2026-06-20 12:26:35.606 Df CollageMaker[74667:8b6549] [com.apple.corespotlight:index] *warn* MailCS ======%%% _setMailMessageAttributes skip:1
+2026-06-20 12:26:35.606 A  CollageMaker[74667:8b6549] (CoreSpotlight) index-items
+2026-06-20 12:26:35.606 Df CollageMaker[74667:8b6549] [com.apple.corespotlight:index] CSInlineDonation:<private>: Skipping donation (feature flag disabled)
+2026-06-20 12:26:36.239 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca464e300] activating connection: mach=true listener=false peer=false name=com.apple.pbs.fetch_services
+2026-06-20 12:26:36.241 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca464e300] invalidated after the last release of the connection object
+2026-06-20 12:26:36.241 A  CollageMaker[74667:8b652f] (CoreFoundation) Loading Preferences From User CFPrefsD
+2026-06-20 12:26:36.250 A  CollageMaker[74667:8b652f] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-06-20 12:26:37.657 Df CollageMaker[74667:8b6545] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:26:37.657 Df CollageMaker[74667:8b6545] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:26:37.658 Df CollageMaker[74667:8b6545] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:26:37.661 Df CollageMaker[74667:8b652f] [com.apple.BoardServices:XPCErrors] [C:3] Alloc com.apple.backboard.hid-services.xpc
+2026-06-20 12:26:37.661 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca464e440] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:26:37.661 Df CollageMaker[74667:8b6549] [com.apple.BackBoard:EventDelivery] BKSHIDEventDeliveryManager - connection activation
+2026-06-20 12:26:37.664 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.664 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.664 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.664 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.664 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.664 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.664 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:37.664 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.664 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.664 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.664 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.664 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.664 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.664 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:37.673 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.673 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.673 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.673 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.673 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.673 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.673 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:37.673 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.673 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.673 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.673 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.673 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:37.673 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:37.673 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:37.703 Df CollageMaker[74667:8b652f] [com.apple.AppKit:AutomaticTermination] void _updateToReflectAutomaticTerminationState(void) Setting _kLSApplicationWouldBeTerminatedByTALKey=0
+2026-06-20 12:26:37.749 A  CollageMaker[74667:8b6549] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:26:37.765 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]
+2026-06-20 12:26:37.765 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges] Emptying for initial flush.
+2026-06-20 12:26:37.781 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges] finishing enqueued operations
+2026-06-20 12:26:37.781 Df CollageMaker[74667:8b6545] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke asyncing to main queue
+2026-06-20 12:26:37.781 Df CollageMaker[74667:8b6544] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke writing records
+2026-06-20 12:26:45.288 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Pasteboard] NSPasteboard (name: Apple CFPasteboard drag): data requested for type public.file-url at index 0
+2026-06-20 12:26:45.288 Df CollageMaker[74667:8b6545] [com.apple.launchservices:default] LSExceptions shared instance invalidated for timeout.
+2026-06-20 12:26:45.316 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Pasteboard] NSPasteboard (name: Apple CFPasteboard drag): data requested for type public.file-url at index 0
+2026-06-20 12:26:45.319 A  CollageMaker[74667:8b652f] (CoreFoundation) Loading Preferences From User CFPrefsD
+2026-06-20 12:26:45.330 Df CollageMaker[74667:8b652f] (CoreVideo) Pixel format registry initialized. Constant classes enabled.
+2026-06-20 12:26:45.406 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.406 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.406 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.406 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.406 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.406 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.406 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:45.406 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.406 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.406 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.406 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.407 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.406 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.407 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:45.415 Df CollageMaker[74667:8b65a2] [com.apple.xpc:connection] [0xca464e800] activating connection: mach=true listener=false peer=false name=com.apple.appleneuralengine
+2026-06-20 12:26:45.435 Df CollageMaker[74667:8b65aa] (ANEServices) Found matching service: ANEDriver
+2026-06-20 12:26:45.435 Df CollageMaker[74667:8b65aa] (ANEServices) Found matching service: H11ANEIn
+2026-06-20 12:26:45.435 Df CollageMaker[74667:8b65a2] (ANEServices) Total num of devices 2
+2026-06-20 12:26:45.435 Df CollageMaker[74667:8b65a2] (ANEServices) (Single-ANE System with ANEDriver) Selected ANEDriver device
+2026-06-20 12:26:45.435 Df CollageMaker[74667:8b65a2] (ANEServices) ANEServicesDevice::ANEServicesDeviceOpen, usage type: 1
+2026-06-20 12:26:45.435 Df CollageMaker[74667:8b65a2] (ANEServices) ANEDriver Device Open succeeded with usage type: 1
+2026-06-20 12:26:45.435 Df CollageMaker[74667:8b65a2] (ANEServices) Selected ANEDriver device
+2026-06-20 12:26:45.450 Df CollageMaker[74667:8b65bf] (ANEServices) Found matching service: ANEDriver
+2026-06-20 12:26:45.450 Df CollageMaker[74667:8b65bf] (ANEServices) Found matching service: H11ANEIn
+2026-06-20 12:26:45.450 Df CollageMaker[74667:8b65a2] (ANEServices) Total num of devices 2
+2026-06-20 12:26:45.450 Df CollageMaker[74667:8b65a2] (ANEServices) (Single-ANE System with ANEDriver) Selected ANEDriver device
+2026-06-20 12:26:45.450 Df CollageMaker[74667:8b65a2] (ANEServices) ANEServicesDevice::ANEServicesDeviceOpen, usage type: 1
+2026-06-20 12:26:45.450 Df CollageMaker[74667:8b65a2] (ANEServices) ANEDriver Device Open succeeded with usage type: 1
+2026-06-20 12:26:45.450 Df CollageMaker[74667:8b65a2] (ANEServices) Selected ANEDriver device
+2026-06-20 12:26:45.483 Df CollageMaker[74667:8b65c0] (ANEServices) Found matching service: ANEDriver
+2026-06-20 12:26:45.483 Df CollageMaker[74667:8b65c0] (ANEServices) Found matching service: H11ANEIn
+2026-06-20 12:26:45.483 Df CollageMaker[74667:8b65a2] (ANEServices) Total num of devices 2
+2026-06-20 12:26:45.483 Df CollageMaker[74667:8b65a2] (ANEServices) (Single-ANE System with ANEDriver) Selected ANEDriver device
+2026-06-20 12:26:45.483 Df CollageMaker[74667:8b65a2] (ANEServices) ANEServicesDevice::ANEServicesDeviceOpen, usage type: 1
+2026-06-20 12:26:45.483 Df CollageMaker[74667:8b65a2] (ANEServices) ANEDriver Device Open succeeded with usage type: 1
+2026-06-20 12:26:45.483 Df CollageMaker[74667:8b65a2] (ANEServices) Selected ANEDriver device
+2026-06-20 12:26:45.494 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a0140] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.494 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a03c0] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.494 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a0500] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.494 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a0640] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.494 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a0780] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.494 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a08c0] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.494 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a0a00] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.494 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a0b40] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.494 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a0c80] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.494 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a0dc0] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.495 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a0f00] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.495 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a1040] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.495 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a1180] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.495 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a12c0] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.495 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a1400] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.495 Df CollageMaker[74667:8b65a5] [com.apple.xpc:connection] [0xca58a1540] activating connection: mach=false listener=false peer=false name=com.apple.MTLCompilerService
+2026-06-20 12:26:45.495 A  CollageMaker[74667:8b65a3] (Metal) Metal Compiling Shader
+2026-06-20 12:26:45.537 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.537 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.537 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.537 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.537 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.537 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.537 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:45.537 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.537 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.537 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.537 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.537 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:45.537 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:45.537 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:46.105 A  CollageMaker[74667:8b65a2] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:26:46.108 A  CollageMaker[74667:8b6544] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:26:46.115 Df CollageMaker[74667:8b6544] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:26:46.123 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.123 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.123 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.123 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.123 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.123 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.123 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:46.123 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.123 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.123 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.123 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.123 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.123 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.123 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:46.135 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.135 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.136 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.136 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.136 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.136 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.136 Df CollageMaker[74667:8b65a2] [com.apple.xpc:connection] [0xca58a1b80] activating connection: mach=false listener=false peer=false name=com.apple.TextInputUI.xpc.CursorUIViewService
+2026-06-20 12:26:46.136 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:46.136 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.136 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.136 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.136 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.136 Df CollageMaker[74667:8b65a2] [com.apple.xpc:connection] [0xca58a1b80] invalidated after the last release of the connection object
+2026-06-20 12:26:46.136 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.136 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.136 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:46.145 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.145 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.145 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.145 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.145 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.145 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.145 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:46.145 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.145 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.145 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.145 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.145 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:46.145 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:46.145 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:46.169 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a1cc0] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:26:46.169 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a17c0] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:26:46.186 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController activate:]_block_invoke: Create CursorUIViewService: TUINSRemoteViewController
+2026-06-20 12:26:46.186 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca464de00] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:26:46.186 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca464da40] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:26:46.186 E  CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] ViewBridge to RemoteViewService Terminated: Error Domain=com.apple.ViewBridge Code=18 UserInfo={com.apple.ViewBridge.error.hint=this process disconnected remote view controller -- benign unless unexpected, com.apple.ViewBridge.error.description=NSViewBridgeErrorCanceled}
+2026-06-20 12:26:46.264 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a1680] activating connection: mach=true listener=false peer=false name=mul-xpc (Apple)_OpenStep
+2026-06-20 12:26:46.264 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a1b80] activating connection: mach=true listener=false peer=false name=com.apple.naturallanguaged
+2026-06-20 12:26:46.340 A  CollageMaker[74667:8b6544] (CoreSpotlight) end-index-batch
+2026-06-20 12:26:46.341 A  CollageMaker[74667:8b6544] (CoreSpotlight) index-items
+2026-06-20 12:26:46.341 Df CollageMaker[74667:8b6544] [com.apple.corespotlight:index] CSInlineDonation:<private>: Skipping donation (feature flag disabled)
+2026-06-20 12:26:47.997 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:47.997 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:47.997 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:47.997 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:47.997 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:47.997 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:47.998 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:47.998 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:47.998 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:47.998 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:47.998 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:47.998 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:26:47.998 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:26:47.998 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:26:48.021 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:00.652 Df CollageMaker[74667:8b6545] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:00.653 Df CollageMaker[74667:8b6545] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:00.653 Df CollageMaker[74667:8b6545] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:00.662 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.662 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.663 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.663 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.663 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.663 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.663 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:00.663 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.663 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.663 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.663 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.663 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.663 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.663 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:00.675 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.675 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.675 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.675 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.675 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.675 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.675 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:00.675 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.675 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.675 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.675 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.675 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:00.675 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:00.675 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:00.745 A  CollageMaker[74667:8b6545] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:27:00.761 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]
+2026-06-20 12:27:00.775 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges] finishing enqueued operations
+2026-06-20 12:27:00.775 Df CollageMaker[74667:8b6545] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke asyncing to main queue
+2026-06-20 12:27:00.775 Df CollageMaker[74667:8b6549] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke writing records
+2026-06-20 12:27:04.711 A  CollageMaker[74667:8b6545] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:27:04.715 A  CollageMaker[74667:8b6545] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:27:04.716 Df CollageMaker[74667:8b65a6] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:04.725 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.725 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.725 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.725 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.725 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.725 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.726 Df CollageMaker[74667:8b6549] [com.apple.xpc:connection] [0xca58a21c0] activating connection: mach=false listener=false peer=false name=com.apple.TextInputUI.xpc.CursorUIViewService
+2026-06-20 12:27:04.726 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:04.726 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.726 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.726 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.726 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.726 Df CollageMaker[74667:8b6549] [com.apple.xpc:connection] [0xca58a21c0] invalidated after the last release of the connection object
+2026-06-20 12:27:04.726 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.726 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.726 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:04.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.737 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:04.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:04.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:04.737 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:04.764 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a2300] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:27:04.764 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a1f40] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:27:04.793 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController activate:]_block_invoke: Create CursorUIViewService: TUINSRemoteViewController
+2026-06-20 12:27:04.793 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a17c0] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:27:04.793 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a1cc0] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:27:04.890 A  CollageMaker[74667:8b6549] (CoreSpotlight) end-index-batch
+2026-06-20 12:27:04.890 A  CollageMaker[74667:8b6549] (CoreSpotlight) index-items
+2026-06-20 12:27:04.890 Df CollageMaker[74667:8b6549] [com.apple.corespotlight:index] CSInlineDonation:<private>: Skipping donation (feature flag disabled)
+2026-06-20 12:27:12.526 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:12.526 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:12.526 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:12.526 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:12.526 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:12.526 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:12.527 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:12.527 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:12.527 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:12.527 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:12.527 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:12.527 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:12.527 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:12.527 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:12.551 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:14.892 A  CollageMaker[74667:8b6549] (CoreSpotlight) end-index-batch
+2026-06-20 12:27:14.892 A  CollageMaker[74667:8b6549] (CoreSpotlight) index-items
+2026-06-20 12:27:14.892 Df CollageMaker[74667:8b6549] [com.apple.corespotlight:index] CSInlineDonation:<private>: Skipping donation (feature flag disabled)
+2026-06-20 12:27:15.817 Df CollageMaker[74667:8b6549] [com.apple.xpc:connection] [0xca58a3700] activating connection: mach=false listener=false peer=false name=com.apple.TextInputUI.xpc.CursorUIViewService
+2026-06-20 12:27:15.818 Df CollageMaker[74667:8b66df] [com.apple.xpc:connection] [0xca58a3700] invalidated after the last release of the connection object
+2026-06-20 12:27:15.818 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a3840] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:27:15.818 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a3700] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:27:15.820 A  CollageMaker[74667:8b652f] (AppKit) perform action for menu item
+2026-06-20 12:27:15.821 A  CollageMaker[74667:8b652f] (AppKit) sendAction:
+2026-06-20 12:27:15.824 Df CollageMaker[74667:8b6549] [com.apple.xpc:connection] [0xca58a3980] activating connection: mach=true listener=false peer=false name=com.apple.proactive.app-client.donation
+2026-06-20 12:27:15.831 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.831 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.831 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.831 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.832 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.832 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.832 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:15.832 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.832 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.832 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.832 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.832 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.832 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.832 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:15.842 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.842 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.842 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.842 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.842 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.842 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.842 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:15.842 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.842 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.842 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.842 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.842 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.842 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.842 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:15.850 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.850 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.850 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.850 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.850 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.850 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.850 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:15.850 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.850 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.850 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.850 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.850 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.850 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.850 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:15.861 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a1e00] activating connection: mach=true listener=false peer=false name=com.apple.iconservices
+2026-06-20 12:27:15.861 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a3200] activating connection: mach=true listener=false peer=false name=com.apple.iconservices.store
+2026-06-20 12:27:15.900 Df CollageMaker[74667:8b66df] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:15.900 Df CollageMaker[74667:8b66df] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:15.900 Df CollageMaker[74667:8b66df] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:15.904 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.904 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.904 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.904 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.904 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.904 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.904 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:15.904 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.904 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.904 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.904 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.904 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.904 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.904 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:15.910 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.910 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.910 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.910 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.910 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.910 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.910 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:15.910 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.910 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.910 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.910 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.910 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:15.910 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:15.910 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.170 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a1a40] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:27:16.171 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController activate:]_block_invoke: Create CursorUIViewService: TUINSRemoteViewController
+2026-06-20 12:27:16.171 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a1f40] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:27:16.171 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a2300] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:27:16.179 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.179 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.179 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.179 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.179 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.179 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.179 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.179 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.179 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.179 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.179 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.179 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.179 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.179 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.190 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.190 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.190 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.190 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.190 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.190 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.190 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.191 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.191 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.191 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.191 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.191 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.191 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.191 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.318 A  CollageMaker[74667:8b65a6] (CoreSpotlight) end-index-batch
+2026-06-20 12:27:16.318 A  CollageMaker[74667:8b65a6] (CoreSpotlight) index-items
+2026-06-20 12:27:16.318 Df CollageMaker[74667:8b65a6] [com.apple.corespotlight:index] CSInlineDonation:<private>: Skipping donation (feature flag disabled)
+2026-06-20 12:27:16.595 A  CollageMaker[74667:8b652f] (CoreFoundation) Loading Preferences From User CFPrefsD
+2026-06-20 12:27:16.595 A  CollageMaker[74667:8b652f] (AppKit) sendAction:
+2026-06-20 12:27:16.675 A  CollageMaker[74667:8b652f] (AppKit) sendAction:
+2026-06-20 12:27:16.675 A  CollageMaker[74667:8b652f] (AppKit) trackMouse send action on mouseUp
+2026-06-20 12:27:16.675 A  CollageMaker[74667:8b652f] (AppKit) sendActionFrom:
+2026-06-20 12:27:16.675 A  CollageMaker[74667:8b652f] (AppKit) sendAction:
+2026-06-20 12:27:16.679 Df CollageMaker[74667:8b65a6] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:16.692 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.692 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.692 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.692 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.692 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.692 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.694 Df CollageMaker[74667:8b66df] [com.apple.xpc:connection] [0xca58a3c00] activating connection: mach=false listener=false peer=false name=com.apple.TextInputUI.xpc.CursorUIViewService
+2026-06-20 12:27:16.694 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.694 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.694 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.694 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.694 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.694 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.694 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.694 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.694 Df CollageMaker[74667:8b65a6] [com.apple.xpc:connection] [0xca58a3c00] invalidated after the last release of the connection object
+2026-06-20 12:27:16.706 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.706 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.706 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.706 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.706 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.706 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.706 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.706 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.706 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.706 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.706 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.706 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.706 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.706 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.731 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.731 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.731 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.731 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.731 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.731 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.731 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.731 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.731 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.731 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.731 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.731 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.731 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.731 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.737 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.737 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.737 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.737 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.743 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.743 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.743 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.743 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.743 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.743 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.743 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.743 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.743 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.743 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.743 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.743 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.743 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.743 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.965 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a0280] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:27:16.965 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca464de00] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:27:16.968 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.968 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.968 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.968 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.968 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.968 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.968 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.968 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.968 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.968 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.968 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.968 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.968 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.968 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.978 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.978 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.978 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.978 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.978 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.978 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.978 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:16.979 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.979 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.979 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.979 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.979 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:16.979 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:16.979 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:17.017 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController activate:]_block_invoke: Create CursorUIViewService: TUINSRemoteViewController
+2026-06-20 12:27:17.017 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a3700] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:27:17.017 Df CollageMaker[74667:8b652f] [com.apple.xpc:connection] [0xca58a3840] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:27:17.178 A  CollageMaker[74667:8b6549] (CoreSpotlight) end-index-batch
+2026-06-20 12:27:17.178 A  CollageMaker[74667:8b6549] (CoreSpotlight) index-items
+2026-06-20 12:27:17.179 Df CollageMaker[74667:8b6549] [com.apple.corespotlight:index] CSInlineDonation:<private>: Skipping donation (feature flag disabled)
+2026-06-20 12:27:17.858 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:18.654 Df CollageMaker[74667:8b652f] (libMobileGestalt.dylib) Could not get size of EAN data (IOConnectCallScalarMethod kAppleNVMeEANGetSize returned 0xE00002E2)
+2026-06-20 12:27:18.654 Df CollageMaker[74667:8b652f] (libMobileGestalt.dylib) Failed to copy 'aptk' from EAN
+2026-06-20 12:27:18.654 Df CollageMaker[74667:8b652f] (libMobileGestalt.dylib) Failed to copy APTicket properties. Falling back to default policy.
+2026-06-20 12:27:18.654 Df CollageMaker[74667:8b652f] (libMobileGestalt.dylib) Creating default MGSysConfigPolicy
+2026-06-20 12:27:18.655 Df CollageMaker[74667:8b652f] (libMobileGestalt.dylib) syscfg is not initialized!
+2026-06-20 12:27:18.655 Df CollageMaker[74667:8b652f] (libMobileGestalt.dylib) CFDictionaryRef copySyscfgDictionary(void) enumeration of <private> failed.
+2026-06-20 12:27:18.655 Df CollageMaker[74667:8b652f] (libMobileGestalt.dylib) Failed to find key <private>
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.iohid:oversized] Released connection: AC6ADDE7-A67F-4E98-AA96-5EE9D5A4AAF3
+{
+    UUID = "AC6ADDE7-A67F-4E98-AA96-5EE9D5A4AAF3";
+    caller = "HIToolbox: _TISCopyAttachedKeyboardLanguages + 112";
+    dispatchQueue = 0;
+    eventCount = 0;
+    eventMask = 0;
+    port = 118291;
+    resetCount = 0;
+    runloop = 0;
+    services =     (
+        4294970673,
+        4294984013
+    );
+    virtualServices =     (
+    );
+}
+2026-06-20 12:27:18.685 A  CollageMaker[74667:8b652f] (AppKit) performKeyEquivalent:
+2026-06-20 12:27:18.685 A  CollageMaker[74667:8b652f] (AppKit) sendAction:
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Application] terminate:
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:AutomaticTermination] void _NSDisableAutomaticTerminationAndLog(NSString *) Terminating
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Application] -[NSApplication _setShouldRestoreStateOnNextLaunch:] shouldRestore=0
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSApplication _pushPersistentStateTerminationGeneration] sPersistentStateTerminateStackHeight -> 1
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager discardAllPersistentStateAndClose]
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _waitForPendingChangesToFinish] finishing pending changes
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _finishEncodingImmediatelyWithCompletionHandler:] _encodingQueue=0xca3080da0
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _waitForPendingChangesToFinish] observer=0xca49db660
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b66df] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _waitForPendingChangesToFinish]_block_invoke asyncing to main runloop
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _waitForPendingChangesToFinish] spinning the runloop
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _waitForPendingChangesToFinish]_block_invoke observer=0xca49db660 activity=1 depth=0 finished=0
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _waitForPendingChangesToFinish]_block_invoke finished=YES
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _waitForPendingChangesToFinish]_block_invoke observer=0xca49db660 activity=128 depth=1 finished=1
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _waitForPendingChangesToFinish] completed spinning the runloop
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _waitForPendingChangesToFinish] finished waiting
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _flushPendingPostEncodingChangesSynchronously] workQueue=0xca3593c00
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _flushPendingPostEncodingChangesSynchronously]_block_invoke _windowSnapshotter=0xca287d680
+2026-06-20 12:27:18.685 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIWindowSnapshotter flushPendingSnapshotsSynchronously] _workQueue=0xca3593c80
+2026-06-20 12:27:18.686 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _flushPendingPostEncodingChangesSynchronously]_block_invoke _store=0xca2aecc30
+2026-06-20 12:27:18.687 Df CollageMaker[74667:8b652f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager _waitForPendingChangesToFinish] finished flushing
+2026-06-20 12:27:18.687 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Application] Attempting sudden termination (1st attempt)
+2026-06-20 12:27:18.687 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Application] Checking whether app should terminate
+2026-06-20 12:27:18.687 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Application] Asking app delegate whether applicationShouldTerminate:
+2026-06-20 12:27:18.687 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Application] replyToApplicationShouldTerminate:YES
+2026-06-20 12:27:18.687 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Application] App termination approved
+2026-06-20 12:27:18.687 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Application] Termination commencing
+2026-06-20 12:27:18.687 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Application] Attempting sudden termination (2nd attempt)
+2026-06-20 12:27:18.694 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:18.694 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:18.694 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:18.694 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:18.694 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:18.694 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:18.694 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:18.694 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:18.694 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:18.694 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:18.694 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:18.694 A  CollageMaker[74667:8b652f] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:18.694 F  CollageMaker[74667:8b652f] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:18.694 Df CollageMaker[74667:8b652f] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:18.702 Df CollageMaker[74667:8b66df] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:18.702 Df CollageMaker[74667:8b66df] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:18.702 Df CollageMaker[74667:8b66df] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b66df] [com.apple.xpc:connection] [0xca464e940] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b66df] [com.apple.xpc:session] [0xca1f85220] Session canceled.
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b65a6] [com.apple.UIIntelligenceSupport:xpc] agent connection cancelled (details: Session manually canceled)
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b65a6] [com.apple.xpc:session] [0xca1f85220] Disposing of session
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b652f] [com.apple.AppKit:Application] Termination complete. Exiting without sudden termination.
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b652f] [com.apple.CoreAnalytics:client] Entering exit handler.
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b65a6] [com.apple.xpc:connection] [0xca464e940] activating connection: mach=true listener=false peer=false name=com.apple.powerlog.plxpclogger.xpc
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b652f] [com.apple.CoreAnalytics:client] Queueing exit procedure onto XPC queue. Any further messages sent will be discarded. activeSendTransactions=0
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b6549] [com.apple.CoreAnalytics:client] Cancelling XPC connection. Any further reply handler invocations will not retry messages
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b6549] [com.apple.xpc:connection] [0xca305c500] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b652f] [com.apple.CoreAnalytics:client] Exiting exit handler.
+2026-06-20 12:27:18.704 Df CollageMaker[74667:8b6549] [com.apple.CoreAnalytics:client] XPC connection invalidated (daemon unloaded/disabled)
+^C
+(base) austin@Mac CollageMaker % bash script/build_and_run.sh --logs
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker/CollageMaker.xcodeproj -scheme CollageMaker -configuration Debug -destination platform=macOS,arch=arm64 build
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'CollageMaker' in project 'CollageMaker' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 9b5ea50513907e31ee2c46620a78f55d
+Build description path: /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/XCBuildData/9b5ea50513907e31ee2c46620a78f55d.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk /Users/austin/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.5-25F70-e082c4a02f00227109f4ed75e425c832.sdkstatcache
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker/CollageMaker.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -o /Users/austin/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.5-25F70-e082c4a02f00227109f4ed75e425c832.sdkstatcache
+
+ProcessInfoPlistFile /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Info.plist /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/empty-CollageMaker.plist (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    builtin-infoPlistUtility /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/empty-CollageMaker.plist -producttype com.apple.product-type.application -genpkginfo /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/PkgInfo -expandbuildsettings -platform macosx -additionalcontentfile /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/assetcatalog_generated_info.plist -o /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Info.plist
+
+CopySwiftLibs /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app (in target 'CollageMaker' from project 'CollageMaker')
+    cd /Users/austin/workspace/agent-ollama-projects/Experiments/CollageMaker/CollageMaker
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/MacOS/CollageMaker.debug.dylib --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Frameworks --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/PlugIns --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Library/SystemExtensions --scan-folder /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Extensions --scan-folder /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk/System/Library/Frameworks/CoreText.framework --platform macosx --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Products/Debug/CollageMaker.app/Contents/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/austin/Library/Developer/Xcode/DerivedData/CollageMaker-dzvnzlunlwffplakrflslprxxeau/Build/Intermediates.noindex/CollageMaker.build/Debug/CollageMaker.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+** BUILD SUCCEEDED **
+
+Filtering the log data using "process == "CollageMaker""
+Timestamp               Ty Process[PID:TID]
+2026-06-20 12:27:45.237 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x8702bd400] activating connection: mach=true listener=false peer=false name=com.apple.pbs.fetch_services
+2026-06-20 12:27:45.238 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x8702bd400] invalidated after the last release of the connection object
+2026-06-20 12:27:45.238 A  CollageMaker[74762:8b6b86] (CoreFoundation) Loading Preferences From User CFPrefsD
+2026-06-20 12:27:45.245 A  CollageMaker[74762:8b6b86] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-06-20 12:27:49.098 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:AutomaticTermination] void _updateToReflectAutomaticTerminationState(void) Setting _kLSApplicationWouldBeTerminatedByTALKey=0
+2026-06-20 12:27:50.941 Df CollageMaker[74762:8b6b94] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:50.942 Df CollageMaker[74762:8b6b94] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:50.942 Df CollageMaker[74762:8b6b94] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:50.946 Df CollageMaker[74762:8b6b86] [com.apple.BoardServices:XPCErrors] [C:3] Alloc com.apple.backboard.hid-services.xpc
+2026-06-20 12:27:50.946 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x8702bdcc0] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:27:50.947 Df CollageMaker[74762:8b6ba1] [com.apple.BackBoard:EventDelivery] BKSHIDEventDeliveryManager - connection activation
+2026-06-20 12:27:50.949 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.949 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.949 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.949 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.949 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.949 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.949 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:50.949 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.949 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.949 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.949 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.949 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.949 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.949 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:50.958 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.958 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.958 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.958 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.958 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.958 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.958 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:50.958 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.958 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.958 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.958 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.958 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:50.958 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:50.958 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:51.039 A  CollageMaker[74762:8b6ba1] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:27:51.050 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]
+2026-06-20 12:27:51.050 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges] Emptying for initial flush.
+2026-06-20 12:27:51.065 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges] finishing enqueued operations
+2026-06-20 12:27:51.065 Df CollageMaker[74762:8b6ba1] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke asyncing to main queue
+2026-06-20 12:27:51.065 Df CollageMaker[74762:8b6b94] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke writing records
+2026-06-20 12:27:54.831 Df CollageMaker[74762:8b6b95] [com.apple.launchservices:default] LSExceptions shared instance invalidated for timeout.
+2026-06-20 12:27:55.251 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x8702bd2c0] activating connection: mach=true listener=false peer=false name=mul-xpc (Apple)_OpenStep
+2026-06-20 12:27:55.252 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x8702bd7c0] activating connection: mach=true listener=false peer=false name=com.apple.naturallanguaged
+2026-06-20 12:27:55.880 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:Pasteboard] NSPasteboard (name: Apple CFPasteboard drag): data requested for type public.file-url at index 0
+2026-06-20 12:27:55.910 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:Pasteboard] NSPasteboard (name: Apple CFPasteboard drag): data requested for type public.file-url at index 0
+2026-06-20 12:27:55.913 A  CollageMaker[74762:8b6b86] (CoreFoundation) Loading Preferences From User CFPrefsD
+2026-06-20 12:27:55.923 Df CollageMaker[74762:8b6b86] (CoreVideo) Pixel format registry initialized. Constant classes enabled.
+2026-06-20 12:27:55.997 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:55.997 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:55.997 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:55.997 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:55.997 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:55.997 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:55.997 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:55.997 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:55.997 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:55.997 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:55.997 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:55.997 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:55.997 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:55.997 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:56.026 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.026 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.026 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.026 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.026 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.026 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.026 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:56.026 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.026 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.026 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.026 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.026 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.026 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.026 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:56.037 Df CollageMaker[74762:8b6b95] [com.apple.xpc:connection] [0x8702be6c0] activating connection: mach=true listener=false peer=false name=com.apple.appleneuralengine
+2026-06-20 12:27:56.056 Df CollageMaker[74762:8b6e63] (ANEServices) Found matching service: ANEDriver
+2026-06-20 12:27:56.056 Df CollageMaker[74762:8b6e63] (ANEServices) Found matching service: H11ANEIn
+2026-06-20 12:27:56.056 Df CollageMaker[74762:8b6b95] (ANEServices) Total num of devices 2
+2026-06-20 12:27:56.056 Df CollageMaker[74762:8b6b95] (ANEServices) (Single-ANE System with ANEDriver) Selected ANEDriver device
+2026-06-20 12:27:56.056 Df CollageMaker[74762:8b6b95] (ANEServices) ANEServicesDevice::ANEServicesDeviceOpen, usage type: 1
+2026-06-20 12:27:56.056 Df CollageMaker[74762:8b6b95] (ANEServices) ANEDriver Device Open succeeded with usage type: 1
+2026-06-20 12:27:56.056 Df CollageMaker[74762:8b6b95] (ANEServices) Selected ANEDriver device
+2026-06-20 12:27:56.072 Df CollageMaker[74762:8b6e64] (ANEServices) Found matching service: ANEDriver
+2026-06-20 12:27:56.072 Df CollageMaker[74762:8b6e64] (ANEServices) Found matching service: H11ANEIn
+2026-06-20 12:27:56.072 Df CollageMaker[74762:8b6b95] (ANEServices) Total num of devices 2
+2026-06-20 12:27:56.072 Df CollageMaker[74762:8b6b95] (ANEServices) (Single-ANE System with ANEDriver) Selected ANEDriver device
+2026-06-20 12:27:56.072 Df CollageMaker[74762:8b6b95] (ANEServices) ANEServicesDevice::ANEServicesDeviceOpen, usage type: 1
+2026-06-20 12:27:56.072 Df CollageMaker[74762:8b6b95] (ANEServices) ANEDriver Device Open succeeded with usage type: 1
+2026-06-20 12:27:56.072 Df CollageMaker[74762:8b6b95] (ANEServices) Selected ANEDriver device
+2026-06-20 12:27:56.104 Df CollageMaker[74762:8b6e65] (ANEServices) Found matching service: ANEDriver
+2026-06-20 12:27:56.104 Df CollageMaker[74762:8b6e65] (ANEServices) Found matching service: H11ANEIn
+2026-06-20 12:27:56.104 Df CollageMaker[74762:8b6b95] (ANEServices) Total num of devices 2
+2026-06-20 12:27:56.104 Df CollageMaker[74762:8b6b95] (ANEServices) (Single-ANE System with ANEDriver) Selected ANEDriver device
+2026-06-20 12:27:56.104 Df CollageMaker[74762:8b6b95] (ANEServices) ANEServicesDevice::ANEServicesDeviceOpen, usage type: 1
+2026-06-20 12:27:56.105 Df CollageMaker[74762:8b6b95] (ANEServices) ANEDriver Device Open succeeded with usage type: 1
+2026-06-20 12:27:56.105 Df CollageMaker[74762:8b6b95] (ANEServices) Selected ANEDriver device
+2026-06-20 12:27:56.117 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.117 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.117 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.117 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.117 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.117 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.118 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:56.118 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.118 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.118 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.118 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.118 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.118 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.118 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:56.214 E  CollageMaker[74762:8b6b86] [com.apple.HIServices:DragAndDrop] 46 Reentrant message: kDragIPCCompleted, current message: kDragIPCLeaveApplication
+2026-06-20 12:27:56.728 A  CollageMaker[74762:8b6b94] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:27:56.733 A  CollageMaker[74762:8b6b94] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:27:56.737 Df CollageMaker[74762:8b6b95] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:27:56.744 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.744 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.744 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.744 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.744 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.744 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.745 Df CollageMaker[74762:8b6b94] [com.apple.xpc:connection] [0x870940780] activating connection: mach=false listener=false peer=false name=com.apple.TextInputUI.xpc.CursorUIViewService
+2026-06-20 12:27:56.745 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:56.745 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.745 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.745 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.745 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.745 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.745 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.745 Df CollageMaker[74762:8b6b94] [com.apple.xpc:connection] [0x870940780] invalidated after the last release of the connection object
+2026-06-20 12:27:56.745 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:56.759 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.759 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.759 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.759 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.759 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.759 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.759 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:56.759 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.759 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.759 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.759 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.759 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:56.759 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:56.759 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:56.788 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x8709408c0] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:27:56.788 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x870940280] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:27:56.810 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController activate:]_block_invoke: Create CursorUIViewService: TUINSRemoteViewController
+2026-06-20 12:27:56.810 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x8702bd680] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:27:56.810 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x8702bf480] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:27:56.810 E  CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] ViewBridge to RemoteViewService Terminated: Error Domain=com.apple.ViewBridge Code=18 UserInfo={com.apple.ViewBridge.error.hint=this process disconnected remote view controller -- benign unless unexpected, com.apple.ViewBridge.error.description=NSViewBridgeErrorCanceled}
+2026-06-20 12:27:56.864 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:57.041 A  CollageMaker[74762:8b6e5f] (CoreSpotlight) end-index-batch
+2026-06-20 12:27:57.041 A  CollageMaker[74762:8b6e5f] (CoreSpotlight) index-items
+2026-06-20 12:27:57.042 Df CollageMaker[74762:8b6b95] [com.apple.corespotlight:index] CSInlineDonation:<private>: Skipping donation (feature flag disabled)
+2026-06-20 12:27:58.873 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:58.873 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:58.873 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:58.873 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:58.873 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:58.873 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:58.873 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:58.874 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:58.874 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:58.874 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:58.874 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:58.874 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:27:58.874 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:27:58.874 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:27:58.895 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:05.089 Df CollageMaker[74762:8b6e5f] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:28:05.090 Df CollageMaker[74762:8b6e5f] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:28:05.090 Df CollageMaker[74762:8b6e5f] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:28:05.097 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.097 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.097 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.097 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.097 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.097 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.097 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:05.097 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.097 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.097 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.097 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.097 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.097 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.097 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:05.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.108 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:05.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:05.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:05.108 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:05.182 A  CollageMaker[74762:8b6b94] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:28:05.198 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]
+2026-06-20 12:28:05.216 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges] finishing enqueued operations
+2026-06-20 12:28:05.216 Df CollageMaker[74762:8b6b95] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke asyncing to main queue
+2026-06-20 12:28:05.216 Df CollageMaker[74762:8b6e5f] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke writing records
+2026-06-20 12:28:41.079 A  CollageMaker[74762:8b6b94] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:28:41.085 A  CollageMaker[74762:8b6b94] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:28:41.086 Df CollageMaker[74762:8b6e5b] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:28:41.096 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.096 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.097 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.097 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.097 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.097 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.097 Df CollageMaker[74762:8b6b94] [com.apple.xpc:connection] [0x870940a00] activating connection: mach=false listener=false peer=false name=com.apple.TextInputUI.xpc.CursorUIViewService
+2026-06-20 12:28:41.097 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:41.097 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.097 Df CollageMaker[74762:8b6b94] [com.apple.xpc:connection] [0x870940a00] invalidated after the last release of the connection object
+2026-06-20 12:28:41.097 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.097 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.097 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.097 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.097 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.097 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:41.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.108 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:41.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.108 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:41.108 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:41.108 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:41.139 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x870940b40] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:28:41.139 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x870940640] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:28:41.154 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController activate:]_block_invoke: Create CursorUIViewService: TUINSRemoteViewController
+2026-06-20 12:28:41.154 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x870940280] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:28:41.154 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x8709408c0] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:28:41.307 A  CollageMaker[74762:8b6b94] (CoreSpotlight) end-index-batch
+2026-06-20 12:28:41.307 A  CollageMaker[74762:8b6b94] (CoreSpotlight) index-items
+2026-06-20 12:28:41.307 Df CollageMaker[74762:8b6e5b] [com.apple.corespotlight:index] CSInlineDonation:<private>: Skipping donation (feature flag disabled)
+2026-06-20 12:28:46.706 Df CollageMaker[74762:8b6b94] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:28:46.706 Df CollageMaker[74762:8b6b94] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:28:46.707 Df CollageMaker[74762:8b6b94] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:28:46.713 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.713 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.713 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.713 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.713 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.713 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.713 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:46.713 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.713 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.713 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.713 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.713 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.713 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.713 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:46.724 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.724 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.724 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.724 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.724 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.724 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.724 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:46.724 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.724 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.724 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.724 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.724 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:28:46.724 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:28:46.724 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:28:46.799 A  CollageMaker[74762:8b6e5b] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:28:46.815 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]
+2026-06-20 12:28:46.815 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges] finishing enqueued operations
+2026-06-20 12:28:46.815 Df CollageMaker[74762:8b6b94] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke asyncing to main queue
+2026-06-20 12:28:46.815 Df CollageMaker[74762:8b6e5b] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke writing records
+2026-06-20 12:29:41.897 A  CollageMaker[74762:8b6b94] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:29:41.903 A  CollageMaker[74762:8b6e5b] (RunningBoardServices) didChangeInheritances
+2026-06-20 12:29:41.904 Df CollageMaker[74762:8b71cd] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:29:41.910 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.910 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.910 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.910 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.910 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.910 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.913 Df CollageMaker[74762:8b6b94] [com.apple.xpc:connection] [0x870940780] activating connection: mach=false listener=false peer=false name=com.apple.TextInputUI.xpc.CursorUIViewService
+2026-06-20 12:29:41.914 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:29:41.914 Df CollageMaker[74762:8b6b94] [com.apple.xpc:connection] [0x870940780] invalidated after the last release of the connection object
+2026-06-20 12:29:41.914 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.914 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.914 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.914 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.914 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.914 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.914 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:29:41.927 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.927 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.927 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.927 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.927 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.927 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.927 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:29:41.928 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.928 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.928 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.928 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.928 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:41.928 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:41.928 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:29:41.958 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x870940a00] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:29:41.958 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x8709408c0] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-06-20 12:29:41.974 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController activate:]_block_invoke: Create CursorUIViewService: TUINSRemoteViewController
+2026-06-20 12:29:41.974 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x870940640] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:29:41.974 Df CollageMaker[74762:8b6b86] [com.apple.xpc:connection] [0x870940b40] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-06-20 12:29:42.080 A  CollageMaker[74762:8b71cd] (CoreSpotlight) end-index-batch
+2026-06-20 12:29:42.080 A  CollageMaker[74762:8b71cd] (CoreSpotlight) index-items
+2026-06-20 12:29:42.080 Df CollageMaker[74762:8b71cd] [com.apple.corespotlight:index] CSInlineDonation:<private>: Skipping donation (feature flag disabled)
+2026-06-20 12:29:47.923 Df CollageMaker[74762:8b71cd] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:29:47.923 Df CollageMaker[74762:8b71cd] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:29:47.923 Df CollageMaker[74762:8b71cd] [com.apple.inputAnalytics.client:IASignalAnalytics] channel:<private> signal:<private> sessionID:<private> timestamp:<private> payload:<private>
+2026-06-20 12:29:47.929 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.929 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.929 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.929 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.929 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.929 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.929 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:29:47.929 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.929 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.929 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.929 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.929 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.929 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.929 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:29:47.939 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.939 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.939 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.939 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.939 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.939 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.940 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:29:47.940 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.940 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.940 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.940 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.940 A  CollageMaker[74762:8b6b86] (libsystem_trace.dylib) Activity for state dumps
+2026-06-20 12:29:47.940 F  CollageMaker[74762:8b6b86] [com.apple.runtime-issues:SwiftUI] Modifying state during view update, this will cause undefined behavior.
+2026-06-20 12:29:47.940 Df CollageMaker[74762:8b6b86] [com.apple.TextInputUI:CursorUI] -[TUINSCursorUIController scheduleUpdateCursorLocation]
+2026-06-20 12:29:48.030 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]
+2026-06-20 12:29:48.030 Df CollageMaker[74762:8b6b86] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges] finishing enqueued operations
+2026-06-20 12:29:48.031 Df CollageMaker[74762:8b74a5] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke asyncing to main queue
+2026-06-20 12:29:48.031 Df CollageMaker[74762:8b71cd] [com.apple.AppKit:StateRestoration] -[NSPersistentUIManager flushAllChanges]_block_invoke writing records
+2026-06-20 12:29:48.101 A  CollageMaker[74762:8b6b94] (RunningBoardServices) didChangeInheritances
+

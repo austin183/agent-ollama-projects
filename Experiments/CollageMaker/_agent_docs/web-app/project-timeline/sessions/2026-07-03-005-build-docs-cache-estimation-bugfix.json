@@ -1,0 +1,22 @@
+{
+  "session_id": "session-019",
+  "session_number": 19,
+  "date": "2026-07-03",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/analyzing-opencode-usage/script/estimate_cache.py",
+    ".opencode/skills/analyzing-opencode-usage/templates/report.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 2,
+  "learnings_written": [
+    "_agent_docs/learnings/2026-07-03-cache-estimation-scripts.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Fixed two bugs in cache estimation pipeline: (1) estimate_cache.py breakdown queries skipped when --by not specified, (2) missing templates/report.html caused render_report.py to fail. Also escaped JavaScript template literals for Python string.Template compatibility."
+}

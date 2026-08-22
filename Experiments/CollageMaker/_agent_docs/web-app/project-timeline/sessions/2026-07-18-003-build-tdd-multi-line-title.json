@@ -1,0 +1,27 @@
+{
+  "session_id": "2026-07-18-003-build-tdd-multi-line-title",
+  "session_number": 3,
+  "date": "2026-07-18",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/Rendering/TitleRenderer.js",
+    "MyESModules/State/TitleManager.js",
+    "MyESModules/Interaction/TitleInteraction.js",
+    "index.html",
+    "Style.css",
+    "MyComponents/TitleInteractionTest.html",
+    "MyComponents/SaliencyDebugOverlayTest.html"
+  ],
+  "test_files_added": [
+    "MyComponents/TitleMultiLineTest.html"
+  ],
+  "tests_added": 43,
+  "assertions_added": 85,
+  "bugs_fixed": 4,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Completed Phase 4 multi-line title support (up to 3 lines via \\n). TDD cycle: wrote 43 tests in TitleMultiLineTest.html covering splitRunsByNewline, computeMultiLineBounds, setText clamping, insertChar newline rejection, multi-line rendering, and backward compatibility. Fixed 4 bugs: (1) lineRuns not iterable in render() - lines[lineIdx] is {runs, width} not the array itself, (2) leading newline creating phantom empty first line in splitRunsByNewline, (3) Y-clamp test expectation outdated after switching from fontSize+12 to boxHeight, (4) SaliencyDebugOverlayTest clearRect expectation was wrong (assembler never calls clearRect). All 1,374 tests pass with 0 failures."
+}

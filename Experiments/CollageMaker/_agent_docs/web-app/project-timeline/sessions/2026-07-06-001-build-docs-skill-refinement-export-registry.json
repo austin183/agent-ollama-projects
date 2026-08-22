@@ -1,0 +1,21 @@
+{
+  "session_id": "2026-07-06",
+  "session_number": 49,
+  "date": "2026-07-06",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/es-modules.md",
+    ".opencode/skills/building-web-apps/references/testing.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with learnings from 2026-07-05-export-registry-signature-alignment.md. Added: (1) registry signature alignment rule to SKILL.md extensibility section and quick reference, (2) barrel export verification section to es-modules.md with gotcha, (3) canvas dimension interception pattern to testing.md, (4) integration testing for registry dispatchers section to testing.md, (5) two new gotchas (#14 registry signature alignment, #15 barrel export verification) to testing.md."
+}

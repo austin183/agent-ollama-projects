@@ -1,0 +1,22 @@
+{
+  "session_id": "2026-07-13-003-build-docs-skill-refinement",
+  "session_number": 3,
+  "date": "2026-07-13",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/canvas-2d.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [
+    "_agent_docs/learnings/2026-07-13-canvas-destination-out-shape-cutouts.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined the building-web-apps skill by adding canvas destination-out compositing for shape cutouts patterns to the canvas-2d.md reference file. Updated the skill description to include this new pattern. Key patterns added: try/finally for save/restore safety with composite operations, clip before composite, compute shape points once, anti-aliasing considerations (halo effect), and testing strategy using context method wrapping."
+}

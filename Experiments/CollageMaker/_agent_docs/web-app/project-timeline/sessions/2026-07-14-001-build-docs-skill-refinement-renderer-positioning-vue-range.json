@@ -1,0 +1,22 @@
+{
+  "session_id": "2026-07-14-001-build-docs-skill-refinement-renderer-positioning-vue-range",
+  "session_number": 1,
+  "date": "2026-07-14",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/canvas-2d.md",
+    ".opencode/skills/building-web-apps/references/vue-options-api.md",
+    ".opencode/skills/building-web-apps/references/es-modules.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with 5 learnings from 2026-07-14-renderer-positioning-migration-and-vue-range-gotchas.md: (1) SKILL.md — added Vue range input null default gotcha to Vue 3 Options API section; (2) SKILL.md — added destructured parameter scoping gotcha to ES Modules section; (3) canvas-2d.md — added 'Backward-Compatible Renderer Extensions' section covering legacy mode detection with === null/undefined checks and mixed-mode background positioning; (4) canvas-2d.md — added 'Optional Context Parameter for Measurement Functions' section for avoiding offscreen canvas GC pressure in hot paths; (5) vue-options-api.md — added 'Range Input with Null Default' pattern with :value fallback + @input handler; (6) es-modules.md — added destructured parameter scoping gotcha to Gotchas list."
+}

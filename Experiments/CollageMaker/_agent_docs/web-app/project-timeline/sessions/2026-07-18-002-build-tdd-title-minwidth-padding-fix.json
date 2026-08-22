@@ -1,0 +1,21 @@
+{
+  "session_id": "2026-07-18-002-build-tdd-title-minwidth-padding-fix",
+  "session_number": 2,
+  "date": "2026-07-18",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/Rendering/TitleRenderer.js",
+    "MyESModules/Interaction/TitleInteraction.js",
+    "MyComponents/TitleInteractionTest.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 3,
+  "assertions_added": 3,
+  "bugs_fixed": 1,
+  "learnings_written": ["(none — straightforward bug fix, no new patterns beyond existing conventions)"],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Phase 3 of title-changes-implementation: Fix title background width minimum constraint. Bug was that minWidth during resize used textWidth without padding, allowing background to shrink to text edge. Fix: export PADDING constant from TitleRenderer.js, import in TitleInteraction.js, change minWidth from Math.max(100, bounds.textWidth) to Math.max(100, bounds.textWidth + PADDING * 2). Added 3 tests (resize-right padding, resize-left padding, absolute minimum for short text). All 34 TitleInteraction tests pass, 1012 total tests pass across all suites. World review confirmed implementation is sound — no DPR scaling issues, layering consistent with existing computeBounds import, assertions appropriate for font-dependent measurements."
+}

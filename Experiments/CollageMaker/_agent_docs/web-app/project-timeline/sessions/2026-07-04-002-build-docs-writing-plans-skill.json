@@ -1,0 +1,21 @@
+{
+  "session_id": "2026-07-04-writing-plans-skill",
+  "session_number": 31,
+  "date": "2026-07-04",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/writing-plans/SKILL.md",
+    ".opencode/skills/writing-plans/references/create-plan.md",
+    ".opencode/skills/writing-plans/references/iterate-plan.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Created writing-plans skill for feature planning, integrating best practices from humanlayer create_plan and iterate_plan commands. Added reference files for create-plan.md and iterate-plan.md with detailed patterns for plan creation, research workflows, and iterative updates. Skill includes test plan drafting workflow using @world-review and @planner subagents."
+}

@@ -1,0 +1,2 @@
+# Add Negative Degree Angle for Rotation Clockwise in Addition to Counter Clockwise
+The current Slice Angle goes from 0 to 75, but I think it needs to go from -75 to 75 so the user can have the angle go both ways.

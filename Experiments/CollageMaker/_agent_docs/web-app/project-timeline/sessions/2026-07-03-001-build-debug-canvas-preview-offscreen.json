@@ -1,0 +1,21 @@
+{
+  "session_id": "build-debug-2026-07-03-canvas-positioning",
+  "session_number": 16,
+  "date": "2026-07-03",
+  "purpose": "debug",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "Style.css"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 1,
+  "learnings_written": [
+    "flex-min-height-zero-pitfall.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Fixed canvas preview appearing far off-screen (~600px down) after adding images. Root cause: missing min-height: 0 on nested flex items (#app, .canvas-area, .canvas-container) in a column flex chain. Without min-height: 0, flex items default to min-height: auto which prevents proper height constraint inheritance through the flex chain, causing containers to expand beyond the viewport. Fix: added #app { display: flex; flex-direction: column; flex: 1; min-height: 0; } plus min-height: 0 to .canvas-area and .canvas-container. Used world-review subagent for analysis and playwright-cli for measurement verification."
+}

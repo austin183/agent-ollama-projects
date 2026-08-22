@@ -1,0 +1,22 @@
+{
+  "session_id": "2026-07-17-002",
+  "session_number": 2,
+  "date": "2026-07-17",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/State/TitleManager.js",
+    "MyComponents/TitleManagerTest.html",
+    ".opencode/skills/building-web-apps/references/testing-strategy.md",
+    ".opencode/skills/building-web-apps/references/testing-unit.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 4,
+  "assertions_added": 12,
+  "bugs_fixed": 1,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Phase 1 of title-changes: Fixed font style toggle bug. Root cause was applyFormattingToRange using 'formatting.prop !== undefined' which treated absent properties the same as undefined values. Fix: use 'prop' in formatting to distinguish 'toggle this property' from 'preserve this property'. Added null guard for defensive programming. Updated 2 skill references that documented the old buggy behavior. All 78 TitleManager tests pass, full suite passes with no new failures."
+}

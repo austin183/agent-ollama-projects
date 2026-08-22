@@ -1,0 +1,22 @@
+{
+  "session_id": "build-docs-2026-07-03",
+  "session_number": 14,
+  "date": "2026-07-03",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/canvas-2d.md",
+    ".opencode/skills/building-web-apps/references/vue-options-api.md",
+    ".opencode/skills/building-web-apps/references/rich-text-runs.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill by incorporating patterns from two learnings documents: (1) rich-text-run-architecture.md — distilled into new references/rich-text-runs.md with run data model, mutation algorithm, and the critical 'no break in run loops' gotcha; (2) offscreen-canvas-export-and-vue-provide-timing.md — offscreen canvas export with try/finally cleanup added to references/canvas-2d.md, provide() timing and @mousedown.prevent added to references/vue-options-api.md. SKILL.md updated with new reference links and expanded Learnings section. No commits — that is build-quick-work's responsibility."
+}

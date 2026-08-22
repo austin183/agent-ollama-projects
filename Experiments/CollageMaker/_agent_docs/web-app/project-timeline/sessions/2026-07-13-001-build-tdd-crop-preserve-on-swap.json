@@ -1,0 +1,21 @@
+{
+  "session_id": "2026-07-13-001",
+  "session_number": 1,
+  "date": "2026-07-13",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/Interaction/PanelSwap.js",
+    "MyESModules/App/createCollageLifecycle.js",
+    "MyComponents/PanelSwapTest.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 14,
+  "assertions_added": 70,
+  "bugs_fixed": 1,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Implemented crop coordinate preservation with aspect ratio correction during panel swap. Two features delivered: (1) crop sourceRect values swap between panels so crop coordinates follow images, (2) new adaptCropToPanelAspect() pure function resizes sourceRect to match new panel's aspect ratio, preventing image skew when panels differ in size (e.g., Hero layout tall sidebar vs wide main panel). Algorithm: preserve crop center as focal point, scale dimensions to new panel aspect ratio (preserving larger dimension to minimize loss), clamp to image bounds while maintaining aspect ratio. Key design: destination rects stay with panels (tied to canvas position), default crops auto-created for missing entries, backward-compatible (optional crops/images params). Added 14 new tests: 6 pure function tests for adaptCropToPanelAspect (same aspect, wide-to-tall, tall-to-wide, edge clamping, degenerate cases), 1 Hero layout integration test, 7 crop preservation tests (basic swap, missing crop, clamping, backward compat, symmetry, path geometry, handler integration). Removed unused clampSourceRectToImage() after adaptCropToPanelAspect superseded it. All 1152 tests pass (1 pre-existing SaliencyDebugOverlayTest failure unrelated)."
+}

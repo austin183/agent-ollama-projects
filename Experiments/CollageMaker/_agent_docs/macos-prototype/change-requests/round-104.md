@@ -1,0 +1,2 @@
+# View Option to Display or Hide Saliency Result
+It seems the Saliency result always appears in the Panel Editor when I choose an image.  I would like to be able to Show / Hide that result from a new Menu Item in the View Menu.

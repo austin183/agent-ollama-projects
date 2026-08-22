@@ -1,0 +1,2 @@
+# Make Color Labels Clickable to chang selected Color
+In a previous change request, we change labels from hexadecimal values for colors over to a lable with the color in it.  It looks like it should be clickable but it is not.  We should either remove the labels or make the clickable as if the user is choosing to edit that color value.

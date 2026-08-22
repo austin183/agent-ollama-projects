@@ -1,0 +1,25 @@
+{
+  "session_id": "ses_saliency-debug-overlay-test-001",
+  "session_number": 29,
+  "date": "2026-07-04",
+  "purpose": "test",
+  "agent_role": "build-test",
+  "files_changed": [
+    "MyESModules/Rendering/SaliencyDebugOverlay.js",
+    "MyESModules/Rendering/CollageAssembler.js",
+    "MyESModules/State/CollageState.js",
+    "MyESModules/Export/ExportManager.js",
+    "MyESModules/index.js"
+  ],
+  "test_files_added": [
+    "MyComponents/SaliencyDebugOverlayTest.html"
+  ],
+  "tests_added": 128,
+  "assertions_added": 190,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Implemented all tests from Section 3.4 (Saliency Debug Overlay) of the Phase 4 priority plan. Created SaliencyDebugOverlay.js with pure coordinate functions (validateFocusPoint, focusPointToCanvasCoords, imageCenterToCanvasCoords, computeDebugMarkers), canvas rendering (render with DPR-aware markers, shift vectors, crop rectangles), and a factory (createDebugOverlay). Integrated into CollageAssembler render pipeline between selection highlight and blend-mode overlay. Added showDebugOverlay (default false) and focusPoints (default null) to CollageState. Documented export safety in ExportManager. All 128 tests pass covering: 15 coordinate transformation tests, 5 image center tests, 12 marker computation tests, 20 focus point validation tests, 6 constants tests, 17 basic canvas rendering tests, 5 marker positioning tests, 8 style verification tests, 15 edge case tests, 14 assembler integration tests, 6 state management tests, and 5 export safety tests. World-review found no critical issues; added integration notes to module JSDoc addressing stale data and Vue reactivity concerns for future ML saliency wiring."
+}

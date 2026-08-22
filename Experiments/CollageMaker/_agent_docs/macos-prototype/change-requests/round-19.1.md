@@ -1,0 +1,2 @@
+# Title Dragging and Resizing Responsiveness Issues
+When moving or resizing the Title with Click and Drag actions, there is a long delay in rendering the updated coordinates to the main image.  We worked on similar issues with the panels previously.  Is there anything we can change with the Title actions to make them more responsive too?

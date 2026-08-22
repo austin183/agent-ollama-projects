@@ -1,0 +1,19 @@
+{
+  "session_id": "2026-07-12-009-build-docs-pointer-capture-skill-refinement",
+  "session_number": 9,
+  "date": "2026-07-12",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/references/interaction.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined the pointer capture section in interaction.md using learnings from 2026-07-12-pointer-capture-hygiene.md. Changes: (1) Restructured section with subheadings for capture/pointerup/pointercancel/gotchas/testing. (2) Added pointercancel handler pattern — was entirely missing. (3) Added browser auto-release gotcha — browser only auto-releases on focus loss/page unload, not during normal gesture interaction. (4) Clarified release loop rationale — iterate activePointers.keys() not a separate captured ID list, delete before loop to prevent double-release. (5) Added testing pattern for verifying capture and release via overridden canvas methods. Updated table of contents to reflect new sub-sections."
+}

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CollageMaker — LLM Usage & Value Report</title>
+<style>
+  :root {
+    --bg: #1a1a2e; --card-bg: #16213e; --border: #0f3460;
+    --text: #e0e0e0; --muted: #8892a4; --accent: #4fc3f7;
+    --input-color: #4fc3f7; --output-color: #4db6ac; --reasoning-color: #ba68c8;
+    --bar-bg: rgba(255,255,255,0.06);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', Menlo, monospace; line-height: 1.5; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+
+  h1 { font-size: 1.8rem; color: var(--accent); margin-bottom: 0.3rem; letter-spacing: -0.5px; }
+  h2 { font-size: 1.2rem; color: var(--muted); margin-top: 2rem; margin-bottom: 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; }
+
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .metric-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; text-align: center; }
+  .metric-value { font-size: 1.6rem; font-weight: 700; color: var(--accent); letter-spacing: -1px; }
+  .metric-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; margin-top: 0.3rem; letter-spacing: 0.5px; }
+  .metric-card.cost { border-color: #f5a623; background: rgba(245,166,35,0.06); }
+  .metric-card.cost .metric-value { color: #f5a623; }
+
+  .impact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .impact-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; text-align: center; }
+  .impact-value { font-size: 1.8rem; font-weight: 700; color: #4db6ac; letter-spacing: -1px; }
+  .impact-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; margin-top: 0.3rem; letter-spacing: 0.5px; }
+  .impact-card.ratio { border-color: #4db6ac; background: rgba(77, 182, 172, 0.06); }
+  .impact-card.ratio .impact-value { color: #4db6ac; font-size: 2rem; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.82rem; }
+  th { text-align: left; color: var(--muted); padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--border); font-weight: 500; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; }
+  td { padding: 0.5rem 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  tr:hover td { background: rgba(79,195,247,0.06); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* Stacked bar chart (models) */
+  .bar-row { display: flex; align-items: center; margin-bottom: 0.5rem; }
+  .bar-label { width: 180px; font-size: 0.8rem; color: var(--text); text-align: right; padding-right: 1rem; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 28px; background: var(--bar-bg); border-radius: 4px; overflow: hidden; display: flex; min-width: 40px; }
+  .bar-segment { height: 100%; transition: opacity 0.15s; }
+  .bar-segment:hover { opacity: 0.8; }
+  .bar-value { width: 80px; font-size: 0.8rem; color: var(--muted); text-align: right; padding-left: 0.8rem; flex-shrink: 0; }
+
+  /* Horizontal bar (agents) */
+  .h-bar-row { display: flex; align-items: center; margin-bottom: 0.4rem; }
+  .h-bar-label { width: 140px; font-size: 0.8rem; color: var(--text); text-align: right; padding-right: 1rem; flex-shrink: 0; }
+  .h-bar-track { flex: 1; height: 20px; background: var(--bar-bg); border-radius: 4px; overflow: hidden; min-width: 40px; }
+  .h-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; }
+  .h-bar-value { width: 100px; font-size: 0.78rem; color: var(--muted); text-align: right; padding-left: 0.8rem; flex-shrink: 0; }
+
+  .chart-title { font-size: 0.95rem; color: var(--muted); margin-top: 2rem; margin-bottom: 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid rgba(15,52,96,0.5); }
+
+  .chart-svg { width: 100%; height: auto; margin-bottom: 1rem; }
+  .chart-point { cursor: crosshair; transition: r 0.15s; }
+  .chart-point:hover { r: 6; }
+
+  #svg-tooltip { position: fixed; display: none; background: #16213e; border: 1px solid #4fc3f7; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #e0e0e0; pointer-events: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3); line-height: 1.6; }
+
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.72rem; color: var(--muted); text-align: center; }
+  code { background: rgba(79,195,247,0.1); padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.8rem; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  
+  /* Collapsible sections */
+  .collapsible-section { margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .collapsible-section > summary {
+    background: var(--card-bg); padding: 0.8rem 1.2rem; cursor: pointer;
+    font-size: 1rem; color: var(--accent); user-select: none;
+    list-style: none; display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.15s;
+  }
+  .collapsible-section > summary:hover { background: rgba(79,195,247,0.08); }
+  .collapsible-section > summary::-webkit-details-marker { display: none; }
+  .collapsible-section > summary::after {
+    content: '▾'; font-size: 0.8rem; transition: transform 0.2s; color: var(--muted);
+  }
+  .collapsible-section[open] > summary::after { transform: rotate(180deg); }
+  .collapsible-content { padding: 1rem 1.2rem; background: rgba(26,26,46,0.5); }
+
+  /* Always-visible sections get no border/shadow for visual consistency */
+  .always-visible { margin-bottom: 1.5rem; }
+
+</style>
+</head>
+<body>
+
+<h1>CollageMaker — LLM Usage & Value Report</h1>
+<details class="collapsible-section" open>
+  <summary onclick="toggleDetails(this)">Summary Metrics ▾</summary>
+  <div class="collapsible-content">
+    <div class="metrics-grid" id="summary">
+  <div class="metric-card"><div class="metric-value">22.4M</div><div class="metric-label">Effective Tokens</div></div>
+  <div class="metric-card"><div class="metric-value">309.8M</div><div class="metric-label">Raw Tokens</div></div>
+  <div class="metric-card"><div class="metric-value">215</div><div class="metric-label">Sessions</div></div>
+  <div class="metric-card"><div class="metric-value">104.2K</div><div class="metric-label">Avg / Session</div></div>
+  <div class="metric-card"><div class="metric-value">9</div><div class="metric-label">Commits</div></div>
+  <div class="metric-card"><div class="metric-value">38.8K</div><div class="metric-label">Lines Added</div></div>
+  <div class="metric-card cost"><div class="metric-value">$15.80</div><div class="metric-label">Est. Cost (Low, raw)</div></div>
+  <div class="metric-card cost"><div class="metric-value">$158.04</div><div class="metric-label">Est. Cost (High, raw)</div></div>
+  <div class="metric-card cost" style="border-color:#4db6ac;background:rgba(77,182,172,0.06);"><div class="metric-value" style="color:#4db6ac;">$4.31</div><div class="metric-label">Est. Cost (Low, w/cache)</div></div>
+  <div class="metric-card cost" style="border-color:#4db6ac;background:rgba(77,182,172,0.06);"><div class="metric-value" style="color:#4db6ac;">$28.69</div><div class="metric-label">Est. Cost (High, w/cache)</div></div>
+  <div class="metric-card"><div class="metric-value">93.7%</div><div class="metric-label">Cache Hit Rate</div></div></div><p class="subtitle">Period: 2026-07-01 to 2026-07-10 &middot; 9 models &middot; 15 agent roles &middot; Generated: 2026-07-10</p><p class="subtitle" style="margin-top:0.3rem;">Cost estimates: cloud-equivalent per-model pricing (actual cost: $0, all models run locally via LM Studio).</p><p class="subtitle" style="margin-top:0.3rem; color:#4db6ac;">$11.49 saved via prompt context caching (72.7% reduction, 93.7% cache hit rate).</p>
+<p style="color:#8892a4; margin-bottom:1rem; font-size:0.9rem;">22.4M tokens consumed across 9 commits producing 2,075 lines of code. (est. effective)</p>
+<div class="impact-grid">
+  <div class="impact-card"><div class="impact-value">9</div><div class="impact-label">Total Commits</div></div>
+  <div class="impact-card"><div class="impact-value">2.1K</div><div class="impact-label">Lines Added</div></div>
+  <div class="impact-card ratio"><div class="impact-value">2.5M</div><div class="impact-label">Avg Tokens / Commit</div></div>
+  <div class="impact-card ratio"><div class="impact-value">10.8K</div><div class="impact-label">Avg Tokens / Line Added</div></div>
+  <div class="impact-card"><div class="impact-value">4.2%</div><div class="impact-label">Reasoning %</div></div>
+  <div class="impact-card"><div class="impact-value">4.0M</div><div class="impact-label">Peak Tok / Commit</div></div>
+</div>
+<div class="impact-grid">
+<div class="impact-card"><div class="impact-value">41.9%</div><div class="impact-label">Sessions w/ File Changes</div></div>
+<div class="impact-card"><div class="impact-value">90/215</div><div class="impact-label">Productive Sessions</div></div>
+<div class="impact-card ratio"><div class="impact-value">45.0%</div><div class="impact-label">Build Agent Productive</div></div>
+<div class="impact-card"><div class="impact-value">3.9%</div><div class="impact-label">Build Tokens w/ Zero Changes</div></div>
+</div>
+<p style="color:#8892a4; font-size:0.82rem; margin-bottom:1rem;"><strong>Notes:</strong> <code>summary_files</code> is only populated for sessions where opencode recorded file changes. Most sessions are exploratory, research, or cross-session coordination. 3 days had 10.8M tokens with zero commits (e.g., research, debugging, cross-session coordination). </p>
+  </div>
+</details>
+<details class="collapsible-section" open>
+  <summary onclick="toggleDetails(this)">Charts & Visualizations ▾</summary>
+  <div class="collapsible-content">
+    <div class="always-visible">
+  <h3 id="token-usage-by-model" class="chart-title">Token Usage by Model</h3>
+  <div class="bar-row">
+  <span class="bar-label" title="qwen/qwen3.6-27b">qwen/qwen3.6-27b</span>
+  <div class="bar-track" style="width:100.0%">
+    <div class="bar-segment" style="width:88.15209566429645%;background:#4fc3f7;" title="Uncached Input: 12.4M"></div>
+    <div class="bar-segment" style="width:9.405653607373338%;background:#4db6ac;" title="Output: 1.3M"></div>
+    <div class="bar-segment" style="width:2.4422507283302077%;background:#ba68c8;" title="Reasoning: 344.3K"></div>
+  </div>
+  <span class="bar-value">14.1M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="agents-a1">agents-a1</span>
+  <div class="bar-track" style="width:29.042002101495477%">
+    <div class="bar-segment" style="width:81.42797786876856%;background:#4fc3f7;" title="Uncached Input: 3.3M"></div>
+    <div class="bar-segment" style="width:13.278665579857854%;background:#4db6ac;" title="Output: 543.6K"></div>
+    <div class="bar-segment" style="width:5.293356551373578%;background:#ba68c8;" title="Reasoning: 216.7K"></div>
+  </div>
+  <span class="bar-value">4.1M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="ornith-1.0-35b">ornith-1.0-35b</span>
+  <div class="bar-track" style="width:10.288708760705042%">
+    <div class="bar-segment" style="width:87.39300077704793%;background:#4fc3f7;" title="Uncached Input: 1.3M"></div>
+    <div class="bar-segment" style="width:8.285316552223895%;background:#4db6ac;" title="Output: 120.2K"></div>
+    <div class="bar-segment" style="width:4.321682670728184%;background:#ba68c8;" title="Reasoning: 62.7K"></div>
+  </div>
+  <span class="bar-value">1.5M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="qwen-agentworld-35b-a3b">qwen-agentworld-35b-a3b</span>
+  <div class="bar-track" style="width:12.842305266195575%">
+    <div class="bar-segment" style="width:76.57330257654397%;background:#4fc3f7;" title="Uncached Input: 1.4M"></div>
+    <div class="bar-segment" style="width:7.849941336727186%;background:#4db6ac;" title="Output: 142.1K"></div>
+    <div class="bar-segment" style="width:15.576756086728844%;background:#ba68c8;" title="Reasoning: 282.0K"></div>
+  </div>
+  <span class="bar-value">1.8M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="qwen/qwen3.6-27b-q4">qwen/qwen3.6-27b-q4</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:89.37736567287457%;background:#4fc3f7;" title="Uncached Input: 124.4K"></div>
+    <div class="bar-segment" style="width:6.929491277086281%;background:#4db6ac;" title="Output: 9.6K"></div>
+    <div class="bar-segment" style="width:3.6931430500391436%;background:#ba68c8;" title="Reasoning: 5.1K"></div>
+  </div>
+  <span class="bar-value">139.2K</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="qwen/qwen3.6-27b-lite">qwen/qwen3.6-27b-lite</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:91.68752161197494%;background:#4fc3f7;" title="Uncached Input: 156.4K"></div>
+    <div class="bar-segment" style="width:7.463237664324271%;background:#4db6ac;" title="Output: 12.7K"></div>
+    <div class="bar-segment" style="width:0.8492407237007906%;background:#ba68c8;" title="Reasoning: 1.4K"></div>
+  </div>
+  <span class="bar-value">170.6K</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="google/gemma-4-31b-qat">google/gemma-4-31b-qat</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:81.71507479086763%;background:#4fc3f7;" title="Uncached Input: 194.1K"></div>
+    <div class="bar-segment" style="width:7.90850801375832%;background:#4db6ac;" title="Output: 18.8K"></div>
+    <div class="bar-segment" style="width:10.376417195374039%;background:#ba68c8;" title="Reasoning: 24.6K"></div>
+  </div>
+  <span class="bar-value">237.5K</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="big-pickle">big-pickle</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:96.40454417274302%;background:#4fc3f7;" title="Uncached Input: 382.9K"></div>
+    <div class="bar-segment" style="width:2.405027595375257%;background:#4db6ac;" title="Output: 9.6K"></div>
+    <div class="bar-segment" style="width:1.1904282318817228%;background:#ba68c8;" title="Reasoning: 4.7K"></div>
+  </div>
+  <span class="bar-value">397.2K</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="qwen/qwen3.5-9b">qwen/qwen3.5-9b</span>
+  <div class="bar-track" style="width:5%">
+  </div>
+  <span class="bar-value">0</span>
+</div>
+</div>
+<div class="always-visible">
+  <h3 id="token-usage-by-agent" class="chart-title">Token Usage by Agent</h3>
+  <div class="h-bar-row">
+  <span class="h-bar-label" title="build-docs">build-docs</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:100.0%"></div></div>
+  <span class="h-bar-value">8.6M (57)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="build">build</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:49.631678440745056%"></div></div>
+  <span class="h-bar-value">4.3M (24)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="build-test">build-test</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:28.993381883212816%"></div></div>
+  <span class="h-bar-value">2.5M (24)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="build-tdd">build-tdd</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:19.707952175504328%"></div></div>
+  <span class="h-bar-value">1.7M (10)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="build-debug">build-debug</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:12.346068242122266%"></div></div>
+  <span class="h-bar-value">1.1M (5)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="planner">planner</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:15.220444350442%"></div></div>
+  <span class="h-bar-value">1.3M (14)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="general">general</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">143.4K (2)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="plan">plan</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:4.0954064712522165%"></div></div>
+  <span class="h-bar-value">351.2K (3)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="world-review">world-review</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:18.94937731217548%"></div></div>
+  <span class="h-bar-value">1.6M (57)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="build-quick-work">build-quick-work</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:3.658392262023371%"></div></div>
+  <span class="h-bar-value">313.8K (7)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="explore">explore</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:3.595115505440437%"></div></div>
+  <span class="h-bar-value">308.3K (3)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="diff-review-g31">diff-review-g31</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">165.0K (4)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="solid-review">solid-review</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">41.8K (1)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="planner-g31">planner-g31</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">51.8K (3)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="solid-review-g31">solid-review-g31</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">20.7K (1)</span>
+</div>
+</div>
+<div class="always-visible">
+  <h3 id="daily-token-trend" class="chart-title">Daily Token Trend</h3>
+  <svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <defs>
+    <linearGradient id="grad-inp" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4fc3f7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#4fc3f7" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="grad-out" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4db6ac" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#4db6ac" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="grad-rea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ba68c8" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ba68c8" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+  <polygon points="55,223 131,185 208,106 285,126 361,55 438,229 515,188 591,188 668,231 745,240 745,241 668,233 591,190 515,191 438,230 361,68 285,132 208,113 131,187 55,224" fill="url(#grad-rea)" stroke="#ba68c8" stroke-width="1" opacity="0.9"/>
+  <polygon points="55,224 131,187 208,113 285,132 361,68 438,230 515,191 591,190 668,233 745,241 745,243 668,237 591,196 515,198 438,234 361,92 285,147 208,125 131,196 55,227" fill="url(#grad-out)" stroke="#4db6ac" stroke-width="1" opacity="0.9"/>
+  <polygon points="55,227 131,196 208,125 285,147 361,92 438,234 515,198 591,196 668,237 745,243 745,265 55,265" fill="url(#grad-inp)" stroke="#4fc3f7" stroke-width="1" opacity="0.9"/>
+  <circle cx="55" cy="223" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-07-01" data-input="965900" data-output="90819" data-reasoning="31658" data-total="1088377"/>
+  <circle cx="131" cy="185" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-07-02" data-input="1752996" data-output="231818" data-reasoning="58133" data-total="2042947"/>
+  <circle cx="208" cy="106" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-07-03" data-input="3552584" data-output="316196" data-reasoning="167346" data-total="4036126"/>
+  <circle cx="285" cy="126" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-07-04" data-input="3014870" data-output="373055" data-reasoning="144282" data-total="3532207"/>
+  <circle cx="361" cy="55" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-07-05" data-input="4411387" data-output="608773" data-reasoning="304494" data-total="5324654"/>
+  <circle cx="438" cy="229" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-07-06" data-input="809750" data-output="87704" data-reasoning="31290" data-total="928744"/>
+  <circle cx="515" cy="188" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-07-07" data-input="1714029" data-output="184736" data-reasoning="72806" data-total="1971571"/>
+  <circle cx="591" cy="188" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-07-08" data-input="1750793" data-output="157091" data-reasoning="62755" data-total="1970639"/>
+  <circle cx="668" cy="231" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-07-09" data-input="734053" data-output="85687" data-reasoning="44003" data-total="863743"/>
+  <circle cx="745" cy="240" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-07-10" data-input="565337" data-output="46618" data-reasoning="24852" data-total="636807"/>
+  <text x="55" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-01</text>
+  <text x="131" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-02</text>
+  <text x="208" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-03</text>
+  <text x="285" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-04</text>
+  <text x="361" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-05</text>
+  <text x="438" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-06</text>
+  <text x="515" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-07</text>
+  <text x="591" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-08</text>
+  <text x="668" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-09</text>
+  <text x="745" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-10</text>
+  <text x="50" y="12" text-anchor="end" fill="#8892a4" font-size="10">5.3M</text>
+  <text x="50" y="164" text-anchor="end" fill="#8892a4" font-size="10">2.7M</text>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="213" x2="745" y2="213" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="160" x2="745" y2="160" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="108" x2="745" y2="108" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="55" x2="745" y2="55" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="55" x2="55" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="#8892a4" stroke-width="1"/>
+</svg><table><thead><tr><th>Date</th><th class="num">Input</th><th class="num">Output</th><th class="num">Reasoning</th><th class="num">Total</th></tr></thead><tbody><tr><td>2026-07-01</td><td class="num">965.9K</td><td class="num">90.8K</td><td class="num">31.7K</td><td class="num">1.1M</td></tr><tr><td>2026-07-02</td><td class="num">1.8M</td><td class="num">231.8K</td><td class="num">58.1K</td><td class="num">2.0M</td></tr><tr><td>2026-07-03</td><td class="num">3.6M</td><td class="num">316.2K</td><td class="num">167.3K</td><td class="num">4.0M</td></tr><tr><td>2026-07-04</td><td class="num">3.0M</td><td class="num">373.1K</td><td class="num">144.3K</td><td class="num">3.5M</td></tr><tr><td>2026-07-05</td><td class="num">4.4M</td><td class="num">608.8K</td><td class="num">304.5K</td><td class="num">5.3M</td></tr><tr><td>2026-07-06</td><td class="num">809.8K</td><td class="num">87.7K</td><td class="num">31.3K</td><td class="num">928.7K</td></tr><tr><td>2026-07-07</td><td class="num">1.7M</td><td class="num">184.7K</td><td class="num">72.8K</td><td class="num">2.0M</td></tr><tr><td>2026-07-08</td><td class="num">1.8M</td><td class="num">157.1K</td><td class="num">62.8K</td><td class="num">2.0M</td></tr><tr><td>2026-07-09</td><td class="num">734.1K</td><td class="num">85.7K</td><td class="num">44.0K</td><td class="num">863.7K</td></tr><tr><td>2026-07-10</td><td class="num">565.3K</td><td class="num">46.6K</td><td class="num">24.9K</td><td class="num">636.8K</td></tr></tbody></table>
+</div>
+<h3 id="chart-tokens-vs-commits" class="chart-title">Tokens vs. Commits</h3>
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <rect x="38" y="223" width="34" height="42" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="114" y="185" width="34" height="80" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="191" y="106" width="34" height="159" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="268" y="126" width="34" height="139" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="344" y="55" width="34" height="210" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="421" y="229" width="34" height="36" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="498" y="188" width="34" height="77" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="574" y="188" width="34" height="77" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="651" y="231" width="34" height="34" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="728" y="240" width="34" height="25" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <polygon points="55,223 131,185 208,106 285,126 361,55 438,229 515,188 591,188 668,231 745,240 55,265 -21,265" fill="url(#grad-inp)" opacity="0.3"/>
+  <polyline points="55,223 131,185 208,106 285,126 361,55 438,229 515,188 591,188 668,231 745,240" fill="none" stroke="#4fc3f7"stroke-width="2" stroke-linejoin="round"/>
+  <polyline points="55,227 131,196 208,125 285,147 361,92 438,234 515,198 591,196 668,237 745,243" fill="none" stroke="#4db6ac"stroke-width="1.5" stroke-linejoin="round"/>
+  <polyline points="55,223 131,55 208,223 285,265 361,265 438,265 515,223 591,265 668,223 745,265" fill="none" stroke="#f5a623"stroke-width="2" stroke-linejoin="round" stroke-dasharray="6,3"/>
+  <circle cx="55" cy="223" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-07-01" data-tokens="1088377" data-commits="1"/>
+  <circle cx="131" cy="185" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-07-02" data-tokens="2042947" data-commits="5"/>
+  <circle cx="208" cy="106" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-07-03" data-tokens="4036126" data-commits="1"/>
+  <circle cx="285" cy="126" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-07-04" data-tokens="3532207" data-commits="0"/>
+  <circle cx="361" cy="55" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-07-05" data-tokens="5324654" data-commits="0"/>
+  <circle cx="438" cy="229" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-07-06" data-tokens="928744" data-commits="0"/>
+  <circle cx="515" cy="188" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-07-07" data-tokens="1971571" data-commits="1"/>
+  <circle cx="591" cy="188" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-07-08" data-tokens="1970639" data-commits="0"/>
+  <circle cx="668" cy="231" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-07-09" data-tokens="863743" data-commits="1"/>
+  <circle cx="745" cy="240" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-07-10" data-tokens="636807" data-commits="0"/>
+  <text x="55" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-01</text>
+  <text x="131" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-02</text>
+  <text x="208" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-03</text>
+  <text x="285" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-04</text>
+  <text x="361" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-05</text>
+  <text x="438" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-06</text>
+  <text x="515" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-07</text>
+  <text x="591" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-08</text>
+  <text x="668" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-09</text>
+  <text x="745" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-10</text>
+  <text x="50" y="12" text-anchor="end" fill="#4fc3f7" font-size="10">5.3M</text>
+  <text x="50" y="164" text-anchor="end" fill="#4fc3f7" font-size="10">2.7M</text>
+  <text x="753" y="12" text-anchor="start" fill="#f5a623" font-size="10">5</text>
+  <text x="753" y="185" text-anchor="start" fill="#f5a623" font-size="10">2</text>
+  <line x1="55" y1="55" x2="55" y2="265" stroke="#4fc3f7" stroke-width="1" opacity="0.5"/>
+  <line x1="745" y1="55" x2="745" y2="265" stroke="#f5a623" stroke-width="1" opacity="0.5"/>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <line x1="65" y1="68" x2="81" y2="68" stroke="#4fc3f7" stroke-width="2"/>
+  <text x="85" y="72" fill="#8892a4" font-size="10">Total Tokens</text>
+  <line x1="185" y1="68" x2="201" y2="68" stroke="#4db6ac" stroke-width="1.5"/>
+  <text x="205" y="72" fill="#8892a4" font-size="10">Uncached Input</text>
+  <line x1="295" y1="68" x2="311" y2="68" stroke="#f5a623" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="315" y="72" fill="#8892a4" font-size="10">Commits</text>
+</svg><table><thead><tr><th>Date</th><th class="num">Total Tokens</th><th class="num">Input (Uncached)</th><th class="num">Input (Cached)</th><th class="num">Output</th><th class="num">Reasoning</th><th class="num">Commits</th></tr></thead><tbody><tr><td>2026-07-01</td><td class="num">1.1M</td><td class="num">965.9K</td><td class="num">12.5M</td><td class="num">90.8K</td><td class="num">31.7K</td><td class="num">1</td></tr><tr><td>2026-07-02</td><td class="num">2.0M</td><td class="num">1.8M</td><td class="num">25.1M</td><td class="num">231.8K</td><td class="num">58.1K</td><td class="num">5</td></tr><tr><td>2026-07-03</td><td class="num">4.0M</td><td class="num">3.6M</td><td class="num">39.0M</td><td class="num">316.2K</td><td class="num">167.3K</td><td class="num">1</td></tr><tr><td>2026-07-04</td><td class="num">3.5M</td><td class="num">3.0M</td><td class="num">42.8M</td><td class="num">373.1K</td><td class="num">144.3K</td><td class="num">0</td></tr><tr><td>2026-07-05</td><td class="num">5.3M</td><td class="num">4.4M</td><td class="num">92.0M</td><td class="num">608.8K</td><td class="num">304.5K</td><td class="num">0</td></tr><tr><td>2026-07-06</td><td class="num">928.7K</td><td class="num">809.8K</td><td class="num">6.1M</td><td class="num">87.7K</td><td class="num">31.3K</td><td class="num">0</td></tr><tr><td>2026-07-07</td><td class="num">2.0M</td><td class="num">1.7M</td><td class="num">24.4M</td><td class="num">184.7K</td><td class="num">72.8K</td><td class="num">1</td></tr><tr><td>2026-07-08</td><td class="num">2.0M</td><td class="num">1.8M</td><td class="num">30.9M</td><td class="num">157.1K</td><td class="num">62.8K</td><td class="num">0</td></tr><tr><td>2026-07-09</td><td class="num">863.7K</td><td class="num">734.1K</td><td class="num">10.5M</td><td class="num">85.7K</td><td class="num">44.0K</td><td class="num">1</td></tr><tr><td>2026-07-10</td><td class="num">636.8K</td><td class="num">565.3K</td><td class="num">4.2M</td><td class="num">46.6K</td><td class="num">24.9K</td><td class="num">0</td></tr></tbody></table>
+<h3 id="chart-efficiency" class="chart-title">Tokens per Commit vs. per Line Added</h3>
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <polygon points="55,209 131,244 208,55 285,265 361,265 438,265 515,163 591,265 668,221 745,265 55,265 -21,265" fill="url(#grad-inp)" opacity="0.2"/>
+  <polyline points="55,209 131,244 208,55 285,265 361,265 438,265 515,163 591,265 668,221 745,265" fill="none" stroke="#4fc3f7"stroke-width="2" stroke-linejoin="round"/>
+  <polyline points="55,243 131,171 208,55 285,265 361,265 438,265 515,232 591,265 668,217 745,265" fill="none" stroke="#4db6ac"stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="55" cy="209" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-07-01" data-tok-per-commit="1088377" data-tok-per-line="96"/>
+  <polygon points="55,239 51.5,247 58.5,247" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"data-date="2026-07-01" data-tok-per-commit="1088377"data-tok-per-line="96"/>
+  <circle cx="131" cy="244" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-07-02" data-tok-per-commit="408589" data-tok-per-line="403"/>
+  <polygon points="131,167 127.5,175 134.5,175" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"data-date="2026-07-02" data-tok-per-commit="408589"data-tok-per-line="403"/>
+  <circle cx="208" cy="55" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-07-03" data-tok-per-commit="4036126" data-tok-per-line="896"/>
+  <polygon points="208,51 204.5,59 211.5,59" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"data-date="2026-07-03" data-tok-per-commit="4036126"data-tok-per-line="896"/>
+  <circle cx="285" cy="265" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-07-04" data-tok-per-commit="0" data-tok-per-line="0"/>
+  <polygon points="285,261 281.5,269 288.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"data-date="2026-07-04" data-tok-per-commit="0"data-tok-per-line="0"/>
+  <circle cx="361" cy="265" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-07-05" data-tok-per-commit="0" data-tok-per-line="0"/>
+  <polygon points="361,261 357.5,269 364.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"data-date="2026-07-05" data-tok-per-commit="0"data-tok-per-line="0"/>
+  <circle cx="438" cy="265" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-07-06" data-tok-per-commit="0" data-tok-per-line="0"/>
+  <polygon points="438,261 434.5,269 441.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"data-date="2026-07-06" data-tok-per-commit="0"data-tok-per-line="0"/>
+  <circle cx="515" cy="163" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-07-07" data-tok-per-commit="1971571" data-tok-per-line="143"/>
+  <polygon points="515,228 511.5,236 518.5,236" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"data-date="2026-07-07" data-tok-per-commit="1971571"data-tok-per-line="143"/>
+  <circle cx="591" cy="265" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-07-08" data-tok-per-commit="0" data-tok-per-line="0"/>
+  <polygon points="591,261 587.5,269 594.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"data-date="2026-07-08" data-tok-per-commit="0"data-tok-per-line="0"/>
+  <circle cx="668" cy="221" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-07-09" data-tok-per-commit="863743" data-tok-per-line="207"/>
+  <polygon points="668,213 664.5,221 671.5,221" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"data-date="2026-07-09" data-tok-per-commit="863743"data-tok-per-line="207"/>
+  <circle cx="745" cy="265" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-07-10" data-tok-per-commit="0" data-tok-per-line="0"/>
+  <polygon points="745,261 741.5,269 748.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"data-date="2026-07-10" data-tok-per-commit="0"data-tok-per-line="0"/>
+  <text x="55" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-01</text>
+  <text x="131" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-02</text>
+  <text x="208" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-03</text>
+  <text x="285" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-04</text>
+  <text x="361" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-05</text>
+  <text x="438" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-06</text>
+  <text x="515" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-07</text>
+  <text x="591" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-08</text>
+  <text x="668" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-09</text>
+  <text x="745" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-10</text>
+  <text x="50" y="12" text-anchor="end" fill="#4fc3f7" font-size="10">4.0M</text>
+  <text x="50" y="164" text-anchor="end" fill="#4fc3f7" font-size="10">2.0M</text>
+  <text x="753" y="12" text-anchor="start" fill="#4db6ac" font-size="10">896</text>
+  <text x="753" y="164" text-anchor="start" fill="#4db6ac" font-size="10">448</text>
+  <line x1="55" y1="55" x2="55" y2="265" stroke="#4fc3f7" stroke-width="1" opacity="0.5"/>
+  <line x1="745" y1="55" x2="745" y2="265" stroke="#4db6ac" stroke-width="1" opacity="0.5"/>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <line x1="65" y1="68" x2="81" y2="68" stroke="#4fc3f7" stroke-width="2"/>
+  <text x="85" y="72" fill="#8892a4" font-size="10">Tokens / Commit</text>
+  <line x1="215" y1="68" x2="231" y2="68" stroke="#4db6ac" stroke-width="2"/>
+  <text x="235" y="72" fill="#8892a4" font-size="10">Tokens / Line Added</text>
+</svg><table><thead><tr><th>Date</th><th class="num">Tok/Commit</th><th class="num">Tok/Line</th><th class="num">Commits</th><th class="num">Adds</th></tr></thead><tbody><tr><td>2026-07-01</td><td class="num">1.1M</td><td class="num">96</td><td class="num">1</td><td class="num">11.3K</td></tr><tr><td>2026-07-02</td><td class="num">408.6K</td><td class="num">403</td><td class="num">5</td><td class="num">5.1K</td></tr><tr><td>2026-07-03</td><td class="num">4.0M</td><td class="num">896</td><td class="num">1</td><td class="num">4.5K</td></tr><tr><td>2026-07-04</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr><tr><td>2026-07-05</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr><tr><td>2026-07-06</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr><tr><td>2026-07-07</td><td class="num">2.0M</td><td class="num">143</td><td class="num">1</td><td class="num">13.8K</td></tr><tr><td>2026-07-08</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr><tr><td>2026-07-09</td><td class="num">863.7K</td><td class="num">207</td><td class="num">1</td><td class="num">4.2K</td></tr><tr><td>2026-07-10</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr></tbody></table>
+<h3 class="chart-title">Cumulative Tokens vs. Cumulative Lines Added</h3>
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <defs>
+    <linearGradient id="grad-cum-tok" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4fc3f7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#4fc3f7" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+  <polygon points="55,255 131,236 208,198 285,165 361,115 438,107 515,88 591,70 668,61 745,55 55,265 -21,265" fill="url(#grad-cum-tok)" stroke="#4fc3f7" stroke-width="1" opacity="0.9"/>
+  <polyline points="55,201 131,173 208,148 285,148 361,148 438,148 515,76 591,76 668,55 745,55" fill="none" stroke="#4db6ac" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="55" cy="255" r="3" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-efficiency" data-date="2026-07-01" data-cum-tokens="1088377" data-cum-lines="11291"/>
+  <circle cx="131" cy="236" r="3" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-efficiency" data-date="2026-07-02" data-cum-tokens="3131324" data-cum-lines="16199"/>
+  <circle cx="208" cy="198" r="3" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-efficiency" data-date="2026-07-03" data-cum-tokens="7167450" data-cum-lines="20595"/>
+  <circle cx="285" cy="165" r="3" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-efficiency" data-date="2026-07-04" data-cum-tokens="10699657" data-cum-lines="20595"/>
+  <circle cx="361" cy="115" r="3" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-efficiency" data-date="2026-07-05" data-cum-tokens="16024311" data-cum-lines="20595"/>
+  <circle cx="438" cy="107" r="3" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-efficiency" data-date="2026-07-06" data-cum-tokens="16953055" data-cum-lines="20595"/>
+  <circle cx="515" cy="88" r="3" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-efficiency" data-date="2026-07-07" data-cum-tokens="18924626" data-cum-lines="33184"/>
+  <circle cx="591" cy="70" r="3" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-efficiency" data-date="2026-07-08" data-cum-tokens="20895265" data-cum-lines="33184"/>
+  <circle cx="668" cy="61" r="3" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-efficiency" data-date="2026-07-09" data-cum-tokens="21759008" data-cum-lines="36773"/>
+  <circle cx="745" cy="55" r="3" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-efficiency" data-date="2026-07-10" data-cum-tokens="22395815" data-cum-lines="36773"/>
+  <text x="55" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-01</text>
+  <text x="131" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-02</text>
+  <text x="208" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-03</text>
+  <text x="285" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-04</text>
+  <text x="361" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-05</text>
+  <text x="438" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-06</text>
+  <text x="515" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-07</text>
+  <text x="591" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-08</text>
+  <text x="668" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-09</text>
+  <text x="745" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-10</text>
+  <text x="50" y="12" text-anchor="end" fill="#4fc3f7" font-size="10">22.4M</text>
+  <text x="50" y="165" text-anchor="end" fill="#4fc3f7" font-size="10">11.2M</text>
+  <text x="753" y="12" text-anchor="start" fill="#4db6ac" font-size="10">36.8K</text>
+  <text x="753" y="165" text-anchor="start" fill="#4db6ac" font-size="10">18.4K</text>
+  <line x1="55" y1="55" x2="55" y2="265" stroke="#4fc3f7" stroke-width="1" opacity="0.5"/>
+  <line x1="745" y1="55" x2="745" y2="265" stroke="#4db6ac" stroke-width="1" opacity="0.5"/>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <rect x="65" y="63" width="12" height="8" fill="#4fc3f7" opacity="0.3" rx="1"/>
+  <text x="81" y="72" fill="#8892a4" font-size="10">Cumulative Tokens</text>
+  <line x1="225" y1="68" x2="241" y2="68" stroke="#4db6ac" stroke-width="2"/>
+  <text x="245" y="72" fill="#8892a4" font-size="10">Cumulative Lines Added</text>
+</svg><table><thead><tr><th>Date</th><th class="num">Cum. Tokens</th><th class="num">Cum. Lines Added</th><th class="num">Tok/Line</th></tr></thead><tbody><tr><td>2026-07-01</td><td class="num">1.1M</td><td class="num">11.3K</td><td class="num">96</td></tr><tr><td>2026-07-02</td><td class="num">3.1M</td><td class="num">16.2K</td><td class="num">193</td></tr><tr><td>2026-07-03</td><td class="num">7.2M</td><td class="num">20.6K</td><td class="num">348</td></tr><tr><td>2026-07-04</td><td class="num">10.7M</td><td class="num">20.6K</td><td class="num">520</td></tr><tr><td>2026-07-05</td><td class="num">16.0M</td><td class="num">20.6K</td><td class="num">778</td></tr><tr><td>2026-07-06</td><td class="num">17.0M</td><td class="num">20.6K</td><td class="num">823</td></tr><tr><td>2026-07-07</td><td class="num">18.9M</td><td class="num">33.2K</td><td class="num">570</td></tr><tr><td>2026-07-08</td><td class="num">20.9M</td><td class="num">33.2K</td><td class="num">630</td></tr><tr><td>2026-07-09</td><td class="num">21.8M</td><td class="num">36.8K</td><td class="num">592</td></tr><tr><td>2026-07-10</td><td class="num">22.4M</td><td class="num">36.8K</td><td class="num">609</td></tr></tbody></table>
+<h3 class="chart-title">Cumulative Estimated Cost</h3>
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <defs>
+    <linearGradient id="grad-cheap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5a623" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#f5a623" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+  <polygon points="55,256 131,235 208,202 285,167 361,111 438,103 515,85 591,69 668,60 745,55 55,265 -21,265" fill="url(#grad-cheap)" stroke="#f5a623" stroke-width="1" opacity="0.8"/>
+  <polyline points="55,256 131,235 208,199 285,166 361,114 438,105 515,87 591,69 668,61 745,55" fill="none" stroke="#ef5350" stroke-width="2" stroke-linejoin="round" stroke-dasharray="6,3"/>
+  <circle cx="55" cy="256" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-01" data-cost-low="0.29" data-cost-high="0.71" data-daily-low="0.29" data-daily-high="0.71"/>
+  <circle cx="131" cy="235" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-02" data-cost-low="0.98" data-cost-high="2.17" data-daily-low="0.69" data-daily-high="1.45"/>
+  <circle cx="208" cy="202" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-03" data-cost-low="2.02" data-cost-high="4.75" data-daily-low="1.04" data-daily-high="2.58"/>
+  <circle cx="285" cy="167" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-04" data-cost-low="3.15" data-cost-high="7.18" data-daily-low="1.13" data-daily-high="2.44"/>
+  <circle cx="361" cy="111" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-05" data-cost-low="4.95" data-cost-high="10.9" data-daily-low="1.8" data-daily-high="3.71"/>
+  <circle cx="438" cy="103" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-06" data-cost-low="5.22" data-cost-high="11.52" data-daily-low="0.27" data-daily-high="0.63"/>
+  <circle cx="515" cy="85" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-07" data-cost-low="5.8" data-cost-high="12.84" data-daily-low="0.58" data-daily-high="1.32"/>
+  <circle cx="591" cy="69" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-08" data-cost-low="6.31" data-cost-high="14.12" data-daily-low="0.51" data-daily-high="1.27"/>
+  <circle cx="668" cy="60" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-09" data-cost-low="6.57" data-cost-high="14.7" data-daily-low="0.26" data-daily-high="0.58"/>
+  <circle cx="745" cy="55" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-10" data-cost-low="6.73" data-cost-high="15.1" data-daily-low="0.16" data-daily-high="0.4"/>
+  <text x="55" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-01</text>
+  <text x="131" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-02</text>
+  <text x="208" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-03</text>
+  <text x="285" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-04</text>
+  <text x="361" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-05</text>
+  <text x="438" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-06</text>
+  <text x="515" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-07</text>
+  <text x="591" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-08</text>
+  <text x="668" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-09</text>
+  <text x="745" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-10</text>
+  <text x="50" y="12" text-anchor="end" fill="#f5a623" font-size="10">$7</text>
+  <text x="50" y="176" text-anchor="end" fill="#f5a623" font-size="10">$3</text>
+  <text x="753" y="12" text-anchor="start" fill="#ef5350" font-size="10">$15</text>
+  <text x="753" y="172" text-anchor="start" fill="#ef5350" font-size="10">$7</text>
+  <line x1="55" y1="55" x2="55" y2="265" stroke="#f5a623" stroke-width="1" opacity="0.5"/>
+  <line x1="745" y1="55" x2="745" y2="265" stroke="#ef5350" stroke-width="1" opacity="0.5"/>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <rect x="65" y="63" width="12" height="8" fill="#f5a623" opacity="0.3" rx="1"/>
+  <text x="81" y="72" fill="#8892a4" font-size="10">Cum. Cost (Low)</text>
+  <line x1="205" y1="68" x2="221" y2="68" stroke="#ef5350" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="225" y="72" fill="#8892a4" font-size="10">Cum. Cost (High)</text>
+</svg><table><thead><tr><th>Date</th><th class="num">Daily (Low)</th><th class="num">Daily (High)</th><th class="num">Cum. (Low)</th><th class="num">Cum. (High)</th></tr></thead><tbody><tr><td>2026-07-01</td><td class="num">$0.29</td><td class="num">$0.71</td><td class="num">$0.29</td><td class="num">$0.71</td></tr><tr><td>2026-07-02</td><td class="num">$0.69</td><td class="num">$1.45</td><td class="num">$0.98</td><td class="num">$2.17</td></tr><tr><td>2026-07-03</td><td class="num">$1.04</td><td class="num">$2.58</td><td class="num">$2.02</td><td class="num">$4.75</td></tr><tr><td>2026-07-04</td><td class="num">$1.13</td><td class="num">$2.44</td><td class="num">$3.15</td><td class="num">$7.18</td></tr><tr><td>2026-07-05</td><td class="num">$1.80</td><td class="num">$3.71</td><td class="num">$4.95</td><td class="num">$10.90</td></tr><tr><td>2026-07-06</td><td class="num">$0.27</td><td class="num">$0.63</td><td class="num">$5.22</td><td class="num">$11.52</td></tr><tr><td>2026-07-07</td><td class="num">$0.58</td><td class="num">$1.32</td><td class="num">$5.80</td><td class="num">$12.84</td></tr><tr><td>2026-07-08</td><td class="num">$0.51</td><td class="num">$1.27</td><td class="num">$6.31</td><td class="num">$14.12</td></tr><tr><td>2026-07-09</td><td class="num">$0.26</td><td class="num">$0.58</td><td class="num">$6.57</td><td class="num">$14.70</td></tr><tr><td>2026-07-10</td><td class="num">$0.16</td><td class="num">$0.40</td><td class="num">$6.73</td><td class="num">$15.10</td></tr></tbody></table>
+<h3 class="chart-title">Rolling 7-Day Tokens per Commit Trend</h3>
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <defs>
+    <linearGradient id="grad-inp" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4fc3f7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#4fc3f7" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+  <polygon points="55,235 131,251 208,237 285,223 361,202 438,199 515,200 591,187 668,94 745,55 55,265 -21,265" fill="url(#grad-inp)" opacity="0.2"/>
+  <polyline points="55,235 131,251 208,237 285,223 361,202 438,199 515,200 591,187 668,94 745,55" fill="none" stroke="#4fc3f7" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="55" cy="235" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="rolling-tpc" data-date="2026-07-01" data-rolling-tpc="1088377"/>
+  <circle cx="131" cy="251" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="rolling-tpc" data-date="2026-07-02" data-rolling-tpc="521887"/>
+  <circle cx="208" cy="237" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="rolling-tpc" data-date="2026-07-03" data-rolling-tpc="1023921"/>
+  <circle cx="285" cy="223" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="rolling-tpc" data-date="2026-07-04" data-rolling-tpc="1528522"/>
+  <circle cx="361" cy="202" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="rolling-tpc" data-date="2026-07-05" data-rolling-tpc="2289187"/>
+  <circle cx="438" cy="199" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="rolling-tpc" data-date="2026-07-06" data-rolling-tpc="2421865"/>
+  <circle cx="515" cy="200" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="rolling-tpc" data-date="2026-07-07" data-rolling-tpc="2365578"/>
+  <circle cx="591" cy="187" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="rolling-tpc" data-date="2026-07-08" data-rolling-tpc="2829555"/>
+  <circle cx="668" cy="94" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="rolling-tpc" data-date="2026-07-09" data-rolling-tpc="6209228"/>
+  <circle cx="745" cy="55" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="rolling-tpc" data-date="2026-07-10" data-rolling-tpc="7614182"/>
+  <text x="55" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-01</text>
+  <text x="131" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-02</text>
+  <text x="208" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-03</text>
+  <text x="285" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-04</text>
+  <text x="361" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-05</text>
+  <text x="438" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-06</text>
+  <text x="515" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-07</text>
+  <text x="591" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-08</text>
+  <text x="668" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-09</text>
+  <text x="745" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-10</text>
+  <text x="50" y="12" text-anchor="end" fill="#4fc3f7" font-size="10">7.6M</text>
+  <text x="50" y="164" text-anchor="end" fill="#4fc3f7" font-size="10">3.8M</text>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="213" x2="745" y2="213" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="160" x2="745" y2="160" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="108" x2="745" y2="108" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="55" x2="745" y2="55" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="55" x2="55" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="#8892a4" stroke-width="1"/>
+</svg><table><thead><tr><th>Date</th><th class="num">7d Avg Tok/Commit</th><th class="num">Commits</th></tr></thead><tbody><tr><td>2026-07-01</td><td class="num">1.1M</td><td class="num">1</td></tr><tr><td>2026-07-02</td><td class="num">521.9K</td><td class="num">5</td></tr><tr><td>2026-07-03</td><td class="num">1.0M</td><td class="num">1</td></tr><tr><td>2026-07-04</td><td class="num">1.5M</td><td class="num">0</td></tr><tr><td>2026-07-05</td><td class="num">2.3M</td><td class="num">0</td></tr><tr><td>2026-07-06</td><td class="num">2.4M</td><td class="num">0</td></tr><tr><td>2026-07-07</td><td class="num">2.4M</td><td class="num">1</td></tr><tr><td>2026-07-08</td><td class="num">2.8M</td><td class="num">0</td></tr><tr><td>2026-07-09</td><td class="num">6.2M</td><td class="num">1</td></tr><tr><td>2026-07-10</td><td class="num">7.6M</td><td class="num">0</td></tr></tbody></table>
+<h3 class="chart-title">Daily Token Breakdown by Agent Category</h3>
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <defs>
+    <linearGradient id="grad-build" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4fc3f7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#4fc3f7" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="grad-review" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4db6ac" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#4db6ac" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="grad-plan" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ba68c8" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ba68c8" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="grad-explore" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5a623" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#f5a623" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="grad-other" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8892a4" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#8892a4" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+  <polygon points="55,223 131,185 208,106 285,126 361,55 438,229 515,188 591,188 668,231 745,240 745,240 668,231 591,188 515,188 438,229 361,55 285,126 208,106 131,185 55,223" fill="url(#grad-other)" stroke="#8892a4" stroke-width="0.5" opacity="0.9"/>
+  <polygon points="55,223 131,185 208,106 285,126 361,55 438,229 515,188 591,188 668,231 745,240 745,240 668,231 591,188 515,189 438,233 361,55 285,127 208,106 131,185 55,223" fill="url(#grad-explore)" stroke="#f5a623" stroke-width="0.5" opacity="0.9"/>
+  <polygon points="55,223 131,185 208,106 285,127 361,55 438,233 515,189 591,188 668,231 745,240 745,244 668,231 591,192 515,200 438,236 361,57 285,141 208,113 131,185 55,223" fill="url(#grad-plan)" stroke="#ba68c8" stroke-width="0.5" opacity="0.9"/>
+  <polygon points="55,223 131,185 208,113 285,141 361,57 438,236 515,200 591,192 668,231 745,244 745,244 668,232 591,193 515,201 438,239 361,60 285,142 208,116 131,186 55,224" fill="url(#grad-review)" stroke="#4db6ac" stroke-width="0.5" opacity="0.9"/>
+  <polygon points="55,224 131,186 208,116 285,142 361,60 438,239 515,201 591,193 668,232 745,244 745,265 668,265 591,265 515,265 438,265 361,265 285,265 208,265 131,265 55,265" fill="url(#grad-build)" stroke="#4fc3f7" stroke-width="0.5" opacity="0.9"/>
+  <circle cx="55" cy="223" r="3" fill="#1a1a2e" stroke="#8892a4" stroke-width="1.5" class="chart-point" data-chart-type="agent-stacked" data-date="2026-07-01" data-build="1063489" data-review="24888" data-plan="0" data-explore="0" data-other="0" data-total="1088377"/>
+  <circle cx="131" cy="185" r="3" fill="#1a1a2e" stroke="#8892a4" stroke-width="1.5" class="chart-point" data-chart-type="agent-stacked" data-date="2026-07-02" data-build="2006020" data-review="32517" data-plan="4410" data-explore="0" data-other="0" data-total="2042947"/>
+  <circle cx="208" cy="106" r="3" fill="#1a1a2e" stroke="#8892a4" stroke-width="1.5" class="chart-point" data-chart-type="agent-stacked" data-date="2026-07-03" data-build="3779233" data-review="94337" data-plan="162556" data-explore="0" data-other="0" data-total="4036126"/>
+  <circle cx="285" cy="126" r="3" fill="#1a1a2e" stroke="#8892a4" stroke-width="1.5" class="chart-point" data-chart-type="agent-stacked" data-date="2026-07-04" data-build="3133612" data-review="13684" data-plan="361391" data-explore="23520" data-other="0" data-total="3532207"/>
+  <circle cx="361" cy="55" r="3" fill="#1a1a2e" stroke="#8892a4" stroke-width="1.5" class="chart-point" data-chart-type="agent-stacked" data-date="2026-07-05" data-build="5218792" data-review="76619" data-plan="29243" data-explore="0" data-other="0" data-total="5324654"/>
+  <circle cx="438" cy="229" r="3" fill="#1a1a2e" stroke="#8892a4" stroke-width="1.5" class="chart-point" data-chart-type="agent-stacked" data-date="2026-07-06" data-build="684479" data-review="63298" data-plan="71707" data-explore="109261" data-other="0" data-total="928745"/>
+  <circle cx="515" cy="188" r="3" fill="#1a1a2e" stroke="#8892a4" stroke-width="1.5" class="chart-point" data-chart-type="agent-stacked" data-date="2026-07-07" data-build="1630408" data-review="25677" data-plan="277387" data-explore="38099" data-other="0" data-total="1971571"/>
+  <circle cx="591" cy="188" r="3" fill="#1a1a2e" stroke="#8892a4" stroke-width="1.5" class="chart-point" data-chart-type="agent-stacked" data-date="2026-07-08" data-build="1838492" data-review="35337" data-plan="96810" data-explore="0" data-other="0" data-total="1970639"/>
+  <circle cx="668" cy="231" r="3" fill="#1a1a2e" stroke="#8892a4" stroke-width="1.5" class="chart-point" data-chart-type="agent-stacked" data-date="2026-07-09" data-build="859059" data-review="4684" data-plan="0" data-explore="0" data-other="0" data-total="863743"/>
+  <circle cx="745" cy="240" r="3" fill="#1a1a2e" stroke="#8892a4" stroke-width="1.5" class="chart-point" data-chart-type="agent-stacked" data-date="2026-07-10" data-build="550148" data-review="3644" data-plan="83015" data-explore="0" data-other="0" data-total="636807"/>
+  <text x="55" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-01</text>
+  <text x="131" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-02</text>
+  <text x="208" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-03</text>
+  <text x="285" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-04</text>
+  <text x="361" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-05</text>
+  <text x="438" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-06</text>
+  <text x="515" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-07</text>
+  <text x="591" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-08</text>
+  <text x="668" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-09</text>
+  <text x="745" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-10</text>
+  <text x="50" y="12" text-anchor="end" fill="#8892a4" font-size="10">5.3M</text>
+  <text x="50" y="164" text-anchor="end" fill="#8892a4" font-size="10">2.7M</text>
+  <line x1="55" y1="55" x2="55" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <rect x="65" y="63" width="10" height="8" fill="#4fc3f7" opacity="0.5" rx="1"/>
+  <text x="79" y="72" fill="#8892a4" font-size="10">Build</text>
+  <rect x="140" y="63" width="10" height="8" fill="#4db6ac" opacity="0.5" rx="1"/>
+  <text x="154" y="72" fill="#8892a4" font-size="10">Review</text>
+  <rect x="215" y="63" width="10" height="8" fill="#ba68c8" opacity="0.5" rx="1"/>
+  <text x="229" y="72" fill="#8892a4" font-size="10">Plan</text>
+  <rect x="290" y="63" width="10" height="8" fill="#f5a623" opacity="0.5" rx="1"/>
+  <text x="304" y="72" fill="#8892a4" font-size="10">Explore</text>
+  <rect x="365" y="63" width="10" height="8" fill="#8892a4" opacity="0.5" rx="1"/>
+  <text x="379" y="72" fill="#8892a4" font-size="10">Other</text>
+</svg><table><thead><tr><th>Date</th><th class="num">Build</th><th class="num">Review</th><th class="num">Plan</th><th class="num">Explore</th><th class="num">Other</th><th class="num">Total</th></tr></thead><tbody><tr><td>2026-07-01</td><td class="num">1.1M</td><td class="num">24.9K</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">1.1M</td></tr><tr><td>2026-07-02</td><td class="num">2.0M</td><td class="num">32.5K</td><td class="num">4.4K</td><td class="num">0</td><td class="num">0</td><td class="num">2.0M</td></tr><tr><td>2026-07-03</td><td class="num">3.8M</td><td class="num">94.3K</td><td class="num">162.6K</td><td class="num">0</td><td class="num">0</td><td class="num">4.0M</td></tr><tr><td>2026-07-04</td><td class="num">3.1M</td><td class="num">13.7K</td><td class="num">361.4K</td><td class="num">23.5K</td><td class="num">0</td><td class="num">3.5M</td></tr><tr><td>2026-07-05</td><td class="num">5.2M</td><td class="num">76.6K</td><td class="num">29.2K</td><td class="num">0</td><td class="num">0</td><td class="num">5.3M</td></tr><tr><td>2026-07-06</td><td class="num">684.5K</td><td class="num">63.3K</td><td class="num">71.7K</td><td class="num">109.3K</td><td class="num">0</td><td class="num">928.7K</td></tr><tr><td>2026-07-07</td><td class="num">1.6M</td><td class="num">25.7K</td><td class="num">277.4K</td><td class="num">38.1K</td><td class="num">0</td><td class="num">2.0M</td></tr><tr><td>2026-07-08</td><td class="num">1.8M</td><td class="num">35.3K</td><td class="num">96.8K</td><td class="num">0</td><td class="num">0</td><td class="num">2.0M</td></tr><tr><td>2026-07-09</td><td class="num">859.1K</td><td class="num">4.7K</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">863.7K</td></tr><tr><td>2026-07-10</td><td class="num">550.1K</td><td class="num">3.6K</td><td class="num">83.0K</td><td class="num">0</td><td class="num">0</td><td class="num">636.8K</td></tr></tbody></table>
+  </div>
+</details>
+<details class="collapsible-section" open>
+  <summary onclick="toggleDetails(this)">Cost Analysis ▾</summary>
+  <div class="collapsible-content">
+    <p style="color:#8892a4; font-size:0.85rem; margin-bottom:1rem;">
+All models run locally via LM Studio — actual API cost is $0. 
+Cloud-equivalent costs below show what these sessions would cost 
+if run through commercial APIs at current per-model pricing.
+</p>
+<div class="impact-grid">
+  <div class="impact-card" style="border-color:#8892a4;background:rgba(136,146,164,0.06);"><div class="impact-value" style="color:#8892a4;">$0.00</div><div class="impact-label">Actual Cost</div><div style="font-size:0.65rem;color:#8892a4;margin-top:0.2rem;">Local execution only &middot; no API fees</div></div>
+  <div class="impact-card cost"><div class="impact-value">$163.49</div><div class="impact-label">Cloud-Equivalent (Raw)</div></div>
+  <div class="impact-card" style="border-color:#4db6ac;background:rgba(77,182,172,0.06);"><div class="impact-value" style="color:#4db6ac;">$30.22</div><div class="impact-label">Cloud-Equivalent (w/Cache)</div></div>
+  <div class="impact-card ratio"><div class="impact-value">$133.27</div><div class="impact-label">Saved by Context Caching</div></div>
+</div>
+<p style="color:#4db6ac; font-size:0.85rem; margin-bottom:1.5rem;">$133.27 saved via prompt context caching (81.5% reduction, 93.7% cache hit rate).</p>
+<h3 class="chart-title">Cloud-Equivalent Cost by Model</h3>
+<table><thead><tr><th>Model</th><th class="num">Sessions</th><th class="num">Input Tokens</th><th class="num">Output Tokens</th><th class="num">Raw Cost</th><th class="num">w/Cache Cost</th><th class="num">Cache Savings</th></tr></thead><tbody>
+<tr><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td class="num">92</td><td class="num">0</td><td class="num">0</td><td class="num">$99.09</td><td class="num" style="color:#4db6ac;">$17.76</td><td class="num" style="color:#4db6ac;">$81.34</td></tr>
+<tr><td style="font-size:0.75rem">agents-a1</td><td class="num">33</td><td class="num">0</td><td class="num">0</td><td class="num">$44.06</td><td class="num" style="color:#4db6ac;">$6.93</td><td class="num" style="color:#4db6ac;">$37.13</td></tr>
+<tr><td style="font-size:0.75rem">ornith-1.0-35b</td><td class="num">14</td><td class="num">0</td><td class="num">0</td><td class="num">$13.57</td><td class="num" style="color:#4db6ac;">$2.50</td><td class="num" style="color:#4db6ac;">$11.07</td></tr>
+<tr><td style="font-size:0.75rem">qwen-agentworld-35b-a3b</td><td class="num">61</td><td class="num">0</td><td class="num">0</td><td class="num">$4.71</td><td class="num" style="color:#4db6ac;">$2.38</td><td class="num" style="color:#4db6ac;">$2.32</td></tr>
+<tr><td style="font-size:0.75rem">qwen/qwen3.6-27b-q4</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">$0.96</td><td class="num" style="color:#4db6ac;">$0.17</td><td class="num" style="color:#4db6ac;">$0.79</td></tr>
+<tr><td style="font-size:0.75rem">qwen/qwen3.6-27b-lite</td><td class="num">3</td><td class="num">0</td><td class="num">0</td><td class="num">$0.66</td><td class="num" style="color:#4db6ac;">$0.16</td><td class="num" style="color:#4db6ac;">$0.51</td></tr>
+<tr><td style="font-size:0.75rem">big-pickle</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">$0.23</td><td class="num" style="color:#4db6ac;">$0.21</td><td class="num" style="color:#4db6ac;">$0.02</td></tr>
+<tr><td style="font-size:0.75rem">google/gemma-4-31b-qat</td><td class="num">8</td><td class="num">0</td><td class="num">0</td><td class="num">$0.21</td><td class="num" style="color:#4db6ac;">$0.10</td><td class="num" style="color:#4db6ac;">$0.10</td></tr>
+<tr><td style="font-size:0.75rem">qwen/qwen3.5-9b</td><td class="num">2</td><td class="num">0</td><td class="num">0</td><td class="num">$0.00</td><td class="num" style="color:#4db6ac;">$0.00</td><td class="num" style="color:#4db6ac;">$0.00</td></tr>
+</tbody></table>
+<h3 class="chart-title">Assumed Pricing Rates</h3>
+<table><thead><tr><th>Model</th><th class="num">Input ($/M)</th><th class="num">Output ($/M)</th><th class="num">Cached Input ($/M)</th></tr></thead><tbody>
+<tr><td style="font-size:0.75rem">openai/gpt-4o</td><td class="num">$2.500</td><td class="num">$10.000</td><td class="num">$1.250</td></tr>
+<tr><td style="font-size:0.75rem">anthropic/claude-sonnet-4</td><td class="num">$3.000</td><td class="num">$15.000</td><td class="num">$0.300</td></tr>
+<tr><td style="font-size:0.75rem">google/gemma-4-31b-qat</td><td class="num">$0.250</td><td class="num">$1.000</td><td class="num">$0.025</td></tr>
+<tr><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td class="num">$0.500</td><td class="num">$1.500</td><td class="num">$0.050</td></tr>
+<tr><td style="font-size:0.75rem">qwen/qwen3.6-35b-a3b</td><td class="num">$0.800</td><td class="num">$2.400</td><td class="num">$0.080</td></tr>
+<tr><td style="font-size:0.75rem">qwen/qwq-32b</td><td class="num">$0.600</td><td class="num">$1.800</td><td class="num">$0.060</td></tr>
+<tr><td style="font-size:0.75rem">ornith-1.0-35b</td><td class="num">$0.700</td><td class="num">$2.100</td><td class="num">$0.070</td></tr>
+<tr><td style="font-size:0.75rem">qwen/qwen3-coder-next</td><td class="num">$0.750</td><td class="num">$2.250</td><td class="num">$0.075</td></tr>
+<tr><td style="font-size:0.75rem">qwen-agentworld-35b-a3b</td><td class="num">$0.800</td><td class="num">$2.400</td><td class="num">$0.080</td></tr>
+<tr><td style="font-size:0.75rem">gemini/gemini-2.5-flash</td><td class="num">$0.150</td><td class="num">$0.600</td><td class="num">$0.015</td></tr>
+<tr><td style="font-size:0.75rem">fallback</td><td class="num">$0.500</td><td class="num">$1.500</td><td class="num">$0.050</td></tr>
+</tbody></table>
+<p style="color:#8892a4; font-size:0.7rem; margin-top:0.5rem;">Per-model rates above are used for detailed cost calculations. Flat-rate tiers below are used for summary estimates.</p>
+<table><thead><tr><th>Tier</th><th class="num">Input ($/M)</th><th class="num">Output ($/M)</th><th class="num">Cached Input ($/M)</th></tr></thead><tbody>
+<tr><td>Cheap</td><td class="num">$0.05</td><td class="num">$0.15</td><td class="num">$0.01</td></tr>
+<tr><td>Expensive</td><td class="num">$0.50</td><td class="num">$1.50</td><td class="num">$0.05</td></tr>
+</tbody></table>
+<h3 class="chart-title">Estimated Cloud Cost Over Time (Hypothetical)</h3>
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <defs>
+    <linearGradient id="grad-cheap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5a623" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#f5a623" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+  <polygon points="55,256 131,235 208,202 285,167 361,111 438,103 515,85 591,69 668,60 745,55 55,265 -21,265" fill="url(#grad-cheap)" stroke="#f5a623" stroke-width="1" opacity="0.8"/>
+  <polyline points="55,256 131,235 208,199 285,166 361,114 438,105 515,87 591,69 668,61 745,55" fill="none" stroke="#ef5350" stroke-width="2" stroke-linejoin="round" stroke-dasharray="6,3"/>
+  <circle cx="55" cy="256" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-01" data-cost-low="0.29" data-cost-high="0.71" data-daily-low="0.29" data-daily-high="0.71"/>
+  <circle cx="131" cy="235" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-02" data-cost-low="0.98" data-cost-high="2.17" data-daily-low="0.69" data-daily-high="1.45"/>
+  <circle cx="208" cy="202" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-03" data-cost-low="2.02" data-cost-high="4.75" data-daily-low="1.04" data-daily-high="2.58"/>
+  <circle cx="285" cy="167" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-04" data-cost-low="3.15" data-cost-high="7.18" data-daily-low="1.13" data-daily-high="2.44"/>
+  <circle cx="361" cy="111" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-05" data-cost-low="4.95" data-cost-high="10.9" data-daily-low="1.8" data-daily-high="3.71"/>
+  <circle cx="438" cy="103" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-06" data-cost-low="5.22" data-cost-high="11.52" data-daily-low="0.27" data-daily-high="0.63"/>
+  <circle cx="515" cy="85" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-07" data-cost-low="5.8" data-cost-high="12.84" data-daily-low="0.58" data-daily-high="1.32"/>
+  <circle cx="591" cy="69" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-08" data-cost-low="6.31" data-cost-high="14.12" data-daily-low="0.51" data-daily-high="1.27"/>
+  <circle cx="668" cy="60" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-09" data-cost-low="6.57" data-cost-high="14.7" data-daily-low="0.26" data-daily-high="0.58"/>
+  <circle cx="745" cy="55" r="3" fill="#1a1a2e" stroke="#f5a623" stroke-width="1.5" class="chart-point" data-chart-type="cumulative-cost" data-date="2026-07-10" data-cost-low="6.73" data-cost-high="15.1" data-daily-low="0.16" data-daily-high="0.4"/>
+  <text x="55" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-01</text>
+  <text x="131" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-02</text>
+  <text x="208" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-03</text>
+  <text x="285" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-04</text>
+  <text x="361" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-05</text>
+  <text x="438" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-06</text>
+  <text x="515" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-07</text>
+  <text x="591" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-08</text>
+  <text x="668" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-09</text>
+  <text x="745" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-07-10</text>
+  <text x="50" y="12" text-anchor="end" fill="#f5a623" font-size="10">$7</text>
+  <text x="50" y="176" text-anchor="end" fill="#f5a623" font-size="10">$3</text>
+  <text x="753" y="12" text-anchor="start" fill="#ef5350" font-size="10">$15</text>
+  <text x="753" y="172" text-anchor="start" fill="#ef5350" font-size="10">$7</text>
+  <line x1="55" y1="55" x2="55" y2="265" stroke="#f5a623" stroke-width="1" opacity="0.5"/>
+  <line x1="745" y1="55" x2="745" y2="265" stroke="#ef5350" stroke-width="1" opacity="0.5"/>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <rect x="65" y="63" width="12" height="8" fill="#f5a623" opacity="0.3" rx="1"/>
+  <text x="81" y="72" fill="#8892a4" font-size="10">Cum. Cost (Low)</text>
+  <line x1="205" y1="68" x2="221" y2="68" stroke="#ef5350" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="225" y="72" fill="#8892a4" font-size="10">Cum. Cost (High)</text>
+</svg><table><thead><tr><th>Date</th><th class="num">Daily (Low)</th><th class="num">Daily (High)</th><th class="num">Cum. (Low)</th><th class="num">Cum. (High)</th></tr></thead><tbody><tr><td>2026-07-01</td><td class="num">$0.29</td><td class="num">$0.71</td><td class="num">$0.29</td><td class="num">$0.71</td></tr><tr><td>2026-07-02</td><td class="num">$0.69</td><td class="num">$1.45</td><td class="num">$0.98</td><td class="num">$2.17</td></tr><tr><td>2026-07-03</td><td class="num">$1.04</td><td class="num">$2.58</td><td class="num">$2.02</td><td class="num">$4.75</td></tr><tr><td>2026-07-04</td><td class="num">$1.13</td><td class="num">$2.44</td><td class="num">$3.15</td><td class="num">$7.18</td></tr><tr><td>2026-07-05</td><td class="num">$1.80</td><td class="num">$3.71</td><td class="num">$4.95</td><td class="num">$10.90</td></tr><tr><td>2026-07-06</td><td class="num">$0.27</td><td class="num">$0.63</td><td class="num">$5.22</td><td class="num">$11.52</td></tr><tr><td>2026-07-07</td><td class="num">$0.58</td><td class="num">$1.32</td><td class="num">$5.80</td><td class="num">$12.84</td></tr><tr><td>2026-07-08</td><td class="num">$0.51</td><td class="num">$1.27</td><td class="num">$6.31</td><td class="num">$14.12</td></tr><tr><td>2026-07-09</td><td class="num">$0.26</td><td class="num">$0.58</td><td class="num">$6.57</td><td class="num">$14.70</td></tr><tr><td>2026-07-10</td><td class="num">$0.16</td><td class="num">$0.40</td><td class="num">$6.73</td><td class="num">$15.10</td></tr></tbody></table>
+  </div>
+</details>
+<details class="collapsible-section">
+  <summary onclick="toggleDetails(this)">Detailed Data Tables ▾</summary>
+  <div class="collapsible-content">
+    <div class="always-visible">
+  <h3 id="model---agent-breakdown" class="chart-title">Model × Agent Breakdown</h3>
+  <table><thead><tr><th>Model</th><th>Agent</th><th class="num">Sessions</th><th class="num">Effective Tokens</th></tr></thead><tbody><tr><td>qwen/qwen3.6-27b</td><td>build-docs</td><td class="num">40</td><td class="num">0</td></tr><tr><td>agents-a1</td><td>build</td><td class="num">11</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b</td><td>build-tdd</td><td class="num">10</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b</td><td>build-test</td><td class="num">12</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b</td><td>build</td><td class="num">8</td><td class="num">0</td></tr><tr><td>agents-a1</td><td>build-docs</td><td class="num">7</td><td class="num">0</td></tr><tr><td>agents-a1</td><td>build-test</td><td class="num">10</td><td class="num">0</td></tr><tr><td>ornith-1.0-35b</td><td>build-docs</td><td class="num">7</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b</td><td>build-debug</td><td class="num">4</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b</td><td>planner</td><td class="num">11</td><td class="num">0</td></tr><tr><td>agents-a1</td><td>general</td><td class="num">2</td><td class="num">0</td></tr><tr><td>qwen-agentworld-35b-a3b</td><td>world-review</td><td class="num">57</td><td class="num">0</td></tr><tr><td>agents-a1</td><td>build-debug</td><td class="num">1</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b</td><td>plan</td><td class="num">2</td><td class="num">0</td></tr><tr><td>ornith-1.0-35b</td><td>build-quick-work</td><td class="num">5</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b-q4</td><td>plan</td><td class="num">1</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b</td><td>explore</td><td class="num">3</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b-lite</td><td>planner</td><td class="num">1</td><td class="num">0</td></tr><tr><td>qwen-agentworld-35b-a3b</td><td>build-docs</td><td class="num">2</td><td class="num">0</td></tr><tr><td>google/gemma-4-31b-qat</td><td>diff-review-g31</td><td class="num">4</td><td class="num">0</td></tr><tr><td>agents-a1</td><td>planner</td><td class="num">2</td><td class="num">0</td></tr><tr><td>big-pickle</td><td>build-docs</td><td class="num">1</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b-lite</td><td>build</td><td class="num">1</td><td class="num">0</td></tr><tr><td>qwen-agentworld-35b-a3b</td><td>build-quick-work</td><td class="num">1</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b</td><td>solid-review</td><td class="num">1</td><td class="num">0</td></tr><tr><td>ornith-1.0-35b</td><td>build</td><td class="num">1</td><td class="num">0</td></tr><tr><td>qwen-agentworld-35b-a3b</td><td>build</td><td class="num">1</td><td class="num">0</td></tr><tr><td>google/gemma-4-31b-qat</td><td>planner-g31</td><td class="num">3</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b</td><td>build-quick-work</td><td class="num">1</td><td class="num">0</td></tr><tr><td>google/gemma-4-31b-qat</td><td>solid-review-g31</td><td class="num">1</td><td class="num">0</td></tr><tr><td>ornith-1.0-35b</td><td>build-test</td><td class="num">1</td><td class="num">0</td></tr><tr><td>qwen/qwen3.5-9b</td><td>build</td><td class="num">2</td><td class="num">0</td></tr><tr><td>qwen/qwen3.6-27b-lite</td><td>build-test</td><td class="num">1</td><td class="num">0</td></tr></tbody></table>
+</div>
+<h3 class="chart-title">Cache Approximation</h3><h3 class="chart-title">Cache Impact by Model</h3>
+<table><thead><tr><th>Model</th><th class="num">Sessions</th><th class="num">Raw Input</th><th class="num">Uncached</th><th class="num">Cached</th><th class="num">Hit %</th></tr></thead><tbody>
+<tr><td>unknown</td><td class="num">92</td><td class="num">193.2M</td><td class="num">12.4M</td><td class="num">180.8M</td><td class="num">93.6%</td></tr>
+<tr><td>unknown</td><td class="num">33</td><td class="num">85.8M</td><td class="num">3.3M</td><td class="num">82.5M</td><td class="num">96.1%</td></tr>
+<tr><td>unknown</td><td class="num">14</td><td class="num">18.8M</td><td class="num">1.3M</td><td class="num">17.6M</td><td class="num">93.3%</td></tr>
+<tr><td>unknown</td><td class="num">61</td><td class="num">4.6M</td><td class="num">1.4M</td><td class="num">3.2M</td><td class="num">69.9%</td></tr>
+<tr><td>unknown</td><td class="num">1</td><td class="num">1.9M</td><td class="num">124.4K</td><td class="num">1.7M</td><td class="num">93.3%</td></tr>
+<tr><td>unknown</td><td class="num">3</td><td class="num">1.3M</td><td class="num">156.4K</td><td class="num">1.1M</td><td class="num">87.8%</td></tr>
+<tr><td>unknown</td><td class="num">8</td><td class="num">656.1K</td><td class="num">194.1K</td><td class="num">462.0K</td><td class="num">70.4%</td></tr>
+<tr><td>unknown</td><td class="num">1</td><td class="num">419.3K</td><td class="num">382.9K</td><td class="num">36.4K</td><td class="num">8.7%</td></tr>
+<tr><td>unknown</td><td class="num">2</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0%</td></tr>
+</tbody></table>
+<h3 class="chart-title">Cache Impact by Agent</h3>
+<table><thead><tr><th>Agent</th><th class="num">Sessions</th><th class="num">Raw Input</th><th class="num">Uncached</th><th class="num">Cached</th><th class="num">Hit %</th></tr></thead><tbody>
+<tr><td>unknown</td><td class="num">57</td><td class="num">111.6M</td><td class="num">7.6M</td><td class="num">104.0M</td><td class="num">93.2%</td></tr>
+<tr><td>unknown</td><td class="num">24</td><td class="num">72.9M</td><td class="num">3.7M</td><td class="num">69.2M</td><td class="num">94.9%</td></tr>
+<tr><td>unknown</td><td class="num">24</td><td class="num">46.8M</td><td class="num">2.0M</td><td class="num">44.7M</td><td class="num">95.7%</td></tr>
+<tr><td>unknown</td><td class="num">10</td><td class="num">37.7M</td><td class="num">1.4M</td><td class="num">36.2M</td><td class="num">96.2%</td></tr>
+<tr><td>unknown</td><td class="num">5</td><td class="num">11.4M</td><td class="num">956.4K</td><td class="num">10.5M</td><td class="num">91.6%</td></tr>
+<tr><td>unknown</td><td class="num">14</td><td class="num">9.0M</td><td class="num">1.2M</td><td class="num">7.8M</td><td class="num">87.0%</td></tr>
+<tr><td>unknown</td><td class="num">2</td><td class="num">4.4M</td><td class="num">102.0K</td><td class="num">4.3M</td><td class="num">97.7%</td></tr>
+<tr><td>unknown</td><td class="num">3</td><td class="num">4.4M</td><td class="num">311.5K</td><td class="num">4.0M</td><td class="num">92.8%</td></tr>
+<tr><td>unknown</td><td class="num">57</td><td class="num">3.7M</td><td class="num">1.2M</td><td class="num">2.5M</td><td class="num">66.8%</td></tr>
+<tr><td>unknown</td><td class="num">7</td><td class="num">2.7M</td><td class="num">280.2K</td><td class="num">2.4M</td><td class="num">89.5%</td></tr>
+<tr><td>unknown</td><td class="num">3</td><td class="num">1.6M</td><td class="num">287.9K</td><td class="num">1.3M</td><td class="num">82.3%</td></tr>
+<tr><td>unknown</td><td class="num">4</td><td class="num">568.1K</td><td class="num">141.9K</td><td class="num">426.1K</td><td class="num">75.0%</td></tr>
+<tr><td>unknown</td><td class="num">1</td><td class="num">96.3K</td><td class="num">38.9K</td><td class="num">57.3K</td><td class="num">59.6%</td></tr>
+<tr><td>unknown</td><td class="num">3</td><td class="num">45.4K</td><td class="num">38.7K</td><td class="num">6.7K</td><td class="num">14.7%</td></tr>
+<tr><td>unknown</td><td class="num">1</td><td class="num">42.6K</td><td class="num">13.5K</td><td class="num">29.2K</td><td class="num">68.4%</td></tr>
+</tbody></table>
+<h3 class="chart-title">Cache Impact by Day</h3>
+<table><thead><tr><th>Date</th><th class="num">Sessions</th><th class="num">Raw Input</th><th class="num">Uncached</th><th class="num">Cached</th><th class="num">Hit %</th></tr></thead><tbody>
+<tr><td></td><td class="num">5</td><td class="num">13.5M</td><td class="num">965.9K</td><td class="num">12.5M</td><td class="num">92.8%</td></tr>
+<tr><td></td><td class="num">17</td><td class="num">26.8M</td><td class="num">1.8M</td><td class="num">25.1M</td><td class="num">93.5%</td></tr>
+<tr><td></td><td class="num">37</td><td class="num">42.6M</td><td class="num">3.6M</td><td class="num">39.0M</td><td class="num">91.7%</td></tr>
+<tr><td></td><td class="num">39</td><td class="num">45.8M</td><td class="num">3.0M</td><td class="num">42.8M</td><td class="num">93.4%</td></tr>
+<tr><td></td><td class="num">53</td><td class="num">96.4M</td><td class="num">4.4M</td><td class="num">92.0M</td><td class="num">95.4%</td></tr>
+<tr><td></td><td class="num">10</td><td class="num">6.9M</td><td class="num">809.8K</td><td class="num">6.1M</td><td class="num">88.3%</td></tr>
+<tr><td></td><td class="num">21</td><td class="num">26.1M</td><td class="num">1.7M</td><td class="num">24.4M</td><td class="num">93.4%</td></tr>
+<tr><td></td><td class="num">17</td><td class="num">32.6M</td><td class="num">1.8M</td><td class="num">30.9M</td><td class="num">94.6%</td></tr>
+<tr><td></td><td class="num">10</td><td class="num">11.2M</td><td class="num">734.1K</td><td class="num">10.5M</td><td class="num">93.5%</td></tr>
+<tr><td></td><td class="num">6</td><td class="num">4.8M</td><td class="num">565.3K</td><td class="num">4.2M</td><td class="num">88.2%</td></tr>
+</tbody></table>
+<div class="always-visible">
+  <h3 id="phase-breakdown" class="chart-title">Phase Breakdown</h3>
+  <table><thead><tr><th>Phase</th><th>Dates</th><th class="num">Effective Tokens</th><th class="num">Sessions</th><th class="num">Commits</th><th class="num">Lines Added</th><th class="num">Test+</th><th class="num">Tok/Commit</th><th class="num">Tok/Line</th><th class="num">Test%</th></tr></thead><tbody><tr><td>Pre-Merge Exploration</td><td>2026-05-10–2026-05-24</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0%</td></tr><tr><td>Ramp-Up</td><td>2026-05-25–2026-05-31</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0%</td></tr><tr><td>Feature Velocity</td><td>2026-06-01–2026-06-14</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0%</td></tr><tr><td>Efficiency Gains</td><td>2026-06-15–2026-06-29</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0%</td></tr></tbody></table>
+</div>
+<div class="always-visible">
+  <h3 id="commit-efficiency" class="chart-title">Commit Efficiency</h3>
+  <h3 class="chart-title">Top 10 Most Efficient Commits</h3><table><thead><tr><th>#</th><th>Date</th><th>Message</th><th class="num">Lines</th><th class="num">Adds</th><th class="num">Dels</th><th class="num">Tok/Commit</th><th class="num">Tok/Line</th></tr></thead><tbody><tr><td>1</td><td>2026-07-01</td><td>CollageMaker: Phase 1 — add agents, skills, app shell, layout math, and canvas r</td><td class="num">11291</td><td class="num">11291</td><td class="num">0</td><td class="num">1.1M</td><td class="num">96</td></tr><tr><td>2</td><td>2026-07-07</td><td>CollageMaker: refactor into handler modules, add saliency/PWA/responsive feature</td><td class="num">15021</td><td class="num">13805</td><td class="num">1216</td><td class="num">2.0M</td><td class="num">131</td></tr><tr><td>3</td><td>2026-07-09</td><td>CollageMaker: add hex panel swap, multi-touch, crop overlay shape, refactor hand</td><td class="num">4771</td><td class="num">4180</td><td class="num">591</td><td class="num">863.7K</td><td class="num">181</td></tr><tr><td>4</td><td>2026-07-02</td><td>CollageMaker: add building-web-apps skill, test infrastructure, and Mocha/Chai t</td><td class="num">2208</td><td class="num">2208</td><td class="num">0</td><td class="num">408.6K</td><td class="num">185</td></tr><tr><td>5</td><td>2026-07-02</td><td>CollageMaker: Fix UndoManager batch undo/redo, refactor E2E tests, add coverage</td><td class="num">1415</td><td class="num">1415</td><td class="num">0</td><td class="num">408.6K</td><td class="num">289</td></tr><tr><td>6</td><td>2026-07-02</td><td>CollageMaker: add crop interaction, undo/redo, hover borders, and UI updates</td><td class="num">811</td><td class="num">652</td><td class="num">159</td><td class="num">408.6K</td><td class="num">504</td></tr><tr><td>7</td><td>2026-07-02</td><td>CollageMaker: add crop interaction core modules</td><td class="num">791</td><td class="num">791</td><td class="num">0</td><td class="num">408.6K</td><td class="num">517</td></tr><tr><td>8</td><td>2026-07-03</td><td>CollageMaker: add backgrounds, title/overlay rendering, export manager, and sett</td><td class="num">4614</td><td class="num">4505</td><td class="num">109</td><td class="num">4.0M</td><td class="num">875</td></tr><tr><td>9</td><td>2026-07-02</td><td>CollageMaker: remind agents to commit skills, tests, and configs</td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td class="num">408.6K</td><td class="num">408.6K</td></tr></tbody></table><br><h3 class="chart-title">Top 10 Least Efficient Commits</h3><table><thead><tr><th>#</th><th>Date</th><th>Message</th><th class="num">Lines</th><th class="num">Adds</th><th class="num">Dels</th><th class="num">Tok/Commit</th><th class="num">Tok/Line</th></tr></thead><tbody><tr><td>1</td><td>2026-07-02</td><td>CollageMaker: remind agents to commit skills, tests, and configs</td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td class="num">408.6K</td><td class="num">408.6K</td></tr><tr><td>2</td><td>2026-07-03</td><td>CollageMaker: add backgrounds, title/overlay rendering, export manager, and sett</td><td class="num">4614</td><td class="num">4505</td><td class="num">109</td><td class="num">4.0M</td><td class="num">875</td></tr><tr><td>3</td><td>2026-07-02</td><td>CollageMaker: add crop interaction core modules</td><td class="num">791</td><td class="num">791</td><td class="num">0</td><td class="num">408.6K</td><td class="num">517</td></tr><tr><td>4</td><td>2026-07-02</td><td>CollageMaker: add crop interaction, undo/redo, hover borders, and UI updates</td><td class="num">811</td><td class="num">652</td><td class="num">159</td><td class="num">408.6K</td><td class="num">504</td></tr><tr><td>5</td><td>2026-07-02</td><td>CollageMaker: Fix UndoManager batch undo/redo, refactor E2E tests, add coverage</td><td class="num">1415</td><td class="num">1415</td><td class="num">0</td><td class="num">408.6K</td><td class="num">289</td></tr><tr><td>6</td><td>2026-07-02</td><td>CollageMaker: add building-web-apps skill, test infrastructure, and Mocha/Chai t</td><td class="num">2208</td><td class="num">2208</td><td class="num">0</td><td class="num">408.6K</td><td class="num">185</td></tr><tr><td>7</td><td>2026-07-09</td><td>CollageMaker: add hex panel swap, multi-touch, crop overlay shape, refactor hand</td><td class="num">4771</td><td class="num">4180</td><td class="num">591</td><td class="num">863.7K</td><td class="num">181</td></tr><tr><td>8</td><td>2026-07-07</td><td>CollageMaker: refactor into handler modules, add saliency/PWA/responsive feature</td><td class="num">15021</td><td class="num">13805</td><td class="num">1216</td><td class="num">2.0M</td><td class="num">131</td></tr><tr><td>9</td><td>2026-07-01</td><td>CollageMaker: Phase 1 — add agents, skills, app shell, layout math, and canvas r</td><td class="num">11291</td><td class="num">11291</td><td class="num">0</td><td class="num">1.1M</td><td class="num">96</td></tr></tbody></table>
+</div>
+<div class="always-visible">
+  <h3 id="agent-context-efficiency" class="chart-title">Agent Context Efficiency</h3>
+  <table><thead><tr><th>Agent</th><th class="num">Sessions</th><th class="num">Total Tokens</th><th class="num">Input</th><th class="num">Output</th><th class="num">Reasoning</th></tr></thead><tbody><tr><td>build-docs</td><td class="num">57</td><td class="num">112.6M</td><td class="num">111.6M</td><td class="num">799.5K</td><td class="num">222.1K</td></tr><tr><td>build</td><td class="num">24</td><td class="num">73.4M</td><td class="num">72.9M</td><td class="num">388.1K</td><td class="num">168.8K</td></tr><tr><td>build-test</td><td class="num">24</td><td class="num">47.2M</td><td class="num">46.8M</td><td class="num">369.8K</td><td class="num">104.0K</td></tr><tr><td>build-tdd</td><td class="num">10</td><td class="num">37.9M</td><td class="num">37.7M</td><td class="num">207.6K</td><td class="num">44.0K</td></tr><tr><td>build-debug</td><td class="num">5</td><td class="num">11.5M</td><td class="num">11.4M</td><td class="num">44.2K</td><td class="num">58.3K</td></tr><tr><td>planner</td><td class="num">14</td><td class="num">9.1M</td><td class="num">9.0M</td><td class="num">125.0K</td><td class="num">10.9K</td></tr><tr><td>general</td><td class="num">2</td><td class="num">4.4M</td><td class="num">4.4M</td><td class="num">35.2K</td><td class="num">6.2K</td></tr><tr><td>plan</td><td class="num">3</td><td class="num">4.4M</td><td class="num">4.4M</td><td class="num">27.1K</td><td class="num">12.6K</td></tr><tr><td>world-review</td><td class="num">57</td><td class="num">4.1M</td><td class="num">3.7M</td><td class="num">128.3K</td><td class="num">272.0K</td></tr><tr><td>build-quick-work</td><td class="num">7</td><td class="num">2.7M</td><td class="num">2.7M</td><td class="num">18.3K</td><td class="num">15.3K</td></tr><tr><td>explore</td><td class="num">3</td><td class="num">1.6M</td><td class="num">1.6M</td><td class="num">18.0K</td><td class="num">2.5K</td></tr><tr><td>diff-review-g31</td><td class="num">4</td><td class="num">591.2K</td><td class="num">568.1K</td><td class="num">4.0K</td><td class="num">19.1K</td></tr><tr><td>solid-review</td><td class="num">1</td><td class="num">99.1K</td><td class="num">96.3K</td><td class="num">2.5K</td><td class="num">324</td></tr><tr><td>planner-g31</td><td class="num">3</td><td class="num">58.5K</td><td class="num">45.4K</td><td class="num">9.6K</td><td class="num">3.6K</td></tr><tr><td>solid-review-g31</td><td class="num">1</td><td class="num">49.9K</td><td class="num">42.6K</td><td class="num">5.2K</td><td class="num">2.0K</td></tr></tbody></table>
+</div>
+<div class="always-visible">
+  <h3 id="top-sessions-by-token-count" class="chart-title">Top Sessions by Token Count</h3>
+  <table><thead><tr><th>#</th><th>Agent</th><th>Model</th><th>Title</th><th class="num">Tokens (raw)</th></tr></thead><tbody><tr><td>1</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>Opencode LLM usage cost discrepancy review</td><td class="num">15.6M</td></tr><tr><td>2</td><td>build-docs</td><td style="font-size:0.75rem">agents-a1</td><td>Canvas image load error at localhost:8000</td><td class="num">14.6M</td></tr><tr><td>3</td><td>build-tdd</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>Implement Phase 3 plan: review and capture learnings</td><td class="num">11.0M</td></tr><tr><td>4</td><td>build</td><td style="font-size:0.75rem">agents-a1</td><td>Opencode token usage analytics and reporting</td><td class="num">8.4M</td></tr><tr><td>5</td><td>build</td><td style="font-size:0.75rem">agents-a1</td><td>Update analyzing-opencode-usage using Section 3.6 & @world-r</td><td class="num">7.8M</td></tr><tr><td>6</td><td>build-test</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>Implement tests in Section 3.5; World Review and timeline up</td><td class="num">7.8M</td></tr><tr><td>7</td><td>build-docs</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>Phase 2 implementation: CollageMaker Web Port</td><td class="num">7.2M</td></tr><tr><td>8</td><td>build-docs</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>CollageMaker agent/skill review and adjustments</td><td class="num">7.1M</td></tr><tr><td>9</td><td>build-docs</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>Run P0 tests from collagemaker-test-plan.md</td><td class="num">7.0M</td></tr><tr><td>10</td><td>build</td><td style="font-size:0.75rem">agents-a1</td><td>Data access layer Phase 3 implementation</td><td class="num">6.7M</td></tr><tr><td>11</td><td>build-docs</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>Phase 4 implementation & learnings documentation</td><td class="num">6.5M</td></tr><tr><td>12</td><td>build</td><td style="font-size:0.75rem">agents-a1</td><td>Phase 6 implementation for data access layer plan</td><td class="num">6.4M</td></tr><tr><td>13</td><td>build-docs</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>Opencode token usage analytics via SQLite</td><td class="num">6.3M</td></tr><tr><td>14</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>Phase 3 implementation: fix-analytics-script-bugs.md</td><td class="num">5.8M</td></tr><tr><td>15</td><td>build-docs</td><td style="font-size:0.75rem">ornith-1.0-35b</td><td>Plan implementation: Section 3.1 review</td><td class="num">5.8M</td></tr><tr><td>16</td><td>build-docs</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>Implement phase 3 plan via web app guidance</td><td class="num">5.7M</td></tr><tr><td>17</td><td>build-docs</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>Collagemaker Web Port Phase 1 Implementation</td><td class="num">5.5M</td></tr><tr><td>18</td><td>build-tdd</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>Implement Phase 5, review concerns, update project learnings</td><td class="num">5.4M</td></tr><tr><td>19</td><td>build-debug</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>CollageMaker Canvas scrolling issue debug</td><td class="num">5.1M</td></tr><tr><td>20</td><td>build</td><td style="font-size:0.75rem">agents-a1</td><td>New session - 2026-07-05T11:37:39.657Z</td><td class="num">5.0M</td></tr></tbody></table>
+</div>
+  </div>
+</details>
+
+<footer>
+  <p>Data sources: opencode SQLite DB (<code>session</code> + <code>message</code> tables) + git log (all tracked files)</p>
+  <p>LM Studio cache columns (<code>tokens_cache_read</code>/<code>tokens_cache_write</code>) exist but are all 0 — input token counts may be overstated for cached sessions.</p>
+  <p>Token counts use cache-adjusted (uncached) input by default. Raw values shown for comparison in summary cards and top sessions table.</p>
+</footer>
+
+<div id="svg-tooltip"></div>
+
+<script>
+// Collapsible section toggle handler
+function toggleDetails(summaryEl) {
+  const details = summaryEl.parentElement;
+  // Toggle is handled natively by <details>, this just provides smooth transition feedback
+}
+
+// Tooltip for chart points
+const tooltip = document.getElementById('svg-tooltip');
+document.querySelectorAll('.chart-point').forEach(pt => {
+  pt.addEventListener('mouseenter', e => {
+    if (!tooltip) return;
+    tooltip.style.display = 'block';
+    let html = '';
+    const date = pt.getAttribute('data-date');
+    if (date) html += '<strong>' + date + '</strong><br>';
+    const attrs = pt.attributes;
+    for (let i = 0; i < attrs.length; i++) {
+      const attr = attrs[i];
+      if (attr.name.startsWith('data-') && attr.name !== 'data-date' && attr.name !== 'data-chart-type') {
+        const label = attr.name.replace('data-', '').replace(/-([a-z])/g, g => g[1].toUpperCase());
+        const num = parseFloat(attr.value);
+        html += label + ': ' + (isNaN(num) ? attr.value : num.toLocaleString()) + '<br>';
+      }
+    }
+    tooltip.innerHTML = html;
+  });
+  pt.addEventListener('mousemove', e => {
+    if (!tooltip) return;
+    tooltip.style.left = (e.clientX + 15) + 'px';
+    tooltip.style.top = (e.clientY + 15) + 'px';
+  });
+  pt.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.display = 'none'; });
+});
+</script>
+</body>
+</html>

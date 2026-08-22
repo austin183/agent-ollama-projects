@@ -1,0 +1,20 @@
+{
+  "purpose": "debug",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "CollageMaker/MyESModules/App/createCollageMethods.js",
+    "CollageMaker/MyESModules/App/createCropHandlers.js"
+  ],
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "summary": "Fixed two crop overlay bugs: (1) Crop drag/resize not working at all — caused by selectPanel passing base._cropInteraction (always undefined) instead of this._cropInteraction. Fixed in createCollageMethods.js. (2) Crop drag/resize required two clicks on first panel selection — caused by cropInteraction.setPanelId() running synchronously before Vue rendered the v-if block containing the crop canvas. Fixed by moving setPanelId into $nextTick alongside _scheduleCropPreviewRender in createCropHandlers.js. All 687 unit tests and E2E tests pass.",
+  "key_decisions": [
+    "Changed base._cropInteraction to this._cropInteraction in createCollageMethods.js",
+    "Moved cropInteraction.setPanelId into $nextTick in createCropHandlers.js to match the existing pattern for _scheduleCropPreviewRender"
+  ],
+  "challenges": [
+    "The DOM timing issue was already documented in a previous learning but only the render call was fixed — the interaction attach call had the same problem"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "purpose": "docs",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "CollageMaker/MyESModules/App/createCropHandlers.js",
+    "CollageMaker/MyESModules/App/createCollageMethods.js",
+    "CollageMaker/MyESModules/App/createFileHandlers.js",
+    "CollageMaker/MyESModules/State/LayoutManager.js",
+    "CollageMaker/MyESModules/App/createCollageLifecycle.js"
+  ],
+  "learnings_written": [
+    "_agent_docs/learnings/crop-preview-timing-issue.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "summary": "Fixed two bugs in CollageMaker: (1) Main canvas not rendering after image upload - caused by accessing base.canvasRenderer directly instead of using base.getCanvasRenderer(). Fixed by updating createCollageMethods.js to use the getter. (2) Crop Editor sidebar showing blank when selecting a panel - caused by missing call to _scheduleCropPreviewRender() and DOM timing issues. Fixed by adding _scheduleCropPreviewRender() in selectPanel handler and wrapping it in this.$nextTick() to wait for Vue's DOM updates. Verified through browser automation that images now render on main canvas and crop preview displays correctly with overlay.",
+  "key_decisions": [
+    "Use base.getCanvasRenderer() instead of direct property access",
+    "Wrap DOM-dependent operations in $nextTick() to ensure Vue has finished DOM updates"
+  ],
+  "challenges": [
+    "Debugging async Vue reactivity timing issues",
+    "Identifying that canvas element didn't exist in DOM when crop preview render was called"
+  ]
+}

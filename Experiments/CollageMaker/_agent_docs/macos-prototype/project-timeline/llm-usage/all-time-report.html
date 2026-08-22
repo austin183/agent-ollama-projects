@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CollageMaker — LLM Usage Report</title>
+<style>
+  :root {
+    --bg: #1a1a2e; --card-bg: #16213e; --border: #0f3460;
+    --text: #e0e0e0; --muted: #8892a4; --accent: #4fc3f7;
+    --input-color: #4fc3f7; --output-color: #4db6ac; --reasoning-color: #ba68c8;
+    --bar-bg: rgba(255,255,255,0.06);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', Menlo, monospace; line-height: 1.5; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+  
+  h1 { font-size: 1.8rem; color: var(--accent); margin-bottom: 0.3rem; letter-spacing: -0.5px; }
+  h2 { font-size: 1.2rem; color: var(--muted); margin-top: 2rem; margin-bottom: 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; }
+  
+  /* Metric cards */
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .metric-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; text-align: center; }
+  .metric-value { font-size: 1.6rem; font-weight: 700; color: var(--accent); letter-spacing: -1px; }
+  .metric-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; margin-top: 0.3rem; letter-spacing: 0.5px; }
+  
+  /* Stacked bars (model breakdown) */
+  .bar-row { display: flex; align-items: center; margin-bottom: 0.6rem; gap: 0.8rem; }
+  .bar-label { width: 220px; font-size: 0.8rem; color: var(--muted); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 24px; background: var(--bar-bg); border-radius: 4px; overflow: hidden; display: flex; position: relative; }
+  .bar-segment { height: 100%; transition: opacity 0.2s; cursor: pointer; }
+  .bar-segment:hover { opacity: 0.8; }
+  .bar-value { font-size: 0.75rem; color: var(--muted); width: 90px; text-align: right; flex-shrink: 0; }
+  
+  /* Horizontal bars (agent usage) */
+  .h-bar-row { display: flex; align-items: center; margin-bottom: 0.5rem; gap: 1rem; }
+  .h-bar-label { width: 160px; font-size: 0.8rem; color: var(--muted); text-align: right; flex-shrink: 0; }
+  .h-bar-track { flex: 1; height: 20px; background: var(--bar-bg); border-radius: 3px; overflow: hidden; position: relative; }
+  .h-bar-fill { height: 100%; background: linear-gradient(90deg, #4fc3f7, #4db6ac); border-radius: 3px; transition: width 0.3s; }
+  .h-bar-value { font-size: 0.75rem; color: var(--muted); width: 90px; text-align: right; flex-shrink: 0; }
+  
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.82rem; }
+  th { text-align: left; color: var(--muted); padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--border); font-weight: 500; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; }
+  td { padding: 0.5rem 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  tr:hover td { background: rgba(79,195,247,0.06); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  
+  /* Chart */
+  .chart-svg { width: 100%; height: auto; margin-bottom: 1rem; }
+  .chart-point { cursor: crosshair; transition: r 0.15s; }
+  .chart-point:hover { r: 6; }
+  
+  /* Legend */
+  .legend { display: flex; gap: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--muted); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 2px; }
+
+  /* Chart titles (sub-section headings within Code Impact) */
+  .chart-title { font-size: 0.95rem; color: var(--muted); margin-top: 2rem; margin-bottom: 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid rgba(15,52,96,0.5); }
+
+  /* Tooltip */
+  #svg-tooltip { position: fixed; display: none; background: #16213e; border: 1px solid #4fc3f7; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #e0e0e0; pointer-events: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3); line-height: 1.6; }
+
+  /* Code impact cards */
+  .impact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .impact-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; text-align: center; }
+  .impact-value { font-size: 1.8rem; font-weight: 700; color: #4db6ac; letter-spacing: -1px; }
+  .impact-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; margin-top: 0.3rem; letter-spacing: 0.5px; }
+  .impact-card.ratio { border-color: #4db6ac; background: rgba(77, 182, 172, 0.06); }
+  .impact-card.ratio .impact-value { color: #4db6ac; font-size: 2rem; }
+  
+  /* Footer */
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.72rem; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>CollageMaker — LLM Usage Report</h1>
+<p class="subtitle">Period: 2026-05-10 to 2026-06-28 &middot; Generated: 2026-06-28 09:39 CDT</p>
+
+<div class="metrics-grid" id="summary">
+  <div class="metric-card"><div class="metric-value">940.8M</div><div class="metric-label">Total Tokens</div></div>
+  <div class="metric-card"><div class="metric-value">923</div><div class="metric-label">Sessions</div></div>
+  <div class="metric-card"><div class="metric-value">1.0M</div><div class="metric-label">Avg / Session</div></div>
+  <div class="metric-card"><div class="metric-value">9</div><div class="metric-label">Models Used</div></div>
+  <div class="metric-card"><div class="metric-value">13</div><div class="metric-label">Agent Roles</div></div>
+</div>
+
+<h2 id="models">Token Usage by Model</h2>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:#4fc3f7"></div>Input</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#4db6ac"></div>Output</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#ba68c8"></div>Reasoning</div>
+</div>
+
+<div class="bar-row">
+  <span class="bar-label" title="qwen/qwen3.6-27b">qwen/qwen3.6-27b</span>
+  <div class="bar-track" style="width:100.0%">
+    <div class="bar-segment" style="width:99.25680525708995%;background:#4fc3f7;" title="Input: 761.6M"></div>
+    <div class="bar-segment" style="width:0.4610173024266513%;background:#4db6ac;" title="Output: 3.5M"></div>
+    <div class="bar-segment" style="width:0.2821774404833969%;background:#ba68c8;" title="Reasoning: 2.2M"></div>
+  </div>
+  <span class="bar-value">767.3M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="qwen/qwen3.6-27b">qwen/qwen3.6-27b</span>
+  <div class="bar-track" style="width:6.03538202285449%">
+    <div class="bar-segment" style="width:97.56669356208366%;background:#4fc3f7;" title="Input: 45.2M"></div>
+    <div class="bar-segment" style="width:1.6246667359836386%;background:#4db6ac;" title="Output: 752.4K"></div>
+    <div class="bar-segment" style="width:0.8086397019327017%;background:#ba68c8;" title="Reasoning: 374.5K"></div>
+  </div>
+  <span class="bar-value">46.3M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="ornith-1.0-35b">ornith-1.0-35b</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:99.21983937621334%;background:#4fc3f7;" title="Input: 36.7M"></div>
+    <div class="bar-segment" style="width:0.5421449681614035%;background:#4db6ac;" title="Output: 200.5K"></div>
+    <div class="bar-segment" style="width:0.23801565562524962%;background:#ba68c8;" title="Reasoning: 88.0K"></div>
+  </div>
+  <span class="bar-value">37.0M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="qwen/qwen3.6-35b-a3b">qwen/qwen3.6-35b-a3b</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:98.90528591016874%;background:#4fc3f7;" title="Input: 31.7M"></div>
+    <div class="bar-segment" style="width:0.6578780485240325%;background:#4db6ac;" title="Output: 210.9K"></div>
+    <div class="bar-segment" style="width:0.4368360413072271%;background:#ba68c8;" title="Reasoning: 140.0K"></div>
+  </div>
+  <span class="bar-value">32.1M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="qwen/qwen3-coder-next">qwen/qwen3-coder-next</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:99.80636938537104%;background:#4fc3f7;" title="Input: 13.0M"></div>
+    <div class="bar-segment" style="width:0.19363061462895612%;background:#4db6ac;" title="Output: 25.3K"></div>
+  </div>
+  <span class="bar-value">13.1M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="ornith-1.0-35b">ornith-1.0-35b</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:99.13306744178688%;background:#4fc3f7;" title="Input: 11.8M"></div>
+    <div class="bar-segment" style="width:0.7090795604119654%;background:#4db6ac;" title="Output: 84.5K"></div>
+    <div class="bar-segment" style="width:0.1578529978011534%;background:#ba68c8;" title="Reasoning: 18.8K"></div>
+  </div>
+  <span class="bar-value">11.9M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="qwen-agentworld-35b-a3b">qwen-agentworld-35b-a3b</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:99.03254384561687%;background:#4fc3f7;" title="Input: 11.4M"></div>
+    <div class="bar-segment" style="width:0.4901755776350498%;background:#4db6ac;" title="Output: 56.3K"></div>
+    <div class="bar-segment" style="width:0.47728057674808294%;background:#ba68c8;" title="Reasoning: 54.8K"></div>
+  </div>
+  <span class="bar-value">11.5M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="google/gemma-4-31b-qat">google/gemma-4-31b-qat</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:95.74748302734842%;background:#4fc3f7;" title="Input: 7.3M"></div>
+    <div class="bar-segment" style="width:0.8962396735812327%;background:#4db6ac;" title="Output: 68.6K"></div>
+    <div class="bar-segment" style="width:3.356277299070345%;background:#ba68c8;" title="Reasoning: 256.7K"></div>
+  </div>
+  <span class="bar-value">7.6M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="qwen/qwen3.6-35b-a3b">qwen/qwen3.6-35b-a3b</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:97.65309873727648%;background:#4fc3f7;" title="Input: 6.5M"></div>
+    <div class="bar-segment" style="width:1.0522142633790863%;background:#4db6ac;" title="Output: 69.7K"></div>
+    <div class="bar-segment" style="width:1.2946869993444319%;background:#ba68c8;" title="Reasoning: 85.8K"></div>
+  </div>
+  <span class="bar-value">6.6M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="unknown">unknown</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:98.32318524126492%;background:#4fc3f7;" title="Input: 3.8M"></div>
+    <div class="bar-segment" style="width:1.5183832870532183%;background:#4db6ac;" title="Output: 58.9K"></div>
+    <div class="bar-segment" style="width:0.15843147168185764%;background:#ba68c8;" title="Reasoning: 6.1K"></div>
+  </div>
+  <span class="bar-value">3.9M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="google/gemma-4-31b-qat">google/gemma-4-31b-qat</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:97.70472588848929%;background:#4fc3f7;" title="Input: 2.6M"></div>
+    <div class="bar-segment" style="width:0.8827089499196336%;background:#4db6ac;" title="Output: 23.7K"></div>
+    <div class="bar-segment" style="width:1.4125651615910653%;background:#ba68c8;" title="Reasoning: 37.9K"></div>
+  </div>
+  <span class="bar-value">2.7M</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="qwen-agentworld-35b-a3b">qwen-agentworld-35b-a3b</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:93.73634633530042%;background:#4fc3f7;" title="Input: 586.1K"></div>
+    <div class="bar-segment" style="width:3.017799740920213%;background:#4db6ac;" title="Output: 18.9K"></div>
+    <div class="bar-segment" style="width:3.245853923779366%;background:#ba68c8;" title="Reasoning: 20.3K"></div>
+  </div>
+  <span class="bar-value">625.3K</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="google/gemma-4-31b">google/gemma-4-31b</span>
+  <div class="bar-track" style="width:5%">
+    <div class="bar-segment" style="width:97.95625721250691%;background:#4fc3f7;" title="Input: 286.9K"></div>
+    <div class="bar-segment" style="width:0.7514664008139463%;background:#4db6ac;" title="Output: 2.2K"></div>
+    <div class="bar-segment" style="width:1.29227638667914%;background:#ba68c8;" title="Reasoning: 3.8K"></div>
+  </div>
+  <span class="bar-value">292.9K</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="qwen3.6-27b">qwen3.6-27b</span>
+  <div class="bar-track" style="width:5%">
+  </div>
+  <span class="bar-value">0</span>
+</div>
+<div class="bar-row">
+  <span class="bar-label" title="allenai/olmo-3-32b-think">allenai/olmo-3-32b-think</span>
+  <div class="bar-track" style="width:5%">
+  </div>
+  <span class="bar-value">0</span>
+</div>
+
+<h2 id="agents">Token Usage by Agent</h2>
+
+<div class="h-bar-row">
+  <span class="h-bar-label" title="build">build</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:100.0%"></div></div>
+  <span class="h-bar-value">873.7M (617)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="explore">explore</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2.4931924006015858%"></div></div>
+  <span class="h-bar-value">21.8M (121)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="diff-review">diff-review</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">15.3M (47)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="planner">planner</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">8.5M (21)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="plan">plan</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">7.2M (17)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="unknown">unknown</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">3.9M (19)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="diff-review-g31">diff-review-g31</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">3.5M (31)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="general">general</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">2.1M (21)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="solid-review">solid-review</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">2.1M (9)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="planner-g31">planner-g31</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">1.4M (11)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="diff-review-q35">diff-review-q35</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">678.1K (1)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="world-review">world-review</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">625.3K (6)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="bug-investigator-g31">bug-investigator-g31</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">209.4K (1)</span>
+</div>
+<div class="h-bar-row">
+  <span class="h-bar-label" title="diff-review-o32">diff-review-o32</span>
+  <div class="h-bar-track"><div class="h-bar-fill" style="width:2%"></div></div>
+  <span class="h-bar-value">0 (1)</span>
+</div>
+
+<h2 id="cross-tab">Model &times; Agent Breakdown</h2>
+
+<table><thead><tr><th>Model</th><th>Agent</th><th class="num">Sessions</th><th class="num">Tokens</th></tr></thead><tbody><tr><td>qwen/qwen3.6-27b</td><td>build</td><td class="num">394</td><td class="num">760.6M</td></tr><tr><td>ornith-1.0-35b</td><td>build</td><td class="num">24</td><td class="num">37.0M</td></tr><tr><td>qwen/qwen3.6-35b-a3b</td><td>build</td><td class="num">142</td><td class="num">31.9M</td></tr><tr><td>qwen/qwen3.6-27b</td><td>explore</td><td class="num">106</td><td class="num">19.2M</td></tr><tr><td>qwen/qwen3-coder-next</td><td>build</td><td class="num">1</td><td class="num">13.1M</td></tr><tr><td>qwen/qwen3.6-27b</td><td>diff-review</td><td class="num">38</td><td class="num">11.7M</td></tr><tr><td>ornith-1.0-35b</td><td>build</td><td class="num">3</td><td class="num">11.7M</td></tr><tr><td>qwen-agentworld-35b-a3b</td><td>build</td><td class="num">11</td><td class="num">11.5M</td></tr><tr><td>qwen/qwen3.6-27b</td><td>planner</td><td class="num">21</td><td class="num">8.5M</td></tr><tr><td>qwen/qwen3.6-27b</td><td>plan</td><td class="num">12</td><td class="num">6.7M</td></tr><tr><td>unknown</td><td>unknown</td><td class="num">19</td><td class="num">3.9M</td></tr><tr><td>qwen/qwen3.6-27b</td><td>build</td><td class="num">4</td><td class="num">3.6M</td></tr><tr><td>qwen/qwen3.6-35b-a3b</td><td>diff-review</td><td class="num">8</td><td class="num">3.5M</td></tr><tr><td>google/gemma-4-31b-qat</td><td>diff-review-g31</td><td class="num">31</td><td class="num">3.5M</td></tr><tr><td>google/gemma-4-31b-qat</td><td>build</td><td class="num">23</td><td class="num">2.4M</td></tr><tr><td>qwen/qwen3.6-27b</td><td>solid-review</td><td class="num">5</td><td class="num">1.9M</td></tr><tr><td>qwen/qwen3.6-35b-a3b</td><td>explore</td><td class="num">5</td><td class="num">1.7M</td></tr><tr><td>qwen/qwen3.6-27b</td><td>general</td><td class="num">13</td><td class="num">1.5M</td></tr><tr><td>google/gemma-4-31b-qat</td><td>planner-g31</td><td class="num">11</td><td class="num">1.4M</td></tr><tr><td>google/gemma-4-31b-qat</td><td>build</td><td class="num">13</td><td class="num">1.0M</td></tr><tr><td>qwen/qwen3.6-35b-a3b</td><td>build</td><td class="num">1</td><td class="num">748.3K</td></tr><tr><td>google/gemma-4-31b-qat</td><td>explore</td><td class="num">6</td><td class="num">712.9K</td></tr><tr><td>qwen/qwen3.6-35b-a3b</td><td>diff-review-q35</td><td class="num">1</td><td class="num">678.1K</td></tr><tr><td>qwen-agentworld-35b-a3b</td><td>world-review</td><td class="num">6</td><td class="num">625.3K</td></tr><tr><td>google/gemma-4-31b-qat</td><td>general</td><td class="num">6</td><td class="num">596.8K</td></tr><tr><td>google/gemma-4-31b-qat</td><td>plan</td><td class="num">3</td><td class="num">325.1K</td></tr><tr><td>google/gemma-4-31b</td><td>build</td><td class="num">1</td><td class="num">292.9K</td></tr><tr><td>google/gemma-4-31b-qat</td><td>solid-review</td><td class="num">3</td><td class="num">212.2K</td></tr><tr><td>google/gemma-4-31b-qat</td><td>bug-investigator-g31</td><td class="num">1</td><td class="num">209.4K</td></tr><tr><td>ornith-1.0-35b</td><td>explore</td><td class="num">4</td><td class="num">192.5K</td></tr></tbody></table>
+
+<h2 id="timeseries">Daily Token Trend</h2>
+
+<table><thead><tr><th>Date</th><th>Sessions</th><th class="num">Total Tokens</th><th class="num">Input</th><th class="num">Output</th><th class="num">Reasoning</th><th class="num">Reasoning %</th></tr></thead><tbody><tr><td>2026-05-10</td><td class="num">9</td><td class="num">22.7M</td><td class="num">22.5M</td><td class="num">130.6K</td><td class="num">30.5K</td><td class="num">0.1%</td></tr><tr><td>2026-05-11</td><td class="num">23</td><td class="num">19.3M</td><td class="num">19.1M</td><td class="num">146.8K</td><td class="num">51.4K</td><td class="num">0.3%</td></tr><tr><td>2026-05-12</td><td class="num">10</td><td class="num">5.9M</td><td class="num">5.8M</td><td class="num">51.1K</td><td class="num">20.6K</td><td class="num">0.3%</td></tr><tr><td>2026-05-13</td><td class="num">15</td><td class="num">19.0M</td><td class="num">18.8M</td><td class="num">92.4K</td><td class="num">43.1K</td><td class="num">0.2%</td></tr><tr><td>2026-05-14</td><td class="num">14</td><td class="num">17.8M</td><td class="num">17.7M</td><td class="num">90.6K</td><td class="num">44.0K</td><td class="num">0.2%</td></tr><tr><td>2026-05-15</td><td class="num">13</td><td class="num">12.4M</td><td class="num">12.3M</td><td class="num">65.2K</td><td class="num">46.8K</td><td class="num">0.4%</td></tr><tr><td>2026-05-16</td><td class="num">22</td><td class="num">19.2M</td><td class="num">19.0M</td><td class="num">114.7K</td><td class="num">87.7K</td><td class="num">0.5%</td></tr><tr><td>2026-05-17</td><td class="num">20</td><td class="num">20.2M</td><td class="num">20.0M</td><td class="num">150.7K</td><td class="num">49.7K</td><td class="num">0.2%</td></tr><tr><td>2026-05-18</td><td class="num">5</td><td class="num">3.5M</td><td class="num">3.5M</td><td class="num">47.6K</td><td class="num">15.0K</td><td class="num">0.4%</td></tr><tr><td>2026-05-19</td><td class="num">26</td><td class="num">15.8M</td><td class="num">15.6M</td><td class="num">116.6K</td><td class="num">37.4K</td><td class="num">0.2%</td></tr><tr><td>2026-05-20</td><td class="num">5</td><td class="num">5.5M</td><td class="num">5.4M</td><td class="num">30.5K</td><td class="num">10.4K</td><td class="num">0.2%</td></tr><tr><td>2026-05-21</td><td class="num">12</td><td class="num">24.5M</td><td class="num">24.3M</td><td class="num">112.5K</td><td class="num">77.2K</td><td class="num">0.3%</td></tr><tr><td>2026-05-22</td><td class="num">17</td><td class="num">11.0M</td><td class="num">10.9M</td><td class="num">65.7K</td><td class="num">53.5K</td><td class="num">0.5%</td></tr><tr><td>2026-05-23</td><td class="num">18</td><td class="num">4.3M</td><td class="num">4.2M</td><td class="num">62.9K</td><td class="num">16.0K</td><td class="num">0.4%</td></tr><tr><td>2026-05-24</td><td class="num">15</td><td class="num">1.1M</td><td class="num">1.1M</td><td class="num">28.9K</td><td class="num">3.5K</td><td class="num">0.3%</td></tr><tr><td>2026-05-25</td><td class="num">23</td><td class="num">19.0M</td><td class="num">18.8M</td><td class="num">133.4K</td><td class="num">93.2K</td><td class="num">0.5%</td></tr><tr><td>2026-05-26</td><td class="num">14</td><td class="num">15.5M</td><td class="num">15.4M</td><td class="num">83.1K</td><td class="num">50.8K</td><td class="num">0.3%</td></tr><tr><td>2026-05-27</td><td class="num">10</td><td class="num">23.0M</td><td class="num">22.9M</td><td class="num">97.7K</td><td class="num">34.2K</td><td class="num">0.1%</td></tr><tr><td>2026-05-28</td><td class="num">15</td><td class="num">21.3M</td><td class="num">21.1M</td><td class="num">103.1K</td><td class="num">51.5K</td><td class="num">0.2%</td></tr><tr><td>2026-05-29</td><td class="num">22</td><td class="num">11.9M</td><td class="num">11.8M</td><td class="num">79.7K</td><td class="num">42.0K</td><td class="num">0.4%</td></tr><tr><td>2026-05-30</td><td class="num">28</td><td class="num">23.0M</td><td class="num">22.8M</td><td class="num">138.7K</td><td class="num">88.4K</td><td class="num">0.4%</td></tr><tr><td>2026-05-31</td><td class="num">35</td><td class="num">26.8M</td><td class="num">26.5M</td><td class="num">202.4K</td><td class="num">134.2K</td><td class="num">0.5%</td></tr><tr><td>2026-06-01</td><td class="num">9</td><td class="num">28.4M</td><td class="num">28.2M</td><td class="num">105.6K</td><td class="num">91.3K</td><td class="num">0.3%</td></tr><tr><td>2026-06-02</td><td class="num">21</td><td class="num">37.4M</td><td class="num">37.2M</td><td class="num">170.9K</td><td class="num">94.3K</td><td class="num">0.3%</td></tr><tr><td>2026-06-03</td><td class="num">16</td><td class="num">18.4M</td><td class="num">18.3M</td><td class="num">107.6K</td><td class="num">61.3K</td><td class="num">0.3%</td></tr><tr><td>2026-06-04</td><td class="num">20</td><td class="num">20.3M</td><td class="num">20.1M</td><td class="num">136.0K</td><td class="num">48.7K</td><td class="num">0.2%</td></tr><tr><td>2026-06-05</td><td class="num">13</td><td class="num">10.8M</td><td class="num">10.7M</td><td class="num">72.0K</td><td class="num">23.2K</td><td class="num">0.2%</td></tr><tr><td>2026-06-06</td><td class="num">32</td><td class="num">29.1M</td><td class="num">28.9M</td><td class="num">143.6K</td><td class="num">124.3K</td><td class="num">0.4%</td></tr><tr><td>2026-06-07</td><td class="num">19</td><td class="num">6.3M</td><td class="num">6.2M</td><td class="num">53.5K</td><td class="num">39.4K</td><td class="num">0.6%</td></tr><tr><td>2026-06-08</td><td class="num">19</td><td class="num">31.8M</td><td class="num">31.6M</td><td class="num">110.5K</td><td class="num">72.8K</td><td class="num">0.2%</td></tr><tr><td>2026-06-09</td><td class="num">17</td><td class="num">17.1M</td><td class="num">16.9M</td><td class="num">79.9K</td><td class="num">115.8K</td><td class="num">0.7%</td></tr><tr><td>2026-06-10</td><td class="num">11</td><td class="num">17.8M</td><td class="num">17.6M</td><td class="num">82.4K</td><td class="num">106.4K</td><td class="num">0.6%</td></tr><tr><td>2026-06-11</td><td class="num">25</td><td class="num">9.3M</td><td class="num">9.1M</td><td class="num">81.5K</td><td class="num">112.8K</td><td class="num">1.2%</td></tr><tr><td>2026-06-12</td><td class="num">10</td><td class="num">13.6M</td><td class="num">13.4M</td><td class="num">64.0K</td><td class="num">110.4K</td><td class="num">0.8%</td></tr><tr><td>2026-06-13</td><td class="num">26</td><td class="num">23.0M</td><td class="num">22.8M</td><td class="num">139.7K</td><td class="num">79.1K</td><td class="num">0.3%</td></tr><tr><td>2026-06-14</td><td class="num">13</td><td class="num">22.4M</td><td class="num">22.2M</td><td class="num">127.0K</td><td class="num">85.7K</td><td class="num">0.4%</td></tr><tr><td>2026-06-15</td><td class="num">24</td><td class="num">24.4M</td><td class="num">24.2M</td><td class="num">123.2K</td><td class="num">58.8K</td><td class="num">0.2%</td></tr><tr><td>2026-06-16</td><td class="num">23</td><td class="num">16.6M</td><td class="num">16.5M</td><td class="num">60.6K</td><td class="num">56.5K</td><td class="num">0.3%</td></tr><tr><td>2026-06-17</td><td class="num">22</td><td class="num">11.7M</td><td class="num">11.6M</td><td class="num">61.2K</td><td class="num">58.3K</td><td class="num">0.5%</td></tr><tr><td>2026-06-18</td><td class="num">27</td><td class="num">22.3M</td><td class="num">22.2M</td><td class="num">104.5K</td><td class="num">64.7K</td><td class="num">0.3%</td></tr><tr><td>2026-06-19</td><td class="num">25</td><td class="num">25.6M</td><td class="num">25.3M</td><td class="num">131.5K</td><td class="num">95.8K</td><td class="num">0.4%</td></tr><tr><td>2026-06-20</td><td class="num">12</td><td class="num">24.9M</td><td class="num">24.6M</td><td class="num">99.3K</td><td class="num">137.6K</td><td class="num">0.6%</td></tr><tr><td>2026-06-21</td><td class="num">22</td><td class="num">15.5M</td><td class="num">15.4M</td><td class="num">93.2K</td><td class="num">42.9K</td><td class="num">0.3%</td></tr><tr><td>2026-06-22</td><td class="num">21</td><td class="num">15.1M</td><td class="num">14.9M</td><td class="num">81.4K</td><td class="num">50.3K</td><td class="num">0.3%</td></tr><tr><td>2026-06-23</td><td class="num">18</td><td class="num">13.7M</td><td class="num">13.6M</td><td class="num">89.5K</td><td class="num">39.6K</td><td class="num">0.3%</td></tr><tr><td>2026-06-24</td><td class="num">13</td><td class="num">20.5M</td><td class="num">20.4M</td><td class="num">68.9K</td><td class="num">27.6K</td><td class="num">0.1%</td></tr><tr><td>2026-06-25</td><td class="num">8</td><td class="num">29.7M</td><td class="num">29.6M</td><td class="num">79.7K</td><td class="num">92.0K</td><td class="num">0.3%</td></tr><tr><td>2026-06-26</td><td class="num">9</td><td class="num">14.5M</td><td class="num">14.4M</td><td class="num">47.9K</td><td class="num">30.7K</td><td class="num">0.2%</td></tr><tr><td>2026-06-27</td><td class="num">60</td><td class="num">38.4M</td><td class="num">38.0M</td><td class="num">231.3K</td><td class="num">165.4K</td><td class="num">0.4%</td></tr><tr><td>2026-06-28</td><td class="num">17</td><td class="num">39.3M</td><td class="num">39.0M</td><td class="num">217.4K</td><td class="num">84.9K</td><td class="num">0.2%</td></tr></tbody></table>
+
+<h2 id="top-sessions">Top Sessions by Token Usage</h2>
+
+<table><thead><tr><th>#</th><th>Agent</th><th>Model</th><th>Title</th><th class="num">Tokens</th></tr></thead><tbody><tr><td>1</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-06-01T09:35:07.907Z</td><td class="num">15.5M</td></tr><tr><td>2</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>SwiftUI macOS Image Processing & ML Guide</td><td class="num">14.6M</td></tr><tr><td>3</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3-coder-next</td><td>New session - 2026-06-08T20:39:43.865Z</td><td class="num">13.1M</td></tr><tr><td>4</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-06-02T17:44:46.642Z</td><td class="num">13.0M</td></tr><tr><td>5</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-06-26T01:55:45.169Z</td><td class="num">11.4M</td></tr><tr><td>6</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-06-15T08:42:06.869Z</td><td class="num">11.0M</td></tr><tr><td>7</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-06-06T23:27:34.455Z</td><td class="num">10.7M</td></tr><tr><td>8</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-06-02T14:56:21.948Z</td><td class="num">10.4M</td></tr><tr><td>9</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-06-24T23:45:40.739Z</td><td class="num">10.0M</td></tr><tr><td>10</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-35b-a3b</td><td>New session - 2026-06-20T18:36:22.138Z</td><td class="num">9.9M</td></tr><tr><td>11</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-05-30T14:02:24.513Z</td><td class="num">9.3M</td></tr><tr><td>12</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-05-27T10:55:08.620Z</td><td class="num">9.1M</td></tr><tr><td>13</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-06-25T10:01:44.339Z</td><td class="num">9.1M</td></tr><tr><td>14</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-06-14T20:10:06.247Z</td><td class="num">8.8M</td></tr><tr><td>15</td><td>build</td><td style="font-size:0.75rem">qwen/qwen3.6-27b</td><td>New session - 2026-06-25T16:49:01.670Z</td><td class="num">8.8M</td></tr></tbody></table>
+
+<h2 id="code-impact">Code Impact — Tokens vs. Commits</h2>
+
+<p style="color:#8892a4; margin-bottom:1rem; font-size:0.9rem;">940.8M tokens consumed across 115 commits producing 93,666 lines of code.</p>
+<div class="impact-grid">
+  <div class="impact-card"><div class="impact-value">115</div><div class="impact-label">Total Commits</div></div>
+  <div class="impact-card"><div class="impact-value">93.7K</div><div class="impact-label">Lines Added</div></div>
+  <div class="impact-card ratio"><div class="impact-value">8.2M</div><div class="impact-label">Avg Tokens / Commit</div></div>
+  <div class="impact-card ratio"><div class="impact-value">10.0K</div><div class="impact-label">Avg Tokens / Line Added</div></div>
+  <div class="impact-card"><div class="impact-value">0.3%</div><div class="impact-label">Reasoning %</div></div>
+  <div class="impact-card"><div class="impact-value">39.3M</div><div class="impact-label">Peak Tok / Commit</div></div>
+</div>
+<h3 id="chart-token-breakdown" class="chart-title">Daily Token Breakdown</h3>
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <defs>
+    <linearGradient id="grad-inp" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4fc3f7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#4fc3f7" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="grad-out" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4db6ac" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#4db6ac" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="grad-rea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ba68c8" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ba68c8" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+  <polygon points="55,144 69,162 83,234 97,164 111,170 125,199 139,163 153,157 167,247 181,181 195,236 209,135 223,207 238,242 252,260 266,164 280,183 294,142 308,152 322,202 336,142 350,122 364,114 378,65 392,167 407,157 421,208 435,110 449,232 463,95 477,174 491,170 505,216 519,193 533,142 547,146 561,135 576,177 590,203 604,146 618,129 632,133 646,182 660,185 674,192 688,156 702,107 716,188 730,60 745,55 745,56 730,61 716,188 702,107 688,156 674,192 660,185 646,183 632,133 618,129 604,146 590,203 576,177 561,135 547,146 533,143 519,193 505,216 491,171 477,175 463,96 449,232 435,110 421,208 407,157 392,167 378,66 364,114 350,123 336,143 322,202 308,152 294,143 280,183 266,164 252,260 238,242 223,207 209,135 195,236 181,181 167,247 153,158 139,163 125,199 111,171 97,164 83,234 69,163 55,144" fill="url(#grad-rea)" stroke="#ba68c8" stroke-width="1" opacity="0.9"/>
+  <polygon points="55,144 69,163 83,234 97,164 111,171 125,199 139,163 153,158 167,247 181,181 195,236 209,135 223,207 238,242 252,260 266,164 280,183 294,143 308,152 322,202 336,143 350,123 364,114 378,66 392,167 407,157 421,208 435,110 449,232 463,96 477,175 491,171 505,216 519,193 533,143 547,146 561,135 576,177 590,203 604,146 618,129 632,133 646,183 660,185 674,192 688,156 702,107 716,188 730,61 745,56 745,57 730,62 716,188 702,107 688,156 674,193 660,186 646,183 632,134 618,130 604,147 590,204 576,177 561,136 547,147 533,143 519,194 505,217 491,171 477,175 463,96 449,232 435,111 421,208 407,158 392,168 378,67 364,115 350,124 336,144 322,202 308,152 294,143 280,183 266,165 252,260 238,243 223,207 209,136 195,236 181,182 167,247 153,158 139,164 125,200 111,171 97,165 83,234 69,163 55,145" fill="url(#grad-out)" stroke="#4db6ac" stroke-width="1" opacity="0.9"/>
+  <polygon points="55,145 69,163 83,234 97,165 111,171 125,200 139,164 153,158 167,247 181,182 195,236 209,136 223,207 238,243 252,260 266,165 280,183 294,143 308,152 322,202 336,144 350,124 364,115 378,67 392,168 407,158 421,208 435,111 449,232 463,96 477,175 491,171 505,217 519,194 533,143 547,147 561,136 576,177 590,204 604,147 618,130 632,134 646,183 660,186 674,193 688,156 702,107 716,188 730,62 745,57 745,265 55,265" fill="url(#grad-inp)" stroke="#4fc3f7" stroke-width="1" opacity="0.9"/>
+  <circle cx="55" cy="144" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-10" data-input="22512419" data-output="130585" data-reasoning="30539" data-total="22673543"/>
+  <circle cx="69" cy="162" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-11" data-input="19106217" data-output="146822" data-reasoning="51409" data-total="19304448"/>
+  <circle cx="83" cy="234" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-12" data-input="5824821" data-output="51068" data-reasoning="20587" data-total="5896476"/>
+  <circle cx="97" cy="164" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-13" data-input="18834999" data-output="92383" data-reasoning="43114" data-total="18970496"/>
+  <circle cx="111" cy="170" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-14" data-input="17666842" data-output="90557" data-reasoning="43979" data-total="17801378"/>
+  <circle cx="125" cy="199" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-15" data-input="12276436" data-output="65248" data-reasoning="46818" data-total="12388502"/>
+  <circle cx="139" cy="163" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-16" data-input="19037956" data-output="114703" data-reasoning="87699" data-total="19240358"/>
+  <circle cx="153" cy="157" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-17" data-input="20034668" data-output="150673" data-reasoning="49651" data-total="20234992"/>
+  <circle cx="167" cy="247" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-18" data-input="3465754" data-output="47599" data-reasoning="15011" data-total="3528364"/>
+  <circle cx="181" cy="181" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-19" data-input="15624355" data-output="116637" data-reasoning="37420" data-total="15778412"/>
+  <circle cx="195" cy="236" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-20" data-input="5447223" data-output="30501" data-reasoning="10405" data-total="5488129"/>
+  <circle cx="209" cy="135" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-21" data-input="24276439" data-output="112483" data-reasoning="77162" data-total="24466084"/>
+  <circle cx="223" cy="207" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-22" data-input="10912049" data-output="65709" data-reasoning="53534" data-total="11031292"/>
+  <circle cx="238" cy="242" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-23" data-input="4237758" data-output="62928" data-reasoning="16013" data-total="4316699"/>
+  <circle cx="252" cy="260" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-24" data-input="1077301" data-output="28943" data-reasoning="3532" data-total="1109776"/>
+  <circle cx="266" cy="164" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-25" data-input="18783798" data-output="133398" data-reasoning="93185" data-total="19010381"/>
+  <circle cx="280" cy="183" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-26" data-input="15350167" data-output="83126" data-reasoning="50778" data-total="15484071"/>
+  <circle cx="294" cy="142" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-27" data-input="22875950" data-output="97687" data-reasoning="34225" data-total="23007862"/>
+  <circle cx="308" cy="152" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-28" data-input="21129885" data-output="103149" data-reasoning="51518" data-total="21284552"/>
+  <circle cx="322" cy="202" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-29" data-input="11781798" data-output="79698" data-reasoning="41962" data-total="11903458"/>
+  <circle cx="336" cy="142" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-30" data-input="22778150" data-output="138728" data-reasoning="88381" data-total="23005259"/>
+  <circle cx="350" cy="122" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-05-31" data-input="26461266" data-output="202448" data-reasoning="134246" data-total="26797960"/>
+  <circle cx="364" cy="114" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-01" data-input="28165002" data-output="105571" data-reasoning="91284" data-total="28361857"/>
+  <circle cx="378" cy="65" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-02" data-input="37159074" data-output="170902" data-reasoning="94260" data-total="37424236"/>
+  <circle cx="392" cy="167" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-03" data-input="18257127" data-output="107619" data-reasoning="61280" data-total="18426026"/>
+  <circle cx="407" cy="157" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-04" data-input="20067195" data-output="135952" data-reasoning="48684" data-total="20251831"/>
+  <circle cx="421" cy="208" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-05" data-input="10732126" data-output="71951" data-reasoning="23158" data-total="10827235"/>
+  <circle cx="435" cy="110" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-06" data-input="28861518" data-output="143550" data-reasoning="124349" data-total="29129417"/>
+  <circle cx="449" cy="232" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-07" data-input="6237516" data-output="53488" data-reasoning="39447" data-total="6330451"/>
+  <circle cx="463" cy="95" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-08" data-input="31633016" data-output="110539" data-reasoning="72760" data-total="31816315"/>
+  <circle cx="477" cy="174" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-09" data-input="16906295" data-output="79875" data-reasoning="115840" data-total="17102010"/>
+  <circle cx="491" cy="170" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-10" data-input="17628231" data-output="82439" data-reasoning="106411" data-total="17817081"/>
+  <circle cx="505" cy="216" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-11" data-input="9123085" data-output="81543" data-reasoning="112792" data-total="9317420"/>
+  <circle cx="519" cy="193" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-12" data-input="13412155" data-output="64033" data-reasoning="110380" data-total="13586568"/>
+  <circle cx="533" cy="142" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-13" data-input="22819228" data-output="139671" data-reasoning="79126" data-total="23038025"/>
+  <circle cx="547" cy="146" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-14" data-input="22198723" data-output="127039" data-reasoning="85652" data-total="22411414"/>
+  <circle cx="561" cy="135" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-15" data-input="24227131" data-output="123237" data-reasoning="58770" data-total="24409138"/>
+  <circle cx="576" cy="177" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-16" data-input="16476090" data-output="60596" data-reasoning="56538" data-total="16593224"/>
+  <circle cx="590" cy="203" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-17" data-input="11563351" data-output="61232" data-reasoning="58327" data-total="11682910"/>
+  <circle cx="604" cy="146" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-18" data-input="22174772" data-output="104537" data-reasoning="64720" data-total="22344029"/>
+  <circle cx="618" cy="129" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-19" data-input="25345092" data-output="131528" data-reasoning="95843" data-total="25572463"/>
+  <circle cx="632" cy="133" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-20" data-input="24630007" data-output="99329" data-reasoning="137562" data-total="24866898"/>
+  <circle cx="646" cy="182" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-21" data-input="15411877" data-output="93189" data-reasoning="42884" data-total="15547950"/>
+  <circle cx="660" cy="185" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-22" data-input="14943583" data-output="81371" data-reasoning="50314" data-total="15075268"/>
+  <circle cx="674" cy="192" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-23" data-input="13572198" data-output="89494" data-reasoning="39628" data-total="13701320"/>
+  <circle cx="688" cy="156" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-24" data-input="20417120" data-output="68924" data-reasoning="27580" data-total="20513624"/>
+  <circle cx="702" cy="107" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-25" data-input="29552448" data-output="79691" data-reasoning="92000" data-total="29724139"/>
+  <circle cx="716" cy="188" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-26" data-input="14446170" data-output="47850" data-reasoning="30728" data-total="14524748"/>
+  <circle cx="730" cy="60" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-27" data-input="38046905" data-output="231322" data-reasoning="165450" data-total="38443677"/>
+  <circle cx="745" cy="55" r="3" fill="#1a1a2e" stroke="#ba68c8" stroke-width="1.5" class="chart-point" data-chart-type="stacked" data-date="2026-06-28" data-input="38964117" data-output="217425" data-reasoning="84942" data-total="39266484"/>
+  <text x="55" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-10</text>
+  <text x="139" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-16</text>
+  <text x="223" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-22</text>
+  <text x="308" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-28</text>
+  <text x="392" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-03</text>
+  <text x="477" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-09</text>
+  <text x="561" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-15</text>
+  <text x="646" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-21</text>
+  <text x="730" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-27</text>
+  <text x="50" y="12" text-anchor="end" fill="#8892a4" font-size="10">39.3M</text>
+  <text x="50" y="164" text-anchor="end" fill="#8892a4" font-size="10">19.6M</text>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="213" x2="745" y2="213" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="160" x2="745" y2="160" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="108" x2="745" y2="108" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="55" x2="745" y2="55" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="55" y1="55" x2="55" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="#8892a4" stroke-width="1"/>
+</svg><table><thead><tr><th>Date</th><th class="num">Input</th><th class="num">Output</th><th class="num">Reasoning</th><th class="num">Total</th></tr></thead><tbody><tr><td>2026-05-10</td><td class="num">22.5M</td><td class="num">130.6K</td><td class="num">30.5K</td><td class="num">22.7M</td></tr><tr><td>2026-05-11</td><td class="num">19.1M</td><td class="num">146.8K</td><td class="num">51.4K</td><td class="num">19.3M</td></tr><tr><td>2026-05-12</td><td class="num">5.8M</td><td class="num">51.1K</td><td class="num">20.6K</td><td class="num">5.9M</td></tr><tr><td>2026-05-13</td><td class="num">18.8M</td><td class="num">92.4K</td><td class="num">43.1K</td><td class="num">19.0M</td></tr><tr><td>2026-05-14</td><td class="num">17.7M</td><td class="num">90.6K</td><td class="num">44.0K</td><td class="num">17.8M</td></tr><tr><td>2026-05-15</td><td class="num">12.3M</td><td class="num">65.2K</td><td class="num">46.8K</td><td class="num">12.4M</td></tr><tr><td>2026-05-16</td><td class="num">19.0M</td><td class="num">114.7K</td><td class="num">87.7K</td><td class="num">19.2M</td></tr><tr><td>2026-05-17</td><td class="num">20.0M</td><td class="num">150.7K</td><td class="num">49.7K</td><td class="num">20.2M</td></tr><tr><td>2026-05-18</td><td class="num">3.5M</td><td class="num">47.6K</td><td class="num">15.0K</td><td class="num">3.5M</td></tr><tr><td>2026-05-19</td><td class="num">15.6M</td><td class="num">116.6K</td><td class="num">37.4K</td><td class="num">15.8M</td></tr><tr><td>2026-05-20</td><td class="num">5.4M</td><td class="num">30.5K</td><td class="num">10.4K</td><td class="num">5.5M</td></tr><tr><td>2026-05-21</td><td class="num">24.3M</td><td class="num">112.5K</td><td class="num">77.2K</td><td class="num">24.5M</td></tr><tr><td>2026-05-22</td><td class="num">10.9M</td><td class="num">65.7K</td><td class="num">53.5K</td><td class="num">11.0M</td></tr><tr><td>2026-05-23</td><td class="num">4.2M</td><td class="num">62.9K</td><td class="num">16.0K</td><td class="num">4.3M</td></tr><tr><td>2026-05-24</td><td class="num">1.1M</td><td class="num">28.9K</td><td class="num">3.5K</td><td class="num">1.1M</td></tr><tr><td>2026-05-25</td><td class="num">18.8M</td><td class="num">133.4K</td><td class="num">93.2K</td><td class="num">19.0M</td></tr><tr><td>2026-05-26</td><td class="num">15.4M</td><td class="num">83.1K</td><td class="num">50.8K</td><td class="num">15.5M</td></tr><tr><td>2026-05-27</td><td class="num">22.9M</td><td class="num">97.7K</td><td class="num">34.2K</td><td class="num">23.0M</td></tr><tr><td>2026-05-28</td><td class="num">21.1M</td><td class="num">103.1K</td><td class="num">51.5K</td><td class="num">21.3M</td></tr><tr><td>2026-05-29</td><td class="num">11.8M</td><td class="num">79.7K</td><td class="num">42.0K</td><td class="num">11.9M</td></tr><tr><td>2026-05-30</td><td class="num">22.8M</td><td class="num">138.7K</td><td class="num">88.4K</td><td class="num">23.0M</td></tr><tr><td>2026-05-31</td><td class="num">26.5M</td><td class="num">202.4K</td><td class="num">134.2K</td><td class="num">26.8M</td></tr><tr><td>2026-06-01</td><td class="num">28.2M</td><td class="num">105.6K</td><td class="num">91.3K</td><td class="num">28.4M</td></tr><tr><td>2026-06-02</td><td class="num">37.2M</td><td class="num">170.9K</td><td class="num">94.3K</td><td class="num">37.4M</td></tr><tr><td>2026-06-03</td><td class="num">18.3M</td><td class="num">107.6K</td><td class="num">61.3K</td><td class="num">18.4M</td></tr><tr><td>2026-06-04</td><td class="num">20.1M</td><td class="num">136.0K</td><td class="num">48.7K</td><td class="num">20.3M</td></tr><tr><td>2026-06-05</td><td class="num">10.7M</td><td class="num">72.0K</td><td class="num">23.2K</td><td class="num">10.8M</td></tr><tr><td>2026-06-06</td><td class="num">28.9M</td><td class="num">143.6K</td><td class="num">124.3K</td><td class="num">29.1M</td></tr><tr><td>2026-06-07</td><td class="num">6.2M</td><td class="num">53.5K</td><td class="num">39.4K</td><td class="num">6.3M</td></tr><tr><td>2026-06-08</td><td class="num">31.6M</td><td class="num">110.5K</td><td class="num">72.8K</td><td class="num">31.8M</td></tr><tr><td>2026-06-09</td><td class="num">16.9M</td><td class="num">79.9K</td><td class="num">115.8K</td><td class="num">17.1M</td></tr><tr><td>2026-06-10</td><td class="num">17.6M</td><td class="num">82.4K</td><td class="num">106.4K</td><td class="num">17.8M</td></tr><tr><td>2026-06-11</td><td class="num">9.1M</td><td class="num">81.5K</td><td class="num">112.8K</td><td class="num">9.3M</td></tr><tr><td>2026-06-12</td><td class="num">13.4M</td><td class="num">64.0K</td><td class="num">110.4K</td><td class="num">13.6M</td></tr><tr><td>2026-06-13</td><td class="num">22.8M</td><td class="num">139.7K</td><td class="num">79.1K</td><td class="num">23.0M</td></tr><tr><td>2026-06-14</td><td class="num">22.2M</td><td class="num">127.0K</td><td class="num">85.7K</td><td class="num">22.4M</td></tr><tr><td>2026-06-15</td><td class="num">24.2M</td><td class="num">123.2K</td><td class="num">58.8K</td><td class="num">24.4M</td></tr><tr><td>2026-06-16</td><td class="num">16.5M</td><td class="num">60.6K</td><td class="num">56.5K</td><td class="num">16.6M</td></tr><tr><td>2026-06-17</td><td class="num">11.6M</td><td class="num">61.2K</td><td class="num">58.3K</td><td class="num">11.7M</td></tr><tr><td>2026-06-18</td><td class="num">22.2M</td><td class="num">104.5K</td><td class="num">64.7K</td><td class="num">22.3M</td></tr><tr><td>2026-06-19</td><td class="num">25.3M</td><td class="num">131.5K</td><td class="num">95.8K</td><td class="num">25.6M</td></tr><tr><td>2026-06-20</td><td class="num">24.6M</td><td class="num">99.3K</td><td class="num">137.6K</td><td class="num">24.9M</td></tr><tr><td>2026-06-21</td><td class="num">15.4M</td><td class="num">93.2K</td><td class="num">42.9K</td><td class="num">15.5M</td></tr><tr><td>2026-06-22</td><td class="num">14.9M</td><td class="num">81.4K</td><td class="num">50.3K</td><td class="num">15.1M</td></tr><tr><td>2026-06-23</td><td class="num">13.6M</td><td class="num">89.5K</td><td class="num">39.6K</td><td class="num">13.7M</td></tr><tr><td>2026-06-24</td><td class="num">20.4M</td><td class="num">68.9K</td><td class="num">27.6K</td><td class="num">20.5M</td></tr><tr><td>2026-06-25</td><td class="num">29.6M</td><td class="num">79.7K</td><td class="num">92.0K</td><td class="num">29.7M</td></tr><tr><td>2026-06-26</td><td class="num">14.4M</td><td class="num">47.9K</td><td class="num">30.7K</td><td class="num">14.5M</td></tr><tr><td>2026-06-27</td><td class="num">38.0M</td><td class="num">231.3K</td><td class="num">165.4K</td><td class="num">38.4M</td></tr><tr><td>2026-06-28</td><td class="num">39.0M</td><td class="num">217.4K</td><td class="num">84.9K</td><td class="num">39.3M</td></tr></tbody></table>
+<h3 id="chart-tokens-vs-commits" class="chart-title">Tokens vs. Commits</h3>
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <rect x="52" y="144" width="6" height="121" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="66" y="162" width="6" height="103" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="80" y="234" width="6" height="31" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="94" y="164" width="6" height="101" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="108" y="170" width="6" height="95" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="122" y="199" width="6" height="66" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="136" y="163" width="6" height="102" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="150" y="157" width="6" height="108" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="164" y="247" width="6" height="18" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="178" y="181" width="6" height="84" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="192" y="236" width="6" height="29" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="206" y="135" width="6" height="130" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="220" y="207" width="6" height="58" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="235" y="242" width="6" height="23" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="249" y="260" width="6" height="5" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="263" y="164" width="6" height="101" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="277" y="183" width="6" height="82" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="291" y="142" width="6" height="123" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="305" y="152" width="6" height="113" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="319" y="202" width="6" height="63" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="333" y="142" width="6" height="123" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="347" y="122" width="6" height="143" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="361" y="114" width="6" height="151" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="375" y="65" width="6" height="200" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="389" y="167" width="6" height="98" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="404" y="157" width="6" height="108" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="418" y="208" width="6" height="57" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="432" y="110" width="6" height="155" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="446" y="232" width="6" height="33" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="460" y="95" width="6" height="170" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="474" y="174" width="6" height="91" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="488" y="170" width="6" height="95" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="502" y="216" width="6" height="49" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="516" y="193" width="6" height="72" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="530" y="142" width="6" height="123" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="544" y="146" width="6" height="119" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="558" y="135" width="6" height="130" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="573" y="177" width="6" height="88" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="587" y="203" width="6" height="62" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="601" y="146" width="6" height="119" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="615" y="129" width="6" height="136" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="629" y="133" width="6" height="132" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="643" y="182" width="6" height="83" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="657" y="185" width="6" height="80" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="671" y="192" width="6" height="73" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="685" y="156" width="6" height="109" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="699" y="107" width="6" height="158" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="713" y="188" width="6" height="77" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="727" y="60" width="6" height="205" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <rect x="742" y="55" width="6" height="210" fill="#4fc3f7" opacity="0.15" rx="2"/>
+  <polygon points="55,144 69,162 83,234 97,164 111,170 125,199 139,163 153,157 167,247 181,181 195,236 209,135 223,207 238,242 252,260 266,164 280,183 294,142 308,152 322,202 336,142 350,122 364,114 378,65 392,167 407,157 421,208 435,110 449,232 463,95 477,174 491,170 505,216 519,193 533,142 547,146 561,135 576,177 590,203 604,146 618,129 632,133 646,182 660,185 674,192 688,156 702,107 716,188 730,60 745,55 55,265 41,265" fill="url(#grad-inp)" opacity="0.3"/>
+  <polyline points="55,144 69,162 83,234 97,164 111,170 125,199 139,163 153,157 167,247 181,181 195,236 209,135 223,207 238,242 252,260 266,164 280,183 294,142 308,152 322,202 336,142 350,122 364,114 378,65 392,167 407,157 421,208 435,110 449,232 463,95 477,174 491,170 505,216 519,193 533,142 547,146 561,135 576,177 590,203 604,146 618,129 632,133 646,182 660,185 674,192 688,156 702,107 716,188 730,60 745,55" fill="none" stroke="#4fc3f7"stroke-width="2" stroke-linejoin="round"/>
+  <polyline points="55,239 69,239 83,239 97,239 111,239 125,239 139,239 153,239 167,239 181,239 195,239 209,239 223,239 238,160 252,239 266,160 280,213 294,239 308,160 322,239 336,160 350,134 364,213 378,187 392,213 407,213 421,213 435,108 449,213 463,187 477,213 491,239 505,213 519,213 533,160 547,239 561,187 576,55 590,134 604,82 618,82 632,213 646,134 660,213 674,187 688,187 702,239 716,160 730,82 745,239" fill="none" stroke="#f5a623"stroke-width="2" stroke-linejoin="round" stroke-dasharray="6,3"/>
+  <circle cx="55" cy="144" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-10" data-tokens="22673543" data-commits="1"/>
+  <circle cx="69" cy="162" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-11" data-tokens="19304448" data-commits="1"/>
+  <circle cx="83" cy="234" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-12" data-tokens="5896476" data-commits="1"/>
+  <circle cx="97" cy="164" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-13" data-tokens="18970496" data-commits="1"/>
+  <circle cx="111" cy="170" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-14" data-tokens="17801378" data-commits="1"/>
+  <circle cx="125" cy="199" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-15" data-tokens="12388502" data-commits="1"/>
+  <circle cx="139" cy="163" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-16" data-tokens="19240358" data-commits="1"/>
+  <circle cx="153" cy="157" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-17" data-tokens="20234992" data-commits="1"/>
+  <circle cx="167" cy="247" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-18" data-tokens="3528364" data-commits="1"/>
+  <circle cx="181" cy="181" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-19" data-tokens="15778412" data-commits="1"/>
+  <circle cx="195" cy="236" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-20" data-tokens="5488129" data-commits="1"/>
+  <circle cx="209" cy="135" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-21" data-tokens="24466084" data-commits="1"/>
+  <circle cx="223" cy="207" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-22" data-tokens="11031292" data-commits="1"/>
+  <circle cx="238" cy="242" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-23" data-tokens="4316699" data-commits="4"/>
+  <circle cx="252" cy="260" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-24" data-tokens="1109776" data-commits="1"/>
+  <circle cx="266" cy="164" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-25" data-tokens="19010381" data-commits="4"/>
+  <circle cx="280" cy="183" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-26" data-tokens="15484071" data-commits="2"/>
+  <circle cx="294" cy="142" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-27" data-tokens="23007862" data-commits="1"/>
+  <circle cx="308" cy="152" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-28" data-tokens="21284552" data-commits="4"/>
+  <circle cx="322" cy="202" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-29" data-tokens="11903458" data-commits="1"/>
+  <circle cx="336" cy="142" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-30" data-tokens="23005259" data-commits="4"/>
+  <circle cx="350" cy="122" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-05-31" data-tokens="26797960" data-commits="5"/>
+  <circle cx="364" cy="114" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-01" data-tokens="28361857" data-commits="2"/>
+  <circle cx="378" cy="65" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-02" data-tokens="37424236" data-commits="3"/>
+  <circle cx="392" cy="167" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-03" data-tokens="18426026" data-commits="2"/>
+  <circle cx="407" cy="157" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-04" data-tokens="20251831" data-commits="2"/>
+  <circle cx="421" cy="208" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-05" data-tokens="10827235" data-commits="2"/>
+  <circle cx="435" cy="110" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-06" data-tokens="29129417" data-commits="6"/>
+  <circle cx="449" cy="232" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-07" data-tokens="6330451" data-commits="2"/>
+  <circle cx="463" cy="95" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-08" data-tokens="31816315" data-commits="3"/>
+  <circle cx="477" cy="174" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-09" data-tokens="17102010" data-commits="2"/>
+  <circle cx="491" cy="170" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-10" data-tokens="17817081" data-commits="1"/>
+  <circle cx="505" cy="216" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-11" data-tokens="9317420" data-commits="2"/>
+  <circle cx="519" cy="193" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-12" data-tokens="13586568" data-commits="2"/>
+  <circle cx="533" cy="142" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-13" data-tokens="23038025" data-commits="4"/>
+  <circle cx="547" cy="146" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-14" data-tokens="22411414" data-commits="1"/>
+  <circle cx="561" cy="135" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-15" data-tokens="24409138" data-commits="3"/>
+  <circle cx="576" cy="177" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-16" data-tokens="16593224" data-commits="8"/>
+  <circle cx="590" cy="203" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-17" data-tokens="11682910" data-commits="5"/>
+  <circle cx="604" cy="146" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-18" data-tokens="22344029" data-commits="7"/>
+  <circle cx="618" cy="129" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-19" data-tokens="25572463" data-commits="7"/>
+  <circle cx="632" cy="133" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-20" data-tokens="24866898" data-commits="2"/>
+  <circle cx="646" cy="182" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-21" data-tokens="15547950" data-commits="5"/>
+  <circle cx="660" cy="185" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-22" data-tokens="15075268" data-commits="2"/>
+  <circle cx="674" cy="192" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-23" data-tokens="13701320" data-commits="3"/>
+  <circle cx="688" cy="156" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-24" data-tokens="20513624" data-commits="3"/>
+  <circle cx="702" cy="107" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-25" data-tokens="29724139" data-commits="1"/>
+  <circle cx="716" cy="188" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-26" data-tokens="14524748" data-commits="4"/>
+  <circle cx="730" cy="60" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-27" data-tokens="38443677" data-commits="7"/>
+  <circle cx="745" cy="55" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-tok-commits" data-date="2026-06-28" data-tokens="39266484" data-commits="1"/>
+  <text x="55" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-10</text>
+  <text x="139" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-16</text>
+  <text x="223" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-22</text>
+  <text x="308" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-28</text>
+  <text x="392" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-03</text>
+  <text x="477" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-09</text>
+  <text x="561" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-15</text>
+  <text x="646" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-21</text>
+  <text x="730" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-27</text>
+  <text x="50" y="12" text-anchor="end" fill="#4fc3f7" font-size="10">39.3M</text>
+  <text x="50" y="164" text-anchor="end" fill="#4fc3f7" font-size="10">19.6M</text>
+  <text x="753" y="12" text-anchor="start" fill="#f5a623" font-size="10">8</text>
+  <text x="753" y="164" text-anchor="start" fill="#f5a623" font-size="10">4</text>
+  <line x1="55" y1="55" x2="55" y2="265" stroke="#4fc3f7" stroke-width="1" opacity="0.5"/>
+  <line x1="745" y1="55" x2="745" y2="265" stroke="#f5a623" stroke-width="1" opacity="0.5"/>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <line x1="65" y1="68" x2="81" y2="68" stroke="#4fc3f7" stroke-width="2"/>
+  <text x="85" y="72" fill="#8892a4" font-size="10">Total Tokens</text>
+  <line x1="195" y1="68" x2="211" y2="68" stroke="#f5a623" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="215" y="72" fill="#8892a4" font-size="10">Commits</text>
+</svg><table><thead><tr><th>Date</th><th class="num">Total Tokens</th><th class="num">Input</th><th class="num">Output</th><th class="num">Reasoning</th><th class="num">Commits</th></tr></thead><tbody><tr><td>2026-05-10</td><td class="num">22.7M</td><td class="num">22.5M</td><td class="num">130.6K</td><td class="num">30.5K</td><td class="num">1</td></tr><tr><td>2026-05-11</td><td class="num">19.3M</td><td class="num">19.1M</td><td class="num">146.8K</td><td class="num">51.4K</td><td class="num">1</td></tr><tr><td>2026-05-12</td><td class="num">5.9M</td><td class="num">5.8M</td><td class="num">51.1K</td><td class="num">20.6K</td><td class="num">1</td></tr><tr><td>2026-05-13</td><td class="num">19.0M</td><td class="num">18.8M</td><td class="num">92.4K</td><td class="num">43.1K</td><td class="num">1</td></tr><tr><td>2026-05-14</td><td class="num">17.8M</td><td class="num">17.7M</td><td class="num">90.6K</td><td class="num">44.0K</td><td class="num">1</td></tr><tr><td>2026-05-15</td><td class="num">12.4M</td><td class="num">12.3M</td><td class="num">65.2K</td><td class="num">46.8K</td><td class="num">1</td></tr><tr><td>2026-05-16</td><td class="num">19.2M</td><td class="num">19.0M</td><td class="num">114.7K</td><td class="num">87.7K</td><td class="num">1</td></tr><tr><td>2026-05-17</td><td class="num">20.2M</td><td class="num">20.0M</td><td class="num">150.7K</td><td class="num">49.7K</td><td class="num">1</td></tr><tr><td>2026-05-18</td><td class="num">3.5M</td><td class="num">3.5M</td><td class="num">47.6K</td><td class="num">15.0K</td><td class="num">1</td></tr><tr><td>2026-05-19</td><td class="num">15.8M</td><td class="num">15.6M</td><td class="num">116.6K</td><td class="num">37.4K</td><td class="num">1</td></tr><tr><td>2026-05-20</td><td class="num">5.5M</td><td class="num">5.4M</td><td class="num">30.5K</td><td class="num">10.4K</td><td class="num">1</td></tr><tr><td>2026-05-21</td><td class="num">24.5M</td><td class="num">24.3M</td><td class="num">112.5K</td><td class="num">77.2K</td><td class="num">1</td></tr><tr><td>2026-05-22</td><td class="num">11.0M</td><td class="num">10.9M</td><td class="num">65.7K</td><td class="num">53.5K</td><td class="num">1</td></tr><tr><td>2026-05-23</td><td class="num">4.3M</td><td class="num">4.2M</td><td class="num">62.9K</td><td class="num">16.0K</td><td class="num">4</td></tr><tr><td>2026-05-24</td><td class="num">1.1M</td><td class="num">1.1M</td><td class="num">28.9K</td><td class="num">3.5K</td><td class="num">1</td></tr><tr><td>2026-05-25</td><td class="num">19.0M</td><td class="num">18.8M</td><td class="num">133.4K</td><td class="num">93.2K</td><td class="num">4</td></tr><tr><td>2026-05-26</td><td class="num">15.5M</td><td class="num">15.4M</td><td class="num">83.1K</td><td class="num">50.8K</td><td class="num">2</td></tr><tr><td>2026-05-27</td><td class="num">23.0M</td><td class="num">22.9M</td><td class="num">97.7K</td><td class="num">34.2K</td><td class="num">1</td></tr><tr><td>2026-05-28</td><td class="num">21.3M</td><td class="num">21.1M</td><td class="num">103.1K</td><td class="num">51.5K</td><td class="num">4</td></tr><tr><td>2026-05-29</td><td class="num">11.9M</td><td class="num">11.8M</td><td class="num">79.7K</td><td class="num">42.0K</td><td class="num">1</td></tr><tr><td>2026-05-30</td><td class="num">23.0M</td><td class="num">22.8M</td><td class="num">138.7K</td><td class="num">88.4K</td><td class="num">4</td></tr><tr><td>2026-05-31</td><td class="num">26.8M</td><td class="num">26.5M</td><td class="num">202.4K</td><td class="num">134.2K</td><td class="num">5</td></tr><tr><td>2026-06-01</td><td class="num">28.4M</td><td class="num">28.2M</td><td class="num">105.6K</td><td class="num">91.3K</td><td class="num">2</td></tr><tr><td>2026-06-02</td><td class="num">37.4M</td><td class="num">37.2M</td><td class="num">170.9K</td><td class="num">94.3K</td><td class="num">3</td></tr><tr><td>2026-06-03</td><td class="num">18.4M</td><td class="num">18.3M</td><td class="num">107.6K</td><td class="num">61.3K</td><td class="num">2</td></tr><tr><td>2026-06-04</td><td class="num">20.3M</td><td class="num">20.1M</td><td class="num">136.0K</td><td class="num">48.7K</td><td class="num">2</td></tr><tr><td>2026-06-05</td><td class="num">10.8M</td><td class="num">10.7M</td><td class="num">72.0K</td><td class="num">23.2K</td><td class="num">2</td></tr><tr><td>2026-06-06</td><td class="num">29.1M</td><td class="num">28.9M</td><td class="num">143.6K</td><td class="num">124.3K</td><td class="num">6</td></tr><tr><td>2026-06-07</td><td class="num">6.3M</td><td class="num">6.2M</td><td class="num">53.5K</td><td class="num">39.4K</td><td class="num">2</td></tr><tr><td>2026-06-08</td><td class="num">31.8M</td><td class="num">31.6M</td><td class="num">110.5K</td><td class="num">72.8K</td><td class="num">3</td></tr><tr><td>2026-06-09</td><td class="num">17.1M</td><td class="num">16.9M</td><td class="num">79.9K</td><td class="num">115.8K</td><td class="num">2</td></tr><tr><td>2026-06-10</td><td class="num">17.8M</td><td class="num">17.6M</td><td class="num">82.4K</td><td class="num">106.4K</td><td class="num">1</td></tr><tr><td>2026-06-11</td><td class="num">9.3M</td><td class="num">9.1M</td><td class="num">81.5K</td><td class="num">112.8K</td><td class="num">2</td></tr><tr><td>2026-06-12</td><td class="num">13.6M</td><td class="num">13.4M</td><td class="num">64.0K</td><td class="num">110.4K</td><td class="num">2</td></tr><tr><td>2026-06-13</td><td class="num">23.0M</td><td class="num">22.8M</td><td class="num">139.7K</td><td class="num">79.1K</td><td class="num">4</td></tr><tr><td>2026-06-14</td><td class="num">22.4M</td><td class="num">22.2M</td><td class="num">127.0K</td><td class="num">85.7K</td><td class="num">1</td></tr><tr><td>2026-06-15</td><td class="num">24.4M</td><td class="num">24.2M</td><td class="num">123.2K</td><td class="num">58.8K</td><td class="num">3</td></tr><tr><td>2026-06-16</td><td class="num">16.6M</td><td class="num">16.5M</td><td class="num">60.6K</td><td class="num">56.5K</td><td class="num">8</td></tr><tr><td>2026-06-17</td><td class="num">11.7M</td><td class="num">11.6M</td><td class="num">61.2K</td><td class="num">58.3K</td><td class="num">5</td></tr><tr><td>2026-06-18</td><td class="num">22.3M</td><td class="num">22.2M</td><td class="num">104.5K</td><td class="num">64.7K</td><td class="num">7</td></tr><tr><td>2026-06-19</td><td class="num">25.6M</td><td class="num">25.3M</td><td class="num">131.5K</td><td class="num">95.8K</td><td class="num">7</td></tr><tr><td>2026-06-20</td><td class="num">24.9M</td><td class="num">24.6M</td><td class="num">99.3K</td><td class="num">137.6K</td><td class="num">2</td></tr><tr><td>2026-06-21</td><td class="num">15.5M</td><td class="num">15.4M</td><td class="num">93.2K</td><td class="num">42.9K</td><td class="num">5</td></tr><tr><td>2026-06-22</td><td class="num">15.1M</td><td class="num">14.9M</td><td class="num">81.4K</td><td class="num">50.3K</td><td class="num">2</td></tr><tr><td>2026-06-23</td><td class="num">13.7M</td><td class="num">13.6M</td><td class="num">89.5K</td><td class="num">39.6K</td><td class="num">3</td></tr><tr><td>2026-06-24</td><td class="num">20.5M</td><td class="num">20.4M</td><td class="num">68.9K</td><td class="num">27.6K</td><td class="num">3</td></tr><tr><td>2026-06-25</td><td class="num">29.7M</td><td class="num">29.6M</td><td class="num">79.7K</td><td class="num">92.0K</td><td class="num">1</td></tr><tr><td>2026-06-26</td><td class="num">14.5M</td><td class="num">14.4M</td><td class="num">47.9K</td><td class="num">30.7K</td><td class="num">4</td></tr><tr><td>2026-06-27</td><td class="num">38.4M</td><td class="num">38.0M</td><td class="num">231.3K</td><td class="num">165.4K</td><td class="num">7</td></tr><tr><td>2026-06-28</td><td class="num">39.3M</td><td class="num">39.0M</td><td class="num">217.4K</td><td class="num">84.9K</td><td class="num">1</td></tr></tbody></table>
+<h3 id="chart-efficiency" class="chart-title">Tokens per Commit vs. per Line Added</h3>
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" class="chart-svg">
+  <polygon points="55,144 69,162 83,234 97,164 111,170 125,199 139,163 153,157 167,247 181,181 195,236 209,135 223,207 238,260 252,260 266,240 280,224 294,142 308,237 322,202 336,235 350,237 364,190 378,199 392,216 407,211 421,237 435,240 449,249 463,209 477,220 491,170 505,241 519,229 533,235 547,146 561,222 576,254 590,253 604,248 618,246 632,199 646,249 660,225 674,241 688,229 702,107 716,246 730,236 745,55 55,265 41,265" fill="url(#grad-inp)" opacity="0.2"/>
+  <polyline points="55,144 69,162 83,234 97,164 111,170 125,199 139,163 153,157 167,247 181,181 195,236 209,135 223,207 238,260 252,260 266,240 280,224 294,142 308,237 322,202 336,235 350,237 364,190 378,199 392,216 407,211 421,237 435,240 449,249 463,209 477,220 491,170 505,241 519,229 533,235 547,146 561,222 576,254 590,253 604,248 618,246 632,199 646,249 660,225 674,241 688,229 702,107 716,246 730,236 745,55" fill="none" stroke="#4fc3f7"stroke-width="2" stroke-linejoin="round"/>
+  <polyline points="55,265 69,265 83,265 97,265 111,265 125,265 139,265 153,265 167,265 181,265 195,265 209,265 223,265 238,265 252,265 266,259 280,254 294,246 308,259 322,258 336,256 350,250 364,248 378,249 392,254 407,257 421,261 435,252 449,257 463,231 477,239 491,220 505,260 519,252 533,256 547,230 561,225 576,257 590,253 604,255 618,250 632,223 646,258 660,55 674,256 688,227 702,265 716,259 730,258 745,265" fill="none" stroke="#4db6ac"stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="55" cy="144" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-10" data-tok-per-commit="22673543" data-tok-per-line="0"/>
+  <polygon points="55,261 51.5,269 58.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-10" data-tok-per-commit="22673543"data-tok-per-line="0"/>
+  <circle cx="69" cy="162" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-11" data-tok-per-commit="19304448" data-tok-per-line="0"/>
+  <polygon points="69,261 65.5,269 72.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-11" data-tok-per-commit="19304448"data-tok-per-line="0"/>
+  <circle cx="83" cy="234" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-12" data-tok-per-commit="5896476" data-tok-per-line="0"/>
+  <polygon points="83,261 79.5,269 86.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-12" data-tok-per-commit="5896476"data-tok-per-line="0"/>
+  <circle cx="97" cy="164" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-13" data-tok-per-commit="18970496" data-tok-per-line="0"/>
+  <polygon points="97,261 93.5,269 100.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-13" data-tok-per-commit="18970496"data-tok-per-line="0"/>
+  <circle cx="111" cy="170" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-14" data-tok-per-commit="17801378" data-tok-per-line="0"/>
+  <polygon points="111,261 107.5,269 114.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-14" data-tok-per-commit="17801378"data-tok-per-line="0"/>
+  <circle cx="125" cy="199" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-15" data-tok-per-commit="12388502" data-tok-per-line="0"/>
+  <polygon points="125,261 121.5,269 128.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-15" data-tok-per-commit="12388502"data-tok-per-line="0"/>
+  <circle cx="139" cy="163" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-16" data-tok-per-commit="19240358" data-tok-per-line="0"/>
+  <polygon points="139,261 135.5,269 142.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-16" data-tok-per-commit="19240358"data-tok-per-line="0"/>
+  <circle cx="153" cy="157" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-17" data-tok-per-commit="20234992" data-tok-per-line="0"/>
+  <polygon points="153,261 149.5,269 156.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-17" data-tok-per-commit="20234992"data-tok-per-line="0"/>
+  <circle cx="167" cy="247" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-18" data-tok-per-commit="3528364" data-tok-per-line="0"/>
+  <polygon points="167,261 163.5,269 170.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-18" data-tok-per-commit="3528364"data-tok-per-line="0"/>
+  <circle cx="181" cy="181" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-19" data-tok-per-commit="15778412" data-tok-per-line="0"/>
+  <polygon points="181,261 177.5,269 184.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-19" data-tok-per-commit="15778412"data-tok-per-line="0"/>
+  <circle cx="195" cy="236" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-20" data-tok-per-commit="5488129" data-tok-per-line="0"/>
+  <polygon points="195,261 191.5,269 198.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-20" data-tok-per-commit="5488129"data-tok-per-line="0"/>
+  <circle cx="209" cy="135" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-21" data-tok-per-commit="24466084" data-tok-per-line="0"/>
+  <polygon points="209,261 205.5,269 212.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-21" data-tok-per-commit="24466084"data-tok-per-line="0"/>
+  <circle cx="223" cy="207" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-22" data-tok-per-commit="11031292" data-tok-per-line="0"/>
+  <polygon points="223,261 219.5,269 226.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-22" data-tok-per-commit="11031292"data-tok-per-line="0"/>
+  <circle cx="238" cy="260" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-23" data-tok-per-commit="1079175" data-tok-per-line="117"/>
+  <polygon points="238,261 234.5,269 241.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-23" data-tok-per-commit="1079175"data-tok-per-line="117"/>
+  <circle cx="252" cy="260" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-24" data-tok-per-commit="1109776" data-tok-per-line="0"/>
+  <polygon points="252,261 248.5,269 255.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-24" data-tok-per-commit="1109776"data-tok-per-line="0"/>
+  <circle cx="266" cy="240" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-25" data-tok-per-commit="4752595" data-tok-per-line="6438"/>
+  <polygon points="266,255 262.5,263 269.5,263" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-25" data-tok-per-commit="4752595"data-tok-per-line="6438"/>
+  <circle cx="280" cy="224" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-26" data-tok-per-commit="7742036" data-tok-per-line="11108"/>
+  <polygon points="280,250 276.5,258 283.5,258" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-26" data-tok-per-commit="7742036"data-tok-per-line="11108"/>
+  <circle cx="294" cy="142" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-27" data-tok-per-commit="23007862" data-tok-per-line="18999"/>
+  <polygon points="294,242 290.5,250 297.5,250" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-27" data-tok-per-commit="23007862"data-tok-per-line="18999"/>
+  <circle cx="308" cy="237" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-28" data-tok-per-commit="5321138" data-tok-per-line="6333"/>
+  <polygon points="308,255 304.5,263 311.5,263" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-28" data-tok-per-commit="5321138"data-tok-per-line="6333"/>
+  <circle cx="322" cy="202" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-29" data-tok-per-commit="11903458" data-tok-per-line="7267"/>
+  <polygon points="322,254 318.5,262 325.5,262" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-29" data-tok-per-commit="11903458"data-tok-per-line="7267"/>
+  <circle cx="336" cy="235" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-30" data-tok-per-commit="5751315" data-tok-per-line="9622"/>
+  <polygon points="336,252 332.5,260 339.5,260" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-30" data-tok-per-commit="5751315"data-tok-per-line="9622"/>
+  <circle cx="350" cy="237" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-05-31" data-tok-per-commit="5359592" data-tok-per-line="14904"/>
+  <polygon points="350,246 346.5,254 353.5,254" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-05-31" data-tok-per-commit="5359592"data-tok-per-line="14904"/>
+  <circle cx="364" cy="190" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-01" data-tok-per-commit="14180928" data-tok-per-line="16635"/>
+  <polygon points="364,244 360.5,252 367.5,252" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-01" data-tok-per-commit="14180928"data-tok-per-line="16635"/>
+  <circle cx="378" cy="199" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-02" data-tok-per-commit="12474745" data-tok-per-line="16307"/>
+  <polygon points="378,245 374.5,253 381.5,253" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-02" data-tok-per-commit="12474745"data-tok-per-line="16307"/>
+  <circle cx="392" cy="216" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-03" data-tok-per-commit="9213013" data-tok-per-line="10801"/>
+  <polygon points="392,250 388.5,258 395.5,258" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-03" data-tok-per-commit="9213013"data-tok-per-line="10801"/>
+  <circle cx="407" cy="211" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-04" data-tok-per-commit="10125916" data-tok-per-line="7914"/>
+  <polygon points="407,253 403.5,261 410.5,261" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-04" data-tok-per-commit="10125916"data-tok-per-line="7914"/>
+  <circle cx="421" cy="237" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-05" data-tok-per-commit="5413618" data-tok-per-line="4423"/>
+  <polygon points="421,257 417.5,265 424.5,265" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-05" data-tok-per-commit="5413618"data-tok-per-line="4423"/>
+  <circle cx="435" cy="240" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-06" data-tok-per-commit="4854903" data-tok-per-line="13271"/>
+  <polygon points="435,248 431.5,256 438.5,256" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-06" data-tok-per-commit="4854903"data-tok-per-line="13271"/>
+  <circle cx="449" cy="249" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-07" data-tok-per-commit="3165226" data-tok-per-line="8474"/>
+  <polygon points="449,253 445.5,261 452.5,261" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-07" data-tok-per-commit="3165226"data-tok-per-line="8474"/>
+  <circle cx="463" cy="209" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-08" data-tok-per-commit="10605438" data-tok-per-line="33073"/>
+  <polygon points="463,227 459.5,235 466.5,235" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-08" data-tok-per-commit="10605438"data-tok-per-line="33073"/>
+  <circle cx="477" cy="220" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-09" data-tok-per-commit="8551005" data-tok-per-line="25374"/>
+  <polygon points="477,235 473.5,243 480.5,243" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-09" data-tok-per-commit="8551005"data-tok-per-line="25374"/>
+  <circle cx="491" cy="170" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-10" data-tok-per-commit="17817081" data-tok-per-line="43777"/>
+  <polygon points="491,216 487.5,224 494.5,224" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-10" data-tok-per-commit="17817081"data-tok-per-line="43777"/>
+  <circle cx="505" cy="241" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-11" data-tok-per-commit="4658710" data-tok-per-line="5637"/>
+  <polygon points="505,256 501.5,264 508.5,264" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-11" data-tok-per-commit="4658710"data-tok-per-line="5637"/>
+  <circle cx="519" cy="229" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-12" data-tok-per-commit="6793284" data-tok-per-line="12781"/>
+  <polygon points="519,248 515.5,256 522.5,256" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-12" data-tok-per-commit="6793284"data-tok-per-line="12781"/>
+  <circle cx="533" cy="235" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-13" data-tok-per-commit="5759506" data-tok-per-line="9551"/>
+  <polygon points="533,252 529.5,260 536.5,260" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-13" data-tok-per-commit="5759506"data-tok-per-line="9551"/>
+  <circle cx="547" cy="146" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-14" data-tok-per-commit="22411414" data-tok-per-line="34586"/>
+  <polygon points="547,226 543.5,234 550.5,234" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-14" data-tok-per-commit="22411414"data-tok-per-line="34586"/>
+  <circle cx="561" cy="222" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-15" data-tok-per-commit="8136379" data-tok-per-line="38992"/>
+  <polygon points="561,221 557.5,229 564.5,229" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-15" data-tok-per-commit="8136379"data-tok-per-line="38992"/>
+  <circle cx="576" cy="254" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-16" data-tok-per-commit="2074153" data-tok-per-line="8198"/>
+  <polygon points="576,253 572.5,261 579.5,261" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-16" data-tok-per-commit="2074153"data-tok-per-line="8198"/>
+  <circle cx="590" cy="253" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-17" data-tok-per-commit="2336582" data-tok-per-line="11706"/>
+  <polygon points="590,249 586.5,257 593.5,257" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-17" data-tok-per-commit="2336582"data-tok-per-line="11706"/>
+  <circle cx="604" cy="248" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-18" data-tok-per-commit="3192004" data-tok-per-line="9865"/>
+  <polygon points="604,251 600.5,259 607.5,259" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-18" data-tok-per-commit="3192004"data-tok-per-line="9865"/>
+  <circle cx="618" cy="246" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-19" data-tok-per-commit="3653209" data-tok-per-line="15168"/>
+  <polygon points="618,246 614.5,254 621.5,254" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-19" data-tok-per-commit="3653209"data-tok-per-line="15168"/>
+  <circle cx="632" cy="199" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-20" data-tok-per-commit="12433449" data-tok-per-line="40967"/>
+  <polygon points="632,219 628.5,227 635.5,227" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-20" data-tok-per-commit="12433449"data-tok-per-line="40967"/>
+  <circle cx="646" cy="249" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-21" data-tok-per-commit="3109590" data-tok-per-line="6795"/>
+  <polygon points="646,254 642.5,262 649.5,262" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-21" data-tok-per-commit="3109590"data-tok-per-line="6795"/>
+  <circle cx="660" cy="225" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-22" data-tok-per-commit="7537634" data-tok-per-line="203720"/>
+  <polygon points="660,51 656.5,59 663.5,59" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-22" data-tok-per-commit="7537634"data-tok-per-line="203720"/>
+  <circle cx="674" cy="241" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-23" data-tok-per-commit="4567107" data-tok-per-line="8828"/>
+  <polygon points="674,252 670.5,260 677.5,260" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-23" data-tok-per-commit="4567107"data-tok-per-line="8828"/>
+  <circle cx="688" cy="229" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-24" data-tok-per-commit="6837875" data-tok-per-line="37162"/>
+  <polygon points="688,223 684.5,231 691.5,231" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-24" data-tok-per-commit="6837875"data-tok-per-line="37162"/>
+  <circle cx="702" cy="107" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-25" data-tok-per-commit="29724139" data-tok-per-line="0"/>
+  <polygon points="702,261 698.5,269 705.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-25" data-tok-per-commit="29724139"data-tok-per-line="0"/>
+  <circle cx="716" cy="246" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-26" data-tok-per-commit="3631187" data-tok-per-line="6255"/>
+  <polygon points="716,255 712.5,263 719.5,263" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-26" data-tok-per-commit="3631187"data-tok-per-line="6255"/>
+  <circle cx="730" cy="236" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-27" data-tok-per-commit="5491954" data-tok-per-line="6814"/>
+  <polygon points="730,254 726.5,262 733.5,262" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-27" data-tok-per-commit="5491954"data-tok-per-line="6814"/>
+  <circle cx="745" cy="55" r="3.5" fill="#1a1a2e" stroke="#4fc3f7" stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency" data-date="2026-06-28" data-tok-per-commit="39266484" data-tok-per-line="0"/>
+  <polygon points="745,261 741.5,269 748.5,269" fill="#1a1a2e" stroke="#4db6ac"stroke-width="1.5" class="chart-point" data-chart-type="dual-axis-efficiency"date="2026-06-28" data-tok-per-commit="39266484"data-tok-per-line="0"/>
+  <text x="55" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-10</text>
+  <text x="139" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-16</text>
+  <text x="223" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-22</text>
+  <text x="308" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-05-28</text>
+  <text x="392" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-03</text>
+  <text x="477" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-09</text>
+  <text x="561" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-15</text>
+  <text x="646" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-21</text>
+  <text x="730" y="310" text-anchor="middle" fill="#8892a4" font-size="10">2026-06-27</text>
+  <text x="50" y="12" text-anchor="end" fill="#4fc3f7" font-size="10">39.3M</text>
+  <text x="50" y="164" text-anchor="end" fill="#4fc3f7" font-size="10">19.6M</text>
+  <text x="753" y="12" text-anchor="start" fill="#4db6ac" font-size="10">203.7K</text>
+  <text x="753" y="164" text-anchor="start" fill="#4db6ac" font-size="10">101.9K</text>
+  <line x1="55" y1="55" x2="55" y2="265" stroke="#4fc3f7" stroke-width="1" opacity="0.5"/>
+  <line x1="745" y1="55" x2="745" y2="265" stroke="#4db6ac" stroke-width="1" opacity="0.5"/>
+  <line x1="55" y1="265" x2="745" y2="265" stroke="#8892a4" stroke-width="1"/>
+  <line x1="65" y1="68" x2="81" y2="68" stroke="#4fc3f7" stroke-width="2"/>
+  <text x="85" y="72" fill="#8892a4" font-size="10">Tokens / Commit</text>
+  <line x1="215" y1="68" x2="231" y2="68" stroke="#4db6ac" stroke-width="2"/>
+  <text x="235" y="72" fill="#8892a4" font-size="10">Tokens / Line Added</text>
+</svg><table><thead><tr><th>Date</th><th class="num">Tok/Commit</th><th class="num">Tok/Line</th><th class="num">Commits</th><th class="num">Adds</th></tr></thead><tbody><tr><td>2026-05-10</td><td class="num">22.7M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-11</td><td class="num">19.3M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-12</td><td class="num">5.9M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-13</td><td class="num">19.0M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-14</td><td class="num">17.8M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-15</td><td class="num">12.4M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-16</td><td class="num">19.2M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-17</td><td class="num">20.2M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-18</td><td class="num">3.5M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-19</td><td class="num">15.8M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-20</td><td class="num">5.5M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-21</td><td class="num">24.5M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-22</td><td class="num">11.0M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-23</td><td class="num">1.1M</td><td class="num">117</td><td class="num">4</td><td class="num">36.8K</td></tr><tr><td>2026-05-24</td><td class="num">1.1M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-05-25</td><td class="num">4.8M</td><td class="num">6.4K</td><td class="num">4</td><td class="num">3.0K</td></tr><tr><td>2026-05-26</td><td class="num">7.7M</td><td class="num">11.1K</td><td class="num">2</td><td class="num">1.4K</td></tr><tr><td>2026-05-27</td><td class="num">23.0M</td><td class="num">19.0K</td><td class="num">1</td><td class="num">1.2K</td></tr><tr><td>2026-05-28</td><td class="num">5.3M</td><td class="num">6.3K</td><td class="num">4</td><td class="num">3.4K</td></tr><tr><td>2026-05-29</td><td class="num">11.9M</td><td class="num">7.3K</td><td class="num">1</td><td class="num">1.6K</td></tr><tr><td>2026-05-30</td><td class="num">5.8M</td><td class="num">9.6K</td><td class="num">4</td><td class="num">2.4K</td></tr><tr><td>2026-05-31</td><td class="num">5.4M</td><td class="num">14.9K</td><td class="num">5</td><td class="num">1.8K</td></tr><tr><td>2026-06-01</td><td class="num">14.2M</td><td class="num">16.6K</td><td class="num">2</td><td class="num">1.7K</td></tr><tr><td>2026-06-02</td><td class="num">12.5M</td><td class="num">16.3K</td><td class="num">3</td><td class="num">2.3K</td></tr><tr><td>2026-06-03</td><td class="num">9.2M</td><td class="num">10.8K</td><td class="num">2</td><td class="num">1.7K</td></tr><tr><td>2026-06-04</td><td class="num">10.1M</td><td class="num">7.9K</td><td class="num">2</td><td class="num">2.6K</td></tr><tr><td>2026-06-05</td><td class="num">5.4M</td><td class="num">4.4K</td><td class="num">2</td><td class="num">2.4K</td></tr><tr><td>2026-06-06</td><td class="num">4.9M</td><td class="num">13.3K</td><td class="num">6</td><td class="num">2.2K</td></tr><tr><td>2026-06-07</td><td class="num">3.2M</td><td class="num">8.5K</td><td class="num">2</td><td class="num">747</td></tr><tr><td>2026-06-08</td><td class="num">10.6M</td><td class="num">33.1K</td><td class="num">3</td><td class="num">962</td></tr><tr><td>2026-06-09</td><td class="num">8.6M</td><td class="num">25.4K</td><td class="num">2</td><td class="num">674</td></tr><tr><td>2026-06-10</td><td class="num">17.8M</td><td class="num">43.8K</td><td class="num">1</td><td class="num">407</td></tr><tr><td>2026-06-11</td><td class="num">4.7M</td><td class="num">5.6K</td><td class="num">2</td><td class="num">1.7K</td></tr><tr><td>2026-06-12</td><td class="num">6.8M</td><td class="num">12.8K</td><td class="num">2</td><td class="num">1.1K</td></tr><tr><td>2026-06-13</td><td class="num">5.8M</td><td class="num">9.6K</td><td class="num">4</td><td class="num">2.4K</td></tr><tr><td>2026-06-14</td><td class="num">22.4M</td><td class="num">34.6K</td><td class="num">1</td><td class="num">648</td></tr><tr><td>2026-06-15</td><td class="num">8.1M</td><td class="num">39.0K</td><td class="num">3</td><td class="num">626</td></tr><tr><td>2026-06-16</td><td class="num">2.1M</td><td class="num">8.2K</td><td class="num">8</td><td class="num">2.0K</td></tr><tr><td>2026-06-17</td><td class="num">2.3M</td><td class="num">11.7K</td><td class="num">5</td><td class="num">998</td></tr><tr><td>2026-06-18</td><td class="num">3.2M</td><td class="num">9.9K</td><td class="num">7</td><td class="num">2.3K</td></tr><tr><td>2026-06-19</td><td class="num">3.7M</td><td class="num">15.2K</td><td class="num">7</td><td class="num">1.7K</td></tr><tr><td>2026-06-20</td><td class="num">12.4M</td><td class="num">41.0K</td><td class="num">2</td><td class="num">607</td></tr><tr><td>2026-06-21</td><td class="num">3.1M</td><td class="num">6.8K</td><td class="num">5</td><td class="num">2.3K</td></tr><tr><td>2026-06-22</td><td class="num">7.5M</td><td class="num">203.7K</td><td class="num">2</td><td class="num">74</td></tr><tr><td>2026-06-23</td><td class="num">4.6M</td><td class="num">8.8K</td><td class="num">3</td><td class="num">1.6K</td></tr><tr><td>2026-06-24</td><td class="num">6.8M</td><td class="num">37.2K</td><td class="num">3</td><td class="num">552</td></tr><tr><td>2026-06-25</td><td class="num">29.7M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr><tr><td>2026-06-26</td><td class="num">3.6M</td><td class="num">6.3K</td><td class="num">4</td><td class="num">2.3K</td></tr><tr><td>2026-06-27</td><td class="num">5.5M</td><td class="num">6.8K</td><td class="num">7</td><td class="num">5.6K</td></tr><tr><td>2026-06-28</td><td class="num">39.3M</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr></tbody></table>
+<h3 id="summary-table" class="chart-title">Daily Summary</h3>
+<table><thead><tr><th>Date</th><th>Sessions</th><th class="num">Total Tokens</th><th class="num">Input</th><th class="num">Output</th><th class="num">Reasoning</th><th class="num">Reasoning %</th><th class="num">Commits</th><th class="num">Adds</th><th class="num">Dels</th><th class="num">Tok/Commit</th><th class="num">Tok/Line</th></tr></thead><tbody>
+<tr><td>2026-05-10</td><td class="num">9</td><td class="num">22.7M</td><td class="num">22.5M</td><td class="num">130.6K</td><td class="num">30.5K</td><td class="num">0.1%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">22.7M</td><td class="num">0</td></tr>
+<tr><td>2026-05-11</td><td class="num">23</td><td class="num">19.3M</td><td class="num">19.1M</td><td class="num">146.8K</td><td class="num">51.4K</td><td class="num">0.3%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">19.3M</td><td class="num">0</td></tr>
+<tr><td>2026-05-12</td><td class="num">10</td><td class="num">5.9M</td><td class="num">5.8M</td><td class="num">51.1K</td><td class="num">20.6K</td><td class="num">0.3%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">5.9M</td><td class="num">0</td></tr>
+<tr><td>2026-05-13</td><td class="num">15</td><td class="num">19.0M</td><td class="num">18.8M</td><td class="num">92.4K</td><td class="num">43.1K</td><td class="num">0.2%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">19.0M</td><td class="num">0</td></tr>
+<tr><td>2026-05-14</td><td class="num">14</td><td class="num">17.8M</td><td class="num">17.7M</td><td class="num">90.6K</td><td class="num">44.0K</td><td class="num">0.2%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">17.8M</td><td class="num">0</td></tr>
+<tr><td>2026-05-15</td><td class="num">13</td><td class="num">12.4M</td><td class="num">12.3M</td><td class="num">65.2K</td><td class="num">46.8K</td><td class="num">0.4%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">12.4M</td><td class="num">0</td></tr>
+<tr><td>2026-05-16</td><td class="num">22</td><td class="num">19.2M</td><td class="num">19.0M</td><td class="num">114.7K</td><td class="num">87.7K</td><td class="num">0.5%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">19.2M</td><td class="num">0</td></tr>
+<tr><td>2026-05-17</td><td class="num">20</td><td class="num">20.2M</td><td class="num">20.0M</td><td class="num">150.7K</td><td class="num">49.7K</td><td class="num">0.2%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">20.2M</td><td class="num">0</td></tr>
+<tr><td>2026-05-18</td><td class="num">5</td><td class="num">3.5M</td><td class="num">3.5M</td><td class="num">47.6K</td><td class="num">15.0K</td><td class="num">0.4%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">3.5M</td><td class="num">0</td></tr>
+<tr><td>2026-05-19</td><td class="num">26</td><td class="num">15.8M</td><td class="num">15.6M</td><td class="num">116.6K</td><td class="num">37.4K</td><td class="num">0.2%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">15.8M</td><td class="num">0</td></tr>
+<tr><td>2026-05-20</td><td class="num">5</td><td class="num">5.5M</td><td class="num">5.4M</td><td class="num">30.5K</td><td class="num">10.4K</td><td class="num">0.2%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">5.5M</td><td class="num">0</td></tr>
+<tr><td>2026-05-21</td><td class="num">12</td><td class="num">24.5M</td><td class="num">24.3M</td><td class="num">112.5K</td><td class="num">77.2K</td><td class="num">0.3%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">24.5M</td><td class="num">0</td></tr>
+<tr><td>2026-05-22</td><td class="num">17</td><td class="num">11.0M</td><td class="num">10.9M</td><td class="num">65.7K</td><td class="num">53.5K</td><td class="num">0.5%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">11.0M</td><td class="num">0</td></tr>
+<tr><td>2026-05-23</td><td class="num">18</td><td class="num">4.3M</td><td class="num">4.2M</td><td class="num">62.9K</td><td class="num">16.0K</td><td class="num">0.4%</td><td class="num">4</td><td class="num">36.8K</td><td class="num">43</td><td class="num">1.1M</td><td class="num">117</td></tr>
+<tr><td>2026-05-24</td><td class="num">15</td><td class="num">1.1M</td><td class="num">1.1M</td><td class="num">28.9K</td><td class="num">3.5K</td><td class="num">0.3%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">1.1M</td><td class="num">0</td></tr>
+<tr><td>2026-05-25</td><td class="num">23</td><td class="num">19.0M</td><td class="num">18.8M</td><td class="num">133.4K</td><td class="num">93.2K</td><td class="num">0.5%</td><td class="num">4</td><td class="num">3.0K</td><td class="num">1.3K</td><td class="num">4.8M</td><td class="num">6.4K</td></tr>
+<tr><td>2026-05-26</td><td class="num">14</td><td class="num">15.5M</td><td class="num">15.4M</td><td class="num">83.1K</td><td class="num">50.8K</td><td class="num">0.3%</td><td class="num">2</td><td class="num">1.4K</td><td class="num">200</td><td class="num">7.7M</td><td class="num">11.1K</td></tr>
+<tr><td>2026-05-27</td><td class="num">10</td><td class="num">23.0M</td><td class="num">22.9M</td><td class="num">97.7K</td><td class="num">34.2K</td><td class="num">0.1%</td><td class="num">1</td><td class="num">1.2K</td><td class="num">42</td><td class="num">23.0M</td><td class="num">19.0K</td></tr>
+<tr><td>2026-05-28</td><td class="num">15</td><td class="num">21.3M</td><td class="num">21.1M</td><td class="num">103.1K</td><td class="num">51.5K</td><td class="num">0.2%</td><td class="num">4</td><td class="num">3.4K</td><td class="num">501</td><td class="num">5.3M</td><td class="num">6.3K</td></tr>
+<tr><td>2026-05-29</td><td class="num">22</td><td class="num">11.9M</td><td class="num">11.8M</td><td class="num">79.7K</td><td class="num">42.0K</td><td class="num">0.4%</td><td class="num">1</td><td class="num">1.6K</td><td class="num">26</td><td class="num">11.9M</td><td class="num">7.3K</td></tr>
+<tr><td>2026-05-30</td><td class="num">28</td><td class="num">23.0M</td><td class="num">22.8M</td><td class="num">138.7K</td><td class="num">88.4K</td><td class="num">0.4%</td><td class="num">4</td><td class="num">2.4K</td><td class="num">989</td><td class="num">5.8M</td><td class="num">9.6K</td></tr>
+<tr><td>2026-05-31</td><td class="num">35</td><td class="num">26.8M</td><td class="num">26.5M</td><td class="num">202.4K</td><td class="num">134.2K</td><td class="num">0.5%</td><td class="num">5</td><td class="num">1.8K</td><td class="num">215</td><td class="num">5.4M</td><td class="num">14.9K</td></tr>
+<tr><td>2026-06-01</td><td class="num">9</td><td class="num">28.4M</td><td class="num">28.2M</td><td class="num">105.6K</td><td class="num">91.3K</td><td class="num">0.3%</td><td class="num">2</td><td class="num">1.7K</td><td class="num">156</td><td class="num">14.2M</td><td class="num">16.6K</td></tr>
+<tr><td>2026-06-02</td><td class="num">21</td><td class="num">37.4M</td><td class="num">37.2M</td><td class="num">170.9K</td><td class="num">94.3K</td><td class="num">0.3%</td><td class="num">3</td><td class="num">2.3K</td><td class="num">472</td><td class="num">12.5M</td><td class="num">16.3K</td></tr>
+<tr><td>2026-06-03</td><td class="num">16</td><td class="num">18.4M</td><td class="num">18.3M</td><td class="num">107.6K</td><td class="num">61.3K</td><td class="num">0.3%</td><td class="num">2</td><td class="num">1.7K</td><td class="num">260</td><td class="num">9.2M</td><td class="num">10.8K</td></tr>
+<tr><td>2026-06-04</td><td class="num">20</td><td class="num">20.3M</td><td class="num">20.1M</td><td class="num">136.0K</td><td class="num">48.7K</td><td class="num">0.2%</td><td class="num">2</td><td class="num">2.6K</td><td class="num">602</td><td class="num">10.1M</td><td class="num">7.9K</td></tr>
+<tr><td>2026-06-05</td><td class="num">13</td><td class="num">10.8M</td><td class="num">10.7M</td><td class="num">72.0K</td><td class="num">23.2K</td><td class="num">0.2%</td><td class="num">2</td><td class="num">2.4K</td><td class="num">421</td><td class="num">5.4M</td><td class="num">4.4K</td></tr>
+<tr><td>2026-06-06</td><td class="num">32</td><td class="num">29.1M</td><td class="num">28.9M</td><td class="num">143.6K</td><td class="num">124.3K</td><td class="num">0.4%</td><td class="num">6</td><td class="num">2.2K</td><td class="num">98</td><td class="num">4.9M</td><td class="num">13.3K</td></tr>
+<tr><td>2026-06-07</td><td class="num">19</td><td class="num">6.3M</td><td class="num">6.2M</td><td class="num">53.5K</td><td class="num">39.4K</td><td class="num">0.6%</td><td class="num">2</td><td class="num">747</td><td class="num">22</td><td class="num">3.2M</td><td class="num">8.5K</td></tr>
+<tr><td>2026-06-08</td><td class="num">19</td><td class="num">31.8M</td><td class="num">31.6M</td><td class="num">110.5K</td><td class="num">72.8K</td><td class="num">0.2%</td><td class="num">3</td><td class="num">962</td><td class="num">88</td><td class="num">10.6M</td><td class="num">33.1K</td></tr>
+<tr><td>2026-06-09</td><td class="num">17</td><td class="num">17.1M</td><td class="num">16.9M</td><td class="num">79.9K</td><td class="num">115.8K</td><td class="num">0.7%</td><td class="num">2</td><td class="num">674</td><td class="num">159</td><td class="num">8.6M</td><td class="num">25.4K</td></tr>
+<tr><td>2026-06-10</td><td class="num">11</td><td class="num">17.8M</td><td class="num">17.6M</td><td class="num">82.4K</td><td class="num">106.4K</td><td class="num">0.6%</td><td class="num">1</td><td class="num">407</td><td class="num">14</td><td class="num">17.8M</td><td class="num">43.8K</td></tr>
+<tr><td>2026-06-11</td><td class="num">25</td><td class="num">9.3M</td><td class="num">9.1M</td><td class="num">81.5K</td><td class="num">112.8K</td><td class="num">1.2%</td><td class="num">2</td><td class="num">1.7K</td><td class="num">284</td><td class="num">4.7M</td><td class="num">5.6K</td></tr>
+<tr><td>2026-06-12</td><td class="num">10</td><td class="num">13.6M</td><td class="num">13.4M</td><td class="num">64.0K</td><td class="num">110.4K</td><td class="num">0.8%</td><td class="num">2</td><td class="num">1.1K</td><td class="num">168</td><td class="num">6.8M</td><td class="num">12.8K</td></tr>
+<tr><td>2026-06-13</td><td class="num">26</td><td class="num">23.0M</td><td class="num">22.8M</td><td class="num">139.7K</td><td class="num">79.1K</td><td class="num">0.3%</td><td class="num">4</td><td class="num">2.4K</td><td class="num">804</td><td class="num">5.8M</td><td class="num">9.6K</td></tr>
+<tr><td>2026-06-14</td><td class="num">13</td><td class="num">22.4M</td><td class="num">22.2M</td><td class="num">127.0K</td><td class="num">85.7K</td><td class="num">0.4%</td><td class="num">1</td><td class="num">648</td><td class="num">174</td><td class="num">22.4M</td><td class="num">34.6K</td></tr>
+<tr><td>2026-06-15</td><td class="num">24</td><td class="num">24.4M</td><td class="num">24.2M</td><td class="num">123.2K</td><td class="num">58.8K</td><td class="num">0.2%</td><td class="num">3</td><td class="num">626</td><td class="num">238</td><td class="num">8.1M</td><td class="num">39.0K</td></tr>
+<tr><td>2026-06-16</td><td class="num">23</td><td class="num">16.6M</td><td class="num">16.5M</td><td class="num">60.6K</td><td class="num">56.5K</td><td class="num">0.3%</td><td class="num">8</td><td class="num">2.0K</td><td class="num">276</td><td class="num">2.1M</td><td class="num">8.2K</td></tr>
+<tr><td>2026-06-17</td><td class="num">22</td><td class="num">11.7M</td><td class="num">11.6M</td><td class="num">61.2K</td><td class="num">58.3K</td><td class="num">0.5%</td><td class="num">5</td><td class="num">998</td><td class="num">357</td><td class="num">2.3M</td><td class="num">11.7K</td></tr>
+<tr><td>2026-06-18</td><td class="num">27</td><td class="num">22.3M</td><td class="num">22.2M</td><td class="num">104.5K</td><td class="num">64.7K</td><td class="num">0.3%</td><td class="num">7</td><td class="num">2.3K</td><td class="num">253</td><td class="num">3.2M</td><td class="num">9.9K</td></tr>
+<tr><td>2026-06-19</td><td class="num">25</td><td class="num">25.6M</td><td class="num">25.3M</td><td class="num">131.5K</td><td class="num">95.8K</td><td class="num">0.4%</td><td class="num">7</td><td class="num">1.7K</td><td class="num">189</td><td class="num">3.7M</td><td class="num">15.2K</td></tr>
+<tr><td>2026-06-20</td><td class="num">12</td><td class="num">24.9M</td><td class="num">24.6M</td><td class="num">99.3K</td><td class="num">137.6K</td><td class="num">0.6%</td><td class="num">2</td><td class="num">607</td><td class="num">125</td><td class="num">12.4M</td><td class="num">41.0K</td></tr>
+<tr><td>2026-06-21</td><td class="num">22</td><td class="num">15.5M</td><td class="num">15.4M</td><td class="num">93.2K</td><td class="num">42.9K</td><td class="num">0.3%</td><td class="num">5</td><td class="num">2.3K</td><td class="num">73</td><td class="num">3.1M</td><td class="num">6.8K</td></tr>
+<tr><td>2026-06-22</td><td class="num">21</td><td class="num">15.1M</td><td class="num">14.9M</td><td class="num">81.4K</td><td class="num">50.3K</td><td class="num">0.3%</td><td class="num">2</td><td class="num">74</td><td class="num">24</td><td class="num">7.5M</td><td class="num">203.7K</td></tr>
+<tr><td>2026-06-23</td><td class="num">18</td><td class="num">13.7M</td><td class="num">13.6M</td><td class="num">89.5K</td><td class="num">39.6K</td><td class="num">0.3%</td><td class="num">3</td><td class="num">1.6K</td><td class="num">127</td><td class="num">4.6M</td><td class="num">8.8K</td></tr>
+<tr><td>2026-06-24</td><td class="num">13</td><td class="num">20.5M</td><td class="num">20.4M</td><td class="num">68.9K</td><td class="num">27.6K</td><td class="num">0.1%</td><td class="num">3</td><td class="num">552</td><td class="num">248</td><td class="num">6.8M</td><td class="num">37.2K</td></tr>
+<tr><td>2026-06-25</td><td class="num">8</td><td class="num">29.7M</td><td class="num">29.6M</td><td class="num">79.7K</td><td class="num">92.0K</td><td class="num">0.3%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">29.7M</td><td class="num">0</td></tr>
+<tr><td>2026-06-26</td><td class="num">9</td><td class="num">14.5M</td><td class="num">14.4M</td><td class="num">47.9K</td><td class="num">30.7K</td><td class="num">0.2%</td><td class="num">4</td><td class="num">2.3K</td><td class="num">72</td><td class="num">3.6M</td><td class="num">6.3K</td></tr>
+<tr><td>2026-06-27</td><td class="num">60</td><td class="num">38.4M</td><td class="num">38.0M</td><td class="num">231.3K</td><td class="num">165.4K</td><td class="num">0.4%</td><td class="num">7</td><td class="num">5.6K</td><td class="num">78</td><td class="num">5.5M</td><td class="num">6.8K</td></tr>
+<tr><td>2026-06-28</td><td class="num">17</td><td class="num">39.3M</td><td class="num">39.0M</td><td class="num">217.4K</td><td class="num">84.9K</td><td class="num">0.2%</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">39.3M</td><td class="num">0</td></tr>
+</tbody></table>
+
+<footer>Generated by generate_llm_report.sh &middot; Data source: opencode SQLite DB + git log</footer>
+
+<script>
+(function() {
+  const tooltip = document.createElement('div');
+  tooltip.id = 'svg-tooltip';
+  Object.assign(tooltip.style, {
+    position: 'fixed', display: 'none', background: '#16213e', border: '1px solid #4fc3f7',
+    borderRadius: '6px', padding: '8px 12px', fontSize: '12px', color: '#e0e0e0',
+    pointerEvents: 'none', zIndex: '9999', boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+    lineHeight: '1.6'
+  });
+  document.body.appendChild(tooltip);
+
+  function fmt(v) {
+    if (v >= 1e9) return (v/1e9).toFixed(1) + 'B';
+    if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
+    if (v >= 1e3) return (v/1e3).toFixed(1) + 'K';
+    return v.toLocaleString();
+  }
+
+  document.querySelectorAll('.chart-point').forEach(pt => {
+    pt.addEventListener('mouseenter', e => {
+      const type = pt.dataset.chartType;
+      let html = '<strong>' + pt.dataset.date + '</strong><br>';
+      if (type === 'stacked') {
+        html += 'Input: ' + fmt(+pt.dataset.input) + '<br>';
+        html += 'Output: ' + fmt(+pt.dataset.output) + '<br>';
+        html += 'Reasoning: ' + fmt(+pt.dataset.reasoning) + '<br>';
+        html += 'Total: ' + fmt(+pt.dataset.total);
+      } else if (type === 'dual-axis-tok-commits') {
+        html += 'Tokens: ' + fmt(+pt.dataset.tokens) + '<br>';
+        html += 'Commits: ' + pt.dataset.commits;
+      } else if (type === 'dual-axis-efficiency') {
+        html += 'Tok/Commit: ' + fmt(+pt.dataset.tokPerCommit) + '<br>';
+        html += 'Tok/Line: ' + fmt(+pt.dataset.tokPerLine);
+      }
+      tooltip.innerHTML = html;
+      tooltip.style.display = 'block';
+    });
+    pt.addEventListener('mousemove', e => {
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top = (e.clientY - 50) + 'px';
+    });
+    pt.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+

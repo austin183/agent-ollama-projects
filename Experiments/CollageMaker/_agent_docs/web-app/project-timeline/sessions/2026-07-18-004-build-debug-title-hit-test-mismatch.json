@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-18-004-build-debug-title-hit-test-mismatch",
+  "session_number": 4,
+  "date": "2026-07-18",
+  "purpose": "debug",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "MyESModules/Interaction/TitleInteraction.js",
+    "MyComponents/TitleInteractionTest.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 4,
+  "assertions_added": 10,
+  "bugs_fixed": 1,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Fixed title drag/resize interaction broken after multi-line title changes. Root cause: _hitTestTitle() in TitleInteraction.js computed the title box position using simplified logic that diverged from TitleRenderer.render() in two ways: (1) X position in legacy mode (no custom position/width) — hit test centered the box width, but renderer centered the text width, creating a PADDING*2 offset between clickable area and rendered area; (2) Y position for multi-line titles — hit test used single-line formula (titleBoxY - fontSize - 12) but renderer used computeMultiLineBounds.y which accounts for multi-line height, making the top line of multi-line titles unclickable. Fix: rewrote _hitTestTitle to use the same three-mode X position logic as the renderer (custom position, custom width centered, legacy text-centered with bgX offset) and use bounds.y for box top. Also fixed _onPointerDown dragStartBoxX computation to match, preventing visual jump on first drag from legacy mode. Added 4 tests: legacy center hit, legacy left hit, multi-line top line hit, legacy drag no-jump. All 1,337 tests pass (38 TitleInteraction tests, up from 34)."
+}

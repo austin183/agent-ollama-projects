@@ -1,0 +1,31 @@
+{
+  "session_id": "46da243",
+  "session_number": 8,
+  "date": "2026-07-02",
+  "purpose": "test",
+  "agent_role": "build-test",
+  "files_changed": [
+    "MyESModules/State/UndoManager.js",
+    "MyComponents/UndoManagerTest.html",
+    "MyComponents/EdgeCasesTest.html",
+    "test/e2e/workflow-tests.spec.cjs",
+    "_agent_docs/learnings/undomanager-batch-bug.md",
+    "_agent_docs/learnings/playwright-canvas-e2e.md",
+    "_agent_docs/learnings/app-undo-history-scope.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 12,
+  "assertions_added": 17,
+  "bugs_fixed": 1,
+  "learnings_written": [
+    "_agent_docs/learnings/app-undo-history-scope.md"
+  ],
+  "learnings_updated": [
+    "_agent_docs/learnings/undomanager-batch-bug.md",
+    "_agent_docs/learnings/playwright-canvas-e2e.md"
+  ],
+  "plans_written": [],
+  "commits": ["46da243"],
+  "outcome": "success",
+  "notes": "Addressed all findings from 2026-07-02-p0-test-followup.md:\n\n1. FIX #0 (Critical): Fixed UndoManager batch undo/redo — endBatch() was returning snapshots instead of applying them, and push() during batch only kept the last command. Now properly accumulates all commands and executes undos in reverse order and redos in forward order.\n\n2. FIX #1: Replaced all waitForTimeout() calls in E2E tests with assertion-based waits (waitForImagesLoaded, waitForCanvasVisible, changeLayout).\n\n3. FIX #2: Added 3 keyboard shortcut E2E tests (undo shortcut, Escape to deselect, input focus conflict check).\n\n4. FIX #3: Added 2 crop editing flow E2E tests (panel selection with crop preview, reset crop button availability).\n\n5. FIX #4: Added 4 undo/redo button state E2E tests (disabled on load, enabled after crop reset, redo enabled after undo, redo disabled after new action).\n\n6. Cleanup: Removed 5 duplicate tests from EdgeCasesTest (extreme aspect ratios duplicated from LayoutMathTest, undo stack bounds duplicated from UndoManagerTest).\n\nLearnings captured:\n- app-undo-history-scope.md: App only creates undo commands for crop operations, not image removal/layout changes\n- Updated undomanager-batch-bug.md: Marked as resolved with fix details\n- Updated playwright-canvas-e2e.md: Added reusable helper pattern, canvas panel selection, theme toggle verification, disabled attribute gotcha\n\nFinal counts: 147 unit tests + 16 E2E tests = 163 tests, all passing."
+}

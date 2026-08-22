@@ -1,0 +1,21 @@
+{
+  "session_id": "",
+  "session_number": 25,
+  "date": "2026-07-03",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    "_agent_docs/learnings/2026-07-03-deferred-feature-test-planning.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [
+    "_agent_docs/learnings/2026-07-03-deferred-feature-test-planning.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Capturing-learnings session: reviewed all 14 existing learnings documents and sessions 22-24. Determined that keyboard handler patterns (session 22), Phase 3 testing patterns, and skill refinements (session 24) were already well-documented. Identified one genuinely novel pattern from session 23: deferred feature test planning — writing comprehensive test scenarios (138) for unimplemented features as a requirements document. World-review + planner subagent collaboration surfaced 5 non-functional requirements (graceful degradation, non-blocking, privacy, accessibility, memory management) that became test criteria. New learning document created. No other learnings warranted documentation — existing 14 documents provide thorough coverage of all technical patterns."
+}
