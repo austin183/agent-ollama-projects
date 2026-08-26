@@ -1,0 +1,19 @@
+{
+  "session_id": "",
+  "session_number": 1,
+  "date": "2026-08-01",
+  "purpose": "debug",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "_agent_docs/specifications/change-requests/2026-08-01-01-panel-swap-during-multitouch.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Investigated panel swap during two-finger pinch/pan gesture. Root cause: PanelSwap's dragSourceId is set on the first finger's pointerdown (before the two-finger gesture exists) and is never cleared when startGesture() runs on the second finger. The _multiTouchGestureActive guard in PanelSwap's _onPointerDown only prevents a NEW drag from starting — it does not clear the drag state already established by the first finger. When the first finger lifts, MultiTouchHandler clears _multiTouchGestureActive in its _onPointerUp BEFORE PanelSwap's _onPointerUp fires (same event, synchronous, MultiTouchHandler registered first), so PanelSwap sees the flag as false and executes the swap. Recommended fix: move dragSourceId to shared state (state.dragSourceId) so MultiTouchHandler can clear it in startGesture(). Also add _multiTouchGestureActive guard to PanelSwap's _onPointerMove to prevent dragTargetId from updating during gesture. Wrote change request to _agent_docs/specifications/change-requests/2026-08-01-01-panel-swap-during-multitouch.md. No code changes made per user request — investigation and documentation only."
+}

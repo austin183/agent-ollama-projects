@@ -1,0 +1,54 @@
+{
+  "session_id": "01a030fd-420e-7e83-a44e-e5ffe003c68e",
+  "date": "2026-08-23",
+  "title": "CR 2026-08-23-001 (waveform progress + BPM detection) — BDD implementation plan, decomposed into 7 phases",
+  "purpose": "bdd-planning",
+  "agent_role": "plan-bdd",
+  "model": "qwen/qwen3.8-27b (lmstudio)",
+  "duration_minutes": 30,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "Authored the decomposed BDD implementation plan for CR 2026-08-23-001 at _agent_docs/plans/2026-08-23-cr-001-ui-enhancements/ (10 files, ~1 170 lines): index.md (phase map, all not started, CR linked as source of truth, D-M sequencing constraint), context.md (decisions D-A…D-M pinned with spot-verified anchors, D-D confidence-metric formula + tuning contract, D-K clicks20.wav fixture contract, D-L scenario ID scheme, KB-14…KB-17, 13-item risk register, CR §4 limitations), behavior-specs.md (73 canonical Given-When-Then rows: WF-P1.1…9, TD-1.1…15, WF-V1.1…10, WF-I1.1…5, WF-I2.1…10, TD-U1.1…10, E2E-3.1…10, E2E-4.1…4, with a worked-example constants header and P0/P1/P2 ordering), and phase-1…phase-7 files (each self-contained: depends-on by ID, context-to-load, inlined owned scenario tables, concrete code changes, automated/manual success criteria, phase-close handoff audit). Phases 1–6 are test-first with the broken-page RED shape (risk R-11) stated per phase for new barrel names; Phase 4 defines _schedulePostLoadTasks in two-task shape from day one so Phase 6 fills in, never refactors, the tempo task. Spot-verified the planner memo's key file:line anchors against source and corrected the stale ones (see key_decisions). Integrity check passes both default (R-*/RD-*) and custom --ids invocations (63 distinct new IDs all resolve canonically); by-eye ownership pass confirms every scenario ID is inlined in exactly one phase file (other occurrences are dependency/audit references only). No code files were modified — plan directory only.",
+  "key_decisions": [
+    "Treated the CR's §6 world-review dispositions (W-1…W-17) as settled constraints and the planner memo's D-A…D-M as the design base — no re-litigation; this session's job was anchor verification, ID/phase design, and transcription into the decomposed plan format",
+    "Corrected the CR/memo's inverted peak-bucket arithmetic: sine3s (132 300 samples @ 44.1 kHz) at 4096 buckets is 4096 buckets × ≈32 samples, NOT '≈32 effective buckets' — WF-P1.4 pins the tiny-buffer edge with a 50-sample buffer instead",
+    "Corrected the design memo's E2E-4.2 expectation ('edit BPM → re-drop → no prefill'), which contradicted CR §2.5's settled flag-lifecycle (flag resets on every successful load → re-drop re-suggests); the plan follows the CR and flags the correction in index.md and the E2E-4.2 row",
+    "Corrected five stale memo anchors: N-14 guard at createMetronomadMethods.js:242 (not 226–228), _restoreLastValid :117-133 (not 107–121), lifecycle mounted() :32-83 / beforeUnmount() :86-104 (not 26–60 / 62–83), songPosition throttle createBeatDots.js:142-149 (not 167–176), renderClickBuffer clickBuffers.js:33-55 (not 40–63); all other memo anchors (index.html/Style.css/E2E/paramClamps/playbackEngine/run-tests/codecSupport) verified exact",
+    "Two-phase canvas ARIA evolution to keep every phase boundary green: Phase 4 ships the canvas display-only (role='img', tabindex=-1, no callbacks wired — the untouched keyboard.spec.cjs exact-Tab-order test stays green); Phase 5 flips it to the focusable role='slider' and removes #offsetScrubber + re-points all E2E references in the same commit (R-2)",
+    "Locked-state E2E contract for the canvas: a canvas can never be :disabled, so the lock assertion becomes aria-disabled='true' + pointer-events: none + tabindex=-1, and smoke.spec.cjs's CONTROLS helper gains a presence-only list (R-1) — pinned in Phases 4/5 so build-tdd doesn't invent a third shape",
+    "Shared-mean helper pinned as mixDown(channels) in Analysis/channelData.js with monoMixdown(buffer) as its facade — detectTempo takes Float32Array[] (not a buffer) so it imports mixDown directly; exactly one mean implementation (AGENTS.md 'DO NOT Duplicate')",
+    "TD-1.6/TD-1.8 alias outcomes pinned as families ({120,240} for a 240 train; {75,150,null} for the in-band half-time pair) rather than single values — honest about the half/double ambiguity without over-constraining the autocorrelation; TD-1.7 (half-time 120) stays the hard pin: 120 or null, never 60, with the tuning constants (0.75/0.6/8) adjustable only while all pinned outcomes hold",
+    "New scenario ID scheme uses two-letter prefixes (WF-P/WF-V/WF-I, TD/TD-U, E2E-3.x/E2E-4.x) because every single letter is taken and bare W- is consumed by the CR's world-review findings; the integrity-check --ids invocation for this plan is documented in index.md's footer",
+    "New known behaviors continue the v1 series as KB-14 (reduced-motion playhead stays), KB-15 (tempo heuristic limitations), KB-16 (paint gate + placeholder during re-decode), KB-17 (raw-float aria-valuemax is intentional) — written into the v1 plan's context.md by Phase 7"
+  ],
+  "learnings": [
+    "Always re-derive a memo's arithmetic pins before copying them into a plan: the '≈32 effective buckets' error inverted samples-per-bucket into bucket count and would have produced a wrong WF-P1.4 test (and a wrong poolPeaks expectation for the sine3s fixture) if transcribed verbatim",
+    "When a planning memo and the (settled) CR conflict, the CR wins — but the conflict must be surfaced in the plan (index.md Key Discoveries + the scenario row), not silently resolved; the E2E-4.2 re-drop case was exactly this",
+    "Multi-phase UI changes that touch focus order need a per-phase 'stays green' strategy: shipping the canvas as a non-focusable role='img' in Phase 4 let the exact-Tab-order E2E survive until Phase 5 swapped the focusable slider into the scrubber's slot atomically — an intermediate commit that half-added the slider would have red'd the suite for a phase",
+    "Decomposition ownership held up cleanly here because the file-ownership partition (D-M) was done before scenario authoring: 73 scenario IDs each landed in exactly one phase file with zero ownership overlaps to arbitrate; the by-eye check (comm -23/-13 on ID sets + per-ID file counts) takes minutes and caught only substring false-positives (TD-1.1 inside TD-1.15)",
+    "The plan-integrity-check default regex (R-*/RD-*) is still useful for non-BDD plans: naming this plan's risk register R-1…R-13 made the default run cover the risk references for free, while the custom --ids run covers the scenario families — running both is cheap and catches two different drift classes"
+  ],
+  "files_created": [
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/index.md",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/context.md",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/behavior-specs.md",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/phase-1-peaks-pure.md",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/phase-2-tempo-pure.md",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/phase-3-waveform-view.md",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/phase-4-waveform-wiring.md",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/phase-5-scrub-replaces-scrubber.md",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/phase-6-tempo-integration.md",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/phase-7-docs-acceptance.md",
+    "Metronomad/_agent_docs/project-timeline/sessions/2026-08-23-002-plan-bdd-cr-001-ui-enhancements.json"
+  ],
+  "files_modified": [],
+  "next_steps": [
+    "USER: review the plan before execution — highest-value reads: context.md D-D (tempo confidence metric + tuning contract), D-E (post-load hook shape), D-H (exact HTML/CSS contract), the index.md Key Discoveries (three corrections to the CR/memo), and the Phase 4→5 canvas ARIA evolution",
+    "build-tdd Phase 1: work phase-1-peaks-pure.md + its context-to-load only; RED is a broken test page (barrel link failure), not per-test failures (R-11); at phase close run the handoff audit against Phase 2's mixDown consumption and Phase 3's poolPeaks assumption before flipping the phase map",
+    "build-tdd Phase 4: _schedulePostLoadTasks MUST ship in two-task shape with a guarded no-op tempo body (D-M) — Phase 6 fills the body and must never restructure the hook; the canvas ships display-only (role='img', tabindex -1) so keyboard.spec.cjs stays untouched until Phase 5",
+    "build-tdd Phase 5: the scrubber removal, the canvas slider flip, and the three E2E spec updates (keyboard/playback/smoke) land in ONE commit — no phase boundary may contain a broken Tab order (R-2)",
+    "build-tdd Phase 6: author scripts/make-clicks20-wav.cjs first and commit the 1 764 044-byte fixture (D-K) — it is the E2E ground truth; the tempo flag goes in the BPM callers (commitBpmEntry/onBpmStep/onBpmTextInput), never inside the shared _restoreLastValid (R-12)",
+    "No commit in the planning session — _agent_docs/ is gitignored and commits are build-quick-work's responsibility (per repo pattern)"
+  ]
+}

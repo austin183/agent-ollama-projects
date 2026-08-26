@@ -1,0 +1,19 @@
+{
+  "session_id": "2026-07-27-001",
+  "session_number": 1,
+  "date": "2026-07-27",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/references/accessibility.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill by integrating two new accessibility patterns from the 2026-07-26 learnings document (consolidating-interactive-regions-and-status-readouts). Added: (1) 'Consolidating Duplicate Application Regions' section with single-source-of-truth pattern and decision framework for when to keep vs. demote role=application regions, placed after the canvas roles section. (2) 'Reactive Numeric Readouts (role=status)' section explaining why role=status is preferred over aria-live alone (implicit aria-atomic=true) and why polite over assertive for frequently-updating values, placed after ARIA Live Regions. Updated TOC and file references. SKILL.md description was at 1024 char max so left unchanged — new patterns are discoverable via the accessibility.md reference."
+}

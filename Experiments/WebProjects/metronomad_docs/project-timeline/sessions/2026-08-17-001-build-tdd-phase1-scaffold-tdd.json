@@ -1,0 +1,47 @@
+{
+  "session_id": "01a012aa-e3ff-7b41-8f1a-ce1927b83292",
+  "date": "2026-08-17",
+  "title": "Metronomad Phase 1 — app scaffold via TDD",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 88,
+  "tokens_input": 2775562,
+  "tokens_output": 48988,
+  "tokens_reasoning": 35602,
+  "outcome": "Phase 1 (Scaffold) complete. Red-Green-Refactor cycle: wrote the Playwright smoke suite first (4 tests: zero console errors, data-state=noFile hook, drop zone hero + live regions, all 9 controls present and disabled), confirmed RED (4/4 failed on the missing page), then implemented the minimal shell — index.html with the full final-form template (drop zone, file row, locked controls group, playback buttons, beat dots, progress bar, polite/alert live regions), Style.css (drop-zone hero, beat-dot base + reduced-motion hook, tokens from variables.css), and the four app factory stubs + barrel per the repo's createCollageApp pattern. GREEN on first full run after fixing one test-side assertion (see learnings); 4/4 green across two consecutive runs. Barrel re-export names verified live in-browser (no silent undefineds); the scaffold-only formatSeconds placeholder verified against all seven planned formatTime contract cases (T-12…T-17) so the Phase 2 swap is seamless.",
+  "key_decisions": [
+    "data-state hook mirrors the RAW D8 appState value (camelCase 'noFile', 'countingIn'…) — the plan's own E2E scenarios (E2E-1.2 'data-state=countingIn', E2E-2.1 'stays noFile') use camelCase; the Phase 1 criterion line 'data-state=nofile' was read as loose casing",
+    "Single isReady computed (appState === 'ready' && !decoding.active) drives every :disabled binding, so no-file AND decoding states both disable all controls; isSequenceRunning and isParamLocked kept as separate computeds per the V-06 contract (Restart stays disabled during preview, KB-5)",
+    "Play/Stop label and the controls lock both use isParamLocked (identical predicate to 'any running audio') — one name instead of duplicating the expression under a second name",
+    "Template is final-form (all regions, all bindings, B-04 aria-label, KB-6 hooks) even though handlers are stubs — Phases 3–6 change behavior, not structure; the only intentional placeholder is formatSeconds (marked for the Phase 2 formatTime swap)",
+    "playwright.config.cjs mirrors CollageMaker + plan §3.4: chromium only, baseURL :8000, workers 1, timeout 30000, NO webServer block (repo rule: user runs start-server.sh), plus --autoplay-policy=no-user-gesture-required for later playback tests",
+    "Hidden file input gets tabindex=\"-1\" (found via the a11y page snapshot: it was a focusable button in the tab order behind Browse); Playwright setInputFiles still works on it for E2E-1.1"
+  ],
+  "learnings": [
+    "The smoke test initially asserted data-state=nofile while the app correctly exposed noFile — the app followed D8 and the plan's E2E section; when a plan criterion contradicts the plan's own behavior specs, the behavior spec (D8 + E2E-1.2/E2E-2.1) wins. Fixed the test, not the app",
+    "Vue's data-state watch with immediate:true fires during component init (module scripts are deferred, so document.body exists) — no need to also set the attribute in mounted()",
+    "Barrel re-exports must be verified at runtime: imported MyESModules/index.js in a headless page and checked typeof of every name (es-modules.md pitfall — missing names silently yield undefined)",
+    "A visually-hidden (clip-rect) input is still keyboard-focusable — it appeared as a button in Playwright's a11y snapshot; clip-only hiding is not enough for programmatic-only inputs",
+    "The scaffold formatSeconds was validated against the Phase 2 contract (T-12…T-17: 75.3→1:15.3, 65.25→1:05.3 half-up, 3599.94→59:59.9, negatives/NaN→0:00.0) via a one-off node eval of the extracted function — placeholder code should still honor the future contract so the swap is behavior-neutral"
+  ],
+  "files_created": [
+    "Metronomad/playwright.config.cjs",
+    "Metronomad/test/e2e/smoke.spec.cjs",
+    "Metronomad/index.html",
+    "Metronomad/Style.css",
+    "Metronomad/MyESModules/index.js",
+    "Metronomad/MyESModules/App/createMetronomadApp.js",
+    "Metronomad/MyESModules/App/createMetronomadData.js",
+    "Metronomad/MyESModules/App/createMetronomadMethods.js",
+    "Metronomad/MyESModules/App/createMetronomadLifecycle.js",
+    "Metronomad/_agent_docs/sessions/2026-08-17-001-build-tdd-phase1-scaffold-tdd.json"
+  ],
+  "files_modified": [],
+  "next_steps": [
+    "Manual gate (user): confirm the layout reads well — drop zone hero in no-file state, controls grouped and labeled (Phase 1 manual success criterion)",
+    "Phase 2 (Pure Functions): MyESModules/Utils/{beatGrid,timeFormat,paramClamps}.js + MyComponents/TimingMathTest.html + scripts/run-tests.cjs; then swap the formatSeconds placeholder in createMetronomadApp.js for the real formatTime import",
+    "Phase 3 (File Loading): howlerSetup/codecSupport/fileLoader + real onDrop/onFileInputChange/onBrowseClick wiring, decoding state, error overlay (U-14…U-16, U-20, V-05)",
+    "Phase 4 (PlaybackEngine) and Phase 5 (UI integration) per the plan"
+  ]
+}

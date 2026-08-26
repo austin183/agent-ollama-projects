@@ -1,0 +1,41 @@
+{
+  "session_id": "01a0264a-ea1b-780f-abd2-28ca25e1f21d",
+  "date": "2026-08-21",
+  "title": "Commit Metronomad v1 and reorganize shared building-web-apps skill to repo root",
+  "purpose": "refactor",
+  "agent_role": "build-quick-work",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 50.6,
+  "tokens_input": 424077,
+  "tokens_output": 10337,
+  "tokens_reasoning": 5153,
+  "outcome": "Metronomad v1 (all 8 plan phases) committed on branch prototype/metronomad as a0e3498 (51 files: app code, 127 unit + 21 e2e tests, fixtures, site launch card, gitignore/AGENTS.md process updates, skill docs), followed by housekeeping commit a6ecfc0 moving the canonical building-web-apps skill from CollageMaker/.opencode/skills/ to repo-root skills/ with relative symlinks from both CollageMaker/.opencode/skills/ and Metronomad/.pi/skills/. Unrelated untracked files (MacNotes.txt, BlogPosts report data, 73MB TaxBracketVisualizer/References, empty test-results/) intentionally left untracked.",
+  "key_decisions": [
+    "Excluded _agent_docs from git (repo serves the website): generalized existing CollageMaker/_agent_docs/** rule to **/_agent_docs/ in .gitignore",
+    "Committed the Metronomad work with the original one-way skill symlink intact, then performed the skill move as a separate housekeeping commit per user preference",
+    "Canonical shared skill moved to neutral repo-root skills/building-web-apps/ with relative symlinks (../../../skills/building-web-apps) in each project's tool folder — scales to future projects",
+    "Left tracked root .DS_Store modified-but-uncommitted (user did not answer untrack question); all unrelated untracked files left in place",
+    "Pi-Session trailer for a0e3498 names the phase-8 work session (01a02392-e8ed-7ed6-8ac4-fd60399add70); a6ecfc0 uses this session's own UUID"
+  ],
+  "learnings": [
+    "git mv of a directory fails with 'No such file or directory' if the destination parent directory does not exist — mkdir -p the parent first",
+    "git stores symlinks as mode 120000 blobs containing the target path; GitHub renders them as text files showing the relative target, and re-creates real symlinks on clone (macOS/Linux)"
+  ],
+  "files_created": [
+    "Metronomad/_agent_docs/sessions/2026-08-21-001-build-quick-work-commit-metronomad-v1.json"
+  ],
+  "files_modified": [
+    ".gitignore (commit a0e3498: added **/.playwright-cli/ and **/_agent_docs/)",
+    "AGENTS.md (commit a0e3498: added Decomposed Plans practice)",
+    "index.html (commit a0e3498: Metronomad launch card)",
+    "Metronomad/** (commit a0e3498: entire project, 34 files)",
+    "CollageMaker/.opencode/skills/building-web-apps/** (commit a0e3498: 11 modified + 3 new references)",
+    "skills/building-web-apps/** (commit a6ecfc0: renamed from CollageMaker/.opencode/skills/)",
+    "CollageMaker/.opencode/skills/building-web-apps (commit a6ecfc0: now a symlink to ../../../skills/building-web-apps)",
+    "Metronomad/.pi/skills/building-web-apps (commit a6ecfc0: symlink target repointed to ../../../skills/building-web-apps)"
+  ],
+  "next_steps": [
+    "Decide whether to untrack the root .DS_Store (git rm --cached) so the existing **/.DS_Store ignore rule takes effect",
+    "Push prototype/metronomad and/or open a PR when ready (no push performed in this session)"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "session_id": "2026-07-26-006-build-docs-skill-refinement-test-runner-canvas-visibility",
+  "session_number": 6,
+  "date": "2026-07-26",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/canvas-2d.md",
+    ".opencode/skills/building-web-apps/references/testing-e2e.md",
+    ".opencode/skills/building-web-apps/references/interaction.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with three patterns from learnings/2026-07-26-test-runner-getelementbyid-quirk-and-dual-canvas-visibility.md: (1) Test Runner DOM Query Gotcha — querySelector over getElementById for Mocha-manipulated DOM, added to references/testing-e2e.md; (2) Dual-Canvas Visibility Guard — isConnected + offsetParent check to skip hidden canvas rendering, added to references/canvas-2d.md; (3) Multi-Canvas Pointer Events — e.currentTarget for per-canvas coordinate math, added to references/interaction.md. Updated SKILL.md description and Key References to surface all three new patterns for discoverability."
+}

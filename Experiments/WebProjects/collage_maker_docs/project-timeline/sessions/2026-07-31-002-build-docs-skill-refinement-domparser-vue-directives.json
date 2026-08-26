@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-31-002-build-docs-skill-refinement-domparser-vue-directives",
+  "session_number": 2,
+  "date": "2026-07-31",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/testing-unit.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with DOMParser Vue directive attribute gotcha from learnings/2026-07-31-domparser-vue-directive-attributes.md. Added: (1) new 'DOMParser Vue Directive Attributes' section to references/testing-unit.md with gotcha explanation, three testing strategies, anti-patterns, scope, and file reference; (2) TOC entry in testing-unit.md; (3) inline bullet in SKILL.md Testing section with key insight and reference link; (4) description field keyword update for discoverability. Followed skills-best-practice guidance for conciseness and progressive disclosure (one-level-deep reference from SKILL.md to testing-unit.md)."
+}

@@ -1,0 +1,52 @@
+{
+  "session_id": "01a01e64-a256-704a-b503-55ec47a74bab",
+  "date": "2026-08-20",
+  "title": "Metronomad Phase 6 — Beat Dots, Progress, Clock Hygiene via TDD (B-01…B-05 + wiring, D9/U-17/U-22)",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 126,
+  "tokens_input": 5549975,
+  "tokens_output": 54477,
+  "tokens_reasoning": 30520,
+  "outcome": "Phase 6 (Beat Dots, Progress, Clock Hygiene, P1) automated criteria complete. RED-GREEN-REFACTOR in 6 small batches: B-01 dot rendering (RAF callback-collector, 4 tests incl. lead-in + grid-null loop self-termination) → B-02 visibilitychange pause/snap/resume (2 tests) → B-03 reduced-motion static highlight + live media change + --beat-interval tempo sync (4 tests) → B-04 progress computeds characterization (2 tests, green immediately — Phase 5 code) → B-05 stopAll teardown (1 test: RAF cancel + engine.dispose watch-interval spy + matchMedia listener removal + idempotency) → Phase-6 wiring in UiHandlersTest (4 tests: countingIn starts the clock exactly once, playing flip does not restart, all three terminal states stop, onVisibilityChange delegates, no-_beatDots safety). Final: BeatDots 14/14, full unit suite 127/127 (5 files), E2E smoke 4/4, live page mounts with zero console errors and beatDot-0..3 ids present. REFACTOR: extracted _cancelLoop() (single RAF-teardown point), _render() now returns the grid so _tick/_renderNow stop double-calling engine.getBeatGrid(), single _dotEls() lookup per frame; the refactor initially broke B-02 (_cancelLoop reset _hiddenPaused that the hidden path had just set) — caught by the suite, fixed by keeping the helper side-effect-free. Production: createBeatDots.js (RAF visualizer, D9 pure phase per frame, imperative dot classes, tenth-second-throttled songPosition), methods (_startBeatDots/_stopBeatDots/onVisibilityChange + onEngineStateChange hooks), lifecycle (createBeatDots + document visibilitychange listener in mounted; stopAll first in beforeUnmount), template (dot ids, imperative --active ownership documented), Style.css (pulse on --active.--pulse at --beat-interval, --static variant, media-query safety net), barrel export. Manual gate remains: U-17 (tab switch snap), U-22 (reduced motion), dot/click lockstep at 120 & 250 BPM — phase map left 'in progress' until the user verifies.",
+  "key_decisions": [
+    "createBeatDots owns the APP-LEVEL RAF loop (window.requestAnimationFrame, collector-mockable per B-01) instead of reusing the engine's P-12 visual clock: the app loop needs visibility-pause, tempo-driven CSS (--beat-interval), and reduced-motion class switching, none of which are engine concerns. The engine's startVisualClock/onFrame remains a tested public capability (P-12) but is unused by the app — noted, not deleted (removing tested Phase-4 surface mid-plan is out of scope)",
+    "Dot classes are owned IMPERATIVELY by createBeatDots (classList --active/--pulse/--static); the template keeps only the static downbeat modifier plus the :data-beat row hook (KB-6). Rationale: BeatDotsTest.html has no Vue mount, so B-01's DOM-class assertions require imperative ownership; a Vue :class binding on the same attribute would clobber per-frame writes on re-render",
+    "vm.activeBeatIndex stores the DOWNSAMPLED dot index (beatIndex % 4, or -1), not the absolute beat — it drives the data-beat E2E hook which must match the lit dot (0-3)",
+    "stopAll(vm) calls getEngine().dispose(): B-05 requires stopAll to cancel the D10 watch interval, which only engine.dispose() clears; beforeUnmount therefore does stopAll (RAF + media listener + engine) → fileLoader.release(), with a defensive engine.dispose fallback if _beatDots is absent. stopAll is idempotent via a _stopped flag (double unmount must not dispose twice)",
+    "The visual clock runs for the count-in/song SEQUENCE only: starts on 'countingIn' (idempotent), keeps running through the countingIn→playing flip (one sequence, one loop — the downbeat is on the same grid, D9), stops on stopped/ended/previewEnded. Preview runs no loop (getBeatGrid is null there); U-09's 'progress reset to the offset' is satisfied by _returnToReady",
+    "Progress readout sync is throttled to tenth-second changes (compare formatTime output before writing vm.songPosition) per the plan's per-frame performance note; --beat-interval is set on the dot row from grid.interval so the CSS pulse runs at the song's beat rate (0.5s at 120 BPM, 0.24s at 250)",
+    "Reduced motion (B-03/U-22): JS reads matchMedia('(prefers-reduced-motion: reduce)') — active dot gets beat-dot--static (no --pulse) and a 'change' listener applies the swap LIVE without a new frame; the CSS media query remains as the no-JS safety net. matchMedia is NOT injected (base = getEngine/getClock/getDom per the pinned interface) — tests stub window.matchMedia and restore in afterEach",
+    "Test clock values were pinned to the T-08 corrected input (101.75 → {beatIndex: 2, inBeat: 0.5} on a 100.5/0.5 grid) after the first GREEN attempt exposed an arithmetic slip (102.75 is beat 4.5); a separate bar-wrap test locks in the modulo (absolute beat 4 → dot 0)"
+  ],
+  "learnings": [
+    "The RAF callback-collector mock MUST be browser-faithful about cancellation: the first version only recorded canceled ids and left the callback queued, so 'cancel then assert nothing pending' silently failed with a phantom pending frame. Model pending frames as a Map id→cb and DELETE on cancel (same shape as PlaybackEngineTest's createFakeRAF)",
+    "Refactor regression caught by the suite (Critical, fixed): extracting _cancelLoop() from stopVisualClock/onVisibilityChange/stopAll and giving it _hiddenPaused = false wiped the flag the hidden branch set immediately before calling it — B-02's visible-resume stopped working. When extracting a helper from call sites that write state AROUND the call, audit each flag: the helper should have the minimal side effects all callers share",
+    "document.hidden is testable in the real browser via Object.defineProperty(document, 'hidden', {configurable: true, get: () => value}) with the original Document.prototype descriptor saved and restored in afterEach — no framework needed",
+    "A phase's own test page can double as the home for characterization tests of adjacent computeds: B-04 (progress fill/marker/aria-label) asserts Phase-5 computeds from createMetronomadApp, keeping the phase file's 'BeatDotsTest covers B-01…B-05' contract true while avoiding cross-page duplication of the appOptions-capture boilerplate",
+    "Imperative DOM ownership vs Vue bindings is a per-attribute decision: the attribute the RAF writes (--active class) must be unbound in the template, while attributes Vue owns (data-beat, progress :style/:aria-label) stay bound and are fed through vm data — mixing the two on one attribute causes silent clobbering on the next patch"
+  ],
+  "files_created": [
+    "Metronomad/MyESModules/App/createBeatDots.js",
+    "Metronomad/MyComponents/BeatDotsTest.html",
+    "Metronomad/_agent_docs/sessions/2026-08-20-001-build-tdd-phase6-beat-dots-progress-tdd.json"
+  ],
+  "files_modified": [
+    "Metronomad/MyESModules/App/createMetronomadMethods.js",
+    "Metronomad/MyESModules/App/createMetronomadLifecycle.js",
+    "Metronomad/MyESModules/index.js",
+    "Metronomad/index.html",
+    "Metronomad/Style.css",
+    "Metronomad/MyComponents/UiHandlersTest.html",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/behavior-specs.md (user-approved plan corrections: E2E-1.2 flip t0+1.0→t0+1.5 s per grid law, data-beat zero-based semantics)",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/phase-7-e2e-suite.md (same corrections + Phase 6 summary added to Context to load)",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/context.md (KB-6: pinned data-state/data-beat semantics)",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/phase-8-docs-acceptance.md (dual-clock ownership note added to Context to load)"
+  ],
+  "next_steps": [
+    "User manual acceptance (real audio, Phase 6 gate): U-17 — switch tabs ≥5 s mid-play and return: dots snap to the correct beat instantly, no drift; U-22 — OS reduced-motion: static highlight, no pulse; dots visually lockstep with clicks at 120 and 250 BPM. Then flip Phase 6 to ✅ done in the phase map (index.md) and check the phase-6 success-criteria boxes",
+    "Phase 7 E2E suite (P0/P1): playback.spec.cjs (E2E-1.x) + errors.spec.cjs (E2E-2.x); data-state, data-beat (now live per-frame), announcement strings, and progress aria-label are all stable assertion targets. Fixtures sine3s.mp3 + bad.mp3 still need extracting into test/fixtures/ (D11). PLAN CORRECTIONS ALREADY APPLIED (user-approved, end of this session): the Phase 7/behavior-specs timing table had an arithmetic bug (count-in 2 flips at t0+1.5 s per the grid law, not t0+1.0 s ± 0.3 s — the old window would have timed out on the first RED test) and E2E-1.2's 'beat 1 then beat 2' is now pinned to data-beat '0' then '1'; KB-6 in context.md now documents the hook semantics; Phase 7/8 Context-to-load lists now point at this session summary — a fresh Phase 7 session should start with zero re-derivation churn",
+    "Suggestion-level (deferred): (a) the engine's P-12 visual clock (startVisualClock/stopVisualClock/onFrame) is tested but unused by the app — either a future phase adopts it or Phase 8 docs should say why the app-level loop replaced it; (b) createBeatDots's callbacks parameter is currently reserved (only callbacks.onFrame is honored, never passed by the app) — wire it or drop it in a later refactor"
+  ]
+}

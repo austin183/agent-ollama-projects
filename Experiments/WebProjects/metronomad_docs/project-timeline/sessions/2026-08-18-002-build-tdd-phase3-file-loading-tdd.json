@@ -1,0 +1,48 @@
+{
+  "session_id": "01a01714-b178-734e-88aa-76fa59e9fc28",
+  "date": "2026-08-18",
+  "title": "Metronomad Phase 3 — file loading (howlerSetup, codecSupport, fileLoader) via TDD",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 65,
+  "tokens_input": 3489665,
+  "tokens_output": 29152,
+  "tokens_reasoning": 14387,
+  "outcome": "Phase 3 (File Loading) complete. RED: wrote MyComponents/FileLoaderTest.html with 14 scenarios (F-01…F-09, H-01, H-02 + release idempotence) importing the not-yet-existing Audio/File modules — confirmed RED (3× module 404, 0 tests registered). GREEN: implemented Audio/codecSupport.js (H-02), Audio/howlerSetup.js (H-01, Pitfall 1 autoSuspend=false + Pitfall 2 volume(1) lazy-ctx touch), File/fileLoader.js (F-01…F-09, all deps injected: codecs/context/maxDurationSec/onStateChange; single-live-URL invariant on every exit path), then wired Vue: real onDrop/onFileInputChange/onFileDropped (V-05 contract, U-13 drop-while-locked guard, U-16 error clearing, offset clamped to new duration), lifecycle mounted() = initHowler + createFileLoader (Phase 3 subset; engine/beatDots deferred to Phase 4/5), beforeUnmount = fileLoader.release(). REFLECT: 14/14 new + 34/34 Phase 2 unit tests green; all 22 barrel names resolve live in-browser; verified the real UI in headless chromium — upload real 3 s MP3 → Ready + '0:03.0' + 'sine3s.mp3 loaded' announcement; garbage file → friendly decode error with state preserved (D8); re-upload clears error (U-16); .txt → codec message; zero console errors; Phase 1 smoke E2E 4/4. REFACTOR: fixed extensionless-file codec message ('. files' → 'unrecognized type', test-pinned first); runner fix (see key_decisions).",
+  "key_decisions": [
+    "fileLoader factory signature extends the plan sketch with an injected `context` param: createFileLoader({ codecs, context, maxDurationSec = 1800, onStateChange }) — decodeAudioData needs a context and F-04 requires a mockable decode path, so DIP says inject it; production passes Howler.ctx from mounted()",
+    "The 3 s 440 Hz MP3 (D11) was embedded as base64 directly in FileLoaderTest.html (32,624 chars, extracted from _agent_docs/research/howler-research-test.html) rather than fetching test/fixtures/sine3s.mp3 — the plan's Phase 3 note says 'real File objects from base64'; the fixture file itself is still created in Phase 7 for E2E",
+    "scripts/run-tests.cjs needed a completion fix: it extracted Mocha results as soon as the FIRST `.test` element appeared, which silently undercounts async suites (first run reported 8/14 passing with 0 failures — 6 in-flight decode tests invisible). Now it waits (30 s cap) for runner.stats.tests === passes+failures+pending before extracting. CollageMaker's original has the same latent issue; its suites happen to be synchronous",
+    "decoding flag is written by TWO owners by design: fileLoader.onStateChange (wired in mounted) sets 'decoding' synchronously before the first await (U-01 'Decoding name…' shows immediately on drop), and onFileDropped's finally guarantees 'idle' on all paths — the finally is load-bearing for Phase 5 V-05 mock-VM tests where the spy loadFile never fires the callback",
+    "onFileDropped clamps the current offset to the NEW song's duration on load — the plan doesn't pin this, but an offset longer than a shorter replacement song would make Play start past the end; clampOffset (Phase 2) already exists, so no new logic, and offsetText is re-synced from formatTime",
+    "U-13 drop-while-locked guard landed early in onDrop (isParamLocked → 'Drop a new song after stopping') even though Restart/Preview are Phase 5 — the computed already existed and E2E-2.2 will test it; isPreviewing is a no-op flag until Phase 5",
+    "Lifecycle mounted() is a Phase 3 subset (initHowler + fileLoader only) with a doc comment marking what Phase 5 adds — the plan's lifecycle bullet describes the FINAL state; deferring engine/beatDots/visibility-listeners keeps each phase's diff reviewable"
+  ],
+  "learnings": [
+    "In-browser Mocha runner trap: 'passes: N, failures: 0' with N < registered tests means the run was still in flight when results were extracted — a mid-run snapshot looks identical to a clean pass. Any async unit suite (real decoding, timers) needs an explicit run-completion wait before DOM/runner extraction; the stats-accounting check (tests === passes+failures+pending) is the robust signal, not Runner.state (unverified value set across Mocha versions)",
+    "chai deep.equal distinguishes ['idle'] from ['idle', undefined] (different lengths) — event-recorder test helpers should normalize absent details to an explicit sentinel (null) instead of `detail && detail.x`, or every 'no detail' assertion silently breaks",
+    "KB-6 hook value check before writing verification scripts: the data-state hook mirrors the RAW D8 appState ('noFile', camelCase) per the Phase 1 smoke spec, even though the plan's §3.4 prose writes it lowercase ('nofile') — Phase 7 E2E specs must assert the raw values the app actually writes",
+    "F-08's synchronous-decoding assertion works because an async function runs synchronously up to its first await: calling loadFile(file) and checking the event log BEFORE awaiting the returned promise proves 'decoding' fires before any I/O — no timer mocking needed for the U-01 immediacy contract",
+    "Playwright scripts must be placed inside the repo tree (root node_modules resolution is script-location-based, not CWD-based) — /tmp scripts fail with MODULE_NOT_FOUND even when run from the repo root"
+  ],
+  "files_created": [
+    "Metronomad/MyComponents/FileLoaderTest.html",
+    "Metronomad/MyESModules/Audio/howlerSetup.js",
+    "Metronomad/MyESModules/Audio/codecSupport.js",
+    "Metronomad/MyESModules/File/fileLoader.js",
+    "Metronomad/_agent_docs/sessions/2026-08-18-002-build-tdd-phase3-file-loading-tdd.json"
+  ],
+  "files_modified": [
+    "Metronomad/MyESModules/index.js",
+    "Metronomad/MyESModules/App/createMetronomadMethods.js",
+    "Metronomad/MyESModules/App/createMetronomadLifecycle.js",
+    "Metronomad/scripts/run-tests.cjs"
+  ],
+  "next_steps": [
+    "User manual acceptance (Phase 3): drop a real multi-minute mp3 → Ready + duration; garbage file → friendly error, app usable; >30-min file → too-long error; (Safari) .ogg → friendly codec error",
+    "Phase 4 (PlaybackEngine): MyESModules/Playback/playbackEngine.js (P-01…P-14, D4/D5/D6/D10) + Audio/clickBuffers.js (H-03) with RED tests in MyComponents/PlaybackEngineTest.html — zero real AudioContext (injected fake context/clock/RAF)",
+    "Plan note for build-docs: §3.4 writes data-state=nofile (lowercase) but the implemented hook writes raw appState values ('noFile') — Phase 7 E2E specs must use the raw values (smoke spec precedent)",
+    "CollageMaker's run-tests.js has the same mid-run extraction issue (latent, its suites are synchronous) — candidate for a shared fix if the runner is ever extracted to a shared location"
+  ]
+}

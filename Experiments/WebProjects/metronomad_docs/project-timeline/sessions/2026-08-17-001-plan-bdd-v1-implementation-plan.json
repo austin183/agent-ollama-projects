@@ -1,0 +1,50 @@
+{
+  "session_id": "01a0118e-8fb6-7721-8d7d-8195922ed4e5",
+  "date": "2026-08-17",
+  "title": "Metronomad v1 — Howler research + BDD implementation planning",
+  "purpose": "bdd-planning",
+  "agent_role": "plan-bdd",
+  "model": "qwen/qwen3.8-27b (lmstudio)",
+  "duration_minutes": 303,
+  "tokens_input": 6247267,
+  "tokens_output": 107813,
+  "tokens_reasoning": 49255,
+  "outcome": "Complete: (1) v1 spec finalized with all 6 open product questions resolved by the user; (2) Howler.js researched empirically (docs + source + live headless-Chromium verification harness) — concluded Option B: Howler for context/masterGain/codecs/autoUnlock, raw Web Audio start(when, offset) for the sample-accurate click grid and song start; (3) full BDD implementation plan written via the plan-bdd workflow (world-review + planner subagent delegation, synthesized with skeptical corrections): 93 Given-When-Then scenarios across user/component/pure-function/E2E levels, 11 design decisions (D1-D11), 8 phases with automated+manual success criteria, module interfaces, known behaviors, and test strategy.",
+  "key_decisions": [
+    "Spec: count-in 1-16 default 4; first click one beat after Play press; click-free downbeat; accept whatever Howler decodes; Play<->Stop toggle + separate Restart; name 'Metronomad'",
+    "Architecture Option B: Howler 2.2.3 (CDN) only for AudioContext setup, masterGain, codecs(), autoUnlock; Howler.autoSuspend=false (Pitfall 1 — its 30s timer would suspend the context mid-song because it can't see custom nodes)",
+    "D4 generation counter in PlaybackEngine makes Play/Stop mashing atomic (no orphaned scheduled clicks) — validated as the top P0 by world-review",
+    "D5 song source start(when, offset) issued immediately in startSequence; 25ms/100ms lookahead loop schedules only the N click sources",
+    "D6 hand-rolled scheduler, no Tone.js (dependency-free repo pattern; Tone.js deferred to post-v1)",
+    "D3 30-minute post-decode duration guard (~635 MB float32 PCM worst case) as the iOS memory guard; pre-decode size heuristics out of scope",
+    "D1 no minimum lead-time floor — the spec's timing law (first click = exactly one beat after press) wins over the UX reviewer's 250-BPM concern; documented as Known Behavior KB-1",
+    "D9 beat phase is a pure function of the audio clock — makes hidden-tab RAF pausing (Safari) harmless, no drift",
+    "E2E strategy: chromium only, synthesized 3s sine MP3 fixture (extracted from research harness), data-state/data-beat testability hooks, wall-clock timing with tolerance, never assert audio by ear; codec-reject path is unit (F-02) + manual Safari since chromium supports every codec",
+    "building-web-apps skill symlinked into Metronomad/.pi/skills/ (single canonical copy in CollageMaker/.opencode/skills/)"
+  ],
+  "learnings": [
+    "Subagent outputs can be truncated at the tool's output limit — the planner's first run cut off mid-Phase 7; a focused continuation call ('produce ONLY the remaining sections, under ~120 lines') recovered the rest cleanly",
+    "Howler gotchas that only source-reading + empirical tests revealed: blob: URLs need the format property (no extension to sniff); Howler.ctx is null until lazy setup (Howler.usingWebAudio=true is only a flag); seek() while playing = pause/seek/play cycle; decoded buffers live in a module-private cache and are unrecoverable from a Howl; end events are JS-timer based",
+    "World-review surfaced the autoSuspend-class of bug pattern: library bookkeeping that only sees the library's own objects (suspend timers, generation of end callbacks) silently breaks custom node playback — always check what a library's 'activity' tracking can and cannot see",
+    "Research's 10.6 MB/min PCM figure was 16-bit; decodeAudioData yields float32 (21.1 MB/min at 44.1k stereo) — memory guards must be sized to the actual decoded format",
+    "The planner independently verified repo facts (root index.html card pattern, CollageMaker run-tests.js behavior) that the plan cited; plan-bdd should spot-verify cited facts before synthesis (caught: #collageMakerCard doesn't exist — the pattern is the class-based project-card; U-02 progress-at-flip was wrong; E2E-2.1 'codec reject' is untriggerable on chromium)"
+  ],
+  "files_created": [
+    "Metronomad/_agent_docs/InitialThoughts.md",
+    "Metronomad/_agent_docs/specifications/metronomad-v1-specification.md",
+    "Metronomad/_agent_docs/research/howlerjs-research.md",
+    "Metronomad/_agent_docs/research/howler-research-test.html",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1-implementation-plan.md",
+    "Metronomad/.pi/skills/building-web-apps (symlink -> ../../../CollageMaker/.opencode/skills/building-web-apps)"
+  ],
+  "files_modified": [
+    ".gitignore (added **/.playwright-cli/ for playwright-cli session artifacts)"
+  ],
+  "next_steps": [
+    "build-tdd: Phase 1 (scaffold) of the plan — index.html shell, Vue stubs, playwright config, smoke test",
+    "build-tdd: Phase 2 (pure functions T-01..T-34) then Phase 3 (file loading) per the plan's red-green ordering",
+    "Phase 5 manual acceptance gate: first real-audio count-in with the user verifying downbeat exactness by ear",
+    "Phase 8: add Metronomad project-card to root index.html; write Metronomad/AGENTS.md; run world-review on completed P1 test files (final quality gate per skill workflow)",
+    "Follow-up (post-v1 or manual): cross-browser verification (Safari codec matrix + iOS autoplay) flagged in research §6; commit via build-quick-work with Co-Authored-By: LittleLight <noreply@traveler.dstny>"
+  ]
+}

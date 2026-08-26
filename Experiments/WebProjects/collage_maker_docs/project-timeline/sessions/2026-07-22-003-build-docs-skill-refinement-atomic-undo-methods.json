@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-22-003-build-docs-skill-refinement-atomic-undo-methods",
+  "session_number": 16,
+  "date": "2026-07-22",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/undo-snapshots.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with atomic handler methods pattern from learnings/2026-07-22-atomic-undo-methods-extracting-inline-expressions.md. Added: (1) description metadata updated to include 'atomic handler methods', (2) SKILL.md: new 'Atomic handler methods (refinement)' subsection under segmented controls/checkboxes with before/after code, design rules (setter no-op guard, toggle always push, removal early return), (3) SKILL.md: new 'Testing atomic handler methods' subsection showing direct method call testing, (4) references/undo-snapshots.md: full 'Atomic Handler Methods (Refinement)' section with when-to-extract guidance, design rules, testing examples, refactoring progression table, (5) related learnings cross-reference added."
+}

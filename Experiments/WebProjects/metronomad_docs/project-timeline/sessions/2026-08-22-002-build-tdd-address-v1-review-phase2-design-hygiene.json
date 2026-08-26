@@ -1,0 +1,57 @@
+{
+  "session_id": "01a02c79-c28d-7235-be89-b0372dbcef5a",
+  "date": "2026-08-22",
+  "title": "Metronomad v1-review Phase 2 — Design Hygiene (I-5…I-8, N-17, N-18, N-21) via TDD",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b (lmstudio)",
+  "duration_minutes": 55,
+  "tokens_input": 950000,
+  "tokens_output": 42000,
+  "tokens_reasoning": 0,
+  "outcome": "Phase 2 complete. Pinned sequence followed (R-I5.1 → R-I6.1/R-I6.2 → R-I7.1 → R-I8.1 → docs), each step RED-verified before GREEN. Engine visual clock deleted (no startVisualClock/stopVisualClock/onFrame/_rafTick, and the now-unused raf/cancelRaf factory params — verified nothing else consumed _raf); P-12 retired with a pointer comment to B-01/B-02. Teardown ownership flipped: createBeatDots(vm, base, callbacks) captures vm once, stopAll touches only visualizer resources, beforeUnmount owns listener removal → stopAll() → engine.dispose() → fileLoader.release(). createBeatDots is now as DI-pure as the engine (base.raf/cancelRaf/matchMedia/isPageHidden with browser defaults) and BeatDotsTest.html contains zero window.*/document.* monkey-patching (all global save/restore boilerplate deleted; per-test makeEnv fakes instead). BEATS_PER_BAR = 4 exported from beatGrid.js; accent rule, DOT_COUNT, Vue data beatsPerBar, and the template v-for all bind to it. Docs: AGENTS.md bullets rewritten (visual-clock sole ownership, Howler autoSuspend/autoUnlock split, Memory beforeUnmount order), v1 context.md D9 ownership pin rewritten + stale 'clear error/toast timers' step struck, lifecycle JSDoc aligned, v1 behavior-specs P-12 struck with pointer, B-05 amended, T-08/T-10 now inputs corrected (101.75/102.499), E2E-2.3 9:99.9 → 9:59.9. Final state: unit 145/145 (baseline 142 − 1 for P-12 + 4 new rows R-I5.1/R-I6.2/B-06/R-I8.1; B-05 rev was a 1-for-1 replacement, R-I6.1 folded into the B-05 rev test, R-I7.1 adds no new rows), E2E 23/23 unchanged (E2E-1.8 green — the net for I-8). All phase grep passes return zero code hits. Handoff audit run against Phase 3 scope list; Phase 2 marked done in index.md. Not committed (orchestrator commits after review). NOTE: token/duration figures are estimates — the session JSONL was not available in this environment for exact extraction.",
+  "key_decisions": [
+    "Engine raf/cancelRaf factory params deleted along with the visual clock: grep-verified the visual clock was the engine's only RAF consumer (the phase file's conditional — 'drop only if nothing else uses them' — resolved to 'drop')",
+    "R-I5.1's 'fake-RAF collector stays empty across start/stop/dispose' pinned with a LOCAL save/restore collector over window.requestAnimationFrame inside that one engine test — the engine no longer accepts a raf param, so the only way to assert 'never touches window RAF' is to watch the global; the no-patching grep constraint applies to BeatDotsTest.html only",
+    "R-I6.2 + B-06 live in BeatDotsTest.html (not a new lifecycle test file): the lifecycle teardown test's subject IS the beatDots/engine/fileLoader interplay this file already covers, and it reuses the file's mock-VM conventions",
+    "R-I6.1 is implemented as part of the B-05 (rev) test rather than a separate it: the two rows share identical observable content (stopAll → RAF cancel + media listener removed + dots cleared + _stopped idempotency + engine.dispose never called); the test label names both IDs",
+    "beforeUnmount's engine-dispose branch became a plain `if (this._engine)` after the `if (this._beatDots)` block, not the RD-6 prose's `else if`: stopAll no longer disposes, so an else-if would LEAK the engine dispose in the normal path; the defense/fallback semantics (dispose when no visualizer) are preserved and variant-tested (B-06). Flagged as a literal-text divergence from context.md RD-6 in next_steps",
+    "The count interpretation 'drops by exactly P-12's size vs 142' read as: the only REMOVAL is P-12 (1 test); new scenario rows (R-I5.1, R-I6.2, B-06, R-I8.1) add 4 → 145 total. A literal net-141 reading would contradict the phase's own requirement to add those rows",
+    "N-18 superset: v1 context.md's beforeUnmount line was updated to the full as-built order (listener removal → stopAll → dispose → release), not just the pinned 'clear error/toast timers' strike — the old line pinned a wrong order that AGENTS.md no longer states, and leaving it would create the same drift class this phase removes; noted as a plan-text divergence",
+    "B-04 and the R-I6.2 lifecycle tests keep their pre-existing patterns (appOptions characterization; document.removeEventListener spy with afterEach restore) — the I-7 no-patching contract targets the RAF/matchMedia/hidden boilerplate the review names, and the pinned grep patterns confirm zero hits"
+  ],
+  "learnings": [
+    "A JSDoc line containing the literal string 'window.*/' terminates the block comment early ('window.*/' ends the comment at the first '*/') — the module then fails to parse and the in-browser runner reports 'mocha.run() was never reached' with no per-test error; syntax-check extracted module scripts (cp to .mjs + node --check) before blaming the harness",
+    "When removing a DI param, grep the fake's usages in the harness, not just the module: the engine's dispose() test referenced fakeRAF.pendingCount() and makeEngine's frames array had to be stripped in the same edit or the suite errors on undefined",
+    "sed is the right tool for a mechanical signature migration across 12 call sites in one test file (vm-arg removal) — verify with a pre-count (grep -c on the old form, 12/12 with 'const vm' on the preceding line) and a post-grep for the old form (0)"
+  ],
+  "files_created": [
+    "Metronomad/_agent_docs/sessions/2026-08-22-002-build-tdd-address-v1-review-phase2-design-hygiene.json"
+  ],
+  "files_modified": [
+    "Metronomad/MyESModules/Playback/playbackEngine.js",
+    "Metronomad/MyESModules/App/createBeatDots.js",
+    "Metronomad/MyESModules/App/createMetronomadLifecycle.js",
+    "Metronomad/MyESModules/App/createMetronomadMethods.js",
+    "Metronomad/MyESModules/App/createMetronomadData.js",
+    "Metronomad/MyESModules/Utils/beatGrid.js",
+    "Metronomad/MyESModules/index.js",
+    "Metronomad/index.html",
+    "Metronomad/MyComponents/PlaybackEngineTest.html",
+    "Metronomad/MyComponents/BeatDotsTest.html",
+    "Metronomad/MyComponents/UiHandlersTest.html",
+    "Metronomad/MyComponents/TimingMathTest.html",
+    "Metronomad/AGENTS.md",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/context.md",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/behavior-specs.md",
+    "Metronomad/_agent_docs/plans/2026-08-22-address-v1-review/index.md",
+    "Metronomad/_agent_docs/plans/2026-08-22-address-v1-review/phase-3-nit-backlog.md"
+  ],
+  "next_steps": [
+    "ORCHESTRATOR (build-quick-work): commit Phase 2 as one commit with 'Co-Authored-By: LittleLight <noreply@traveler.dstny>' — working tree is green (unit 145/145, E2E 23/23) and uncommitted by design; the user still owes the manual checklist (Play → dots/progress unchanged; clean unmount with no console errors)",
+    "PLAN CORRECTION (user-approved): context.md RD-6 says the 'else if (this._engine)' fallback is retained — as built it is a plain `if (this._engine)` (an else-if would skip engine.dispose in the normal path since stopAll no longer disposes); the Phase 3 context-to-load pointer already names this shape",
+    "PLAN CORRECTION (minor): Phase 2 success criteria 'count drops by exactly P-12's size vs 142' was implemented as removals-exactly-P-12 + 4 new rows = 145; consider rewording the criterion so the arithmetic is explicit for future phases",
+    "PHASE 3 (scoping session): Batch A/B items consume the as-built shapes as follows — N-1 clears the scheduler interval at the PLAYING flip (engine scheduler interval is still live during playing; the visual clock it must NOT clear no longer exists); N-4 targets startSequence's live `_seq` return (unchanged); N-9's --beat-interval cache folds into createBeatDots._render's grid branch (it still sets the CSS var every frame — Phase 2 deliberately did NOT fold the cache in); N-7's magic 'ended'/'previewEnded' literals remain in createMetronomadMethods.onEngineStateChange; N-3's dead fileLoader objectUrl was untouched per the frozen-architecture list; the new lifecycle test in BeatDotsTest.html (R-I6.2/B-06) is the mock pattern to reuse for any further beforeUnmount work (e.g. N-14's unmount-during-resume guard, which lands in createMetronomadMethods, not the lifecycle)",
+    "PHASE 3 KB numbering: KB-11 remains the next free ID (N-2), then KB-12/KB-13 per the scope list — Phase 2 added no KB entries"
+  ]
+}

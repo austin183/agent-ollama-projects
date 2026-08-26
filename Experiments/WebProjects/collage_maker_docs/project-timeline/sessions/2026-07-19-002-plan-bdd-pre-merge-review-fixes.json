@@ -1,0 +1,19 @@
+{
+  "session_id": "2026-07-19-002",
+  "session_number": 2,
+  "date": "2026-07-19",
+  "purpose": "plan-bdd",
+  "agent_role": "plan-bdd",
+  "files_changed": [],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [
+    "_agent_docs/plans/2026-07-19-pre-merge-review-fixes-plan.md"
+  ],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Created a 7-phase implementation plan addressing all issues from the final pre-merge review (Barbara, 12 parallel subagents). Phase 1 (P0) fixes CR-1: undo/redo completely broken by wiring base.undoManager via getter/setter pattern. Phases 2-3 (P1) fix CropInteraction pointer capture and createImagePanelHandlers callback pattern. Phases 4-5 (P1) add user-facing feedback for image load failures and storage full scenarios. Phase 6 (P1) increases touch targets to WCAG 44x44px minimum. Phase 7 (P1) removes deprecated removeImage(). Each phase includes behavior scenarios at user/component/pure-function levels, test scenarios, and success criteria. Medium-priority issues (M-1 through M-12) and nits (N-1 through N-34) are explicitly deferred to follow-up work."
+}

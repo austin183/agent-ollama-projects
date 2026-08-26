@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-23-003",
+  "session_number": 3,
+  "date": "2026-07-23",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/mobile-ui-patterns.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined the building-web-apps skill with mobile sidebar overlay patterns from _agent_docs/learnings/2026-07-23-mobile-sidebar-overlay-pattern.md. Created new reference file references/mobile-ui-patterns.md with 5 patterns: dual-state toggle (anti-pattern: viewport detection in JS), CSS !important cascade in media queries, Vue .window modifier for global Escape, display:none overlay backdrops, and aria-expanded on mobile toggles. Added inline 'Responsive Mobile UI' section to SKILL.md with concise patterns and reference link. Updated YAML description to include mobile sidebar overlay keywords for skill discovery."
+}

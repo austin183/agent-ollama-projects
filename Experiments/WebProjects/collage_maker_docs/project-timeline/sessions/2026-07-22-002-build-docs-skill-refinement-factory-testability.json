@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-22-002-build-docs-skill-refinement-factory-testability",
+  "session_number": 2,
+  "date": "2026-07-22",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/testing-unit.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with two patterns from learnings/2026-07-22-testing-internal-factory-functions.md: (1) Return Object Exposure for Internal Functions — added to Factory Testability Patterns in SKILL.md with code example and when-to-use/when-not-to-use guidance; (2) Mock VM Construction — added to Testing section in SKILL.md and as new sections in testing-unit.md reference. Updated SKILL.md frontmatter description and testing-unit.md table of contents. Used skills-best-practice guidance for conciseness and structure."
+}

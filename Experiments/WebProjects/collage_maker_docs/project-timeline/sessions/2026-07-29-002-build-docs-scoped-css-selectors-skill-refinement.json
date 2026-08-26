@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-29-002",
+  "session_number": 2,
+  "date": "2026-07-29",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/mobile-ui-patterns.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with scoped CSS selectors pattern from learnings/2026-07-29-scoped-collapse-selectors.md. Added: (1) 'scoped CSS selectors' keyword to YAML description for discovery, (2) concise subsection in SKILL.md under Responsive Mobile UI with bad/good CSS examples and prevention guidance, (3) detailed section in mobile-ui-patterns.md reference covering the problem, fix, pattern (separate state class from style class), prevention checklist, when bare selectors are safe, and debugging tips for zero-dimension elements. Used skills-best-practice guidance: concise SKILL.md entry pointing to reference file, one-level-deep references, consistent terminology."
+}

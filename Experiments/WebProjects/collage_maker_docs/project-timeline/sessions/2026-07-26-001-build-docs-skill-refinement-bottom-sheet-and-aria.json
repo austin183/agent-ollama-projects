@@ -1,0 +1,21 @@
+{
+  "session_id": "ses_build_docs_skill_refinement_20260726",
+  "session_number": 182,
+  "date": "2026-07-26",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/accessibility.md",
+    ".opencode/skills/building-web-apps/references/mobile-ui-patterns.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill by incorporating patterns from two learnings documents (2026-07-25-bottom-sheet-content-duplication-and-aria-tabs.md and 2026-07-25-fixed-element-zindex-occlusion.md). Added 8 new patterns: (1) ARIA Tab Pattern with complete id/aria-controls/aria-labelledby wiring — added to references/accessibility.md; (2) Focus Return on Dialog Close (WCAG 2.4.3) — added to references/accessibility.md; (3) Bottom Sheet Content Duplication with ID Prefixing — added to references/mobile-ui-patterns.md; (4) Bottom Sheet Visual Drag Handle — added to references/mobile-ui-patterns.md; (5) Bottom Sheet Auto-Switch Tab on Content Change — added to references/mobile-ui-patterns.md; (6) Fixed Element Z-Index Occlusion with prevention checklist — added to references/mobile-ui-patterns.md; (7) Playwright 'visible but unclickable' diagnostic pattern — added to references/mobile-ui-patterns.md; (8) CSS dvh units for bottom sheet height — documented in SKILL.md inline section. Updated SKILL.md description and reference entries to surface all new patterns. Followed skills-best-practice guidance: new patterns placed in reference files (progressive disclosure), SKILL.md body kept concise with inline summaries pointing to references, no deeply nested references."
+}

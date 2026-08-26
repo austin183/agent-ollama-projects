@@ -1,0 +1,19 @@
+{
+  "session_id": "2026-07-21-001-build-docs-skill-refinement-closure-reference-safety",
+  "session_number": 1,
+  "date": "2026-07-21",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with closure reference safety for undo commands. Added a new subsection documenting the JavaScript closure-by-reference gotcha where undo/redo closures capture mutable outer variables that are later nullified, causing silent TypeError crashes. Included wrong/correct code examples, the safe pattern (local const copy), existing correct example reference (crop drag in createCollageLifecycle.js), and a world-review checklist item to catch this during code review. Updated frontmatter description to include 'closure reference safety for undo commands'. Skill grew from 445 to 469 lines, still under the 500-line limit."
+}

@@ -1,0 +1,44 @@
+{
+  "session_id": "01a016d3-7d25-742a-a7b3-0ee505d701c9",
+  "date": "2026-08-18",
+  "title": "Metronomad Phase 2 — pure timing math via TDD",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 33,
+  "tokens_input": 846711,
+  "tokens_output": 20948,
+  "tokens_reasoning": 9860,
+  "outcome": "Phase 2 (Pure Functions) complete. Red-Green-Refactor: wrote scripts/run-tests.cjs (CollageMaker runner adapted, BASE_DIR → Metronomad) + MyComponents/TimingMathTest.html with all 34 T-scenarios importing the not-yet-existing Utils modules, confirmed RED (3× module 404, 0 tests registered), then implemented the minimal pure functions — Utils/beatGrid.js (beatInterval/buildSchedule/beatPhaseFromGrid), Utils/timeFormat.js (formatTime/parseOffsetInput), Utils/paramClamps.js (clampBpm/clampCountIn/clampOffset + range constants) — and updated the barrel. GREEN: 34/34 pass, 0 failures. Refactor phase: swapped the Phase 1 formatSeconds placeholder in createMetronomadApp.js for the real formatTime import (behavior-neutral, placeholder had been contract-validated in Phase 1), verified all 19 barrel names resolve live in-browser (no silent undefineds), re-ran full unit suite (34/34) + Phase 1 smoke E2E (4/4) — no regressions.",
+  "key_decisions": [
+    "Plan correction (T-08/T-10): the plan's beatPhaseFromGrid `now` inputs were internally inconsistent with their own expected outputs — (102.75−100.5)/0.5 = 4.5 → floor 4, not the expected 2; (104.999−100.5)/0.5 = 8.998 → floor 8, not 3. No monotonic function satisfies both rows as written. The expected outputs, inBeat values, and T-10's 'floor, not round' note are all consistent with now = 101.75 and now = 102.499, so the test page corrects the `now` inputs and keeps the expected outputs verbatim; a NOTE comment in TimingMathTest.html documents the correction",
+    "beatPhaseFromGrid returns the ABSOLUTE 0-based beat index (unbounded), not a mod-4 dot index — the D9 'dots stay in lockstep through the song' requirement is satisfied by the dot renderer taking beatIndex % 4 (Phase 6); returning absolute keeps the function lossless and the mod where it belongs (SRP)",
+    "buildSchedule throws RangeError on non-integer OR <1 countInBeats (T-07 requires ≥1; integer check is the minimal generalization); invalid bpm degrades to NaN times rather than throwing — the engine's P-13 guard is the defense-in-depth layer",
+    "parseOffsetInput accepts bare seconds with an optional decimal ('90.5' → 90.5) — T-19 only pins '90' → 90.0, and direct entry UX makes bare decimal seconds the natural complement to m:ss.t",
+    "paramClamps exports its range constants (BPM_MIN/MAX/DEFAULT, COUNT_IN_MIN/MAX/DEFAULT) so UI hint text (U-10/U-11) and the template min/max attributes can reference one source instead of duplicating literals",
+    "run-tests.cjs kept CollageMaker's check-server-then-auto-start behavior verbatim (plan: 'same check-server-then-run behavior'); in practice the user's start-server.sh server was already up, so the script never started one"
+  ],
+  "learnings": [
+    "Plan scenario tables can contain internally inconsistent concrete pairs — always hand-compute the expected output from the inputs before writing the RED test; when a row is unsatisfiable, keep the expected OUTPUT (the contract the consumers rely on) and correct the input, with an in-test NOTE explaining why",
+    "Browser ES-module RED state: when imported modules 404, the module script fails to evaluate, so Mocha registers ZERO tests — the runner reports passes:0/failures:0 (not 34 failures). For module-based in-browser tests, 'RED' can look like an empty suite; the console 404 logs are the confirmation",
+    "Float safety check before writing exact-equality assertions: verified in node that 5+0.24 === 5.24, 5+2*0.24 === 5.48, and 60/250 === 0.24 (all exact-in-double or nearest-double-equal) before using .equal in T-02/T-06; T-10's inBeat (0.998) is NOT exact (3.9979999999999905), so it uses closeTo(1e-6) — decide per-value, not per-suite",
+    "The formatSeconds→formatTime swap was behavior-neutral by construction: Phase 1 had validated the placeholder against the full T-12…T-17 contract, and the placeholder body is byte-identical logic to the implemented formatTime — placeholder-for-real-function swaps are safe when the placeholder was contract-checked"
+  ],
+  "files_created": [
+    "Metronomad/scripts/run-tests.cjs",
+    "Metronomad/MyComponents/TimingMathTest.html",
+    "Metronomad/MyESModules/Utils/beatGrid.js",
+    "Metronomad/MyESModules/Utils/timeFormat.js",
+    "Metronomad/MyESModules/Utils/paramClamps.js",
+    "Metronomad/_agent_docs/sessions/2026-08-18-001-build-tdd-phase2-pure-functions-tdd.json"
+  ],
+  "files_modified": [
+    "Metronomad/MyESModules/index.js",
+    "Metronomad/MyESModules/App/createMetronomadApp.js"
+  ],
+  "next_steps": [
+    "Phase 3 (File Loading): MyESModules/Audio/{howlerSetup,codecSupport}.js (H-01/H-02), MyESModules/File/fileLoader.js (F-01…F-09) with RED tests in MyComponents/FileLoaderTest.html first; then Vue wiring — drop/browse handlers, decoding state, error overlay (U-14…U-16, U-20, V-05), filename truncation (U-21)",
+    "Phase 4 (PlaybackEngine) and Phase 5 (UI integration) per the plan",
+    "Plan note for build-docs: T-08/T-10 `now` input correction is documented in TimingMathTest.html — the plan file itself may be worth a one-line erratum"
+  ]
+}

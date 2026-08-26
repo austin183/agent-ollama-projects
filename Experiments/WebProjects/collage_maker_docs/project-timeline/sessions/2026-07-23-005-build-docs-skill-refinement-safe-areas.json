@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-23-005",
+  "session_number": 5,
+  "date": "2026-07-23",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/css-layout.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with iOS safe area knowledge from learnings/2026-07-23-ios-safe-area-complete-pattern.md. Changes: (1) SKILL.md description — added 'iOS safe areas (viewport-fit=cover, 100dvh, fixed element treatment, CSS content validation testing)' for discoverability. (2) SKILL.md toast notifications section — clarified that viewport-fit=cover is required for env() to return non-zero. (3) references/css-layout.md — added viewport-fit=cover gotchas (what it does/doesn't do, non-iOS graceful degradation), 100dvh symptoms and browser support, elements-at-risk table for CollageMaker fixed elements, expanded CSS content validation testing with viewport meta and override ordering assertions, and a 6-item safe area implementation checklist."
+}

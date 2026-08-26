@@ -1,0 +1,21 @@
+{
+  "session_id": "ses_07e0eff6effeXG1RXP9G16aTNR",
+  "session_number": 7,
+  "date": "2026-07-20",
+  "purpose": "debug",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "MyESModules/Interaction/PanelSwap.js",
+    "MyESModules/App/createCollageLifecycle.js",
+    "MyComponents/PanelSwapTest.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 1,
+  "assertions_added": 2,
+  "bugs_fixed": 1,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Bug: After swapping two panels via drag-and-drop, the crop preview canvas showed the wrong image (the unselected panel's image). Root cause: PanelSwap._onPointerUp() called onRenderScheduled() to re-render the main canvas but never triggered a crop preview re-render. MultiTouchHandler and CropInteraction both had an onCropPreviewRender callback for this purpose, but PanelSwap did not. Fix: Added onCropPreviewRender callback to createPanelSwapHandler options, called it after swap in _onPointerUp() with a guard for backward compatibility, and wired it up in createCollageLifecycle.js to call _scheduleCropPreviewRender(). Added regression test 'swap triggers onCropPreviewRender callback so crop editor updates' (34th test in PanelSwapTest, was 33). All 39 test files pass with 0 failures."
+}

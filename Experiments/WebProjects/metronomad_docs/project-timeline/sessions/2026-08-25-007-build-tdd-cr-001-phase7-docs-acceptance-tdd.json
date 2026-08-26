@@ -1,0 +1,41 @@
+{
+  "session_id": "01a03b48-4c93-727e-9cea-1dd037e7709c",
+  "date": "2026-08-25",
+  "title": "Metronomad CR 001 Phase 7 — Docs + Acceptance (AGENTS.md + v1 KB-14…KB-17 aligned to as-built, integrity + grep gates, final whole-change-set world-review, timeline close-out)",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 60,
+  "tokens_input": 900000,
+  "tokens_output": 25000,
+  "tokens_reasoning": 8000,
+  "outcome": "Phase 7 (docs + acceptance — no TDD per the phase file) complete for all automated criteria. (1) Loaded exactly the phase file's 'Context to load' (index.md overview/end-state/scope, CR context.md KB-14…KB-17 + D-K + cross-cutting constraints, as-built AGENTS.md, v1 KB list, timeline, CR §1.8/§2.6), then diffed the as-built code against the plan: barrel Analysis exports, lifecycle teardown order, methods (hook, guards, prefill gate, touched-flag sites), index.html template (slider canvas, readout progressbar, hint, KB-6 hooks) — all match; no plan correction needed. (2) Updated Metronomad/AGENTS.md (Architecture: Analysis pure-signal modules, createWaveformView DI-purity + slider replacement, BPM-suggestion contract, playhead rides the 10 Hz songPosition throttle; Directory tree incl. Analysis/, three new test suites, clicks20.wav + make-clicks20-wav.cjs, waveform/tempo specs; Testing: no-real-AudioContext convention for tempo/view suites + clicks20.wav fixture rule + never-assert-its-duration; Conventions: KB-6 hooks extended, the two owned strings, _analysisValid guard discipline, extended beforeUnmount order). (3) Appended KB-14…KB-17 verbatim (with decision date + CR refs) after KB-13 in the v1 plan context.md. (4) Gates: 228/228 unit + 37/37 E2E green; plan-integrity-check OK (63 distinct IDs); rg 'offsetScrubber' → zero hits across index.html test/ MyComponents/ MyESModules/ AGENTS.md; KB-1[4-7] present. (5) Final whole-change-set world-review (subagent): zero action items — every Phase-7 doc claim verified line-by-line against source; cross-cutting risks (peaks GC, canvas backing store, task race, offsetDraft lifecycle, reduced motion, narrow viewport, iOS pointercancel) verified safe; UX-6 double-announcement remains the lone discussion item, already routed to the manual SR checklist. (6) Timeline milestone + trajectory row + phase map updated. Manual acceptance checklist (dual-SR incl. UX-6, real-song tempo accuracy, playback regression by ear, low-end mobile, memory cycles) awaits user sign-off; the commit (build-quick-work) is next.",
+  "key_decisions": [
+    "Docs describe AS-BUILT, verified by spot-reading source before writing (barrel, lifecycle teardown, methods guards/gates, template attrs) — the phase file's 'diff first' rule; the diff found zero plan-vs-code divergence, so no plan correction was needed",
+    "Plan-internal conflict resolved in favor of the success criterion: the phase's Changes prose says the Directory note should mention '#offsetScrubber's replacement', but the phase's own Automated success criteria require rg 'offsetScrubber' → zero hits INCLUDING Metronomad/AGENTS.md. The gate wins; AGENTS.md names the replacement token-free ('replaced the old offset range input — the app now has zero input[type=range]'), which also matches E2E-3.10's count-0 assertion",
+    "KB-17 in the v1 context.md keeps the historical '#offsetScrubber' reference — that file is outside the grep gate's scope and the reference documents the v1-era precedent the KB is about",
+    "Phase 7 marked done in the phase map with an explicit 'manual acceptance checklist pending user sign-off' qualifier rather than a bare ✅ — the plan's own success criteria split automated (met) vs manual (user gate)",
+    "world-review prompt scoped to the SHIPPED whole change set with the per-phase review history + pinned-decision list inlined, explicitly asking for (a) doc-vs-code verification of this phase's delta and (b) cross-cutting integration risks no single-phase pass could see — it produced line-by-line doc verification and zero action items",
+    "No commit made — per the cross-cutting constraint commits are build-quick-work's responsibility; the phase prepares the commit content (what shipped, the O-1 scrubber removal as the user-visible change, the two new strings)"
+  ],
+  "learnings": [
+    "Mechanical success-criteria gates (grep passes, integrity checks) can contradict a phase's own prose instructions — run the gates against the PLANNED wording before writing docs; on conflict the success criterion is authoritative and the prose intent is expressed in a token-free form (new learning 2026-08-25-doc-phase-gates-and-double-announced-events.md, §1)",
+    "A final whole-change-set world-review — after per-phase reviews were all clean — added real value at near-zero cost by verifying the DOCS (the phase's actual delta) line-by-line against source and checking cross-phase integration surfaces no single-phase review owned (memory across re-loads, task race, draft lifecycle vs state transitions); briefing it with the pinned-decision inventory and prior review history kept it from re-litigating settled decisions",
+    "Single event announced through two pinned surfaces (visible role=status hint + live-region announcement) is an emergent a11y property no unit/E2E row can see — it only surfaces in the manual SR pass; the class of issue and the CR-level remedy pattern are now a learning (§2 of the same doc)"
+  ],
+  "files_created": [
+    "Metronomad/_agent_docs/learnings/2026-08-25-doc-phase-gates-and-double-announced-events.md",
+    "Metronomad/_agent_docs/project-timeline/sessions/2026-08-25-007-build-tdd-cr-001-phase7-docs-acceptance-tdd.json"
+  ],
+  "files_modified": [
+    "Metronomad/AGENTS.md (Architecture, Directory, Testing, Conventions, Project Docs — aligned to as-built CR 001)",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/context.md (KB-14…KB-17 appended after KB-13)",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/index.md (phase map: Phase 7 done)",
+    "Metronomad/_agent_docs/project-timeline/project-timeline.md (Phase 7 milestone, trajectory row, current-state, CR header date range)"
+  ],
+  "next_steps": [
+    "User: sign off the manual acceptance checklist in phase-7-docs-acceptance.md §3 — priorities: (1) dual-SR pass with the UX-6 double-read judgement (if VoiceOver makes 'Detected ~N BPM' + 'Detected tempo N BPM' confusing, the remedy is a CR-level spec change — one of the two pinned surfaces yields — not an in-plan edit), (2) 3–5 real songs with known BPMs for the 'no confidently-wrong suggestion' check, (3) playback regression by ear (click pitch, downbeat exactness, Play from a drag-set offset), (4) low-end/throttled 30-min-class load for the W-6 hitch question, (5) 5 load/unmount cycles for heap/GPU stability",
+    "build-quick-work: commit Phases 1–7 (uncommitted) — suggested message: 'Metronomad: CR 001 — waveform progress + offset scrubbing + BPM detection — 228 unit tests, 37 e2e tests' with body covering: Analysis/ pure modules (peaks + tempo), createWaveformView + canvas slider replacing the old offset range input (user-visible: the range scrubber is gone; canvas drag/keys do its job), tempo prefill with clicks20.wav fixture + regen script, playhead riding the existing 10 Hz throttle, the two new strings, docs (AGENTS.md + v1 KB-14…KB-17 + timeline); 'Co-Authored-By: LittleLight <noreply@traveler.dstny>'",
+    "If the UX-6 double-read fails acceptance: author a small CR (or CR 001 erratum) deciding which pinned surface yields (likely drop role=status from the hint — the live region already announces — or drop the announcement and keep the hint), then re-pin E2E-4.1 / TD-U rows accordingly"
+  ]
+}

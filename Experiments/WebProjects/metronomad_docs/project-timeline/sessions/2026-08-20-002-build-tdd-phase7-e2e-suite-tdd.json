@@ -1,0 +1,46 @@
+{
+  "session_id": "01a02185-4edf-7ee1-a34b-6e0e95d9fe99",
+  "date": "2026-08-20",
+  "title": "Metronomad Phase 7 — E2E Suite (E2E-1.1…1.8, E2E-2.1…2.4) via TDD",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 130,
+  "tokens_input": 6726090,
+  "tokens_output": 60542,
+  "tokens_reasoning": 32445,
+  "outcome": "Phase 7 (E2E Suite, P0/P1) automated criteria complete: all 12 E2E scenarios pass in 2 consecutive full-suite runs (16/16 incl. the 4 Phase-1 smoke tests), timing tolerances stable, unit suite 0 failures across 5 files (regression check). RED-GREEN-REFACTOR in 4 small batches: (1) E2E-1.1/1.2 — fixture extraction + timing methodology overhaul after node-side polling proved unreliable; (2) E2E-1.3/1.4/1.5 stop/restart with in-page scheduled actions; (3) E2E-2.1/2.3 errors P0 (decode failure, clamps); (4) E2E-1.6/1.7/1.8/2.2/2.4 P1. REFACTOR: extracted test/e2e/helpers.cjs (shared mount/load/appState), removed dead node-scope parser. NO production code changes were needed — the KB-6 data-state/data-beat hooks, autoplay-flag config, and no-webServer config all pre-existed from Phases 1/5/6; the phase deliverable is the suite + fixtures. PLAN CORRECTION FLAGGED: E2E-2.3's '9:99.9' is malformed per the pinned parser (T-22) — test uses '9:59.9' instead (see key_decisions).",
+  "key_decisions": [
+    "All TIMING assertions measure from an in-page 5 ms transition logger (state + data-beat + progress readout + live region), not from node-side poll completion. Measured root cause: under this machine's load the node-side Playwright polling loop is starved — expect.poll samples arrived 1–2 s apart (ready flip observed at 5410–5447 ms vs the true in-page 4531 ms), while the in-page performance.now() timeline is exact (grid-law flips at 1506/4506 ms for a 1500/4500 ms grid). The plan's tolerances (±300 ms / ±500 ms) are only achievable with in-page measurement",
+    "The Play click (and every timing-relevant action) is dispatched IN-PAGE so t0 anchors to the exact click instant on the same clock: startRecordedSequence installs the logger and clicks #playStopBtn (or #previewBtn) in one evaluate; E2E-1.3/1.4/1.5 schedule Stop/Restart via in-page setTimeout (250 ms / 2000 ms / 2000 ms) because a starved node-side poll cannot reliably act inside the 500 ms count-in window",
+    "PLAN CONTRADICTION RESOLVED + FLAGGED: behavior-specs E2E-2.3 says offset '9:99.9' → 0:03.0, but the pinned Phase-2 parser (T-22: seconds ≥ 60 → null, unit-tested in TimingMathTest) rejects it as malformed → the app reverts to the last valid value with the 'Enter the time as mm:ss.t' hint. Picked the pinned-interface reading: the over-duration clamp is tested with valid '9:59.9' → 0:03.0 + 'Offset limited to song length'; behavior-specs.md §3.4 and phase-7 should be corrected ('9:99.9' → '9:59.9'). Also: the '-1' invalid-entry case must run BEFORE the clamping commit in the same test, or the revert lands on the clamped 0:03.0 instead of 0:00.0",
+    "E2E-1.7 (preview clamp): appState deliberately STAYS 'ready' during preview (isPreviewing flag — Phase 5 contract, KB-5), so the scenario asserts via the live region ('Preview started'/'Preview stopped') and the D2 clamp window [1.7 s, 2.3 s]. The clamp duration IS the observable evidence the preview started at the offset (preview = min(3, duration−offset) = 2.0 s; an unclamped 3 s or offset-ignored preview ends later). Progress is intentionally static during preview (Phase 6), so no position assertions",
+    "E2E-2.2 (drop lock) uses a GENUINE `new DataTransfer()` + `new DragEvent('drop', { dataTransfer })` in-page — chromium converts a real DataTransfer fine; the skill note about the constructor TypeError applies to mock/plain objects, which is why the unit tests use listener-presence instead",
+    "The timeline records EVERY change (state, beat, pos, ann), so state entries include in-state beat/pos/ann changes; E2E-1.5 (restart) and the ready-timing asserts use a transitionsTo(timeline, state) helper (entry whose predecessor had a different state) — first-match filtering produced a false 'second count-in' at the +520 ms beat change",
+    "Fixture per D11: base64 from the research harness decodes to a 24,468-byte valid 44.1 kHz mono MP3, displayed duration 0:03.0; bad.mp3 is 75 bytes of text. One fixture for all playback scenarios"
+  ],
+  "learnings": [
+    "Node-side Playwright timing is NOT trustworthy under load: on a busy dev machine, expect.poll(100 ms) samples arrived 1–2 s apart while the browser's own 5 ms setInterval stayed exact. For any sub-second timing assertion, log transitions in-page against performance.now() and assert on the read-back log; reserve node-side expects for state/text existence. This cost one full debug cycle (3 failing runs + 3 probe scripts) to discover — the signature is a timing assert that fails by a variable 0.3–0.9 s while a raw in-page probe shows the app is exactly on time",
+    "page.evaluate function bodies serialize standalone: any node-scope helper referenced inside (e.g. timeToSeconds) is undefined in-page. The failure was SILENT — a ReferenceError in the 5 ms logger callback killed logging on tick 1 and produced an empty timeline, which surfaced later as a confusing 'countingIn entry: null'. Define every helper locally inside the evaluated body",
+    "expect.poll(fn) requires a function returning a promise — expect.poll(appState(page)) passes an already-created promise and throws 'accepts only function as a first argument'; use () => appState(page)",
+    "Module-scope locator constants (const STATE = page.locator('body')) break at import time — page doesn't exist outside test scope; use per-test factory functions (stateLocator(page))",
+    "Vue watcher writes to document.body.dataset.state flush as microtasks after the synchronous click handler, so an in-page 5 ms interval captures the flip on its first tick (≤ ~10 ms) — tight enough for the 300 ms countingIn window",
+    "Sequence-state assertions need TRANSITION entries, not first-matches: the timeline's first state==='countingIn' entries after a restart are actually in-state beat changes of the FIRST count-in"
+  ],
+  "files_created": [
+    "Metronomad/test/e2e/playback.spec.cjs (E2E-1.1…1.8 + in-page timeline logger + scheduleActionAt)",
+    "Metronomad/test/e2e/errors.spec.cjs (E2E-2.1…2.4)",
+    "Metronomad/test/e2e/helpers.cjs (APP_URL, FIXTURE, BAD_FIXTURE, waitForAppMount, loadFixture, expectReady, appState)",
+    "Metronomad/test/fixtures/sine3s.mp3 (D11 — decoded from howler-research-test.html base64)",
+    "Metronomad/test/fixtures/bad.mp3 (75-byte text file for E2E-2.1)",
+    "Metronomad/_agent_docs/sessions/2026-08-20-002-build-tdd-phase7-e2e-suite-tdd.json"
+  ],
+  "files_modified": [
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/index.md (phase map: Phase 7 → ✅ done)"
+  ],
+  "next_steps": [
+    "Phase 8 (docs, site link, final acceptance): the Metronomad AGENTS.md should document the in-page timeline-logger convention (test/e2e/helpers.cjs + playback.spec.cjs startRecordedSequence) so future timing tests don't re-derive it; the root index.html project-card link does NOT consume any test hook — it only needs the /Metronomad/index.html URL; the final-acceptance checklist should cite `npx playwright test` (12 E2E + 4 smoke) as the automated gate and carry over the still-open Phase 6 user-manual gates (U-17 tab-switch snap, U-22 reduced motion, dot/click lockstep at 120/250 BPM) which this phase did not cover",
+    "Plan correction (build-docs): behavior-specs.md §3.4 + phase-7-e2e-suite.md E2E-2.3 — replace '9:99.9' with '9:59.9' (the pinned parser T-22 rejects seconds ≥ 60; the test comments in errors.spec.cjs record the reasoning)",
+    "Suggestion-level (deferred): smoke.spec.cjs (Phase 1) still has its own inline waitForAppMount duplicate of helpers.cjs — consolidate when it next changes"
+  ]
+}

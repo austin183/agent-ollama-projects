@@ -1,0 +1,48 @@
+{
+  "session_id": "01a0177d-fbea-7a93-82aa-967688466c86",
+  "date": "2026-08-19",
+  "title": "Metronomad Phase 4 — PlaybackEngine + clickBuffers via TDD (P-01…P-14, H-03)",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 218,
+  "tokens_input": 4107363,
+  "tokens_output": 85606,
+  "tokens_reasoning": 65624,
+  "outcome": "Phase 4 (PlaybackEngine) complete. RED: wrote MyComponents/PlaybackEngineTest.html with 22 scenarios (P-01…P-14, songPosition, dispose, P-07 edge, H-03×4) importing the not-yet-existing Playback/playbackEngine.js + Audio/clickBuffers.js — confirmed RED (2× module 404, 0 tests registered). GREEN: implemented Audio/clickBuffers.js (D7: 60 ms sine bursts, 1568/1047 Hz, 5 ms linear attack + exponential decay to 1e-5) and Playback/playbackEngine.js (generation counter D4, immediate sample-accurate song start D5, hand-rolled 25 ms/100 ms lookahead scheduler D6, 250 ms context watch D10, preview D2, D9 beat grid + visual clock). REFLECT: 22/22 new + 70/70 full unit suite green; all 29 barrel names resolve live in-browser; index.html loads with zero page errors; P-03 mash + P-04 stale-onended atomicity gate pass. REFACTOR: removed dead scaffolding from songPosition, fixed JSDoc param names, de-duplicated 30/250/1/16 literals in favor of paramClamps constants (AGENTS.md no-duplication rule), and one more RED-GREEN cycle for a frozen-state edge case found in review (song onended arriving before the countingIn→playing tick — offset within ~25 ms of track end).",
+  "key_decisions": [
+    "Engine terminal events are SINGLE: song onended emits 'ended' (not 'stopped'+'ended'), preview onended emits 'previewEnded'. The state silently becomes 'stopped'; the terminal event is the one onStateChange call — matches P-04 ('no onStateChange(\"ended\")' phrasing pins the event name, not a double event) and the V-07 announcement list which has no 'Stopped' entry between 'Song started' and 'Song ended'",
+    "H-03 uses ONE real AudioContext (createBuffer + sample render are real APIs), while P-01…P-14 instantiate ZERO real AudioContext (fake context/clock/RAF/timers). The plan's Phase 4 success criterion 'zero real AudioContext' is met for the entire engine surface; the click-buffer render is the one unavoidable exception — same pattern as Phase 3's F-03/F-05 real-decode tests",
+    "H-03 frequency assertion uses zero-crossing count (full cycles/sec within tolerance bands 1400–1700 / 900–1200) instead of an FFT — meaningful waveform discrimination with ~10 lines, no new tooling",
+    "Test tick helpers (tickScheduler/tickWatch) live on the makeEngine() wrapper object, NOT on the engine API (ISP — production surface stays exactly the plan's 10-member interface); an initial test-draft bug called engine.tickScheduler() and was fixed in the tests, not by polluting the API",
+    "songPosition() returns null during countingIn (song not started yet) and clamps to [offset, duration] during playing/preview; the UI (Phase 6) decides what to render pre-start (progress shows the offset marker position)",
+    "startSequence validates BEFORE teardown (P-13): an invalid call mid-sequence leaves the running sequence untouched; valid calls atomically replace any running sequence/preview via _teardown (generation bump first, so in-flight callbacks for the old generation are dead)",
+    "restart() is a thin alias of startSequence — the atomic _teardown inside startSequence already stops old sources before creating new ones, satisfying P-05's ordering contract with no separate code path",
+    "Lifecycle (createMetronomadLifecycle) intentionally unchanged in Phase 4 — the plan puts engine/clickBuffers wiring in Phase 5's mounted(); Phase 4 delivers modules + tests only, keeping the phase diff reviewable"
+  ],
+  "learnings": [
+    "Frozen-state class of bug: a state machine whose visible state flips on a POLL (25 ms scheduler tick) can receive an authoritative end event (onended) before the flip tick runs — any sequence where the remaining duration is shorter than the tick period. The terminal handler must accept the event from every state the sequence can legitimately be in (countingIn OR playing), not just the 'expected' one. Found by code review after green; cost of the RED-GREEN cycle was one test + one guard clause",
+    "Generation-counter guard placement matters: capturing gen BEFORE calling the teardown that increments it makes the guard always-stale (onInterrupted silently dead). The D4 pattern is: teardown first, capture gen after; the onended handlers capture gen right after _teardown in startSequence/preview, which is why they work",
+    "Lookahead-scheduler ordering within a tick is load-bearing: schedule-clicks loop must run BEFORE the countingIn→playing flip check. Since the minimum beat interval (0.24 s at 250 BPM) exceeds the 0.1 s horizon, the last click is always scheduled before the flip; the tick-internal ordering makes that airtight even for hypothetical sub-horizon intervals",
+    "Plan T-08/T-10 corrected inputs (101.75 / 102.499, see TimingMathTest.html NOTE) must be reused in any Phase 4+ test that references beatPhaseFromGrid mid-beat — the plan's original now-values (102.75/104.999) contradict their own expected outputs; a first-draft P-12 test using 102.75 would have failed for plan-text reasons, not engine reasons",
+    "The in-page fake context's shared ordered `calls` log ({type:'start'|'stop', source}) is what makes P-05's 'old stopped before new starts' ordering contract assertable — recording call ORDER on the fake (not just per-object flags) is a cheap addition that unlocks sequencing assertions",
+    "Edit-tool quirk this session: several edit calls contained spurious \\r sequences in the JSON; the tool normalized them and every edit landed clean (verified via grep -c $'\\r' = 0 after each batch) — still, verify file cleanliness after edits when output looks suspicious"
+  ],
+  "files_created": [
+    "Metronomad/MyComponents/PlaybackEngineTest.html",
+    "Metronomad/MyESModules/Playback/playbackEngine.js",
+    "Metronomad/MyESModules/Audio/clickBuffers.js",
+    "Metronomad/_agent_docs/sessions/2026-08-19-001-build-tdd-phase4-playback-engine-tdd.json",
+    "Metronomad/_agent_docs/learnings/2026-08-19-terminal-event-before-poll-transition-race.md",
+    "Metronomad/_agent_docs/learnings/2026-08-19-zero-crossing-frequency-assertion-for-synthesized-audio.md"
+  ],
+  "files_modified": [
+    "Metronomad/MyESModules/index.js"
+  ],
+  "next_steps": [
+    "Phase 5 (UI Integration — P0 acceptance gate): createMetronomadMethods.js real handlers (V-01…V-07, mock-VM tests in MyComponents/UiHandlersTest.html), createMetronomadData.js (decoding flag/errorMessage/announcement), createMetronomadLifecycle.js mounted() wiring: initHowler → renderClickBuffers(ctx) → createPlaybackEngine({context, masterGain, clickBuffers, onStateChange→appState+announcement, onInterrupted, onFrame, …}) → createFileLoader → createBeatDots; beforeUnmount adds engine.dispose() FIRST in the cleanup order; template finalization (lock hints, focus return, U-13 drop rejection). Then the first real-audio manual pass (U-01…U-09)",
+    "Phase 6: createBeatDots.js (B-01…B-05) — the engine's onFrame callback + getBeatGrid() are the integration points; visual clock start/stop should be driven by appState transitions (countingIn/playing → startVisualClock, stopped/preview → stopVisualClock)",
+    "Phase 7: E2E specs must use raw appState values for data-state (Phase 3 precedent), and the engine's event names ('countingIn','playing','stopped','ended','preview','previewEnded') are the V-07 announcement mapping source",
+    "Suggestion-level (deferred, no runtime risk): the engine factory returns 10 members spanning scheduler/state/visual-clock — if Phase 5/6 wiring shows the visual clock drifting toward independent behavior, extract a createVisualClock factory (D9 already isolates its math in beatPhaseFromGrid)"
+  ]
+}

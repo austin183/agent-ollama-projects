@@ -1,0 +1,20 @@
+{
+  "session_id": "build-docs-skill-refinement-vmodel-timing",
+  "session_number": 12,
+  "date": "2026-07-21",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/vue-options-api.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with v-model timing patterns from learnings file 2026-07-21-vue-vmodel-timing-undo-snapshots.md. Three changes: (1) Updated skill description to include 'v-model timing for undo snapshots' in Vue input patterns. (2) Added 'v-model timing for undo snapshots' to Key References entry for vue-options-api.md. (3) Added new inline section 'v-model timing for undo snapshots' to SKILL.md (lines 236-266) covering: the core gotcha (v-model updates before @change/@input fires), select pattern (@focus snapshot + @change compare), range pattern (@focus + @pointerdown snapshot, @input update, @blur commit), @pointerdown vs @mousedown rationale (touch device support), batching for sliders, and test simulation pattern. (4) Added full reference section to references/vue-options-api.md (lines 116-163) with expanded examples and rationale. SKILL.md is now 517 lines (slightly over 500-line guidance, justified by critical pattern coverage)."
+}

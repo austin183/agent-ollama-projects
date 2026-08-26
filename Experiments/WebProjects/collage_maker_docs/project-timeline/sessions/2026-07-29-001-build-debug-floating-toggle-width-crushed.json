@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-29-001",
+  "session_number": 1,
+  "date": "2026-07-29",
+  "purpose": "debug",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "Style.css",
+    "MyComponents/ResponsiveCSSValidationTest.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 1,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Bug: Floating sidebar toggle buttons were invisible after sidebar collapse. Root cause: the .sidebar-collapsed CSS class (applied by Vue :class binding to both sidebar divs AND toggle buttons) had 'width: 0 !important' which crushed the toggle button's width from 40px to 0. The !important flag overrode the .sidebar-float-btn width: 40px declaration. Fix: scoped the .sidebar-collapsed selector from bare '.sidebar-collapsed' to 'div.sidebar.sidebar-collapsed' so it only applies to sidebar div elements, not toggle buttons. The mobile media query overrides at lines 1027/1054 use compound selectors (.sidebar-left.sidebar-collapsed.mobile-open, .sidebar-right.sidebar-collapsed.mobile-open) which are unaffected. Updated ResponsiveCSSValidationTest.html test 3.5.3.23 regex to match new scoped selector. All 48 unit test files (0 failures) and all 12 E2E tests pass."
+}

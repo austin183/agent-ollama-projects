@@ -1,0 +1,26 @@
+{
+  "session_id": "2026-07-26-008",
+  "session_number": 8,
+  "date": "2026-07-26",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "CollageMaker/MyComponents/CropPreviewDualCanvasTest.html",
+    "CollageMaker/MyComponents/ResponsiveCSSValidationTest.html",
+    "CollageMaker/index.html",
+    "CollageMaker/MyESModules/App/createCollageLifecycle.js",
+    "CollageMaker/MyESModules/App/createCollageMethods.js",
+    "CollageMaker/MyESModules/App/createCropPreviewRenderer.js"
+  ],
+  "test_files_added": [],
+  "tests_added": 8,
+  "assertions_added": 12,
+  "bugs_fixed": 0,
+  "learnings_written": [
+    "_agent_docs/learnings/2026-07-26-consolidating-interactive-regions-and-status-readouts.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Implemented Phase 1 of Mobile Bottom Sheet Adjustments (2026-07-26-mobile-bottom-sheet-adjustments.md): removed bsCropPreviewCanvas from Edit bottom sheet and unwired it from the crop system. TDD cycle: (1) RED — rewrote CropPreviewDualCanvasTest.html with 6 single-canvas tests (BS-ADJ-01 through BS-ADJ-06) and added 2 CSS validation tests (BS-ADJ-CSS-01 through BS-ADJ-CSS-02) to ResponsiveCSSValidationTest.html; BS-ADJ-06 failed as expected. (2) GREEN — removed canvas element from index.html Edit panel template, replaced .crop-preview-section with .detail-section, removed bsCropPreviewCanvas from DEFAULT_DOM_IDS in createCollageLifecycle.js and createCollageMethods.js, changed canvasId from array to single string, removed bsCropPreviewCanvas from app domIds. (3) REFLECT — all 48 test files pass with 0 failures. (4) REFACTOR — updated JSDoc in createCropPreviewRenderer.js for accuracy; retained OCP guard on line 183 for future extensibility. World-review addressed: added aria-label='Crop settings' and role='status' aria-live='polite' to crop info section for accessibility. Key decision: crop canvas corner handles (12px) fell below 44x44px touch target minimum on constrained bottom sheet; main canvas provides adequate crop feedback via overlay and two-finger gesture."
+}

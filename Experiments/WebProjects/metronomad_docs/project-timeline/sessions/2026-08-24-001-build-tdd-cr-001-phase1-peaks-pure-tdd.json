@@ -1,0 +1,53 @@
+{
+  "session_id": "01a032f3-1957-7ac7-8b81-eb8d259b199c",
+  "date": "2026-08-24",
+  "title": "CR 001 Phase 1 — Peaks + channel data pure modules (TDD Red-Green-Refactor)",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b (lmstudio)",
+  "duration_minutes": 117,
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "tokens_reasoning": 0,
+  "outcome": "Phase 1 of CR 2026-08-23-001 complete, all success criteria met. RED observed first in the pinned R-11 shape (WaveformPeaksTest.html importing 7 names through the barrel → 'mocha.run() was never reached'; console-verified as a link error naming the missing export before writing any implementation), then GREEN: MyESModules/Analysis/channelData.js (channelArrays/mixDown/monoMixdown, D-B verbatim) + MyESModules/Analysis/waveformPeaks.js (extractPeaks/poolPeaks, D-C verbatim) + barrel block → WF-P1.1…WF-P1.9 all pass (9 tests; suite 167/167) and npx playwright test unchanged at 23/23 (no app surface touched). Refactor phase needed no structural change (modules are pure, ≤3 methods, no cross-layer imports; grep passes clean); two JSDoc contract pins added (bucket↔song-time alignment; no-mutation aliasing). Phase-close handoff audit run: Phase 2's mixDown import shape and Phase 3's WF-V1.1 pooling assumption both verified against as-built (floor-based pool partition is exact: start(b+1)===end(b), end(last)===sourceCount). One plan bug found by worked-example recompute and corrected in place: WF-P1.7's spike 'sample 40 000 000' is out of range for the 20 000 001-sample buffer → 'sample 4 000 000 (in range; a stride-4 multiple)' in behavior-specs.md and phase-1-peaks-pure.md; plan-integrity-check re-run passes (63 IDs). World-review triage: the one 'critical' (main-thread cost) refuted by a 59 ms benchmark of the true 30-min stereo @48 kHz worst case — settled W-6 disposition stands (stride = mitigation, chunking = documented fallback); two JSDoc pins added from legitimate findings; the rest rejected as conflicts with pinned contracts (D-B guard scope, WF-P1.9 reference identity, pinned 20 M-sample test size). Phase marked done in index.md phase map; project timeline updated (CR 001 section, trajectory row 167/23, current state); two new learnings written + one addendum to the 2026-08-22 esmodule learning. Work is UNCOMMITTED — committing is build-quick-work's responsibility.",
+  "key_decisions": [
+    "WF-P1.7 plan bug: the pinned spike index 40 000 000 exceeds the buffer's max index (20 000 000) — impossible as written. Picked the only consistent reading (in-range stride-4 multiple, sample 4 000 000) per the build-tdd contradiction rule, added an off-stride probe spike (4 010 001, different bucket) to pin the CR §1.2 dropped-spike trade directly, and corrected both plan files in place (user-delegated judgment; flagged here for review)",
+    "Bucket index formula floor(i·B/sampleCount) uses the ORIGINAL sample count even under stride 4 — deliberately: bucket b stays aligned to the song-time fraction [b/B, (b+1)/B), which Phase 4's playhead (fraction → bucket) requires; world-review's alternative (strided-count denominator) was rejected as not exactly linear in song time when N % stride ≠ 0; the alignment is now pinned in extractPeaks JSDoc",
+    "D-B guard scope followed verbatim: guards on numberOfChannels/length only — no getChannelData presence check, no sampleRate guard (a real AudioBuffer always has both; a malformed fake is a test bug and should fail loud). Suggestion-level at most per the severity calibration",
+    "mixDown single-channel no-copy retained exactly as pinned (WF-P1.9 asserts reference identity); world-review's copy-for-safety suggestion rejected — it would copy up to ~345 MB for a 30-min file; mutation risk addressed with a JSDoc 'do not mutate' note on channelArrays and mixDown instead",
+    "World-review triage was evidence-first: the 'critical' perf claim (0.4–0.9 s) benchmarked at 59 ms for the true worst case (7–15× overstatement); the 59 ms number is recorded here and in the timeline as the citable constant for Phase 7 docs and for any future W-6 chunking decision on low-end hardware",
+    "Test expectations for Float32Array outputs are built through an f32(...) round-trip helper for exact (no-tolerance) comparisons — new learning doc; the first DSP test battery in this repo set that convention"
+  ],
+  "learnings": [
+    "NEW learning doc 2026-08-24-float32-expected-values-must-round-trip.md: Float32Array elements read back are float64-widened float32 roundings — expect(x).to.equal(-0.8) fails for any non-dyadic value; build expectations with Float32Array.from([...]) and deep.equal array-to-array for exact comparison",
+    "NEW learning doc 2026-08-24-benchmark-perf-review-claims.md: LLM perf estimates ran 7–15× high on a V8-optimized typed-array loop (59 ms actual vs 0.4–0.9 s claimed); triage rules — benchmark perf claims, diff contract claims against pinned scenario rows, ask 'is the size the spec?' for test-size claims, record the measured number",
+    "Addendum to 2026-08-22-esmodule-link-failure-is-silent.md rule 2: the fastest RED-console check is a 10-line Playwright pageerror capture (playwright lives at the repo root — /tmp scripts need NODE_PATH=<repo root>/node_modules); verified output names the missing export",
+    "The R-11 broken-page RED worked exactly as documented for a second consecutive plan — zero phantom-hunting; the console verification step (per the 2026-08-22 learning) took ~1 minute and confirmed the RED was the expected link failure",
+    "Plan-tooling note (writing-plans skill): the planning-time worked-example recompute (rule 2) checks constants derived from the plan's own unit-level examples, but missed a Given-value RANGE bug (spike index 40 000 000 in a 20 000 001-sample buffer). Rule 2's arithmetic pass should explicitly include bounds sanity on Given values (indices vs lengths, sample counts vs strides). Build-time test transcription caught it — that is the backstop working as intended"
+  ],
+  "files_created": [
+    "Metronomad/MyESModules/Analysis/channelData.js",
+    "Metronomad/MyESModules/Analysis/waveformPeaks.js",
+    "Metronomad/MyComponents/WaveformPeaksTest.html",
+    "Metronomad/_agent_docs/learnings/2026-08-24-float32-expected-values-must-round-trip.md",
+    "Metronomad/_agent_docs/learnings/2026-08-24-benchmark-perf-review-claims.md",
+    "Metronomad/_agent_docs/project-timeline/sessions/2026-08-24-001-build-tdd-cr-001-phase1-peaks-pure-tdd.json"
+  ],
+  "files_modified": [
+    "Metronomad/MyESModules/index.js (barrel: Analysis block + header line; 7 verified re-exports)",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/behavior-specs.md (WF-P1.7 spike index corrected in place)",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/phase-1-peaks-pure.md (WF-P1.7 spike index corrected in place)",
+    "Metronomad/_agent_docs/plans/2026-08-23-cr-001-ui-enhancements/index.md (phase map: Phase 1 done 2026-08-24)",
+    "Metronomad/_agent_docs/project-timeline/project-timeline.md (CR 001 section, trajectory row, current state)",
+    "Metronomad/_agent_docs/learnings/2026-08-22-esmodule-link-failure-is-silent.md (rule 2 addendum: verified fastest console check)"
+  ],
+  "next_steps": [
+    "Phase 2 (tempoDetection) consumes this phase as pinned: `import { mixDown } from './channelData.js'` (relative, NOT the barrel — no barrel self-import) and calls mixDown(channels) as pipeline step 1 over its own synthesized Float32Array trains; detectTempo(channels, sampleRate, maxWindowSec) takes raw channels — channelArrays/monoMixdown are NOT Phase 2 inputs",
+    "Phase 4's peaks task calls extractPeaks(this._buffer) (default 4096 buckets) from the barrel and keeps this._buffer identity itself for the D-E staleness guard — extractPeaks returns no sourceBuffer reference by design; the result's sampleRate is threaded from channelArrays (degenerate buffer → 0)",
+    "Phase 6 calls channelArrays(buffer) from the barrel and passes .channels/.sampleRate to detectTempo — it does NOT use monoMixdown",
+    "monoMixdown is a TESTED CAPABILITY, NOT USED BY THE APP: no plan phase wires it (Phases 2/4/6 go through mixDown/extractPeaks/channelArrays). It exists and is pinned by WF-P1.9 as the D-B buffer-facing facade; do not invent a call site for it",
+    "Phase 3's view pools via poolPeaks(peaks, cssWidth) — the as-built pool partition is exact (no gaps/overlaps; target ≥ source returns a fresh copy with the SOURCE bucketCount, so the view must read result.bucketCount, not assume targetBuckets)",
+    "Citable measured constant for Phase 7 docs: extractPeaks worst case (30-min stereo @ 48 kHz, 86.4 M samples/channel) = 59 ms main-thread in the post-Ready setTimeout(0) task (V8, 2026-08-24); W-6 chunking remains the documented fallback only if low-end measurement shows a hitch",
+    "Commit Phase 1 (build-quick-work's responsibility): 2 new modules, 1 new test page, barrel, plan corrections, timeline + learnings — suggest a single 'CR 001 Phase 1' commit with the Co-Authored-By: LittleLight footer"
+  ]
+}

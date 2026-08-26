@@ -1,0 +1,54 @@
+{
+  "session_id": "01a02ae3-70f7-77de-b1c9-8cc35fd0b54f",
+  "date": "2026-08-22",
+  "title": "Metronomad v1 review-fix — Phase 1 (Shippable Gate) via Red-Green-Refactor TDD",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 318,
+  "tokens_input": 13492025,
+  "tokens_output": 121680,
+  "tokens_reasoning": 75931,
+  "outcome": "Phase 1 of the 2026-08-22 v1-review-fix plan is complete and green: C-1 (commit-on-Enter/blur BPM + count-in), I-1 (file-acceptance choke point), I-2 (single-flight decode), I-3 (engine end-of-song offset guard + clampOffset quantize-then-reclamp), I-4 (\"Preview stopped\" on user stop), and I-9 (runner can no longer report green with 0 tests / failing tests / blocked CDN), plus add-ons N-16 (shared _restoreLastValid), N-20 (count-in clamp hint), N-22 (U-21 long-filename E2E), N-23 (re-clamp-on-shorter-file test). Unit suite 142/142 (baseline 127, +15, none deleted); E2E 23/23 (baseline 21, +2: E2E-R-C1.1, E2E-U-21). Every automated success criterion in the phase file is met; the phase is marked done in index.md and the handoff audit against Phase 2 was run. No files committed (build-quick-work's job).",
+  "key_decisions": [
+    "C-1 uses the offset-field pattern (RD-1): v-model drafts bpmText/countInText, commit+clamp ONLY on Enter/blur via commitBpmEntry/commitCountInEntry; the per-keystroke @input clamp (onBpmInput/onCountInInput) is deleted. Steppers stay the live path and sync the draft (onBpmStep now sets bpmText). Shared _restoreLastValid(kind) handles empty/non-numeric for both inputs (N-16).",
+    "I-9 runner completion signal: the plan's own v1 wait condition was vacuous and the runner had always ridden a 30 s timeout into a DOM fallback. The new runner injects an init script that wraps mocha.run (registered before the test page's own load listener) to capture the returned Runner and waits for its 'end' event — the only reliable completion signal. A blocked CDN or a run that never starts is a fast (sub-second) named per-file error, not a 30 s stall.",
+    "I-9 scope extension (same false-green intent as R-I9.1/2): the v1 runner exited 0 even when individual tests FAILED (it only threw if every file failed). The new runner collects per-file errors including 'N failing test(s)' (with the failing titles + first error line printed) and exits non-zero on ANY per-file failure. Verified with a scratch failing-test page.",
+    "I-3 clampOffset: implemented floor-then-reclamp with a 1e-9 epsilon (Math.floor(clamped*10 + 1e-9)/10, then Math.min(duration, quantized)) to satisfy the canonical T-35 row (2.96/2.94/3.0 all → 2.9) — see the T-35-vs-RD-4 contradiction flag below.",
+    "E2E count-in helper setCountIn and E2E-2.3's BPM cases now press Enter after fill() — under the commit contract fill() only sets the draft, so the model would not move without an explicit commit. This is the mechanical, semantics-preserving update the phase file anticipates."
+  ],
+  "learnings": [
+    "CONTRADICTION (needs plan correction): RD-4 in context.md pins clampOffset as Math.min(duration, Math.round(clamped*10)/10), which for clampOffset(2.96, 2.96) yields Math.min(2.96, 3.0) = 2.96 — but the canonical T-35 row (this plan's behavior-specs.md §3 and the phase file) requires 2.9 (\"never > duration\", and 2.96 quantizing to itself is the exact bug the review names). I followed the scenario contract (T-35) using floor-then-reclamp + epsilon, which satisfies T-35 AND leaves T-31/T-33/T-34 unchanged. The RD-4 literal formula text should be corrected to match.",
+    "mocha 10.2.0 browser build exposes NO runner on the global: mocha._runner does not exist anywhere in the bundle, and createStatsCollector's stats.tests counts COMPLETED tests (incremented per 'test end'), not the registered total. Consequence: the v1 runner's settle condition (s.tests === s.passes+s.failures+s.pending) was true at any point after a test finished — it never actually gated on completion. The reliable signal is the Runner's 'end' event, reachable only as the return value of mocha.run().",
+    "The building-web-apps skill reference testing-unit.md documents the flawed mocha._runner/stats.tests wait pattern. Hand off to build-docs: that reference should be corrected to the capture-the-returned-runner-and-await-'end' pattern (or note that mocha._runner does not exist in the v10 browser build).",
+    "Playwright fill() on a v-model input fires 'input' (updates the draft) but NOT 'blur'/'keyup.enter' — so a commit-on-Enter/blur field needs an explicit keyboard.press('Enter') in E2E after fill(), or the model is never updated. This bit setCountIn for 6 existing E2E tests until fixed.",
+    "Under the new commit contract, an in-range commit (e.g. '90') must leave the clamp hint OFF and re-sync the draft to the committed display; a clamped commit (e.g. '999'→'250') reverts the draft to the clamped value. The draft and model can only diverge between a keystroke and the next commit — which is the intended, tested behavior (R-C1.1)."
+  ],
+  "files_created": [
+    "_agent_docs/sessions/2026-08-22-001-build-tdd-address-v1-review-phase1-shippable-gate.json"
+  ],
+  "files_modified": [
+    "MyESModules/App/createMetronomadData.js",
+    "MyESModules/App/createMetronomadMethods.js",
+    "MyESModules/Utils/paramClamps.js",
+    "MyESModules/Playback/playbackEngine.js",
+    "index.html",
+    "MyComponents/UiHandlersTest.html",
+    "MyComponents/TimingMathTest.html",
+    "MyComponents/PlaybackEngineTest.html",
+    "test/e2e/errors.spec.cjs",
+    "test/e2e/playback.spec.cjs",
+    "scripts/run-tests.cjs",
+    "AGENTS.md",
+    "_agent_docs/plans/2026-08-17-metronomad-v1/behavior-specs.md",
+    "_agent_docs/plans/2026-08-22-address-v1-review/phase-2-design-hygiene.md",
+    "_agent_docs/plans/2026-08-22-address-v1-review/index.md"
+  ],
+  "next_steps": [
+    "Phase 2 (Design Hygiene) re-wires the beat-dots call sites in createMetronomadMethods.js (_startBeatDots/_stopBeatDots/onVisibilityChange) and the createBeatDots factory. Phase 1 did NOT touch those call sites or createBeatDots.js — they are still exactly the v1 as-built surface Phase 2's RD-6 refactor expects. Phase 1's createMetronomadMethods.js additions (commitBpmEntry/commitCountInEntry/_restoreLastValid/onBpmStep draft-sync) are in the Parameters region only and do not collide with the beat-dots region.",
+    "Phase 2 adds beatsPerBar to createMetronomadData.js and changes the index.html beat-dots v-for to bind to it. Phase 1 added bpmText/countInText/countInClamped to the SAME data file (separate fields, no collision) and edited the BPM/count-in <input> region of index.html (NOT the beat-dots v-for region). No shared lines — Phase 2 can proceed without re-deriving.",
+    "Test baselines Phase 2 must start from: unit 142 (not 127) and E2E 23 (not 21). Phase 2's success criteria already corrected to 23 for E2E (handoff note added to phase-2-design-hygiene.md). Phase 2's unit expectation is relative (drops by exactly P-12's size when the engine visual clock is retired) — from the new 142 baseline.",
+    "Corrections for build-docs to fold into the plan/skill in a later pass (NOT done here, out of build-tdd scope): (a) fix RD-4's clampOffset formula text to floor-then-reclamp per T-35; (b) fix the building-web-apps testing-unit.md mocha wait pattern (mocha._runner absent in v10 browser build; await the Runner's 'end' via the mocha.run() return value).",
+    "Manual acceptance (user, server on :8000): type 90/120/250/16/1 into BPM/count-in per-keystroke incl. select-all-replace and mid-word edits (field and model always agree; hints only on clamped commits); Play → Browse visibly disabled, drop-while-playing rejected, second drop during 'Decoding…' ignored; Stop during Preview announces 'Preview stopped'."
+  ]
+}

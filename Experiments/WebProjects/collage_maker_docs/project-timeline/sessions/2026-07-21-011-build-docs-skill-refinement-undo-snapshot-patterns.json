@@ -1,0 +1,20 @@
+{
+  "session_id": "build-docs-skill-refinement-undo-snapshot-patterns",
+  "session_number": 11,
+  "date": "2026-07-21",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/undo-snapshots.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with undo snapshot patterns from learnings file 2026-07-21-undo-snapshot-patterns-image-operations.md. Created new reference file references/undo-snapshots.md covering: shallow copy reference preservation, onUndoCommand callback injection, crops deep copy with null guard, File object redo limitations, and testing disposed-image toast. Added concise inline section to SKILL.md (lines 173-187) with progressive disclosure to the new reference. Updated skill description to include 'undo snapshot patterns'. SKILL.md is now 486 lines (under 500-line guidance)."
+}

@@ -1,0 +1,24 @@
+{
+  "session_id": "2026-07-28-001-build-tdd-focus-trap-e2e-tests",
+  "session_number": 1,
+  "date": "2026-07-28",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "test/e2e/bottom-sheet.spec.js — Created 7 E2E tests for bottom sheet focus trap (BS-FT-E2E-01 through BS-FT-E2E-07)",
+    "_agent_docs/plans/2026-07-27-mobile-bottom-sheet-review-followups.md — Added Phase 2 Resolution section documenting N-3/N-4 findings and E2E test results"
+  ],
+  "test_files_added": [
+    "test/e2e/bottom-sheet.spec.js"
+  ],
+  "tests_added": 7,
+  "assertions_added": 18,
+  "bugs_fixed": 0,
+  "learnings_written": [
+    "_agent_docs/learnings/2026-07-28-playwright-escape-key-vue-window-modifier.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Implemented Phase 2 of mobile-bottom-sheet-review-followups plan: E2E test coverage for focus trap. Created 7 Playwright tests covering: focus on open (BS-FT-E2E-01), Tab cycling containment (BS-FT-E2E-02), Tab wrap last-to-first (BS-FT-E2E-03), Shift+Tab wrap first-to-last (BS-FT-E2E-04), dismissal focus return (BS-FT-E2E-05), tab switching focus containment (BS-FT-E2E-06), and swipe dismiss (BS-FT-E2E-07). All 7 E2E tests pass, all 44 existing unit tests pass (0 failures). Key discoveries: (1) Playwright's page.click() on backdrop fails due to z-index occlusion by bottom sheet — resolved with page.mouse.click() at coordinates above the sheet; (2) Escape key via page.keyboard.press() unreliable with Vue's @keydown.escape.window.prevent in headless mode — unit test BS-FT-13 covers closeSidebars() directly; (3) Index-based element targeting required for focus wrap tests since many focusable elements (remove buttons) lack IDs; (4) Touch event simulation via plain Event + Object.defineProperty works because Vue handler only reads .touches[0].clientY without instanceof checks. World-review addressed: strengthened BS-FT-E2E-04 assertion with index verification, added clarifying comments for touch event simulation approach. N-3/N-4 documented as no-action-needed (existing test files already comprehensive)."
+}

@@ -1,0 +1,27 @@
+{
+  "session_id": "ses_0790c9c91ffe6vjPWsRfLzO6k4",
+  "session_number": 13,
+  "date": "2026-07-21",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/App/createTitleHandlers.js",
+    "MyESModules/App/createBackgroundHandlers.js",
+    "MyESModules/App/createOverlayHandlers.js",
+    "MyESModules/App/createCollageMethods.js",
+    "MyESModules/App/createCollageLifecycle.js",
+    "index.html",
+    "MyComponents/UndoExpansionTest.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 35,
+  "assertions_added": 78,
+  "bugs_fixed": 0,
+  "learnings_written": [
+    "_agent_docs/learnings/2026-07-21-undo-batching-segmented-controls.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Phase 4 of undo/redo expansion: Title text (blur/Enter commit), title formatting (bold/italic/underline per-toggle), title style (batched), background (batched), overlay (batched). All 35 new tests pass. World-review found 3 missing template handlers (alignment segmented control, show-background checkbox, title width slider) — all fixed. Added beforeUnmount cleanup for pending snapshots. Total test suite: 1514 passes, 0 failures."
+}

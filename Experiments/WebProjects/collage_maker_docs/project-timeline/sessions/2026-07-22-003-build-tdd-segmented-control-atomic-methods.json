@@ -1,0 +1,25 @@
+{
+  "session_id": "2026-07-22-003",
+  "session_number": 3,
+  "date": "2026-07-22",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/App/createTitleHandlers.js",
+    "MyESModules/App/createBackgroundHandlers.js",
+    "MyESModules/App/createOverlayHandlers.js",
+    "MyESModules/App/createCollageMethods.js",
+    "index.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 27,
+  "assertions_added": 58,
+  "bugs_fixed": 0,
+  "learnings_written": [
+    "2026-07-22-atomic-undo-methods-extracting-inline-expressions.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Implemented Phase 2 (N-1) of the undo/redo review follow-ups plan. Extracted 8 inline Vue template expressions into 5 dedicated atomic handler methods: setTitleAlignment(), toggleTitleShowBackground() in createTitleHandlers.js; setBackgroundStyle(), removeBackgroundImageAtomic() in createBackgroundHandlers.js; removeOverlayAtomic() in createOverlayHandlers.js. Wired all 5 methods in createCollageMethods.js. Replaced all 8 inline expressions in index.html with single method calls. Key design decisions: checkbox changed from v-model to :checked to avoid Vue's v-model timing issue (v-model toggles before @change fires). Atomic methods include no-op guards (setTitleAlignment, setBackgroundStyle skip undo when value unchanged; removeBackgroundImageAtomic, removeOverlayAtomic return early when nothing to remove). Added 27 new tests in UndoExpansionTest.html (58 assertions) covering: undo command pushing, no-op guards, undo/redo state restoration, manager method calls, null onUndoCommand safety. Ran world-review which confirmed implementation is production-ready with no issues. All 43 test files pass (1546 tests, 0 failures)."
+}

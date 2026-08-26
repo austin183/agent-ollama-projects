@@ -1,0 +1,49 @@
+{
+  "session_id": "01a02392-e8ed-7ed6-8ac4-fd60399add70",
+  "date": "2026-08-21",
+  "title": "Metronomad Phase 8 — Docs, Site Link, Final Acceptance + keyboard/reduced-motion/visibility E2E (root project-card, Metronomad/AGENTS.md, full-suite gate, world-review, 3 new E2E specs, ready-state position invariant fix)",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 180,
+  "tokens_input": 2400000,
+  "tokens_output": 40000,
+  "tokens_reasoning": 15000,
+  "outcome": "Phase 8 automated work complete plus two post-acceptance TDD rounds. (A) Two RED-GREEN cycles: site-card verification (grep card-id/title/href + target URL 200) — GREEN after adding #metronomadCard to the Music Apps category-grid of the root index.html; AGENTS.md content-contract check (13 tokens) — GREEN after writing Metronomad/AGENTS.md (architecture incl. Howler scope + no-Tone.js D6 + app-level visual-clock ownership per the Phase 6 correction, directory tree, Running, Testing incl. in-page timeline-logger convention, conventions, _agent_docs pointers, Co-Authored-By). Automated gate: 127/127 unit + 16/16 E2E. Final quality gate: world-review over the P1 test files — all groups clean, zero Critical/Warning. (B) User asked for an automated keyboard pass: RED-GREEN on test/e2e/keyboard.spec.cjs (3 tests: exact ready-state Tab order; locked parameter controls unfocusable while counting in + focus-return to Play/Stop; keyboard-only full flow with live-region announcements). The RED run caught a REAL BUG: committing/scrubbing the offset in the ready state updated `offset` but not the `songPosition` data property, leaving the progress readout/aria-label stale — GREEN: `offset` watch in createMetronomadApp.js enforcing the ready-state invariant. (C) User approved two more automation items: test/e2e/reducedMotion.spec.cjs (U-22: reducedMotion:'reduce' context — active dot carries beat-dot--static, never --pulse, and the static treatment follows the dot as beats advance) and test/e2e/visibility.spec.cjs (U-17: stubbed document.hidden + real visibilitychange — dots FROZEN across the hidden window (app cancels its own RAF loop), snap on return equals the grid-law beat anchored on the in-page t0, loop resumes). Final: 127/127 unit + 21/21 E2E (16 + 3 keyboard + 1 reduced-motion + 1 visibility), verified stable (2 consecutive full-suite runs + 5× repeat of the visibility spec). Phase map in-progress pending user; user has since confirmed the 13-item manual checklist passes and asked to wrap Phase 8 up for commit.",
+  "key_decisions": [
+    "TDD for static-content artifacts = grep/curl content-contract check as the Red artifact: for the site card the check also asserted the target URL returns 200 (a card is only as good as its link); for AGENTS.md, 13 tokens pin every section the phase outline names, including 'createBeatDots' and 'startVisualClock' so the visual-clock ownership correction can't be silently lost",
+    "The root project-card consumes no Metronomad test hook (Phase 7 handoff) — pure navigation; only coupling is the /Metronomad/index.html URL",
+    "Metronomad/AGENTS.md documents ACTUAL visual-clock ownership per the Phase 6 correction (app-level createBeatDots RAF loop drives dots; engine P-12 visual clock is tested-but-unused) — also closes Phase 6's deferred suggestion (a); incorporates Phase 7's handoff (in-page timeline-logger convention in the Testing section)",
+    "Keyboard E2E design: exact Tab-order assertion in ready (8 tabs from browseBtn, disabled restartBtn skipped) instead of 'contains' assertions — order is the a11y contract (U-23); locked-state test asserts the locked ids are ABSENT from the Tab sequence and restartBtn is reachable; announcements asserted on div.sr-only[role=status] specifically because the clamp hints also use role=status; headless Chromium does not Tab-wrap past the last element (lands on body), so wrap is never asserted",
+    "Ready-state position invariant fix went in as a Vue `offset` watch in createMetronomadApp.js (single home for 'with nothing playing, the readout IS the entry point'), not as songPosition writes in onOffsetScrub/commitOffsetEntry — one invariant, covers scrub + commit + any future offset mutation path; guarded on appState === READY (during preview appState is also 'ready' but the offset is locked, so the guard is sufficient)",
+    "Phase map left 🚧 in-progress: success criteria include the 13-item manual checklist (user gate); user subsequently confirmed all items pass"
+  ],
+  "learnings": [
+    "The keyboard/a11y E2E pass found a bug no earlier phase's tests could see: unit tests pin each handler's writes (offset, offsetText, hints) and B-04 pins the computeds given a songPosition input — but nothing asserted the ready-state INVARIANT tying them together (songPosition tracks offset when idle). Cross-property invariants need either a mounted-VM test or a DOM-level E2E assertion; the readout text ('0:01.0 / 0:03.0') is the cheapest observable that pins the whole chain",
+    "For docs/link phases the Red artifact is a content contract, not a behavior test — and for any link, assert the target URL over the live server in the same check (case sensitivity bit once: contract said 'no Tone.js', file says '**No Tone.js**')",
+    "world-review over pre-scoped P1 files with the pinned decisions stated in the prompt produces file-by-file verdicts without design re-derivation — it confirmed (rather than assumed) cross-phase edge coverage: grid-null mid-loop termination, rapid hidden toggles, live reduced-motion flip, preview no-grid path, stopAll idempotency, generation guards",
+    "Arrow-key scrubbing of a range input fires @input in Chromium — keyboard E2E can exercise scrub paths with press('ArrowRight') ×n and assert the downstream readout, no mouse events needed",
+    "Headless Chromium 149 cannot be made genuinely hidden — verified empirically: two-page foreground (headless AND headed), CDP Emulation.setFocusEmulationEnabled, and Page.setWebLifecycleState all leave document.hidden false. The stubbed-hidden + real-visibilitychange-dispatch technique (from BeatDotsTest) is the right E2E substitute: the app's pause is still genuine because createBeatDots cancels its own RAF loop on hidden",
+    "Three distinct bugs masked each other during the visibility-spec flake hunt, each with a different signature: (1) `const` reassignment inside a MutationObserver callback — the throw DETACHES the observer silently (no further callbacks ever; looks like 'nothing logged'); (2) Vue bindings flush in a microtask — reading `:data-beat` synchronously in the same evaluate as the state change returns the STALE value; (3) anchoring timing math on a state-flip transition log — the flip NOTIFICATION lags the audio clock by up to ~300 ms under load while the audio itself starts on time, corrupting any flip-anchored expectation. Fixes: let + try/catch probes when 'nothing fires'; dispatch+compute in one evaluate but read Vue-bound DOM afterwards; anchor on the trigger's own t0 (same evaluate as the click) with millisecond units",
+    "`test.use({ reducedMotion: 'reduce' })` is silently dropped by this Playwright/Chromium combination while `browser.newContext({ reducedMotion: 'reduce' })` works — verified with a minimal repro before restructuring the spec around a manual context"
+  ],
+  "files_created": [
+    "Metronomad/AGENTS.md",
+    "Metronomad/test/e2e/keyboard.spec.cjs",
+    "Metronomad/test/e2e/reducedMotion.spec.cjs",
+    "Metronomad/test/e2e/visibility.spec.cjs",
+    "Metronomad/_agent_docs/sessions/2026-08-21-001-build-tdd-phase8-docs-acceptance-tdd.json"
+  ],
+  "files_modified": [
+    "~/workspace/austin183.github.io/index.html (root — #metronomadCard added to Music Apps category-grid after #keybianoCard)",
+    "Metronomad/MyESModules/App/createMetronomadApp.js (offset watch: ready-state songPosition === offset invariant — bug fix from keyboard.spec.cjs RED)",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/index.md (phase map: Phase 8 status)",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/phase-8-docs-acceptance.md (automated success-criteria box checked)"
+  ],
+  "next_steps": [
+    "build-quick-work: commit the Phase 8 diff (root index.html card, Metronomad/AGENTS.md, keyboard.spec.cjs, createMetronomadApp.js offset-watch fix, plan status edits, this session summary) with 'Co-Authored-By: LittleLight <noreply@traveler.dstny>' — then flip Phase 8 to ✅ done in the index.md phase map (user confirmed the 13-item manual checklist passes)",
+    "build-quick-work (NEXT SESSION per user): commit the Phase 8 diff — root index.html card, Metronomad/AGENTS.md, test/e2e/keyboard.spec.cjs + reducedMotion.spec.cjs + visibility.spec.cjs, createMetronomadApp.js offset-watch fix, plan status edits, this session summary — with 'Co-Authored-By: LittleLight <noreply@traveler.dstny>', then flip Phase 8 to ✅ done in the index.md phase map (user confirmed the 13-item manual checklist passes)",
+    "Remaining un-automated checklist items (deliberate): 13 (30-min guard — a ~31-min 32 kbps mono mp3 fixture is only ~7 MB and COULD be E2E'd, but the plan kept that case unit-fake-only F-06 to keep the repo light); 1's drag path (only Browse is E2E-covered; a genuine DataTransfer drop test is the small follow-up); 4/5 accent audibility + downbeat-by-ear and real screen-reader audio (not E2E-able — timing is E2E-covered, pitch is unit-covered H-03, live-region text is now covered)",
+    "Deferred suggestion-level (unchanged from Phase 6): createBeatDots's callbacks parameter is reserved (only callbacks.onFrame honored, never passed by the app) — wire or drop post-v1; engine P-12 visual clock remains unused-by-app (documented in AGENTS.md)"
+  ]
+}

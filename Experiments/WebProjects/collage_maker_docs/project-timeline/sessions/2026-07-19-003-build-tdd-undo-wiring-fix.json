@@ -1,0 +1,26 @@
+{
+  "session_id": "2026-07-19-003",
+  "session_number": 3,
+  "date": "2026-07-19",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/App/CollageBase.js",
+    "MyESModules/App/createCollageLifecycle.js",
+    "MyESModules/App/createUndoMethods.js",
+    "MyComponents/UndoManagerTest.html",
+    "MyComponents/Phase5RefactoringTest.html",
+    "MyComponents/CropPreviewTest.html"
+  ],
+  "test_files_added": [
+    "MyComponents/UndoWiringTest.html"
+  ],
+  "tests_added": 13,
+  "assertions_added": 22,
+  "bugs_fixed": 1,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Implemented Phase 1 of pre-merge review fixes: CR-1 — Undo/Redo Completely Broken. Root cause: createUndoMethods.js accessed base.undoManager (direct property) but CollageBase.js never had that property. The undo manager was created in createCollageLifecycle.js and stored only on the Vue instance as this.undoManager. Fix: (1) Added getUndoManager()/setUndoManager() to CollageBase.js following the existing lazy-service getter/setter pattern, (2) Added base.setUndoManager(this.undoManager) in createCollageLifecycle.js after undo manager creation, (3) Replaced all 7 occurrences of base.undoManager with base.getUndoManager() in createUndoMethods.js using local um variables. Updated 3 existing test files (UndoManagerTest.html, Phase5RefactoringTest.html, CropPreviewTest.html) to use getter pattern in mock bases. Created UndoWiringTest.html with 13 new tests covering: getter returns null before set, getter returns manager after set, createUndoMethods with real UndoManager via getter, createUndoMethods null safety, full undo/redo cycles. All 1,382 tests pass (0 failures). World-review confirmed no new issues introduced — all concerns were about pre-existing behavior."
+}

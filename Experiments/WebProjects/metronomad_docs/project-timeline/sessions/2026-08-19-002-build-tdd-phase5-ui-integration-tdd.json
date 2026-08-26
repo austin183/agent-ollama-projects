@@ -1,0 +1,49 @@
+{
+  "session_id": "01a01af4-fb72-7613-b7d0-74d27ef49c6c",
+  "date": "2026-08-19",
+  "title": "Metronomad Phase 5 — UI Integration: Play/Stop/Restart/Preview via TDD (V-01…V-07 + U-19) and live-page verification",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b",
+  "duration_minutes": 120,
+  "tokens_input": 6155662,
+  "tokens_output": 52603,
+  "tokens_reasoning": 29016,
+  "outcome": "Phase 5 (UI Integration, P0 acceptance gate) complete. RED-GREEN-REFACTOR in 5 batches over MyComponents/UiHandlersTest.html (mock-VM pattern: data + factory methods spread first, computeds from createMetronomadApp attached as live getters, $nextTick/$refs faked): V-01/V-05 (play toggle + _buffer storage) → V-02/V-03 (restart + BPM/count-in inputs/steppers) → V-04/U-08 (offset commit/scrub + preview) → V-07/V-06 (engine state → announcement mapping + computed characterization) → U-19 (suspended-context resume with 750 ms timeout). Final: 39/39 new + 109/109 full unit suite green; smoke E2E 4/4. REFACTOR: deduped previewEnded into _returnToReady, extracted _sequenceParams/_parseParamInput/_resumeWithTimeout, removed dead _masterGain handle, lifecycle now wires renderClickBuffers → createPlaybackEngine (onStateChange/onInterrupted → methods) with engine.dispose() first in beforeUnmount. Template finalized: ref=playStopBtn for focus return, :value+@input raw-value handlers for BPM/count-in/scrubber. LIVE PAGE VERIFICATION (throwaway Playwright script driving the real page with real audio) found and fixed a P0 the unit suite could not see: playStopBtn was :disabled=\"!isReady\" — disabled while playing, so Stop was unpressable; now :disabled=\"!isReady && !isParamLocked\". Post-fix live pass: full lifecycle (load → count-in → playing @1541-1556 ms of ~1500 → ended @4541 ms of ~4500 → stop w/ focus return → preview clamped 2048 ms → restart → U-13 drop rejection) with zero console/page errors.",
+  "key_decisions": [
+    "onPlayToggle is async ONLY for the idle path: the stop path and the running-context path complete synchronously (no await reached), so V-01's synchronous mock-VM assertions still hold. U-19's resume guard sits before startSequence and returns early with a friendly error when resume rejects or never settles within SCHEDULER.RESUME_TIMEOUT_MS (750 ms real-timer test — acceptable at ~0.8 s)",
+    "V-07 announcement mapping lives in the methods factory as onEngineStateChange(state) (mock-VM testable), driven by the engine's Phase-4 event names ('countingIn'/'playing'/'preview'/'stopped'/'ended'/'previewEnded'); D10's interrupt text is a separate onAudioInterrupted() method so the lifecycle stays a thin wiring layer. 'ended'/'previewEnded' are string literals (terminal events, not ENGINE_STATES members) with a comment explaining why",
+    "Both terminal events ('ended' and 'previewEnded') settle through one _returnToReady(announcement) helper (KB-4: ready is the resting state, position resets to the offset) — preview cannot leave appState non-ready, so the shared helper's fileName-guarded appState write is a no-op there",
+    "Input handlers take the RAW string ($event.target.value), not the event: onBpmInput/onCountInInput/onOffsetScrub/commitOffsetEntry are all callable with a plain string in mock-VM tests and stay consistent with the V-03/V-04 scenario signatures in the plan",
+    "Empty/non-numeric BPM or count-in restores the LAST VALID value (lazy _lastValidBpm/_lastValidCountIn, defaulting to BPM_DEFAULT/COUNT_IN_DEFAULT only when no valid value exists yet) — one shared _parseParamInput(rawValue, clamp) → {value, clamped}|null; the clamp hint fires when clamped !== parsed, including rounding (T-26 territory)",
+    "Focus return (U-04/V-02) is _refocusPlayStopButton(): $nextTick + guard `!btn.disabled` — after Restart the button is enabled (countingIn) so it focuses; the guard exists for the (rare) case where the button became disabled before the tick ran. Verified end-to-end via document.activeElement in the live script",
+    "Preview button stays :disabled=\"!isReady\" (enabled during preview, matching the plan's template essentials); clicking it mid-preview is a no-op via the isParamLocked guard — Restart's :disabled=\"!isSequenceRunning\" is the KB-5 distinction",
+    "Phase 5 deliberately does NOT wire the engine's onFrame/visual clock or createBeatDots (Phase 6): songPosition updates only on state transitions in this phase, which satisfies 'progress reads the offset at the flip' (U-02); live progress updates arrive with B-01…B-05",
+    "Live-page verification is part of the Phase 5 definition-of-done for UI-wiring phases (first recorded as a learning): a throwaway /tmp Playwright script drives the real page through the P0 flows and asserts state/labels/enabled/focus/announcements — it caught the disabled-while-playing P0 that mock-VM + smoke E2E both missed"
+  ],
+  "learnings": [
+    "P0 found by live verification, not the unit suite: :disabled=\"!isReady\" on the Play/Stop button disabled it during countingIn/playing (isReady is ready-state-only), making Stop unpressable. Mock-VM tests never render the template, and the smoke spec only covers the no-file state. Any phase whose job is UI wiring needs a real-page drive-through of the P0 flows after unit green (see learnings/2026-08-19-live-page-verification-catches-template-binding-bugs.md)",
+    "When a timing test fails at the WRONG step, suspect that an interaction never happened: Playwright's click auto-waited on the disabled button, the song ended (+3 s), the button became enabled, the pending click then STARTED a new sequence, and the later waitForFunction(state==='ready') timed out. Check element enabled/focus state explicitly rather than assuming the click landed",
+    "Object-literal method factories silently shadow duplicate keys (last wins): re-adding onRestart above a leftover stub left the stub live and 4 tests failing with 'expected [] to deeply equal'. After adding a method in a factory, grep the file for duplicate names (the Phase 1 scaffold had three stubs that each needed removal, not just replacement)",
+    "Async Vue handlers + mock-VM: an async method whose happy path reaches no await runs its body synchronously, so synchronous test assertions after the call still work — structure the guard/await so the deterministic path stays await-free (V-01 tests never await onPlayToggle)",
+    "The edit tool's multi-edit calls are atomic — one non-matching oldText voids the whole batch. index.html's exact indentation defeated two batches; a python re.subn pass with per-replacement counts (and a print of each count) was faster and provably complete (all counts = 1)",
+    "Runner flake observed once: run-tests.cjs reported 0 passes / 0 failures on a page that was actually green (stale extraction mid-run); a plain re-run resolved it. Treat a 0/0 on a known-good suite as 're-run before investigating'"
+  ],
+  "files_created": [
+    "Metronomad/MyComponents/UiHandlersTest.html",
+    "Metronomad/_agent_docs/learnings/2026-08-19-live-page-verification-catches-template-binding-bugs.md",
+    "Metronomad/_agent_docs/sessions/2026-08-19-002-build-tdd-phase5-ui-integration-tdd.json"
+  ],
+  "files_modified": [
+    "Metronomad/MyESModules/App/createMetronomadMethods.js",
+    "Metronomad/MyESModules/App/createMetronomadLifecycle.js",
+    "Metronomad/index.html"
+  ],
+  "next_steps": [
+    "Phase 6 (Beat Dots, Progress, Clock Hygiene, P1): MyESModules/App/createBeatDots.js (B-01…B-05, D9) + Style.css pulse/reduced-motion (U-22) + template dots/progress wiring + MyComponents/BeatDotsTest.html. Integration points already in place: engine.onFrame callback param, engine.getBeatGrid()/songPosition(), lifecycle's beforeUnmount (add listener/timer teardown per the memory-management order), and the data fields activeBeatIndex/songPosition",
+    "Phase 6 should also make the progress readout live (songPosition per frame) — Phase 5 only updates it on state transitions (progress reads the offset at the flip, U-02)",
+    "Phase 7 E2E: the data-state/data-beat hooks and announcement strings are now stable contracts (this phase's live script /tmp/verify-phase5.cjs is a ready-made skeleton for playback.spec.cjs E2E-1.1…1.5 — it asserts exactly those transitions with wall-clock tolerance); fixtures sine3s.mp3 + bad.mp3 still need extracting into test/fixtures/ (D11)",
+    "Manual acceptance (user, first real-audio pass per plan): U-01…U-09 with a real multi-minute song — listen for accent pitch, downbeat exactness, no phantom clicks on Stop; verify U-17 (tab switch mid-play) in Phase 6",
+    "Suggestion-level (deferred): onPreview's no-op click while previewing (button enabled mid-preview per plan template) could get a title hint in Phase 6 polish"
+  ]
+}

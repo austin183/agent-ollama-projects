@@ -1,0 +1,28 @@
+{
+  "session_id": "2026-07-26-004-build-tdd-crop-preview-dual-canvas",
+  "session_number": 4,
+  "date": "2026-07-26",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/App/createCropPreviewRenderer.js",
+    "MyESModules/Interaction/CropInteraction.js",
+    "MyESModules/App/createCollageLifecycle.js",
+    "MyESModules/App/createCollageMethods.js",
+    "index.html",
+    "scripts/run-tests.js"
+  ],
+  "test_files_added": [
+    "MyComponents/CropPreviewDualCanvasTest.html"
+  ],
+  "tests_added": 8,
+  "assertions_added": 12,
+  "bugs_fixed": 1,
+  "learnings_written": [
+    "2026-07-26-test-runner-getelementbyid-quirk-and-dual-canvas-visibility.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Phase 3 crop preview migration: migrated crop preview to dual-canvas system (desktop sidebar + mobile bottom sheet). Key changes: (1) createCropPreviewRenderer.js now accepts multiple canvas IDs via domIds and renders to all configured canvases with visibility guard (skips hidden canvases for performance). (2) CropInteraction.js accepts canvasId as string or array, attaches/detaches listeners to all canvases, uses e.currentTarget for per-canvas coordinate math. (3) createCollageLifecycle.js passes [cropPreviewCanvas, bsCropPreviewCanvas] to createCropInteraction. (4) index.html domIds includes bsCropPreviewCanvas. (5) Fixed test runner bug: getElementById('mocha') returned null due to a DOM quirk after mocha runs — switched to querySelector('#mocha'). Also added waitForSelector('#mocha .test') for reliable test completion detection. All 8 new tests pass, all existing tests pass (0 failures across 48 test files)."
+}

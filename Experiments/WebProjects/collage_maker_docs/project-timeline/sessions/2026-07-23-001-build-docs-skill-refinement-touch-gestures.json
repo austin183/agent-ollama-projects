@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-23-001-build-docs-skill-refinement-touch-gestures",
+  "session_number": 174,
+  "date": "2026-07-23",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/interaction.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill using learnings from 2026-07-22-touch-gesture-conventions-and-touch-action.md. Three key updates: (1) Added dual gesture direction conventions — TouchEvent/PointerEvent negate deltas (direct manipulation), WheelEvent does not negate (scrolling convention) — to both SKILL.md and interaction.md with implementation examples. (2) Replaced blanket 'touch-action: none' recommendation with 'touch-action: pan-y' selective passthrough that allows one-finger vertical page scroll while intercepting two-finger gestures, with the critical requirement of preventDefault() on active two-finger touchmove. (3) Added testing gesture direction section with sign verification assertions and triangulation pattern. Updated frontmatter description and Key References line to mention new topics. Updated interaction.md table of contents."
+}

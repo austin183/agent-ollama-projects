@@ -1,0 +1,25 @@
+{
+  "session_id": "ses_07a102730ffeuUiy0UEKm5VYew",
+  "session_number": 12,
+  "date": "2026-07-21",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/App/createLayoutHandlers.js",
+    "MyESModules/App/createCollageMethods.js",
+    "MyESModules/State/LayoutManager.js",
+    "index.html",
+    "MyComponents/UndoExpansionTest.html"
+  ],
+  "test_files_added": [],
+  "tests_added": 24,
+  "assertions_added": 65,
+  "bugs_fixed": 0,
+  "learnings_written": [
+    "2026-07-21-vue-vmodel-timing-undo-snapshots.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Phase 3: Layout Changes undo/redo. Added onUndoCommand callback to createLayoutHandlers for layout style changes (separate undo per change) and layout options (batched per interaction). Key discovery: Vue v-model updates data before @change/@input fires, so snapshot must be captured on @focus (select) or @pointerdown/@focus (range inputs). Added @pointerdown for touch device support and @focus for keyboard arrow-key support per world-review. Added early-exit guards to LayoutManager setters to prevent unnecessary regenerate() calls during undo. All 43 UndoExpansionTest tests pass, full suite (84 test files) passes with 0 failures."
+}

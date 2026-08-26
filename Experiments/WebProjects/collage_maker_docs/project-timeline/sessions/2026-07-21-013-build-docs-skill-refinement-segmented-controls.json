@@ -1,0 +1,20 @@
+{
+  "session_id": "2026-07-21-013-build-docs-skill-refinement-segmented-controls",
+  "session_number": 13,
+  "date": "2026-07-21",
+  "purpose": "docs",
+  "agent_role": "build-docs",
+  "files_changed": [
+    ".opencode/skills/building-web-apps/SKILL.md",
+    ".opencode/skills/building-web-apps/references/undo-snapshots.md"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 0,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Refined building-web-apps skill with content from 2026-07-21-undo-batching-segmented-controls.md learning. Four changes: (1) SKILL.md description rewritten more concisely to fit 1024-char limit (was 1403+ chars), preserving all key discovery terms including 'segmented inline', 'lifecycle cleanup', 'segmented/checkbox inline snapshot/commit', 'beforeUnmount cleanup'. (2) SKILL.md v-model timing section expanded to cover <input type=\"color\">, <textarea>, segmented control buttons with inline snapshot/commit pattern, checkbox inline pattern, and beforeUnmount lifecycle cleanup — previously only covered <select> and <input type=\"range\">. (3) references/undo-snapshots.md element-by-element table expanded from 2 rows to 6 rows matching the learnings document, with the key rule: 'If the element doesn't have a natural blur event, use inline snapshot/commit'. (4) SKILL.md is now 539 lines."
+}

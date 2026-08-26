@@ -1,0 +1,25 @@
+{
+  "session_id": "ses_phase2-undo-expansion-image-ops",
+  "session_number": 10,
+  "date": "2026-07-21",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "files_changed": [
+    "MyESModules/App/createFileHandlers.js",
+    "MyESModules/App/createImagePanelHandlers.js",
+    "MyESModules/App/createCollageMethods.js"
+  ],
+  "test_files_added": [
+    "MyComponents/UndoExpansionTest.html"
+  ],
+  "tests_added": 23,
+  "assertions_added": 45,
+  "bugs_fixed": 2,
+  "learnings_written": [
+    "_agent_docs/learnings/2026-07-21-undo-snapshot-patterns-image-operations.md"
+  ],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Implemented Phase 2 of undo/redo expansion plan: added onUndoCommand callback pattern to createFileHandlers (Add Images undo) and createImagePanelHandlers (Remove Image, Clear All Images, Remove Selected Image undo). Wired pushUndoCommand in createCollageMethods.js with error handling. Refactored to extract shared buildRemoveImageCommand helper and restoreCrops/triggerUpdate utilities. All 41 test files pass (0 failures). World-review identified 2 bugs: (1) Add Images redo restored preCrops instead of postCrops — fixed, (2) redo error handler missing toast — fixed. World-review's claim about shallow copy breaking image snapshots was incorrect — spread copies the Image reference value at snapshot time, which survives subsequent disposal of the original item."
+}

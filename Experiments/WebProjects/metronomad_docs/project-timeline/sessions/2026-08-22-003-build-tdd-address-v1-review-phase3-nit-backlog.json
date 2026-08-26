@@ -1,0 +1,63 @@
+{
+  "session_id": "01a02e62-12d2-734f-9c12-455cc5743ba5",
+  "date": "2026-08-22",
+  "title": "Metronomad v1-review Phase 3 — Nit Backlog (21 items) via TDD, plus world-review + timeline + learnings",
+  "purpose": "tdd",
+  "agent_role": "build-tdd",
+  "model": "qwen/qwen3.8-27b (lmstudio)",
+  "duration_minutes": 150,
+  "tokens_input": 2400000,
+  "tokens_output": 95000,
+  "tokens_reasoning": 0,
+  "outcome": "Phase 3 complete — all 21 scoped nit items landed in two TDD batches, both suites green, world-review clean, review remediation (all 3 phases) closed. Scoping pass first: 21 per-item phase files + behavior-specs.md §7 scenario rows + index.md sub-table. Batch A (commit 4e915d5): N-1 scheduler interval cleared at the PLAYING flip (R-N1.1 fake-timer count: 2 timers pre-flip, 1 post-flip, 200 no-op ticks schedule nothing); N-4 startSequence returns a frozen schedule snapshot (R-N4.1 — writes throw TypeError in strict mode, engine's internal _seq untouched); N-5 tooLong message interpolates maxDurationSec (R-N5.1; default '30 minutes' string unchanged via F-06 re-pinned with a 1900 s buffer); N-6 _finish(event) extract (refactor-only — behavior pinned by P-04/P-06/P-07/R-I4.2); N-7 ENGINE_EVENTS export + app switch on constants + barrel re-export (R-N7.1). Batch B/D (commit d57bf21): N-8 targeted errorMessage clearing (Stop clears only the drop-lock message — R-N8.1b pins that an unrelated decode error SURVIVES a Stop; successful Play/Restart/Preview clear stale errors — R-N8.2/R-N8.3); N-9 --beat-interval set only on value change with cache reset in _clearDots (R-N9.1 — 5 frames = 1 setProperty; stop+restart re-applies the same value); N-10 progressbar static aria-label + :aria-valuetext=formattedPosition, progressAriaLabel computed deleted (B-04 rev — template pin via fetch+DOMParser asserting the literal ':aria-valuetext' attribute); N-12 'Count-in restarted' announcement (R-N12.1; keyboard E2E updated to the new string); N-13 onDragLeave relatedTarget child-guard (R-N13.1 — pointer-events:none rejected at scoping because it would disable the Browse button, a child of the zone); N-14 post-resume-await unmount guard (R-N14.1 — RED was a TypeError on null engine, GREEN is `if (!this._engine) return;` after the await); N-15 dead scrubber :tabindex dropped; N-19 hint+placeholder 'm:ss.t' (V-04 assertions updated); N-25 resume-timeout assertion uses the SCHEDULER constant; N-26 E2E-1.3 bound = grid-law flip time (1500 ms) not 450 ms (R-N26.1 — the review's literal 'actionT < playing.t' is impossible: a count-in stop never reaches playing, so no playing timeline entry exists); N-27 refocus disabled-branch pinned (R-N27.1). Batch C docs: KB-11 (background-tab throttle compresses count-in; skip-clicks fix deferred), KB-12 (AT coalescing accepted), KB-13 (background audio continues — intended; kept separate from KB-11 per scoping) in v1 context.md with KB-10's ID/position preserved; U-18 scoping note (unit-adequate; ctx.suspend() E2E variant dropped) in v1 behavior-specs. Final state: unit 158/158 (baseline 148 after batch A, 158 after batch B: +10 new rows, 2 V-04/B-04 in-place updates, 1 R-N25 in-place update), E2E 23/23. World-review (qwen-agentworld-35b): all 7 targeted concerns fine, no issues. String audit: N-8 adds zero strings; N-12's 'Count-in restarted' fits the spec §10 exemplary family. NOTE: token/duration figures are estimates.",
+  "key_decisions": [
+    "Batch-level commits (A and B/D) instead of the per-item commits the phase map prescribes: the items share files (playbackEngine.js touched by N-1/N-4/N-6/N-7; FileLoaderTest+fileLoader by N-3/N-5), and hunk-splitting those into per-item commits was error-prone; each commit message enumerates its items. Recorded as a deviation in phase-3-nit-backlog.md success criteria",
+    "N-13: the review's suggested `pointer-events: none` on drop-zone children was rejected — the Browse button and file input ARE children of the zone, so disabling pointer events would break Browse. The relatedTarget/contains() guard in onDragLeave fixes the flicker without disabling children (R-N13.1 pins child/outside/null)",
+    "N-8: precise clearing over blanket clearing — the Stop path clears ONLY the exact drop-lock message ('Drop a new song after stopping'), because a Stop does not resolve an unrelated decode error (R-N8.1b pins the survival); the ok-paths of Play/Restart/Preview clear unconditionally because a successful action supersedes any stale error",
+    "N-26: the grid-law flip time (t0+1500 ms at count-in 2, 120 BPM) is the exact proxy for 'before the song would have started' — a successful count-in stop never produces a 'playing' timeline entry, so the review's literal 'assert actionT < playing.t' cannot be implemented in E2E-1.3",
+    "N-4: the frozen view maps _seq fields (tP, interval, offset, clicks, songStart) — same shape for existing consumers (P-01's schedule.songStart assertion still passes); the internal _seq keeps owning the `scheduled` flags the scheduler trusts",
+    "N-9: the cache resets in _clearDots (both stopVisualClock and stopAll funnel through it), so a new sequence always re-applies --beat-interval even with an unchanged value — BPM is editable between sequences, so 'same value must never skip the first set' is a correctness requirement, not just efficiency",
+    "KB numbering: the review's 'KB-10' reference for N-2 was superseded — KB-10 (offline deferral) already exists in v1 context.md and keeps its ID and list position; the new entries land as KB-11/KB-12/KB-13 after it. First edit attempt renumbered KB-10→KB-14 and was caught by re-reading the list before commit",
+    "OD-2 text in index.md said N-24 was deferred, but the scoping pass scheduled it (batch C) — the OD-2 line was corrected to match the authoritative item table rather than deferring N-24 (a 2-line docs note)",
+    "B-04 rev template pin uses fetch('../index.html') + DOMParser in the in-browser Mocha suite: Vue binding attributes parse literally with the colon prefix (getAttribute(':aria-valuetext')), so the static-label/valuetext contract is pinned without booting the app"
+  ],
+  "learnings": [
+    "A missing ES-module named export fails the whole module graph at link time — the in-browser runner reports 'mocha.run() was never reached within the timeout' with no per-test error (the page's test script never registers). When a RED state is caused by a not-yet-existing export, expect the suite to die at load, not to show a failing test",
+    "Object.freeze in strict-mode ES modules: assigning to a frozen property THROWS TypeError (not a silent no-op) — tests that 'pin the freeze' must assert the throw (expect(() => {...}).to.throw(TypeError)), and behavior-specs prose must say 'writes throw', not 'writes are no-ops'",
+    "When a fix changes a user-facing announcement string, grep the E2E specs for the OLD string before running them: the N-12 'Count-in restarted' change broke keyboard.spec.cjs's full-flow test (it expected the engine's 'Count-in started', which the restart now supersedes) — the unit suite would have gone green with a red E2E suite if the E2E run hadn't followed the unit run",
+    "Wrapping an element's style.setProperty (save/restore around the test) is a clean way to count CSS-variable writes in a DOM unit test — no MutationObserver, no global patching; the wrapped call must delegate via origSet.call(row.style, k, v)",
+    "Numbered markdown lists where the number and the entity ID are both meaningful (10. **KB-10**) drift easily when inserting entries — after inserting, re-read the rendered list and verify number↔ID alignment, especially when an existing ID must keep its number",
+    "The repo's _agent_docs/ is gitignored (line 16 of .gitignore) — plan/timeline/session docs are never committed; only code/test/AGENTS.md changes go in. Previous commits that reference _agent_docs paths were force-added or predate the ignore rule; new doc edits need no (and should not attempt a) commit"
+  ],
+  "files_created": [
+    "Metronomad/_agent_docs/project-timeline/sessions/2026-08-22-003-build-tdd-address-v1-review-phase3-nit-backlog.json",
+    "Metronomad/_agent_docs/plans/2026-08-22-address-v1-review/phase-3-N{1,2,3,4,5,6,7,8,9,10,12,13,14,15,19,24,25,26,27,32,33}-*.md (21 per-item phase files, scoping pass)"
+  ],
+  "files_modified": [
+    "Metronomad/MyESModules/Playback/playbackEngine.js",
+    "Metronomad/MyESModules/File/fileLoader.js",
+    "Metronomad/MyESModules/App/createMetronomadMethods.js",
+    "Metronomad/MyESModules/App/createBeatDots.js",
+    "Metronomad/MyESModules/App/createMetronomadApp.js",
+    "Metronomad/MyESModules/index.js",
+    "Metronomad/index.html",
+    "Metronomad/MyComponents/PlaybackEngineTest.html",
+    "Metronomad/MyComponents/FileLoaderTest.html",
+    "Metronomad/MyComponents/BeatDotsTest.html",
+    "Metronomad/MyComponents/UiHandlersTest.html",
+    "Metronomad/test/e2e/playback.spec.cjs",
+    "Metronomad/test/e2e/keyboard.spec.cjs",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/context.md",
+    "Metronomad/_agent_docs/plans/2026-08-17-metronomad-v1/behavior-specs.md",
+    "Metronomad/_agent_docs/plans/2026-08-22-address-v1-review/index.md",
+    "Metronomad/_agent_docs/plans/2026-08-22-address-v1-review/behavior-specs.md",
+    "Metronomad/_agent_docs/plans/2026-08-22-address-v1-review/phase-3-nit-backlog.md",
+    "Metronomad/_agent_docs/project-timeline/project-timeline.md"
+  ],
+  "next_steps": [
+    "USER: the 5-minute manual spot-check owed by phase-3 success criteria (error-banner lifecycle, restart announcement, dragover highlight, scrubber) — no deep re-acceptance",
+    "USER: optionally close out the v1 review end-to-end (the plan's Phase 1/2/3 are all ✅; the review file itself can be marked remediated)",
+    "DEFERRED (recorded, no action): N-11 (visual loop during Preview — spec §8 says playback only), N-29…N-31 (mobile cluster), N-28 upgrade path (KB-10 documents the path if mobile becomes a target); N-1's skip-late-clicks fix is deferred with KB-11",
+    "SKILL (optional): building-web-apps could absorb the freeze-assertion pattern (writes throw in strict mode) and the style.setProperty-counting pattern if they recur in CollageMaker"
+  ]
+}

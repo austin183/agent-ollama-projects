@@ -1,0 +1,19 @@
+{
+  "session_id": "2026-07-23-006",
+  "session_number": 6,
+  "date": "2026-07-23",
+  "purpose": "debug",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "MyESModules/State/LayoutManager.js"
+  ],
+  "test_files_added": [],
+  "tests_added": 0,
+  "assertions_added": 0,
+  "bugs_fixed": 1,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Fixed layout switching bug caused by early-exit guards in LayoutManager.js setter methods. Root cause: early-exit guards (e.g., 'if (state.layoutStyle === style) return') were added in the undo/redo expansion commit (8d43cfd) to prevent unnecessary regenerate() calls during undo. However, because the LayoutManager uses the Vue instance as its state object, and Vue's v-model updates reactive data before @change/@input events fire, every call from a v-model-driven handler (onLayoutStyleChange, onGutterChange, etc.) would hit the early-exit since the value was already updated. This caused regenerate() to never run, so the canvas rendered stale panels. Fix: removed all 5 early-exit guards from setLayoutStyle, setGutter, setSliceAngle, setHexSpacing, and setHexSizeMultiplier. The setter methods now unconditionally set the value and call regenerate(). The undo/redo undoFns that call these setters still work correctly because the setters always regenerate. All 47 unit test files pass (0 failures). E2E layout switching tests (Alt+1 through Alt+5) all pass. Note: this bug existed on the published site too (same code on origin/main) — the user likely perceived it as working because the select value visibly changed, creating the illusion of functionality."
+}

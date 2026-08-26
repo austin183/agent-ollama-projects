@@ -1,0 +1,21 @@
+{
+  "session_id": "2026-07-28-007",
+  "session_number": 7,
+  "date": "2026-07-28",
+  "purpose": "debug",
+  "agent_role": "build-debug",
+  "files_changed": [
+    "Style.css",
+    "MyComponents/FloatingSidebarToggleTest.html",
+    "test/e2e/floating-sidebar-toggle.spec.js"
+  ],
+  "test_files_added": [],
+  "tests_added": 2,
+  "assertions_added": 4,
+  "bugs_fixed": 1,
+  "learnings_written": [],
+  "plans_written": [],
+  "commits": [],
+  "outcome": "success",
+  "notes": "Bug: Floating sidebar toggle buttons were invisible after sidebar collapse. Root cause: collapsed buttons were positioned at left: 0 and right: 0, flush with the viewport edge. With a 40px circular button, right: 0 clips the right half off-screen, and left: 0 clips the left half. Fix: changed collapsed positions to left: 8px and right: 8px, giving an 8px offset that keeps the full button visible and clickable. Added 2 unit tests (FST-CSS-12, FST-CSS-13) verifying offset > 0. Updated 2 E2E test assertions from '0px' to '8px'. Full suite: 0 failures."
+}
