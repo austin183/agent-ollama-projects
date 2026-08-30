@@ -127,7 +127,7 @@ See `references/review-to-plan.md` for the plan-ready test, the amendment canoni
 
 ## Phase Handoff Consistency
 
-Decomposition isolates context per phase; these rules keep the loaded context *coherent* across phase boundaries: **pin behavior ownership** at authoring time, **recompute every worked-example constant** before a phase is ready, keep **hook semantics in the context entry** (not scenario prose), and run a **handoff audit at phase close** — diff the next phase's context load and inlined tables against as-built code before marking the phase done.
+Decomposition isolates context per phase; these rules keep the loaded context *coherent* across phase boundaries: **pin behavior ownership** at authoring time, **recompute every worked-example constant and verify boundary Givens reach the boundary they name** before a phase is ready, keep **hook semantics in the context entry** (not scenario prose), and run a **handoff audit at phase close** — diff the next phase's context load and inlined tables against as-built code before marking the phase done.
 
 See `references/phase-handoff.md` for the full rules and the phase-close checklist.
 
@@ -217,7 +217,7 @@ Consult these reference files for detailed procedures:
 - [ ] Decompose plans over ~200 lines / 5 phases / ~15 KB into a per-phase directory (`references/decompose-plan.md`)
 - [ ] Plan-ready review (location + fix + named test per finding)? Use the light planning pass, not a full planning session (`references/review-to-plan.md`)
 - [ ] Before a plan is marked ready: run `script/plan-integrity-check.sh <plan-dir>` — never by eye
-- [ ] Before closing a phase: recompute scenario-table constants and run the handoff audit against the next phase (`references/phase-handoff.md`)
+- [ ] Before closing a phase: recompute scenario-table constants, verify boundary Givens reach the boundary they name, and run the handoff audit against the next phase (`references/phase-handoff.md`)
 
 ---
 

@@ -1,165 +1,73 @@
 ---
 name: capturing-learnings
-description: Guides users through structured debriefs after exercises to identify what worked, what was missing, and how to improve. Use when the user completes an exercise, task, or session and wants to capture insights for future reference.
+description: Autonomously reviews a completed exercise, task, or session for insights worth preserving, and saves them as a dated learnings document when they add something new. Use after completing an exercise, task, or session, or when the user asks to capture learnings or debrief. Runs without asking the user questions; making no updates is a valid outcome.
 ---
 
 # Capturing Learnings
 
-Capture structured insights from completed exercises to build better Skills iteratively. This skill follows a proven debrief process that identifies patterns, gaps, and improvement opportunities.
+Review a completed exercise, task, or session and persist any insights that will save time or prevent mistakes in future work.
 
-## When to use this Skill
+**This skill runs autonomously.** Do not ask the user what mattered, what was confusing, or whether anything should be saved. Use your own judgment from the conversation context. Ending with no updates is an acceptable and common outcome — do not pad a document to justify running the skill.
 
-- User completes an exercise, task, or session
-- User wants to document what worked, what failed, or what was confusing
-- User is building or refining Skills and needs systematic way to capture learnings
-- User wants to preserve insights for future reference
-
-## Debrief Template
-
-After completing an exercise, guide the user through these structured questions:
-
-### What Worked
-
-```
-What succeeded in this exercise?
-
-- Specific patterns that produced good results
-- Approaches that saved time or reduced errors
-- Tools, libraries, or methods that performed well
-- Any unexpected discoveries or "aha" moments
-```
-
-### What Didn't Work / Gaps
-
-```
-What was problematic or missing?
-
-- Approaches that failed or produced poor results
-- Missing context, information, or resources
-- Confusing instructions or unclear requirements
-- Bugs, errors, or unexpected behaviors
-- Tools or libraries that caused issues
-```
-
-### What Was Confusing
-
-```
-
-What parts were unclear or ambiguous?
-
-- Ambiguous requirements or specifications
-- Unclear terminology or jargon
-- Missing documentation or examples
-- Poorly designed interfaces or APIs
-- Any uncertainty about expected behavior
-```
-
-### Skill Mapping
-
-```
-
-How can these insights improve existing Skills?
-
-- Which Skills should be updated based on these learnings?
-- What new rules, patterns, or best practices should be added?
-- What documentation needs expansion?
-- What examples or evaluations should be created?
-```
-
-### Documentation Format
-
-```
-
-Where should these learnings be saved?
-
-- Update existing skills document (if applicable)
-- Create new skills document for this exercise
-- Add to `_agent_docs/learnings/` as a dated rule-file (`YYYY-MM-DD-<slug>.md`); archive older ones as the folder grows
-- Document in a debrief file with date and purpose
-```
-
-> **Note**: The learnings location follows project convention (`_agent_docs/learnings/`, dated rule-files). If it changes, update this skill to reflect the new location.
-
-## Workflow Pattern
+## Workflow
 
 Copy this checklist and track your progress:
 
 ```
-Task Progress:
-- [ ] Complete exercise
-- [ ] Run capturing-learnings
-- [ ] Organize insights by category
-- [ ] Map insights to skill improvements
-- [ ] Save documentation
+Learnings Progress:
+- [ ] Survey the conversation for candidate insights
+- [ ] Check existing coverage
+- [ ] Decide: record, extend, or skip
+- [ ] Save and report
 ```
 
-### Step 1: Complete Exercise
+### Step 1: Survey for candidate insights
 
-Finish the task or exercise completely before running capturing-learnings.
+Re-read the completed work and note anything that falls in these categories:
 
-### Step 2: Run Capturing-Learnings
+- **What worked** — patterns, approaches, or tools that produced good results or saved time
+- **Gaps** — missing context, confusing instructions, failed approaches, unexpected errors or behaviors
+- **Skill mapping** — existing skills whose guidance was missing, wrong, or incomplete in practice
 
-Present the debrief template to the user and ask them to answer each section.
+Prefer concrete, reusable insights ("pi subagent runs need `--no-session` or usage is double-counted") over vague ones ("testing was important").
 
-### Step 3: Organize Insights
+### Step 2: Check existing coverage
 
-Group answers by category (worked, gaps, confusing, skill mapping).
+Before recording anything, compare each candidate against:
 
-### Step 4: Map to Improvements
+- Existing skills under `.pi/skills/` (read the relevant ones)
+- Existing documents under `_agent_docs/learnings/`
 
-Identify specific skills to update and document what changes are needed.
+Discard candidates that are already covered, are one-off trivia unlikely to recur, or are model/general-knowledge facts that don't need saving.
 
-### Step 5: Save Documentation
+### Step 3: Decide
 
-Save learnings in an appropriate location (see Documentation Format above).
+- **Record** — genuinely new, reusable insights → save a new learnings document (Step 4)
+- **Extend** — a candidate refines an existing skill or learnings doc → propose or make that targeted edit instead
+- **Skip** — nothing new or relevant → make no file changes and say so briefly
 
-## Key Insight
+### Step 4: Save and report
 
-The debrief process is essential for iterative Skill development because:
-- Context gets cluttered after exercises
-- Insights need to be persistent for future reference
-- Systematic categorization helps identify patterns
-- Clear documentation accelerates future work
-- Lessons learned can be translated into improved Skills
+Save new learnings to `_agent_docs/learnings/` as a dated rule-file: `YYYY-MM-DD-<slug>.md`.
 
-## Debrief Structure
-
-Learnings are most useful when saved with this structure:
+Use this structure:
 
 ```markdown
-# [Topic] - Debrief [Date]
+# [Topic] - Learnings [YYYY-MM-DD]
 
-**Purpose**: [What this exercise was for]
+**Context**: [The exercise/task this came from, one line]
 
-## What Worked
+## Insights
+- [Insight, stated as a reusable rule or fact]
+- ...
 
-[Details...]
-
-## What Didn't Work / Gaps
-
-[Details...]
-
-## What Was Confusing
-
-[Details...]
-
-## Skill Improvements
-
-[Specific changes to make...]
-
-## Next Steps
-
-[Actions to take...]
-
----
-**Status**: [Open/Closed/In Progress]
-**Follow-up**: [Related exercises or tasks]
+## Suggested Skill Changes
+- [Skill to update and the specific change] (omit if none)
 ```
 
-## Using the Skills-Best-Practice Skill
+Then report to the user in a few lines: what was recorded where (or that nothing was recorded and why). Do not wait for user input at any step.
 
-After capturing learnings, use the skills-best-practice skill to:
-- Review existing Skills for improvements
-- Create new Skills based on patterns discovered
-- Add evaluations to test new approaches
-- Document learnings in the skills-best-practice documentation
+## Notes
+
+- The learnings location follows project convention (`_agent_docs/learnings/`, dated rule-files; archive older files as the folder grows). If the convention changes, update this skill.
+- After recording, the `skills-best-practice` skill can be used to apply the suggested skill changes — but only when the user asks for that follow-up.
