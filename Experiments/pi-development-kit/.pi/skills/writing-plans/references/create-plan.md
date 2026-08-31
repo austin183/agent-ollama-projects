@@ -160,3 +160,5 @@ Always separate success criteria into two categories:
    - Performance under real conditions
    - Edge cases that are hard to automate
    - User acceptance criteria
+
+**When pinning exact test counts, pin the row structure too.** A pinned total ("24 new `it`s to land at 311") survives only if the suite is structured **one `it` per pinned scenario row**, with auxiliary checks (constant-value assertions, barrel spot-checks) folded into their most-related row — not given convenience rows of their own. Without the structural pin, the first GREEN lands off-count (2026-08-30, CR 004: 27 instead of 24 — all green, gate failed) and the fix is a post-hoc assertion migration instead of a plan correction. State the one-`it`-per-row rule in the phase's success criteria so the builder inherits it from the plan.
